@@ -8,5 +8,5 @@ published-at = "0xeaf82cdd3decff9cd88781daed238adcbaeffb2ff7a80f6a8600fefa8586d1
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet-v1.2.0" }
 
 [addresses]
-eps =  "0x0"
+eps =  "0xeaf82cdd3decff9cd88781daed238adcbaeffb2ff7a80f6a8600fefa8586d10e"
 sui =  "0x2"
