@@ -31,7 +31,7 @@ Obelisk-Engine is still in its early stages of development, yet the dedicated co
 
 
 
-## ✏️ Enviroment
+## ✏️ Environment
 
 
 

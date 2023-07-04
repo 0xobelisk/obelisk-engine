@@ -1,0 +1,12 @@
+[package]
+name = "eps"
+version = "0.0.1"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet-v1.2.0" }
+MoveEPS = { git = "https://github.com/obelisk/moveeps", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet-v1.2.0" }
+
+
+[addresses]
+eps =  "0x0"
+sui =  "0x2"
