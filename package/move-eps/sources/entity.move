@@ -4,10 +4,8 @@ module eps::entity {
     use sui::tx_context::TxContext;
 
     struct Entity has store  {
-        /// component Set
         components: Bag
     }
-
 
     public fun create_entity(ctx: &mut TxContext):Entity{
         Entity{
