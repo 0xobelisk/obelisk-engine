@@ -1,0 +1,14 @@
+[package]
+name = "Components"
+version = "0.0.1"
+published-at = "0xb82a6b16030819a5d4ed91056160814a393bfb3f9d4e68e32159dc15fc86c580"
+
+
+[dependencies]
+Eps = { local = "../move-eps" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet-v1.5.0" }
+
+[addresses]
+eps =  "0x0a67124c7c9c35a8e2161360c60dcea1b505ee693bf7893c432596be7d6597e1"
+sui =  "0x2"
+components = "0x0"
