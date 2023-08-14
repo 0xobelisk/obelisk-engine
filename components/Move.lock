@@ -10,7 +10,7 @@ dependencies = [
 
 [[move.package]]
 name = "Eps"
-source = { local = "../move-eps" }
+source = { local = "../eps" }
 
 dependencies = [
   { name = "Sui" },
