@@ -7,8 +7,8 @@ module eps::entity {
         components: Bag
     }
 
-    public fun create_entity(ctx: &mut TxContext):Entity{
-        Entity{
+    public fun create_entity(ctx: &mut TxContext): Entity {
+        Entity {
             components: bag::new(ctx)
         }
     }
@@ -17,8 +17,9 @@ module eps::entity {
         &mut entity.components
     }
 
-    public fun get_component<T: store>(entity: &mut Entity,component_id:u64): &mut T {
-        bag::borrow_mut<u64,T>(&mut entity.components,component_id)
+    public fun get_component<T: store>(entity: &mut Entity, component_id: vector<u8>): &mut T {
+        assert!(bag::contains(&entity.components, component_id),0);
+        bag::borrow_mut<vector<u8>,T>(&mut entity.components,component_id)
     }
 
 }
