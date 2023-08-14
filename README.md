@@ -48,7 +48,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Zombieliu"><img src="https://avatars.githubusercontent.com/u/50917820?v=4?s=100" width="100px;" alt="Henry"/><br /><sub><b>Henry</b></sub></a><br /><a href="https://github.com/dojoengine/dojo/commits?author=tarrencev" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Zombieliu"><img src="https://avatars.githubusercontent.com/u/50917820?v=4?s=100" width="100px;" alt="Henry"/><br /><sub><b>Henry</b></sub></a><br /><a href="https://github.com/0xobelisk/obelisk-engine/commits?author=Zombieliu" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/web3olalala"><img src="https://avatars.githubusercontent.com/u/111047493?v=4?s=100" width="100px;" alt="Bob"/><br /><sub><b>Bob</b></sub></a><br /><a href="https://github.com/0xobelisk/obelisk-engine/commits?author=web3olalala" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
