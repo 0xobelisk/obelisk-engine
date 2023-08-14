@@ -20,4 +20,12 @@ module components::name {
         let component = entity::get_component<Name>(entity, components_id);
         component.value = string::utf8(name);
     }
+
+    public fun get_name<T : key + store>(world: &mut World, entity_key: &T): string::String {
+        let id = object::id(entity_key);
+        let entity = world::get_mut_entity(world, id);
+        let components_id = generate_component_id(COMPONENT_NAME);
+        let component = entity::get_component<Name>(entity, components_id);
+        component.value
+    }
 }
