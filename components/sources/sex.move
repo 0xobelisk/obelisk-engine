@@ -12,7 +12,7 @@ module components::sex {
         value: bool
     }
 
-    public fun new_name(sex: bool): Sex {
+    public fun new_sex(sex: bool): Sex {
         Sex {
             value : sex
         }

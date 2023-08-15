@@ -1,6 +1,5 @@
 module components::name {
     use std::string;
-    use sui::tx_context::TxContext;
     use sui::object;
     use eps::entity;
     use eps::world;
@@ -19,7 +18,7 @@ module components::name {
         }
     }
 
-    public fun update_name<T : key + store>(world: &mut World, entity_key: &T, name: vector<u8>, _ctx: &mut TxContext) {
+    public fun update_name<T : key + store>(world: &mut World, entity_key: &T, name: vector<u8>) {
         let id = object::id(entity_key);
         let entity = world::get_mut_entity(world, id);
         let components_id = generate_component_id(COMPONENT_NAME);
