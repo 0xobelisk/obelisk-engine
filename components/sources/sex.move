@@ -12,6 +12,12 @@ module components::sex {
         value: bool
     }
 
+    public fun new_name(sex: bool): Sex {
+        Sex {
+            value : sex
+        }
+    }
+
     public fun update_sex<T : key + store>(world: &mut World, entity_key: &T, sex: bool, _ctx: &mut TxContext) {
         let id = object::id(entity_key);
         let entity = world::get_mut_entity(world, id);

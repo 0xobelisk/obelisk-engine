@@ -13,6 +13,12 @@ module components::name {
         value: string::String
     }
 
+    public fun new_name(name: vector<u8>): Name {
+        Name {
+            value : string::utf8(name)
+        }
+    }
+
     public fun update_name<T : key + store>(world: &mut World, entity_key: &T, name: vector<u8>, _ctx: &mut TxContext) {
         let id = object::id(entity_key);
         let entity = world::get_mut_entity(world, id);
