@@ -74,6 +74,10 @@ export class SuiRpcProvider {
     return parsedObjects as ObjectData[];
   }
 
+  async getNormalizedMoveModulesByPackage(packageId: string) {
+    return this.provider.getNormalizedMoveModulesByPackage({package: packageId});
+  }
+
   /**
    * @description Select coins that add up to the given amount.
    * @param addr the address of the owner

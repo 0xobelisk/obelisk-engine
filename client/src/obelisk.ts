@@ -9,11 +9,14 @@ import {
   TransactionBlock,
   DevInspectResults,
   SuiTransactionBlockResponse, JsonRpcProvider, testnetConnection, Ed25519Keypair,
+  SuiMoveNormalizedModules,
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
+import { SuiContractFactory } from './libs/suiContractFactory';
 import { SuiKitParams, DerivePathParams, SuiTxArg, SuiVecTxArg } from './types';
+import * as fs from 'fs';
 
 /**
  * @class SuiKit
@@ -22,7 +25,10 @@ import { SuiKitParams, DerivePathParams, SuiTxArg, SuiVecTxArg } from './types';
 export class Obelisk {
   public accountManager: SuiAccountManager;
   public rpcProvider: SuiRpcProvider;
-
+  public contractFactory: SuiContractFactory;
+  public packageId: string | undefined;
+  // public needLoad: boolean | undefined;
+  public metadata: SuiMoveNormalizedModules | undefined;
   /**
    * Support the following ways to init the SuiToolkit:
    * 1. mnemonics
@@ -34,6 +40,7 @@ export class Obelisk {
    * @param networkType, 'testnet' | 'mainnet' | 'devnet' | 'localnet', default is 'devnet'
    * @param fullnodeUrl, the fullnode url, default is the preconfig fullnode url for the given network type
    * @param faucetUrl, the faucet url, default is the preconfig faucet url for the given network type
+   * @param packageId
    */
   constructor({
     mnemonics,
@@ -41,6 +48,8 @@ export class Obelisk {
     networkType,
     fullnodeUrl,
     faucetUrl,
+    packageId,
+    // needLoad,
   }: SuiKitParams = {}) {
     // Init the account manager
     this.accountManager = new SuiAccountManager({ mnemonics, secretKey });
@@ -50,6 +59,25 @@ export class Obelisk {
       faucetUrl,
       networkType,
     });
+    this.contractFactory = new SuiContractFactory({ 
+      packageId: packageId, 
+      metadata: undefined
+    })
+    // this.packageId = packageId;
+    // this.needLoad = needLoad;
+
+    // this.init().then((metadata: any) => {
+    //   this.metadata = metadata as SuiMoveNormalizedModules;
+    // });
+  }
+
+  async initialize() {
+    const metadata = await this.loadData();
+    this.metadata = metadata as SuiMoveNormalizedModules;
+    this.contractFactory = new SuiContractFactory({ 
+      packageId: this.packageId, 
+      metadata: this.metadata
+    })
   }
 
   /**
@@ -86,6 +114,13 @@ export class Obelisk {
     return this.rpcProvider.provider;
   }
 
+  getPackageId() {
+    return this.contractFactory.packageId;
+  }
+
+  getMetadata() {
+    return this.contractFactory.metadata
+  }
   /**
    * Request some SUI from faucet
    * @Returns {Promise<boolean>}, true if the request is successful, false otherwise.
@@ -294,4 +329,31 @@ export class Obelisk {
     return this.signAndSendTxn(tx, derivePathParams);
   }
 
+  async loadData() {
+    // const jsonFileName = 'data.json';
+    const jsonFileName = `${this.contractFactory.packageId}.json`;
+
+    try {
+      const data = await fs.promises.readFile(jsonFileName, 'utf-8');
+      const jsonData = JSON.parse(data);
+
+      return jsonData as SuiMoveNormalizedModules;
+    } catch (error) {
+      if (this.contractFactory.packageId !== undefined) {
+        const jsonData = await this.rpcProvider.getNormalizedMoveModulesByPackage(this.contractFactory.packageId);
+
+        fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
+          if (err) {
+            console.error('写入文件时出错:', err);
+          } else {
+            console.log('JSON 数据已保存到文件:', jsonFileName);
+          }
+        });
+
+        return jsonData as SuiMoveNormalizedModules;
+      } else {
+        console.error('please set your package id.');
+      }
+    }
+  }
 }

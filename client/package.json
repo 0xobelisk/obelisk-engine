@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/client",
-  "version": "0.0.1",
+  "version": "1.22.19",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "sui",
@@ -50,7 +50,6 @@
     "test:watch": "vitest",
     "format:fix": "prettier --ignore-path 'dist/* docs/*' --write '**/*.{ts,json,md}'",
     "lint:fix": "eslint . --ignore-pattern dist --ext .ts --fix",
-    "prepare": "husky install",
     "commit": "commit",
     "doc": "typedoc --out docs src/index.ts"
   },
@@ -59,6 +58,9 @@
     "@scure/bip39": "^1.2.1",
     "assert": "^2.0.0",
     "colorts": "^0.1.63",
+    "fs": "^0.0.1-security",
+    "husky": "^8.0.3",
+    "process": "^0.11.10",
     "superstruct": "^1.0.3",
     "tmp": "^0.2.1",
     "ts-retry-promise": "^0.7.0"
@@ -70,19 +72,18 @@
     "@commitlint/cli": "^17.6.6",
     "@commitlint/config-conventional": "^17.6.6",
     "@commitlint/prompt-cli": "^17.6.6",
-    "@types/node": "^20.3.2",
+    "@types/node": "^20.5.0",
+    "@types/tmp": "^0.2.3",
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "@typescript-eslint/parser": "^5.60.1",
-    "@types/tmp": "^0.2.3",
     "dotenv": "^16.3.1",
     "eslint": "^8.43.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "husky": "^8.0.3",
     "lint-staged": "^13.2.3",
     "prettier": "^2.8.8",
-    "tsconfig-paths": "^4.2.0",
     "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
     "tsup": "^7.1.0",
     "typedoc": "^0.24.8",
     "typescript": "^5.0.4",
@@ -96,11 +97,6 @@
     "**/*.json|md": [
       "pnpm run format:fix"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "commitlint": {
     "extends": [
