@@ -13,6 +13,12 @@ module components::birth_time {
         value: u64
     }
 
+    public fun new_birth_time(clock: &Clock): BirthTime {
+        BirthTime {
+            value : clock::timestamp_ms(clock)
+        }
+    }
+
     public fun get_birth_time(birth_time: &BirthTime): u64 {
         birth_time.value
     }

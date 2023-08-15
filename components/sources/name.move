@@ -13,7 +13,7 @@ module components::name {
         value: string::String
     }
 
-    public entry fun update_name<T : key + store>(world: &mut World, entity_key: &T, name: vector<u8>, _ctx: &mut TxContext) {
+    public fun update_name<T : key + store>(world: &mut World, entity_key: &T, name: vector<u8>, _ctx: &mut TxContext) {
         let id = object::id(entity_key);
         let entity = world::get_mut_entity(world, id);
         let components_id = generate_component_id(COMPONENT_NAME);
