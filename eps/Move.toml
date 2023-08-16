@@ -1,13 +1,13 @@
 [package]
 name = "Eps"
 version = "0.0.1"
-published-at = "0x0a67124c7c9c35a8e2161360c60dcea1b505ee693bf7893c432596be7d6597e1"
+published-at = "0xf2196f638c3174e18c0e31aa630a02fd516c2c5deec1ded72c0fea864c9f091a"
 
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "devnet-v1.5.0" }
 
 [addresses]
-eps =  "0x0a67124c7c9c35a8e2161360c60dcea1b505ee693bf7893c432596be7d6597e1"
+eps =  "0xf2196f638c3174e18c0e31aa630a02fd516c2c5deec1ded72c0fea864c9f091a"
 #eps = '0x0'
 sui =  "0x2"
