@@ -57,16 +57,8 @@ export class SuiContractFactory {
       console.log(`${index}. ${data.name}`)
     });
   }
-
-  async getAllEntity(worldObjectId: string) {
-
+  async worldCall() {
+    
   }
 
-  async getEntityComponents(worldId: string, entityId: string) {
-
-  }
-
-  async getEntityComponent(world_id: string, entity_id: string, component_id: string) {
-
-  }
 }

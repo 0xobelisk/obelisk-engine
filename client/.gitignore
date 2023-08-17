@@ -35,3 +35,4 @@ logs/
 .husky
 .idea
 document
+metadata/*.json

@@ -29,6 +29,8 @@ Obelisk-Engine is still in its early stages of development, yet the dedicated co
 
 ## 🏗️ Contributing
 
+We'd love your support in improving Obelisk! This monorepo includes all of Obelisk source code, and pull requests are always welcome. To discuss new features or changes [join our Telegram](https://t.me/+0_98p03Fbv1hNzY1).
+
 
 
 ## ✏️ Environment

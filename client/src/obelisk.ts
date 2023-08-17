@@ -9,7 +9,7 @@ import {
   TransactionBlock,
   DevInspectResults,
   SuiTransactionBlockResponse, JsonRpcProvider, testnetConnection, Ed25519Keypair,
-  SuiMoveNormalizedModules,
+  SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
@@ -133,6 +133,10 @@ export class Obelisk {
   async getBalance(coinType?: string, derivePathParams?: DerivePathParams) {
     const owner = this.accountManager.getAddress(derivePathParams);
     return this.rpcProvider.getBalance(owner, coinType);
+  }
+
+  async getObject(objectId: string) {
+    return this.rpcProvider.getObject(objectId);
   }
 
   async getObjects(objectIds: string[]) {
@@ -329,9 +333,48 @@ export class Obelisk {
     return this.signAndSendTxn(tx, derivePathParams);
   }
 
+  async saveGenToml() {
+    
+  }
+
+
+  async getWorld(worldObjectId: string) {
+    return this.rpcProvider.getObject(worldObjectId)
+  }
+
+  async getAllEntities(worldId: string) {
+    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.entities.fields.id.id;
+    return await this.rpcProvider.getDynamicFields(parentId) as DynamicFieldPage;
+  }
+
+  async getEntity(worldId: string, entityId: string) {
+    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.entities.fields.id.id;
+
+    const name = {
+      type: "0x2::object::ID",
+      value: entityId
+    } as DynamicFieldName
+    return await this.rpcProvider.getDynamicFieldObject(parentId, name);
+  }
+
+  async getEntityComponents(entityId: string) {
+    const parentId = (await this.rpcProvider.getObject(entityId)).objectFields.id.id;
+    return await this.rpcProvider.getDynamicFields(parentId) as DynamicFieldPage;
+  }
+
+  async getEntityComponent(entityId: string, componentId: string) {
+    const parentId = (await this.rpcProvider.getObject(entityId)).objectFields.id.id;
+
+    const name = {
+      type: "0x2::object::ID",
+      value: componentId
+    } as DynamicFieldName
+    return await this.rpcProvider.getDynamicFieldObject(parentId, name);
+  }
+
+
   async loadData() {
-    // const jsonFileName = 'data.json';
-    const jsonFileName = `${this.contractFactory.packageId}.json`;
+    const jsonFileName = `metadata/${this.contractFactory.packageId}.json`;
 
     try {
       const data = await fs.promises.readFile(jsonFileName, 'utf-8');
