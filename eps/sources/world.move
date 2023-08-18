@@ -4,7 +4,7 @@ module eps::world {
     use sui::tx_context::TxContext;
     use sui::bag::Bag;
     use sui::bag;
-    use eps::entity::{Entity, get_components};
+    use eps::entity::Entity;
     use std::string;
 
     struct World has key, store{
@@ -27,30 +27,23 @@ module eps::world {
         }
     }
 
+    public fun get_entity<T : key + store>(world: &World, obj: &T): &Entity {
+        let entity_key = object::id(obj);
+        bag::borrow<ID,Entity>(&world.entities, entity_key)
+    }
 
-    public fun get_mut_entity(world: &mut World, entity_key: ID): &mut Entity {
-        assert!(bag::contains(&mut world.entities,entity_key),0);
+    public fun get_mut_entity<T : key + store>(world: &mut World, obj: &T): &mut Entity {
+        let entity_key = object::id(obj);
         bag::borrow_mut<ID,Entity>(&mut world.entities, entity_key)
     }
 
-    public fun add_entity_in_world(world:&mut World,entity_key: ID, entity: Entity){
+    public fun add_entity_in_world<T : key + store>(world:&mut World, obj: &T, entity: Entity){
+        let entity_key = object::id(obj);
         bag::add(&mut world.entities, entity_key, entity);
     }
 
-    public fun remove_entity(world: &mut World,entity_key: ID) : Entity {
+    public fun remove_entity<T : key + store>(world: &mut World, obj: &T) : Entity {
+        let entity_key = object::id(obj);
        bag::remove<ID,Entity>(&mut world.entities,entity_key)
-    }
-
-    public fun add_component<T: store>(world: &mut World, entity_key: ID, component:T){
-        let entity = get_mut_entity(world, entity_key);
-        let components = get_components(entity);
-        let components_length =  bag::length(components);
-        bag::add(components, components_length, component);
-    }
-
-    public fun remove_component<T: drop + store>(world: &mut World, entity_key: ID, component_id:u64){
-        let entity = get_mut_entity(world, entity_key);
-        let components= get_components(entity);
-        bag::remove<u64,T>(components,component_id);
     }
 }
