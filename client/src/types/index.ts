@@ -17,8 +17,38 @@ export type SuiKitParams = {
   faucetUrl?: string;
   networkType?: NetworkType;
   packageId?: string,
-//   needLoad?: boolean;
 };
+
+export type ComponentFieldType = {
+    components: {
+        type: string;
+        fields: {
+            id: {
+                id: string;
+            },
+            size: string;
+        }
+    }
+}
+
+export type ComponentValueType = {
+    id: {
+        id: string;
+    }
+    name: string;
+    value: {
+        type: string;
+        fields: ComponentFieldType;
+    }
+
+}
+
+export type ComponentContentType = {
+    type: string;
+    fields: ComponentValueType;
+    hasPublicTransfer: boolean;
+    dataType: "moveObject";
+}
 
 export type SuiMoveMoudleValueType =  {
     address: string;

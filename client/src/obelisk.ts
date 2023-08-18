@@ -1,9 +1,3 @@
-/**
- * @file src.ts
- * @description This file is used to aggregate the tools that used to interact with SUI network.
- * @author IceFox
- * @version 0.1.0
- */
 import {
   RawSigner,
   TransactionBlock,
@@ -15,7 +9,7 @@ import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiContractFactory } from './libs/suiContractFactory';
-import { SuiKitParams, DerivePathParams, SuiTxArg, SuiVecTxArg } from './types';
+import { SuiKitParams, DerivePathParams, SuiTxArg, SuiVecTxArg, ComponentContentType } from './types';
 import * as fs from 'fs';
 
 /**
@@ -342,9 +336,9 @@ export class Obelisk {
     return this.rpcProvider.getObject(worldObjectId)
   }
 
-  async getAllEntities(worldId: string) {
+  async getAllEntities(worldId: string, cursor?: string, limit?: number) {
     const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.entities.fields.id.id;
-    return await this.rpcProvider.getDynamicFields(parentId) as DynamicFieldPage;
+    return await this.rpcProvider.getDynamicFields(parentId, cursor, limit) as DynamicFieldPage;
   }
 
   async getEntity(worldId: string, entityId: string) {
@@ -357,9 +351,10 @@ export class Obelisk {
     return await this.rpcProvider.getDynamicFieldObject(parentId, name);
   }
 
-  async getEntityComponents(entityId: string) {
-    const parentId = (await this.rpcProvider.getObject(entityId)).objectFields.id.id;
-    return await this.rpcProvider.getDynamicFields(parentId) as DynamicFieldPage;
+  async getEntityComponents(worldId: string, entityId: string, cursor?: string, limit?: number) {
+    const parentContent = (await this.getEntity(worldId, entityId)).data!.content as ComponentContentType;
+    const parentId = parentContent.fields.value.fields.components.fields.id.id;
+    return await this.rpcProvider.getDynamicFields(parentId, cursor, limit) as DynamicFieldPage;
   }
 
   async getEntityComponent(entityId: string, componentId: string) {

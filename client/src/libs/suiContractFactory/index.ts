@@ -1,9 +1,11 @@
-import { SuiMoveNormalizedModules } from "@mysten/sui.js";
+import { SuiMoveNormalizedModules, TransactionBlock } from "@mysten/sui.js";
 import type { ContractFactoryParams, SuiMoveMoudleValueType } from './types';
 
 export class SuiContractFactory {
   public packageId: string;
   public metadata: SuiMoveNormalizedModules | undefined;
+  public epsId: string;
+  public componentsId: string;
 
   /**
    * Support the following ways to init the SuiToolkit:
@@ -19,6 +21,8 @@ export class SuiContractFactory {
     // Otherwise, generate a random mnemonics with 24 words
     this.packageId = packageId || '';
     this.metadata = metadata || undefined;
+    this.epsId = "0xf2196f638c3174e18c0e31aa630a02fd516c2c5deec1ded72c0fea864c9f091a"
+    this.componentsId = "0x3bc407eb543149e42846ade59ac2a3c901584af4339dc1ecd0affd090529545f"
   }
 
   getFuncByModuleName(moduleName: string) {
@@ -60,5 +64,17 @@ export class SuiContractFactory {
   async worldCall() {
     
   }
+
+  // async call(counter: any,derivePathParams?: DerivePathParams) {
+  //   const tx = new TransactionBlock();
+  //   tx.moveCall({
+  //     target: `${this.componentsId}::birth_time::get_birth_time`,
+  //     arguments: [
+  //       // txb.pure(manager),
+  //       tx.pure(counter),
+  //     ],
+  //   })
+  //   return this.signAndSendTxn(tx);
+  // }
 
 }
