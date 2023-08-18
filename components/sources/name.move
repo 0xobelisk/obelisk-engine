@@ -1,36 +1,28 @@
-module components::name {
+module components::name_component {
     use std::string;
-    use sui::object;
-    use eps::entity;
-    use eps::world;
-    use eps::world::{World};
     use components::utils::generate_component_id;
 
     const COMPONENT_NAME: vector<u8> = b"Obelisk component name";
 
-    struct Name has store {
+    struct NameComponent has store {
         value: string::String
     }
 
-    public fun new_name(name: vector<u8>): Name {
-        Name {
+    public fun new_name(name: vector<u8>): NameComponent {
+        NameComponent {
             value : string::utf8(name)
         }
     }
 
-    public fun update_name<T : key + store>(world: &mut World, entity_key: &T, name: vector<u8>) {
-        let id = object::id(entity_key);
-        let entity = world::get_mut_entity(world, id);
-        let components_id = generate_component_id(COMPONENT_NAME);
-        let component = entity::get_component<Name>(entity, components_id);
-        component.value = string::utf8(name);
+    public fun update_name(name_component: &mut NameComponent, name: vector<u8>) {
+        name_component.value = string::utf8(name);
     }
 
-    public fun get_name<T : key + store>(world: &mut World, entity_key: &T): string::String {
-        let id = object::id(entity_key);
-        let entity = world::get_mut_entity(world, id);
-        let components_id = generate_component_id(COMPONENT_NAME);
-        let component = entity::get_component<Name>(entity, components_id);
-        component.value
+    public fun get_name(name_component: &NameComponent): string::String {
+        name_component.value
+    }
+    
+    public fun get_component_id() : vector<u8> {
+        generate_component_id(COMPONENT_NAME)
     }
 }
