@@ -1,4 +1,5 @@
-import { SuiMoveNormalizedModules, TransactionBlock } from "@mysten/sui.js";
+import { TransactionBlock } from "@mysten/sui.js";
+import { SuiMoveNormalizedModules } from "@mysten/sui.js/client"
 import type { ContractFactoryParams, SuiMoveMoudleValueType } from './types';
 
 export class SuiContractFactory {

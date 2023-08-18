@@ -1,10 +1,12 @@
 import {
   RawSigner,
-  TransactionBlock,
-  DevInspectResults,
-  SuiTransactionBlockResponse, JsonRpcProvider, testnetConnection, Ed25519Keypair,
-  SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName
+  TransactionBlock, JsonRpcProvider, testnetConnection, Ed25519Keypair,
 } from '@mysten/sui.js';
+import { SuiTransactionBlockResponse, SuiMoveNormalizedModules } from '@mysten/sui.js/client'
+import { DevInspectResults } from "@mysten/sui.js/src/types/transactions"
+import { DynamicFieldPage } from '@mysten/sui.js/src/types/dynamic_fields.js';
+import type { DynamicFieldName } from '@mysten/sui.js/src/types/dynamic_fields.js';
+
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
@@ -326,6 +328,19 @@ export class Obelisk {
     })
     return this.signAndSendTxn(tx, derivePathParams);
   }
+
+
+  // async callBirthTime(counter: any,derivePathParams?: DerivePathParams) {
+  //   const tx = new TransactionBlock();
+  //   tx.moveCall({
+  //     target: `${this.componentsId}::birth_time::get_birth_time`,
+  //     arguments: [
+  //       // txb.pure(manager),
+  //       tx.pure(counter),
+  //     ],
+  //   })
+  //   return this.rpcProvider.;
+  // }
 
   async saveGenToml() {
     

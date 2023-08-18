@@ -1,16 +1,20 @@
 import {
   Connection,
   JsonRpcProvider,
+} from '@mysten/sui.js';
+import type { DynamicFieldName } from '@mysten/sui.js/src/types/dynamic_fields.js';
+import {
   getObjectType,
   getObjectId,
   getObjectFields,
   getObjectDisplay,
   getObjectVersion,
-  DynamicFieldName
-} from '@mysten/sui.js';
+} from "@mysten/sui.js/src/types/objects"
+
 import { requestFaucet } from './faucet';
 import { getDefaultNetworkParams } from './defaultChainConfigs';
 import type { ObjectData, SuiRpcProviderParams } from './types';
+import { SuiClient } from '@mysten/sui.js/client';
 
 export class SuiRpcProvider {
   public fullnodeUrl: string;
@@ -40,7 +44,7 @@ export class SuiRpcProvider {
       fullnode: this.fullnodeUrl,
       faucet: this.faucetUrl,
     });
-    this.provider = new JsonRpcProvider(connection);
+    this.provider = new SuiClient(connection);
   }
 
   /**

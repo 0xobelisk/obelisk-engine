@@ -1,8 +1,8 @@
 import {
-  normalizeSuiObjectId,
   TransactionArgument,
   TransactionBlock,
 } from '@mysten/sui.js';
+import { normalizeSuiObjectId } from "@mysten/sui.js/src/utils";
 import { SuiTxArg, SuiInputTypes } from './types';
 
 export const getDefaultSuiInputType = (value: any): SuiInputTypes => {

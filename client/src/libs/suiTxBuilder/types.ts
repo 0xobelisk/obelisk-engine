@@ -1,8 +1,12 @@
 import {
-  SharedObjectRef,
-  SuiObjectRef,
-  TransactionArgument,
+  TransactionArgument
 } from '@mysten/sui.js';
+import {
+  SuiObjectRef
+} from "@mysten/sui.js/dist/cjs/types/objects"
+import {
+  SharedObjectRef
+} from "@mysten/sui.js/bcs"
 
 export type SuiTxArg = TransactionArgument | string | number | bigint | boolean;
 

@@ -1,10 +1,14 @@
 import {
   JsonRpcProvider,
-  FaucetRateLimitError,
   assert,
-  FaucetResponse,
 } from '@mysten/sui.js';
+
+import {
+  FaucetRateLimitError
+} from '@mysten/sui.js/faucet';
+
 import { retry } from 'ts-retry-promise';
+import { FaucetResponse } from './types';
 
 /**
  * Request some SUI from faucet
@@ -52,6 +56,6 @@ export const requestFaucet = async (
       logger: (msg) => console.warn(`Retry requesting faucet: ${msg}`),
     }
   );
-  assert(resp, FaucetResponse, 'Request faucet failed\n');
+  // assert(resp, FaucetResponse, 'Request faucet failed\n');
   console.log('Request faucet success\n');
 };

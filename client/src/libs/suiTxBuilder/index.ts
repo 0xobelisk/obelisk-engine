@@ -1,14 +1,20 @@
 import {
   TransactionBlock,
   SUI_SYSTEM_STATE_OBJECT_ID,
-  TransactionExpiration,
-  SuiObjectRef,
-  SharedObjectRef,
   JsonRpcProvider,
   TransactionType,
   Transactions,
   ObjectCallArg,
 } from '@mysten/sui.js';
+import {
+  TransactionExpiration
+} from "@mysten/sui.js/src/builder/TransactionBlockData"
+import {
+  SuiObjectRef
+} from "@mysten/sui.js/dist/cjs/types/objects"
+import {
+  SharedObjectRef
+} from "@mysten/sui.js/bcs"
 import { convertArgs } from './util';
 import type { SuiTxArg, SuiObjectArg, SuiVecTxArg } from './types';
 
