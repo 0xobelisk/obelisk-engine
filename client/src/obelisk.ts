@@ -2,15 +2,17 @@ import {
   RawSigner,
   TransactionBlock,
   DevInspectResults,
-  SuiTransactionBlockResponse, JsonRpcProvider, testnetConnection, Ed25519Keypair,
+  SuiTransactionBlockResponse, JsonRpcProvider, testnetConnection,
   SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName
 } from '@mysten/sui.js';
+import { SuiAddress } from "@mysten/sui.js/src/types";
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import { SuiKitParams, DerivePathParams, SuiTxArg, SuiVecTxArg, ComponentContentType } from './types';
 import * as fs from 'fs';
+import {ObjectArg, obj, pure} from "./framework/util";
 
 /**
  * @class SuiKit
@@ -23,6 +25,8 @@ export class Obelisk {
   public packageId: string | undefined;
   // public needLoad: boolean | undefined;
   public metadata: SuiMoveNormalizedModules | undefined;
+  public epsId: string;
+  public componentsId: string;
   /**
    * Support the following ways to init the SuiToolkit:
    * 1. mnemonics
@@ -57,6 +61,9 @@ export class Obelisk {
       packageId: packageId, 
       metadata: undefined
     })
+
+    this.epsId = "0xf2196f638c3174e18c0e31aa630a02fd516c2c5deec1ded72c0fea864c9f091a"
+    this.componentsId = "0x3bc407eb543149e42846ade59ac2a3c901584af4339dc1ecd0affd090529545f"
     // this.packageId = packageId;
     // this.needLoad = needLoad;
 
@@ -307,24 +314,34 @@ export class Obelisk {
   async inspectTxn(
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
+    // sender: string
   ): Promise<DevInspectResults> {
+    
     tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
+    console.log(this.getAddress(derivePathParams))
     return this.rpcProvider.provider.devInspectTransactionBlock({
       transactionBlock: tx,
       sender: this.getAddress(derivePathParams),
     });
   }
 
-  async call(world_id: string, system_name: string, counter: any,derivePathParams?: DerivePathParams) {
+  async getBirthTime(objectId: string, derivePathParams?: DerivePathParams) {
     const tx = new TransactionBlock();
+
     tx.moveCall({
-      target: `${world_id}::system::${system_name}`,
+      // target: `0x12b216923e5454e1f076ccb5fc638b59f8aba2175c34df9899de71124d66badd::status_system::get_pet_state`,
+      target: `0x6afbf113a5872b781a2a0068b95c0d9d0ee89428518fdd65f862c841eab45b82::pet_system::get_pet_basic_info`,
       arguments: [
-        // txb.pure(manager),
-        tx.pure(counter),
+        // tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324"),
+        // tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1"),
+        // tx.pure("0x6"),
+        
+        obj(tx, "0x26804211486be597a89c46c16b929d7031fb7c701ecf89d4c750e49459b4bea2"), 
+        pure(tx, "0x35ba3bfb8590dbd060f41cd58c7b140d67efd2126648409cd231c74cff2828b8", `0x2::object::ID`), 
+        obj(tx, "0x6")
       ],
     })
-    return this.signAndSendTxn(tx, derivePathParams);
+    return await this.inspectTxn(tx, derivePathParams);
   }
 
   async saveGenToml() {
