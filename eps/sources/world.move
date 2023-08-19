@@ -27,9 +27,8 @@ module eps::world {
         }
     }
 
-    public fun get_entity<T : key + store>(world: &World, obj: &T): &Entity {
-        let entity_key = object::id(obj);
-        bag::borrow<ID,Entity>(&world.entities, entity_key)
+    public fun get_entity(world: &World, obj_id: ID): &Entity {
+        bag::borrow<ID,Entity>(&world.entities, obj_id)
     }
 
     public fun get_mut_entity<T : key + store>(world: &mut World, obj: &T): &mut Entity {
