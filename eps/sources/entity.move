@@ -13,15 +13,14 @@ module eps::entity {
         }
     }
 
-    public fun add_component<T: store>(entity: &mut Entity, component:T){
+    public fun add_component<T: store>(entity: &mut Entity, component_id: vector<u8>, component:T){
         let components = get_mut_components(entity);
-        let components_length =  bag::length(components);
-        bag::add(components, components_length, component);
+        bag::add(components, component_id, component);
     }
 
-    public fun remove_component<T: drop + store>(entity: &mut Entity, component_id:u64){
+    public fun remove_component<T: drop + store>(entity: &mut Entity, component_id: vector<u8>){
         let components= get_mut_components(entity);
-        bag::remove<u64,T>(components, component_id);
+        bag::remove<vector<u8>,T>(components, component_id);
     }
 
     public fun get_mut_components(entity: &mut Entity): &mut Bag {

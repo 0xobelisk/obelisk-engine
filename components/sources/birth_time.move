@@ -1,12 +1,9 @@
 module components::birth_time_component {
-    use eps::world::World;
-    use eps::world;
     use components::utils::generate_component_id;
-    use eps::entity;
     use sui::clock::Clock;
     use sui::clock;
 
-    const COMPONENT_NAME: vector<u8> = b"Obelisk component birth_time";
+    const COMPONENT_NAME: vector<u8> = b"Obelisk birth_time component";
 
     struct BirthTimeComponent has store {
         value: u64
@@ -22,12 +19,13 @@ module components::birth_time_component {
         birth_time.value
     }
 
-    public fun get_age_timestamp<T : key + store>(world: &mut World, clock: &Clock, obj: &T): u64 {
-        let entity = world::get_mut_entity(world, obj);
-        let components_id = generate_component_id(COMPONENT_NAME);
-        let component = entity::get_mut_component<BirthTimeComponent>(entity, components_id);
+    public fun get_age_timestamp(birth_time: &BirthTimeComponent, clock: &Clock): u64 {
         let current_time = clock::timestamp_ms(clock);
-        let birth_time = get_birth_time(component);
+        let birth_time = get_birth_time(birth_time);
         current_time - birth_time
+    }
+
+    public fun get_component_id() : vector<u8> {
+        generate_component_id(COMPONENT_NAME)
     }
 }

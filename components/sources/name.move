@@ -2,7 +2,7 @@ module components::name_component {
     use std::string;
     use components::utils::generate_component_id;
 
-    const COMPONENT_NAME: vector<u8> = b"Obelisk component name";
+    const COMPONENT_NAME: vector<u8> = b"Obelisk name component";
 
     struct NameComponent has store {
         value: string::String
