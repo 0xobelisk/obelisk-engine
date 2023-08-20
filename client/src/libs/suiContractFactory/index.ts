@@ -1,12 +1,38 @@
 import { SuiMoveNormalizedModules, TransactionBlock } from "@mysten/sui.js";
 import type { ContractFactoryParams, SuiMoveMoudleValueType } from './types';
+export type ApiTypes = 'promise' | 'rxjs';
 
+// export interface ContractQuery {
+//   (origin: AccountId | string | Uint8Array, options: ContractOptions, ...params: unknown[]): SuiTransactionBlockResponse<ApiType, ContractCallOutcome>;
+// }
+
+// export type MapMessageQuery<ApiType extends ApiTypes> = Record<string, ContractQuery<ApiType>>;
+
+
+// // function createQuery <ApiType extends ApiTypes> (meta: AbiMessage, fn: (origin: string | AccountId | Uint8Array, options: ContractOptions, params: unknown[]) => ContractCallResult<ApiType, ContractCallOutcome>): ContractQuery<ApiType> {
+// //   return withMeta(meta, (origin: string | AccountId | Uint8Array, options: ContractOptions, ...params: unknown[]): ContractCallResult<ApiType, ContractCallOutcome> =>
+// //     fn(origin, options, params)
+// //   );
+// // }
+
+// export type MapMessageTx<ApiType extends ApiTypes> = Record<string, ContractTx<ApiType>>;
+
+
+// export interface ContractOptions {
+//   gasLimit?: bigint | string | number | BN | WeightV2;
+//   storageDepositLimit?: bigint | string | number | BN | null;
+//   value?: bigint | BN | string | number;
+// }
+
+
+// export interface ContractTx {
+//   (options: ContractOptions, ...params: unknown[]): SubmittableExtrinsic<ApiType>;
+// }
 export class SuiContractFactory {
   public packageId: string;
   public metadata: SuiMoveNormalizedModules | undefined;
-  public epsId: string;
-  public componentsId: string;
-
+  // readonly #query: MapMessageQuery<ApiTypes> = {};
+  // readonly #tx: MapMessageTx<ApiTypes> = {};
   /**
    * Support the following ways to init the SuiToolkit:
    * 1. mnemonics
@@ -21,8 +47,6 @@ export class SuiContractFactory {
     // Otherwise, generate a random mnemonics with 24 words
     this.packageId = packageId || '';
     this.metadata = metadata || undefined;
-    this.epsId = "0xf2196f638c3174e18c0e31aa630a02fd516c2c5deec1ded72c0fea864c9f091a"
-    this.componentsId = "0x3bc407eb543149e42846ade59ac2a3c901584af4339dc1ecd0affd090529545f"
   }
 
   getFuncByModuleName(moduleName: string) {
@@ -53,6 +77,7 @@ export class SuiContractFactory {
           })
       });
     });
+    
   }
 
   getAllModule() {
@@ -65,16 +90,35 @@ export class SuiContractFactory {
     
   }
 
-  // async call(counter: any,derivePathParams?: DerivePathParams) {
-  //   const tx = new TransactionBlock();
-  //   tx.moveCall({
-  //     target: `${this.componentsId}::birth_time::get_birth_time`,
-  //     arguments: [
-  //       // txb.pure(manager),
-  //       tx.pure(counter),
-  //     ],
-  //   })
-  //   return this.signAndSendTxn(tx);
-  // }
+//   async call(arguments: ({
+//     kind: "Input";
+//     index: number;
+//     type?: "object" | "pure" | undefined;
+//     value?: any;
+// } | {
+//     kind: "GasCoin";
+// } | {
+//     kind: "Result";
+//     index: number;
+// } | {
+//     kind: "NestedResult";
+//     index: number;
+//     resultIndex: number;
+// })[], derivePathParams?: DerivePathParams) {
+//     const tx = new TransactionBlock();
+//     tx.moveCall({
+//       target: `${this.packageId}::${}::${}`,
+//       arguments,
+//     })
+//     return ;
+//   }
 
 }
+
+
+
+// function createTx <ApiType extends ApiTypes> (meta: AbiMessage, fn: (options: ContractOptions, params: unknown[]) => SubmittableExtrinsic<ApiType>): ContractTx<ApiType> {
+//   return withMeta(meta, (options: ContractOptions, ...params: unknown[]): SubmittableExtrinsic<ApiType> =>
+//     fn(options, params)
+//   );
+// }
