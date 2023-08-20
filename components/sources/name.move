@@ -1,24 +1,23 @@
 module components::name_component {
-    use std::string;
     use components::utils::generate_component_id;
 
     const COMPONENT_NAME: vector<u8> = b"Obelisk name component";
 
     struct NameComponent has store {
-        value: string::String
+        value: vector<u8>
     }
 
     public fun new_name(name: vector<u8>): NameComponent {
         NameComponent {
-            value : string::utf8(name)
+            value : name
         }
     }
 
     public fun update_name(name_component: &mut NameComponent, name: vector<u8>) {
-        name_component.value = string::utf8(name);
+        name_component.value = name;
     }
 
-    public fun get_name(name_component: &NameComponent): string::String {
+    public fun get_name(name_component: &NameComponent): vector<u8> {
         name_component.value
     }
     
