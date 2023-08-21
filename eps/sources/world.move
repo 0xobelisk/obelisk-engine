@@ -5,14 +5,13 @@ module eps::world {
     use sui::bag::Bag;
     use sui::bag;
     use eps::entity::Entity;
-    use std::string;
 
     struct World has key, store{
         id: UID,
         /// Name for the world
-        name: string::String,
+        name: vector<u8>,
         /// Description of the world
-        description: string::String,
+        description: vector<u8>,
         /// entity set
         entities: Bag
     }
@@ -21,10 +20,18 @@ module eps::world {
     public fun create_world(ctx: &mut TxContext, name: vector<u8>, description: vector<u8>): World{
         World {
             id: object::new(ctx),
-            name: string::utf8(name),
-            description: string::utf8(description),
+            name,
+            description,
             entities:bag::new(ctx)
         }
+    }
+
+    public fun get_world_name(world: &World): vector<u8> {
+        world.name
+    }
+
+    public fun get_world_description(world: &World): vector<u8> {
+        world.description
     }
 
     public fun get_entity(world: &World, obj_id: ID): &Entity {
