@@ -18,14 +18,19 @@ async function init() {
         // secretKey: privkey
     })
     await obelisk.initialize()
-    const tx = new TransactionBlock();
+    // const tx = new TransactionBlock();
     
     // let data2 = obelisk.query.pet_centre.update_pet_name(
     //     'hello', 'world', [tx.pure("0x6")]
     // );
 
-    let data2 = obelisk.query.pet_centre.update_pet_name
+    // let data2 = obelisk.queryt.pet_centre.update_pet_name
+    let data2 = obelisk.queryt
     console.log(data2)
+    // let res_1 = obelisk.query.pet_centre.update_pet_name()
+
+    // console.log(obelisk.contractFactory.metadata)
+
 
     // let data = obelisk.contractFactory.getAllFunc();
     // // console.log(data)

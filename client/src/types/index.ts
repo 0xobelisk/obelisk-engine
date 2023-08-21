@@ -1,4 +1,4 @@
-import { SuiMoveNormalizedType } from "@mysten/sui.js";
+import { SuiMoveNormalizedModules, SuiMoveNormalizedType } from "@mysten/sui.js";
 
 import type { NetworkType as SuiNetworkType } from '../libs/suiRpcProvider/types';
 
@@ -17,6 +17,7 @@ export type ObeliskParams = {
   faucetUrl?: string;
   networkType?: NetworkType;
   packageId?: string,
+//   metadata?: SuiMoveNormalizedModules,
 };
 
 export type ComponentFieldType = {

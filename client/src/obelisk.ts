@@ -84,6 +84,10 @@ export type MapMoudleFuncTest = Record<string, Record<string, string>>;
 export type MapMoudleFuncQuery = Record<string, MapMessageQuery>;
 
 
+export type MapMoudleFuncQueryTest = Record<string, Record<string, string>>;
+
+
+
 // export function withMeta <T> (creator: Omit<T, 'meta'>): T {
 //   return creator as T;
 // }
@@ -108,6 +112,35 @@ function createQuery(
   });
 }
 
+
+
+// export const LoadData = (packageId: string) => {
+//   const jsonFileName = `metadata/${packageId}.json`;
+
+//   try {
+//     const data = await fs.promises.readFile(jsonFileName, 'utf-8');
+//     const jsonData = JSON.parse(data);
+
+//     return jsonData as SuiMoveNormalizedModules;
+//   } catch (error) {
+//     if (.packageId !== undefined) {
+//       const jsonData = await this.rpcProvider.getNormalizedMoveModulesByPackage(packageId);
+
+//       fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
+//         if (err) {
+//           console.error('写入文件时出错:', err);
+//         } else {
+//           console.log('JSON 数据已保存到文件:', jsonFileName);
+//         }
+//       });
+
+//       return jsonData as SuiMoveNormalizedModules;
+//     } else {
+//       console.error('please set your package id.');
+//     }
+//   }
+// }
+
 /**
  * @class Obelisk
  * @description This class is used to aggregate the tools that used to interact with SUI network.
@@ -121,7 +154,7 @@ export class Obelisk {
   public metadata: SuiMoveNormalizedModules | undefined;
   public epsId: string;
   public componentsId: string;
-
+  
   readonly #query: MapMoudleFuncQuery = {};
   readonly #tx: MapMoudleFuncTx = {};
   readonly #test: MapMoudleFuncTest = {};
@@ -145,6 +178,7 @@ export class Obelisk {
     fullnodeUrl,
     faucetUrl,
     packageId,
+    // metadata,
     // needLoad,
   }: ObeliskParams = {}) {
     // Init the account manager
@@ -155,32 +189,15 @@ export class Obelisk {
       faucetUrl,
       networkType,
     });
-    this.contractFactory = new SuiContractFactory({ 
-      packageId: packageId, 
-      metadata: undefined
-    })
 
     this.epsId = "0xf2196f638c3174e18c0e31aa630a02fd516c2c5deec1ded72c0fea864c9f091a"
     this.componentsId = "0x3bc407eb543149e42846ade59ac2a3c901584af4339dc1ecd0affd090529545f"
-    // this.packageId = packageId;
+    this.packageId = packageId;
     // this.needLoad = needLoad;
 
-    // this.init().then((metadata: any) => {
-    //   this.metadata = metadata as SuiMoveNormalizedModules;
-    // });
-  }
 
-  async initialize() {
-    const metadata = await this.loadData();
-    this.metadata = metadata as SuiMoveNormalizedModules;
-    this.contractFactory = new SuiContractFactory({ 
-      packageId: this.packageId, 
-      metadata: this.metadata
-    })
-    
-    console.log(this.metadata)
-    console.log("-==============")
-    Object.values(this.metadata as SuiMoveNormalizedModules).forEach(value => {
+    this.initialize().then((metadata) => {
+      Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
       let data = value as SuiMoveMoudleValueType;
       let moduleName = data.name;
       Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
@@ -192,25 +209,81 @@ export class Obelisk {
               //     this.#tx[moduleName][funcName] = createTx(this.metadata, (o, p) => this.#exec(this.metadata, o, p));
               //   }
               // }
-              console.log(moduleName)
-              console.log(funcName)
-              // if (this.#query[moduleName] && this.#query[moduleName][funcName]) {
+                  if (isUndefined(this.#test[moduleName])) {
+                    this.#test[moduleName] = {};
+                  }
+                  if (isUndefined(this.#test[moduleName][funcName])) {
+                    this.#test[moduleName][funcName] = "hello"
+                  }
 
-              //   if (isUndefined(this.#query[moduleName]) || isUndefined(this.#query[moduleName][funcName])) {
-                  // this.#query[moduleName][funcName] = createQuery(async (p) => this.#read(moduleName, funcName, p));
-                  // this.#query[moduleName] = 
-                  //   {
-                  //     funcName: createQuery((moduleName, funcName, p) => this.#read(moduleName, funcName, p))
-                  //   }
-                  console.log("-------- here")
-                  console.log(moduleName, funcName);
-                  // this.#query[moduleName][funcName] = () => this.#read(moduleName, funcName, p);
-                  this.#test[moduleName][funcName] = "hello";
-              //   }
-              // }
-          // })
+                  if (isUndefined(this.#query[moduleName])) {
+                    this.#query[moduleName] = {};
+                  }
+                  if (isUndefined(this.#query[moduleName][funcName])) {
+                    this.#query[moduleName][funcName] = createQuery((moduleName, funcName, p) => this.#read(moduleName, funcName, p))
+                  }
       });
     });
+    })
+
+    this.contractFactory = new SuiContractFactory({ 
+      packageId, 
+    })
+  }
+
+  async initialize() {
+    const metadata = await this.loadData();
+    this.metadata = metadata as SuiMoveNormalizedModules;
+    this.contractFactory = new SuiContractFactory({ 
+      packageId: this.packageId, 
+      metadata: this.metadata
+    })
+    return metadata
+    // Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
+    //   let data = value as SuiMoveMoudleValueType;
+    //   let moduleName = data.name;
+    //   Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
+    //       // Object.values(value.parameters).forEach(values => {
+    //           // console.log(values)
+    //           // console.log(`\t\targs: ${values}`)
+    //           // if (isUndefined(this.#tx[moduleName])) {
+    //           //   if (isUndefined(this.#tx[moduleName][funcName])) {
+    //           //     this.#tx[moduleName][funcName] = createTx(this.metadata, (o, p) => this.#exec(this.metadata, o, p));
+    //           //   }
+    //           // }
+    //           console.log(moduleName)
+    //           console.log(funcName)
+    //           // if (this.#query[moduleName] && this.#query[moduleName][funcName]) {
+
+    //           //   if (isUndefined(this.#query[moduleName]) || isUndefined(this.#query[moduleName][funcName])) {
+    //               // this.#query[moduleName][funcName] = createQuery(async (p) =>this.#read(moduleName, funcName, p));
+    //               // this.#query[moduleName] =  
+    //               //   {
+    //               //     funcName: createQuery((moduleName, funcName, p) => this.#read(moduleName, funcName, p))
+    //               //   }
+    //               console.log("-------- here")
+    //               console.log(moduleName, funcName);
+
+    //               // if (isUndefined(this.test)) {
+    //               //   this.test[moduleName] = {};
+    //               // }
+    //               // this.test = {
+    //               //   moduleName: {
+    //               //     funcName: "123"
+    //               //   }
+    //               // }
+    //               // this.#query[moduleName][funcName] = () => this.#read(moduleName, funcName, p);
+    //               // this.#test[moduleName][funcName] = "hello";
+    //           //   }
+    //           // }
+    //       // })
+    //   });
+    // });
+  }
+
+
+  public get queryt (): MapMoudleFuncQueryTest {
+    return this.#test;
   }
 
   public get query (): MapMoudleFuncQuery {
@@ -568,7 +641,7 @@ export class Obelisk {
 
 
   async loadData() {
-    const jsonFileName = `metadata/${this.contractFactory.packageId}.json`;
+    const jsonFileName = `metadata/${this.packageId}.json`;
 
     try {
       const data = await fs.promises.readFile(jsonFileName, 'utf-8');
@@ -576,8 +649,8 @@ export class Obelisk {
 
       return jsonData as SuiMoveNormalizedModules;
     } catch (error) {
-      if (this.contractFactory.packageId !== undefined) {
-        const jsonData = await this.rpcProvider.getNormalizedMoveModulesByPackage(this.contractFactory.packageId);
+      if (this.packageId !== undefined) {
+        const jsonData = await this.rpcProvider.getNormalizedMoveModulesByPackage(this.packageId);
 
         fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
           if (err) {
@@ -586,7 +659,6 @@ export class Obelisk {
             console.log('JSON 数据已保存到文件:', jsonFileName);
           }
         });
-
         return jsonData as SuiMoveNormalizedModules;
       } else {
         console.error('please set your package id.');
