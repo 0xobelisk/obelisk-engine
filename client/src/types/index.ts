@@ -1,8 +1,10 @@
-import { SuiMoveNormalizedModules, SuiMoveNormalizedType } from "@mysten/sui.js";
+import { SuiMoveNormalizedModules, DevInspectResults, SuiTransactionBlockResponse, SuiMoveNormalizedType, TransactionBlock } from "@mysten/sui.js";
 
 import type { NetworkType as SuiNetworkType } from '../libs/suiRpcProvider/types';
 
 export type { DerivePathParams } from '../libs/suiAccountManager/types';
+import { SuiMoveMoudleValueType, SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
+
 export type {
   SuiTxArg,
   SuiVecTxArg,
@@ -10,6 +12,7 @@ export type {
 } from '../libs/suiTxBuilder/types';
 
 export type NetworkType = SuiNetworkType;
+
 export type ObeliskParams = {
   mnemonics?: string;
   secretKey?: string;
@@ -17,7 +20,7 @@ export type ObeliskParams = {
   faucetUrl?: string;
   networkType?: NetworkType;
   packageId?: string,
-//   metadata?: SuiMoveNormalizedModules,
+  metadata?: SuiMoveNormalizedModules,
 };
 
 export type ComponentFieldType = {
@@ -66,36 +69,23 @@ export type ComponentContentType = {
     dataType: "moveObject";
 }
 
-export type SuiMoveMoudleValueType =  {
-    address: string;
-    name: string;
-    fileFormatVersion: number;
-    friends: {
-        address: string;
-        name: string;
-    }[];
-    structs: Record<string, {
-        fields: {
-            type: SuiMoveNormalizedType;
-            name: string;
-        }[];
-        abilities: {
-            abilities: string[];
-        };
-        typeParameters: {
-            constraints: {
-                abilities: string[];
-            };
-            isPhantom: boolean;
-        }[];
-    }>;
-    exposedFunctions: Record<string, {
-        visibility: "Private" | "Public" | "Friend";
-        isEntry: boolean;
-        typeParameters: {
-            abilities: string[];
-        }[];
-        parameters: SuiMoveNormalizedType[];
-        return: SuiMoveNormalizedType[];
-    }>;
+export interface MessageMeta {
+  readonly meta: SuiMoveMoudleFuncType;
 }
+
+export interface ContractQuery extends MessageMeta {
+  (tx: TransactionBlock, params: SuiTxArgument[]): Promise<DevInspectResults>;
+}
+
+export interface ContractTx extends MessageMeta {
+  (tx: TransactionBlock, params: SuiTxArgument[], isRaw: boolean): SuiTransactionBlockResponse | TransactionBlock;
+}
+
+export type MapMessageTx = Record<string, ContractTx>;
+export type MapMessageQuery = Record<string, ContractQuery>;
+
+export type MapMoudleFuncTx = Record<string, MapMessageTx>;
+export type MapMoudleFuncQuery = Record<string, MapMessageQuery>;
+
+export type MapMoudleFuncTest = Record<string, Record<string, string>>;
+export type MapMoudleFuncQueryTest = Record<string, Record<string, string>>;

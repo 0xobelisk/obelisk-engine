@@ -2,56 +2,69 @@ import { Obelisk } from "../src/obelisk";
 import * as process from 'process';
 import { NetworkType, ComponentContentType, SuiTxArgument } from "../src/types";
 import { TransactionBlock } from "@mysten/sui.js";
+import { initialize } from '../src/metadata/index';
+
+type DataItem = [number[], string];
+
+type DataType = "string" | "bool" | "u64";
+
+function formatData(data: DataItem[]): string {
+    const formattedData: string[] = [];
+
+    data.forEach(([values, format]) => {
+        let formattedValue: string;
+
+        if (format === "0x1::string::String") {
+        formattedValue = values.map((num) => String.fromCharCode(num)).join("");
+        } else if (format === "bool") {
+        formattedValue = values[0] !== 0 ? "true" : "false";
+        } else if (format === "u64") {
+        const u64Value = new DataView(new ArrayBuffer(8));
+        values.forEach((num, index) => u64Value.setUint8(index, num));
+        formattedValue = u64Value.getBigUint64(0).toString();
+        } else {
+        formattedValue = "Unknown Format";
+        }
+
+        formattedData.push(formattedValue);
+    });
+
+    return formattedData.join("\n");
+}
 
 async function init() {
     const network = process.argv[2]
     const packageId = process.argv[3]
-    console.log(network)
-    console.log(packageId)
-    // console.log(contract)
-    // 0x80d7de9c4a56194087e0ba0bf59492aa8e6a5ee881606226930827085ddf2332
-    // const privkey = 'c71a1529d774a80d521e02953ce656f1b1cef126451daacaebec763f8dd0b535'
+
+    const metadata = await initialize(network as NetworkType, packageId)
 
     let obelisk = new Obelisk({
         networkType: network as NetworkType,
         packageId: packageId,
+        metadata: metadata
         // secretKey: privkey
     })
-    await obelisk.initialize()
-    // const tx = new TransactionBlock();
-    
-    // let data2 = obelisk.query.pet_centre.update_pet_name(
-    //     'hello', 'world', [tx.pure("0x6")]
-    // );
 
-    // let data2 = obelisk.queryt.pet_centre.update_pet_name
-    let data2 = obelisk.queryt
-    console.log(data2)
-    
-    
     let data3 = obelisk.query;
     console.log(data3)
 
 
-    // tx.moveCall({
-    //   // target: `0x12b216923e5454e1f076ccb5fc638b59f8aba2175c34df9899de71124d66badd::status_system::get_pet_state`,
-    //   target: `0x6afbf113a5872b781a2a0068b95c0d9d0ee89428518fdd65f862c841eab45b82::pet_system::get_pet_basic_info`,
-    //   arguments: [
-    //     // tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324"),
-    //     // tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1"),
-    //     // tx.pure("0x6"),
-        
-    //     obj(tx, "0x26804211486be597a89c46c16b929d7031fb7c701ecf89d4c750e49459b4bea2"), 
-    //     pure(tx, "0x35ba3bfb8590dbd060f41cd58c7b140d67efd2126648409cd231c74cff2828b8", `0x2::object::ID`), 
-    //     obj(tx, "0x6")
-    //   ],
     const tx = new TransactionBlock();
     let params = [tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324") as SuiTxArgument, 
     tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1") as SuiTxArgument,
     tx.pure("0x6") as SuiTxArgument] as SuiTxArgument[]
     let res1 = await obelisk.query.pet_system.get_pet_basic_info(tx, params);
-    console.log(res1)
+    console.log(JSON.stringify(res1.results![0].returnValues))
 
+    const input: DataItem[] = [
+    [[7, 66, 97, 111, 76, 111, 110, 103], "0x1::string::String"],
+    [[0], "bool"],
+    [[157, 136, 137, 14, 138, 1, 0, 0], "u64"],
+    [[11, 129, 14, 11, 0, 0, 0, 0], "u64"],
+    ];
+
+    const formattedOutput: string = formatData(input);
+    console.log(formattedOutput);
     // console.log(obelisk.contractFactory.metadata)
 
 

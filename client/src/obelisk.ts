@@ -2,68 +2,34 @@ import {
   RawSigner,
   TransactionBlock,
   DevInspectResults,
-  SuiTransactionBlockResponse, JsonRpcProvider, testnetConnection,
+  SuiTransactionBlockResponse,
   SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName,
 } from '@mysten/sui.js';
-import { SuiAddress } from "@mysten/sui.js/src/types";
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import { SuiMoveMoudleValueType, SuiMoveMoudleFuncType } from './libs/suiContractFactory/types';
-import { ObeliskParams, DerivePathParams, SuiTxArg, SuiVecTxArg, ComponentContentType, SuiTxArgument } from './types';
-import * as fs from 'fs';
+import { 
+  ObeliskParams, 
+  DerivePathParams, 
+  SuiTxArg, SuiVecTxArg, 
+  ComponentContentType, 
+  SuiTxArgument, ContractQuery, 
+  ContractTx, MapMoudleFuncQuery,
+  MapMoudleFuncTx 
+} from './types';
 import {ObjectArg, obj, pure} from "./framework/util";
 
 export function isUndefined (value?: unknown): value is undefined {
   return value === undefined;
 }
 
-type ContractOptions = {
-    showEffects: boolean;
-    showEvents: boolean;
-    showObjectChanges: boolean
-}
-export interface MessageMeta {
-  readonly meta: SuiMoveMoudleFuncType;
-}
-
-export interface ContractQuery extends MessageMeta {
-  (tx: TransactionBlock, params: SuiTxArgument[]): Promise<DevInspectResults>;
-}
-
-export interface ContractTx extends MessageMeta {
-  (tx: TransactionBlock, params: SuiTxArgument[], isRaw: boolean): SuiTransactionBlockResponse | TransactionBlock;
-}
-
-export type MapMessageTx = Record<string, ContractTx>;
-
-export type MapMessageQuery = Record<string, ContractQuery>;
-
-
-export type MapMoudleFuncTx = Record<string, MapMessageTx>;
-export type MapMoudleFuncTest = Record<string, Record<string, string>>;
-
-export type MapMoudleFuncQuery = Record<string, MapMessageQuery>;
-
-
-export type MapMoudleFuncQueryTest = Record<string, Record<string, string>>;
-
-
 export function withMeta<T extends { meta: SuiMoveMoudleFuncType }>(meta: SuiMoveMoudleFuncType,creator: Omit<T, 'meta'>): T {
   (creator as T).meta = meta
 
   return creator as T;
 }
-
-
-// function createQuer1y(
-//   meta: SuiMoveMoudleFuncType, fn: (params: SuiTxArgument[]) => Promise<DevInspectResults>
-// ): ContractQuery {
-//   return withMeta(meta, (...params: SuiTxArgument[]): Promise<DevInspectResults> => {
-//     fn(params)
-//   });
-// }
 
 function createQuery(
   meta: SuiMoveMoudleFuncType,
@@ -95,13 +61,12 @@ export class Obelisk {
   public contractFactory: SuiContractFactory;
   public packageId: string | undefined;
   // public needLoad: boolean | undefined;
-  public metadata: SuiMoveNormalizedModules | undefined;
+  public metadata: SuiMoveNormalizedModules;
   public epsId: string;
   public componentsId: string;
   
   readonly #query: MapMoudleFuncQuery = {};
   readonly #tx: MapMoudleFuncTx = {};
-  readonly #test: MapMoudleFuncTest = {};
   /**
    * Support the following ways to init the SuiToolkit:
    * 1. mnemonics
@@ -122,8 +87,7 @@ export class Obelisk {
     fullnodeUrl,
     faucetUrl,
     packageId,
-    // metadata,
-    // needLoad,
+    metadata
   }: ObeliskParams = {}) {
     // Init the account manager
     this.accountManager = new SuiAccountManager({ mnemonics, secretKey });
@@ -137,109 +101,46 @@ export class Obelisk {
     this.epsId = "0xf2196f638c3174e18c0e31aa630a02fd516c2c5deec1ded72c0fea864c9f091a"
     this.componentsId = "0x3bc407eb543149e42846ade59ac2a3c901584af4339dc1ecd0affd090529545f"
     this.packageId = packageId;
-    // this.needLoad = needLoad;
-
-
-    this.initialize().then((metadata) => {
-      Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
+    this.metadata = metadata as SuiMoveNormalizedModules;
+    Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
       let data = value as SuiMoveMoudleValueType;
       let moduleName = data.name;
       Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
-          // Object.values(value.parameters).forEach(values => {
-              // console.log(values)
-              // console.log(`\t\targs: ${values}`)
-              // if (isUndefined(this.#tx[moduleName])) {
-              //   if (isUndefined(this.#tx[moduleName][funcName])) {
-              //     this.#tx[moduleName][funcName] = createTx(this.metadata, (o, p) => this.#exec(this.metadata, o, p));
-              //   }
-              // }
-                  let meta = value as SuiMoveMoudleFuncType;
-                  meta.moudleName = moduleName;
-                  meta.funcName = funcName; 
-                  if (isUndefined(this.#test[moduleName])) {
-                    this.#test[moduleName] = {};
-                  }
-                  if (isUndefined(this.#test[moduleName][funcName])) {
-                    this.#test[moduleName][funcName] = "hello"
-                  }
+        let meta = value as SuiMoveMoudleFuncType;
+        meta.moudleName = moduleName;
+        meta.funcName = funcName; 
 
-                  if (isUndefined(this.#query[moduleName])) {
-                    this.#query[moduleName] = {};
-                  }
-                  if (isUndefined(this.#query[moduleName][funcName])) {
+        if (isUndefined(this.#query[moduleName])) {
+          this.#query[moduleName] = {};
+        }
+        if (isUndefined(this.#query[moduleName][funcName])) {
+          this.#query[moduleName][funcName] = createQuery(meta, (tx, p) => this.#read(meta, tx, p))
+        }
 
-                    this.#query[moduleName][funcName] = createQuery(meta, (tx, p) => this.#read(meta, tx, p))
-                  }
-
-                  if (isUndefined(this.#query[moduleName])) {
-                    this.#tx[moduleName] = {};
-                  }
-                  if (isUndefined(this.#query[moduleName][funcName])) {
-                    this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) => this.#exec(meta, tx, p, isRaw))
-                  }
+        if (isUndefined(this.#tx[moduleName])) {
+          this.#tx[moduleName] = {};
+        }
+        if (isUndefined(this.#tx[moduleName][funcName])) {
+          this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) => this.#exec(meta, tx, p, isRaw))
+        }
       });
-    });
     })
 
     this.contractFactory = new SuiContractFactory({ 
       packageId, 
+      metadata
     })
   }
 
-  async initialize() {
-    const metadata = await this.loadData();
-    this.metadata = metadata as SuiMoveNormalizedModules;
-    this.contractFactory = new SuiContractFactory({ 
-      packageId: this.packageId, 
-      metadata: this.metadata
-    })
-    return metadata
-    // Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
-    //   let data = value as SuiMoveMoudleValueType;
-    //   let moduleName = data.name;
-    //   Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
-    //       // Object.values(value.parameters).forEach(values => {
-    //           // console.log(values)
-    //           // console.log(`\t\targs: ${values}`)
-    //           // if (isUndefined(this.#tx[moduleName])) {
-    //           //   if (isUndefined(this.#tx[moduleName][funcName])) {
-    //           //     this.#tx[moduleName][funcName] = createTx(this.metadata, (o, p) => this.#exec(this.metadata, o, p));
-    //           //   }
-    //           // }
-    //           console.log(moduleName)
-    //           console.log(funcName)
-    //           // if (this.#query[moduleName] && this.#query[moduleName][funcName]) {
-
-    //           //   if (isUndefined(this.#query[moduleName]) || isUndefined(this.#query[moduleName][funcName])) {
-    //               // this.#query[moduleName][funcName] = createQuery(async (p) =>this.#read(moduleName, funcName, p));
-    //               // this.#query[moduleName] =  
-    //               //   {
-    //               //     funcName: createQuery((moduleName, funcName, p) => this.#read(moduleName, funcName, p))
-    //               //   }
-    //               console.log("-------- here")
-    //               console.log(moduleName, funcName);
-
-    //               // if (isUndefined(this.test)) {
-    //               //   this.test[moduleName] = {};
-    //               // }
-    //               // this.test = {
-    //               //   moduleName: {
-    //               //     funcName: "123"
-    //               //   }
-    //               // }
-    //               // this.#query[moduleName][funcName] = () => this.#read(moduleName, funcName, p);
-    //               // this.#test[moduleName][funcName] = "hello";
-    //           //   }
-    //           // }
-    //       // })
-    //   });
-    // });
-  }
-
-
-  public get queryt (): MapMoudleFuncQueryTest {
-    return this.#test;
-  }
+  // async initialize() {
+  //   const metadata = await this.loadData();
+  //   this.metadata = metadata as SuiMoveNormalizedModules;
+  //   this.contractFactory = new SuiContractFactory({ 
+  //     packageId: this.packageId, 
+  //     metadata: this.metadata
+  //   })
+  //   return metadata
+  // }
 
   public get query (): MapMoudleFuncQuery {
     return this.#query;
@@ -502,7 +403,6 @@ export class Obelisk {
   async inspectTxn(
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
-    // sender: string
   ): Promise<DevInspectResults> {
     
     tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
@@ -531,11 +431,6 @@ export class Obelisk {
     })
     return await this.inspectTxn(tx, derivePathParams);
   }
-
-  async saveGenToml() {
-    
-  }
-
 
   async getWorld(worldObjectId: string) {
     return this.rpcProvider.getObject(worldObjectId)
@@ -573,29 +468,29 @@ export class Obelisk {
   }
 
 
-  async loadData() {
-    const jsonFileName = `metadata/${this.packageId}.json`;
+  // async loadData() {
+  //   const jsonFileName = `metadata/${this.packageId}.json`;
 
-    try {
-      const data = await fs.promises.readFile(jsonFileName, 'utf-8');
-      const jsonData = JSON.parse(data);
+  //   try {
+  //     const data = await fs.promises.readFile(jsonFileName, 'utf-8');
+  //     const jsonData = JSON.parse(data);
 
-      return jsonData as SuiMoveNormalizedModules;
-    } catch (error) {
-      if (this.packageId !== undefined) {
-        const jsonData = await this.rpcProvider.getNormalizedMoveModulesByPackage(this.packageId);
+  //     return jsonData as SuiMoveNormalizedModules;
+  //   } catch (error) {
+  //     if (this.packageId !== undefined) {
+  //       const jsonData = await this.rpcProvider.getNormalizedMoveModulesByPackage(this.packageId);
 
-        fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
-          if (err) {
-            console.error('写入文件时出错:', err);
-          } else {
-            console.log('JSON 数据已保存到文件:', jsonFileName);
-          }
-        });
-        return jsonData as SuiMoveNormalizedModules;
-      } else {
-        console.error('please set your package id.');
-      }
-    }
-  }
+  //       fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
+  //         if (err) {
+  //           console.error('写入文件时出错:', err);
+  //         } else {
+  //           console.log('JSON 数据已保存到文件:', jsonFileName);
+  //         }
+  //       });
+  //       return jsonData as SuiMoveNormalizedModules;
+  //     } else {
+  //       console.error('please set your package id.');
+  //     }
+  //   }
+  // }
 }
