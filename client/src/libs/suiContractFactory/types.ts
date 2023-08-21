@@ -39,3 +39,16 @@ export type SuiMoveMoudleValueType =  {
         return: SuiMoveNormalizedType[];
     }>;
 }
+
+
+export type SuiMoveMoudleFuncType = {
+    moudleName: string,
+    funcName: string,
+    visibility: "Private" | "Public" | "Friend";
+    isEntry: boolean;
+    typeParameters: {
+        abilities: string[];
+    }[];
+    parameters: SuiMoveNormalizedType[];
+    return: SuiMoveNormalizedType[];
+}

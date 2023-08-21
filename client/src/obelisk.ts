@@ -10,53 +10,13 @@ import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiContractFactory } from './libs/suiContractFactory';
-import { SuiMoveMoudleValueType } from './libs/suiContractFactory/types';
-import { ObeliskParams, DerivePathParams, SuiTxArg, SuiVecTxArg, ComponentContentType } from './types';
+import { SuiMoveMoudleValueType, SuiMoveMoudleFuncType } from './libs/suiContractFactory/types';
+import { ObeliskParams, DerivePathParams, SuiTxArg, SuiVecTxArg, ComponentContentType, SuiTxArgument } from './types';
 import * as fs from 'fs';
 import {ObjectArg, obj, pure} from "./framework/util";
 
 export function isUndefined (value?: unknown): value is undefined {
   return value === undefined;
-}
-type SuiTxArgument = {
-  kind: "Input";
-  index: number;
-  type?: "object" | "pure" | undefined;
-  value?: any;
-} | {
-  kind: "GasCoin";
-} | {
-  kind: "Result";
-  index: number;
-} | {
-  kind: "NestedResult";
-  index: number;
-  resultIndex: number;
-}
-export interface AbiParam {
-  name: string;
-  type: string;
-}
-
-export interface AbiMessage {
-  args: AbiParam[];
-  docs: string[];
-  // fromU8a: (data: Uint8Array) => DecodedMessage;
-  identifier: string;
-  index: number;
-  isConstructor?: boolean;
-  isDefault?: boolean;
-  isMutating?: boolean;
-  isPayable?: boolean;
-  method: string;
-  path: string[];
-  returnType?: string | null;
-  selector: string;
-  toU8a: (params: SuiTxArgument[]) => Uint8Array;
-}
-
-export interface MessageMeta {
-  readonly meta: AbiMessage;
 }
 
 type ContractOptions = {
@@ -64,13 +24,16 @@ type ContractOptions = {
     showEvents: boolean;
     showObjectChanges: boolean
 }
-
-export interface ContractQuery extends MessageMeta {
-  (moudleName: string, funcName: string, params: SuiTxArgument[]): DevInspectResults;
+export interface MessageMeta {
+  readonly meta: SuiMoveMoudleFuncType;
 }
 
-export interface ContractTx {
-  (options: ContractOptions, ...params: SuiTxArgument[]): SuiTransactionBlockResponse;
+export interface ContractQuery extends MessageMeta {
+  (tx: TransactionBlock, params: SuiTxArgument[]): Promise<DevInspectResults>;
+}
+
+export interface ContractTx extends MessageMeta {
+  (tx: TransactionBlock, params: SuiTxArgument[], isRaw: boolean): SuiTransactionBlockResponse | TransactionBlock;
 }
 
 export type MapMessageTx = Record<string, ContractTx>;
@@ -87,59 +50,40 @@ export type MapMoudleFuncQuery = Record<string, MapMessageQuery>;
 export type MapMoudleFuncQueryTest = Record<string, Record<string, string>>;
 
 
+export function withMeta<T extends { meta: SuiMoveMoudleFuncType }>(meta: SuiMoveMoudleFuncType,creator: Omit<T, 'meta'>): T {
+  (creator as T).meta = meta
 
-// export function withMeta <T> (creator: Omit<T, 'meta'>): T {
-//   return creator as T;
-// }
-
-
-// function createQuery (fn: (moudleName: string, funcName: string, params: SuiTxArgument[]) => Promise<DevInspectResults>): ContractQuery {
-//   return withMeta((moudleName: string, funcName: string, params: SuiTxArgument[]): Promise<DevInspectResults> =>
-//     fn(moudleName, funcName, params)
-//   );
-// }
-
-
-export function withMeta<T>(creator: Omit<T, 'meta'>): T {
   return creator as T;
 }
 
+
+// function createQuer1y(
+//   meta: SuiMoveMoudleFuncType, fn: (params: SuiTxArgument[]) => Promise<DevInspectResults>
+// ): ContractQuery {
+//   return withMeta(meta, (...params: SuiTxArgument[]): Promise<DevInspectResults> => {
+//     fn(params)
+//   });
+// }
+
 function createQuery(
-  fn: (moduleName: string, funcName: string, params: SuiTxArgument[]) => Promise<DevInspectResults>
+  meta: SuiMoveMoudleFuncType,
+  fn: (tx: TransactionBlock, params: SuiTxArgument[]) => Promise<DevInspectResults>
 ): ContractQuery {
-  return withMeta(async (moduleName: string, funcName: string, params: SuiTxArgument[]): Promise<DevInspectResults> => {
-    return await fn(moduleName, funcName, params);
+  return withMeta(meta, async (tx: TransactionBlock, params: SuiTxArgument[]): Promise<DevInspectResults> => {
+    const result = await fn(tx, params);
+    return result;
   });
 }
 
-
-
-// export const LoadData = (packageId: string) => {
-//   const jsonFileName = `metadata/${packageId}.json`;
-
-//   try {
-//     const data = await fs.promises.readFile(jsonFileName, 'utf-8');
-//     const jsonData = JSON.parse(data);
-
-//     return jsonData as SuiMoveNormalizedModules;
-//   } catch (error) {
-//     if (.packageId !== undefined) {
-//       const jsonData = await this.rpcProvider.getNormalizedMoveModulesByPackage(packageId);
-
-//       fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
-//         if (err) {
-//           console.error('写入文件时出错:', err);
-//         } else {
-//           console.log('JSON 数据已保存到文件:', jsonFileName);
-//         }
-//       });
-
-//       return jsonData as SuiMoveNormalizedModules;
-//     } else {
-//       console.error('please set your package id.');
-//     }
-//   }
-// }
+function createTx(
+  meta: SuiMoveMoudleFuncType,
+  fn: (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean) => Promise<SuiTransactionBlockResponse | TransactionBlock>
+): ContractTx {
+  return withMeta(meta, async (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean): Promise<SuiTransactionBlockResponse | TransactionBlock> => {
+    const result = await fn(tx, params, isRaw);
+    return result;
+  });
+}
 
 /**
  * @class Obelisk
@@ -209,6 +153,9 @@ export class Obelisk {
               //     this.#tx[moduleName][funcName] = createTx(this.metadata, (o, p) => this.#exec(this.metadata, o, p));
               //   }
               // }
+                  let meta = value as SuiMoveMoudleFuncType;
+                  meta.moudleName = moduleName;
+                  meta.funcName = funcName; 
                   if (isUndefined(this.#test[moduleName])) {
                     this.#test[moduleName] = {};
                   }
@@ -220,7 +167,15 @@ export class Obelisk {
                     this.#query[moduleName] = {};
                   }
                   if (isUndefined(this.#query[moduleName][funcName])) {
-                    this.#query[moduleName][funcName] = createQuery((moduleName, funcName, p) => this.#read(moduleName, funcName, p))
+
+                    this.#query[moduleName][funcName] = createQuery(meta, (tx, p) => this.#read(meta, tx, p))
+                  }
+
+                  if (isUndefined(this.#query[moduleName])) {
+                    this.#tx[moduleName] = {};
+                  }
+                  if (isUndefined(this.#query[moduleName][funcName])) {
+                    this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) => this.#exec(meta, tx, p, isRaw))
                   }
       });
     });
@@ -294,44 +249,22 @@ export class Obelisk {
     return this.#tx;
   }
 
-  // #exec = (messageOrId: AbiMessage | string | number, { gasLimit = BN_ZERO, storageDepositLimit = null, value = BN_ZERO }: ContractOptions, params: unknown[]): SubmittableExtrinsic<ApiType> => {
-  //   return this.api.tx.contracts.call(
-  //     this.address,
-  //     value,
-  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //     // @ts-ignore jiggle v1 weights, metadata points to latest
-  //     this._isWeightV1
-  //       ? convertWeight(gasLimit).v1Weight
-  //       : convertWeight(gasLimit).v2Weight,
-  //     storageDepositLimit,
-  //     this.abi.findMessage(messageOrId).toU8a(params)
-  //   ).withResultTransform((result: ISubmittableResult) =>
-  //     // ContractEmitted is the current generation, ContractExecution is the previous generation
-  //     new ContractSubmittableResult(result, applyOnEvent(result, ['ContractEmitted', 'ContractExecution'], (records: EventRecord[]) =>
-  //       records
-  //         .map(({ event: { data: [, data] } }): DecodedEvent | null => {
-  //           try {
-  //             return this.abi.decodeEvent(data as Bytes);
-  //           } catch (error) {
-  //             l.error(`Unable to decode contract event: ${(error as Error).message}`);
-
-  //             return null;
-  //           }
-  //         })
-  //         .filter((decoded): decoded is DecodedEvent => !!decoded)
-  //     ))
-  //   );
-  // };
-  
-
-
-  #read = async (moudleName: string, funcName: string, params: SuiTxArgument[]) => {
-    // #read = async (moudleName: string, funcName: string, params: SuiTxArgument[]) => {
-    const tx = new TransactionBlock();
-
+  #exec = async (meta: SuiMoveMoudleFuncType, tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean) => {
     tx.moveCall({
-      // target: `0x12b216923e5454e1f076ccb5fc638b59f8aba2175c34df9899de71124d66badd::status_system::get_pet_state`,
-      target: `${this.contractFactory.packageId}::${moudleName}::${funcName}`,
+      target: `${this.contractFactory.packageId}::${meta.moudleName}::${meta.funcName}`,
+      arguments: params,
+    })
+    
+    if (isRaw === true) {
+      return tx;
+    }
+    return await this.signAndSendTxn(tx);
+  };
+
+
+  #read = async (meta: SuiMoveMoudleFuncType, tx: TransactionBlock, params: SuiTxArgument[]) => {
+    tx.moveCall({
+      target: `${this.contractFactory.packageId}::${meta.moudleName}::${meta.funcName}`,
       arguments: params,
     })
     return await this.inspectTxn(tx);

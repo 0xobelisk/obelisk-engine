@@ -44,6 +44,21 @@ export type ComponentValueType = {
 
 }
 
+export type SuiTxArgument = {
+    kind: "Input";
+    index: number;
+    type?: "object" | "pure" | undefined;
+    value?: any;
+  } | {
+    kind: "GasCoin";
+  } | {
+    kind: "Result";
+    index: number;
+  } | {
+    kind: "NestedResult";
+    index: number;
+    resultIndex: number;
+  }
 export type ComponentContentType = {
     type: string;
     fields: ComponentValueType;
