@@ -1,6 +1,7 @@
 import { Obelisk } from "../src/obelisk";
 import * as process from 'process';
 import { NetworkType, ComponentContentType } from "../src/types";
+import { TransactionBlock } from "@mysten/sui.js";
 
 async function init() {
     const network = process.argv[2]
@@ -9,14 +10,23 @@ async function init() {
     console.log(packageId)
     // console.log(contract)
     // 0x80d7de9c4a56194087e0ba0bf59492aa8e6a5ee881606226930827085ddf2332
-    const privkey = 'c71a1529d774a80d521e02953ce656f1b1cef126451daacaebec763f8dd0b535'
+    // const privkey = 'c71a1529d774a80d521e02953ce656f1b1cef126451daacaebec763f8dd0b535'
 
     let obelisk = new Obelisk({
         networkType: network as NetworkType,
         packageId: packageId,
-        secretKey: privkey
+        // secretKey: privkey
     })
     await obelisk.initialize()
+    const tx = new TransactionBlock();
+    
+    // let data2 = obelisk.query.pet_centre.update_pet_name(
+    //     'hello', 'world', [tx.pure("0x6")]
+    // );
+
+    let data2 = obelisk.query.pet_centre.update_pet_name
+    console.log(data2)
+
     // let data = obelisk.contractFactory.getAllFunc();
     // // console.log(data)
 
@@ -41,11 +51,14 @@ async function init() {
     // let comp = await obelisk.getEntityComponents(worldId, entityId);
     // console.log(JSON.stringify(comp))
 
-    console.log('---------- getBirthTime')
-    const birthTimeId = "0x1b204289500b7e7a2c0d2f10838fd8471c587e8ecee24661652d1df18b061685"
-    const sender = "0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8"
-    let time = await obelisk.getBirthTime(birthTimeId);
-    console.log(JSON.stringify(time))
+    // console.log('---------- getBirthTime')
+    // const birthTimeId = "0x1b204289500b7e7a2c0d2f10838fd8471c587e8ecee24661652d1df18b061685"
+    // const sender = "0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8"
+    // let time = await obelisk.getBirthTime(birthTimeId);
+    // console.log(JSON.stringify(time))
+
+      // target: `::status_system::get_pet_state`,
+
 }
 
 init()

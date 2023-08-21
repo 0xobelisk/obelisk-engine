@@ -10,7 +10,7 @@ export type {
 } from '../libs/suiTxBuilder/types';
 
 export type NetworkType = SuiNetworkType;
-export type SuiKitParams = {
+export type ObeliskParams = {
   mnemonics?: string;
   secretKey?: string;
   fullnodeUrl?: string;

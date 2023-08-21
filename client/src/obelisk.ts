@@ -3,19 +3,113 @@ import {
   TransactionBlock,
   DevInspectResults,
   SuiTransactionBlockResponse, JsonRpcProvider, testnetConnection,
-  SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName
+  SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName,
 } from '@mysten/sui.js';
 import { SuiAddress } from "@mysten/sui.js/src/types";
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiContractFactory } from './libs/suiContractFactory';
-import { SuiKitParams, DerivePathParams, SuiTxArg, SuiVecTxArg, ComponentContentType } from './types';
+import { SuiMoveMoudleValueType } from './libs/suiContractFactory/types';
+import { ObeliskParams, DerivePathParams, SuiTxArg, SuiVecTxArg, ComponentContentType } from './types';
 import * as fs from 'fs';
 import {ObjectArg, obj, pure} from "./framework/util";
 
+export function isUndefined (value?: unknown): value is undefined {
+  return value === undefined;
+}
+type SuiTxArgument = {
+  kind: "Input";
+  index: number;
+  type?: "object" | "pure" | undefined;
+  value?: any;
+} | {
+  kind: "GasCoin";
+} | {
+  kind: "Result";
+  index: number;
+} | {
+  kind: "NestedResult";
+  index: number;
+  resultIndex: number;
+}
+export interface AbiParam {
+  name: string;
+  type: string;
+}
+
+export interface AbiMessage {
+  args: AbiParam[];
+  docs: string[];
+  // fromU8a: (data: Uint8Array) => DecodedMessage;
+  identifier: string;
+  index: number;
+  isConstructor?: boolean;
+  isDefault?: boolean;
+  isMutating?: boolean;
+  isPayable?: boolean;
+  method: string;
+  path: string[];
+  returnType?: string | null;
+  selector: string;
+  toU8a: (params: SuiTxArgument[]) => Uint8Array;
+}
+
+export interface MessageMeta {
+  readonly meta: AbiMessage;
+}
+
+type ContractOptions = {
+    showEffects: boolean;
+    showEvents: boolean;
+    showObjectChanges: boolean
+}
+
+export interface ContractQuery extends MessageMeta {
+  (moudleName: string, funcName: string, params: SuiTxArgument[]): DevInspectResults;
+}
+
+export interface ContractTx {
+  (options: ContractOptions, ...params: SuiTxArgument[]): SuiTransactionBlockResponse;
+}
+
+export type MapMessageTx = Record<string, ContractTx>;
+
+export type MapMessageQuery = Record<string, ContractQuery>;
+
+
+export type MapMoudleFuncTx = Record<string, MapMessageTx>;
+export type MapMoudleFuncTest = Record<string, Record<string, string>>;
+
+export type MapMoudleFuncQuery = Record<string, MapMessageQuery>;
+
+
+// export function withMeta <T> (creator: Omit<T, 'meta'>): T {
+//   return creator as T;
+// }
+
+
+// function createQuery (fn: (moudleName: string, funcName: string, params: SuiTxArgument[]) => Promise<DevInspectResults>): ContractQuery {
+//   return withMeta((moudleName: string, funcName: string, params: SuiTxArgument[]): Promise<DevInspectResults> =>
+//     fn(moudleName, funcName, params)
+//   );
+// }
+
+
+export function withMeta<T>(creator: Omit<T, 'meta'>): T {
+  return creator as T;
+}
+
+function createQuery(
+  fn: (moduleName: string, funcName: string, params: SuiTxArgument[]) => Promise<DevInspectResults>
+): ContractQuery {
+  return withMeta(async (moduleName: string, funcName: string, params: SuiTxArgument[]): Promise<DevInspectResults> => {
+    return await fn(moduleName, funcName, params);
+  });
+}
+
 /**
- * @class SuiKit
+ * @class Obelisk
  * @description This class is used to aggregate the tools that used to interact with SUI network.
  */
 export class Obelisk {
@@ -27,6 +121,10 @@ export class Obelisk {
   public metadata: SuiMoveNormalizedModules | undefined;
   public epsId: string;
   public componentsId: string;
+
+  readonly #query: MapMoudleFuncQuery = {};
+  readonly #tx: MapMoudleFuncTx = {};
+  readonly #test: MapMoudleFuncTest = {};
   /**
    * Support the following ways to init the SuiToolkit:
    * 1. mnemonics
@@ -48,7 +146,7 @@ export class Obelisk {
     faucetUrl,
     packageId,
     // needLoad,
-  }: SuiKitParams = {}) {
+  }: ObeliskParams = {}) {
     // Init the account manager
     this.accountManager = new SuiAccountManager({ mnemonics, secretKey });
     // Init the rpc provider
@@ -79,8 +177,92 @@ export class Obelisk {
       packageId: this.packageId, 
       metadata: this.metadata
     })
+    
+    console.log(this.metadata)
+    console.log("-==============")
+    Object.values(this.metadata as SuiMoveNormalizedModules).forEach(value => {
+      let data = value as SuiMoveMoudleValueType;
+      let moduleName = data.name;
+      Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
+          // Object.values(value.parameters).forEach(values => {
+              // console.log(values)
+              // console.log(`\t\targs: ${values}`)
+              // if (isUndefined(this.#tx[moduleName])) {
+              //   if (isUndefined(this.#tx[moduleName][funcName])) {
+              //     this.#tx[moduleName][funcName] = createTx(this.metadata, (o, p) => this.#exec(this.metadata, o, p));
+              //   }
+              // }
+              console.log(moduleName)
+              console.log(funcName)
+              // if (this.#query[moduleName] && this.#query[moduleName][funcName]) {
+
+              //   if (isUndefined(this.#query[moduleName]) || isUndefined(this.#query[moduleName][funcName])) {
+                  // this.#query[moduleName][funcName] = createQuery(async (p) => this.#read(moduleName, funcName, p));
+                  // this.#query[moduleName] = 
+                  //   {
+                  //     funcName: createQuery((moduleName, funcName, p) => this.#read(moduleName, funcName, p))
+                  //   }
+                  console.log("-------- here")
+                  console.log(moduleName, funcName);
+                  // this.#query[moduleName][funcName] = () => this.#read(moduleName, funcName, p);
+                  this.#test[moduleName][funcName] = "hello";
+              //   }
+              // }
+          // })
+      });
+    });
   }
 
+  public get query (): MapMoudleFuncQuery {
+    return this.#query;
+  }
+
+  public get tx (): MapMoudleFuncTx {
+    return this.#tx;
+  }
+
+  // #exec = (messageOrId: AbiMessage | string | number, { gasLimit = BN_ZERO, storageDepositLimit = null, value = BN_ZERO }: ContractOptions, params: unknown[]): SubmittableExtrinsic<ApiType> => {
+  //   return this.api.tx.contracts.call(
+  //     this.address,
+  //     value,
+  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //     // @ts-ignore jiggle v1 weights, metadata points to latest
+  //     this._isWeightV1
+  //       ? convertWeight(gasLimit).v1Weight
+  //       : convertWeight(gasLimit).v2Weight,
+  //     storageDepositLimit,
+  //     this.abi.findMessage(messageOrId).toU8a(params)
+  //   ).withResultTransform((result: ISubmittableResult) =>
+  //     // ContractEmitted is the current generation, ContractExecution is the previous generation
+  //     new ContractSubmittableResult(result, applyOnEvent(result, ['ContractEmitted', 'ContractExecution'], (records: EventRecord[]) =>
+  //       records
+  //         .map(({ event: { data: [, data] } }): DecodedEvent | null => {
+  //           try {
+  //             return this.abi.decodeEvent(data as Bytes);
+  //           } catch (error) {
+  //             l.error(`Unable to decode contract event: ${(error as Error).message}`);
+
+  //             return null;
+  //           }
+  //         })
+  //         .filter((decoded): decoded is DecodedEvent => !!decoded)
+  //     ))
+  //   );
+  // };
+  
+
+
+  #read = async (moudleName: string, funcName: string, params: SuiTxArgument[]) => {
+    // #read = async (moudleName: string, funcName: string, params: SuiTxArgument[]) => {
+    const tx = new TransactionBlock();
+
+    tx.moveCall({
+      // target: `0x12b216923e5454e1f076ccb5fc638b59f8aba2175c34df9899de71124d66badd::status_system::get_pet_state`,
+      target: `${this.contractFactory.packageId}::${moudleName}::${funcName}`,
+      arguments: params,
+    })
+    return await this.inspectTxn(tx);
+  };
   /**
    * if derivePathParams is not provided or mnemonics is empty, it will return the currentSigner.
    * else:
