@@ -17,12 +17,8 @@ export async function initialize(networkType: NetworkType, packageId: string) {
         fs.mkdir(folderPath, (mkdirError) => {
           if (mkdirError) {
             console.error('Create folder error:', mkdirError);
-          } else {
-            console.log('This folder already exist.');
           }
         });
-      } else {
-        console.log('This folder already exist.');
       }
     });
     const jsonFileName = `${folderPath}/${packageId}.json`;
@@ -42,8 +38,6 @@ export async function initialize(networkType: NetworkType, packageId: string) {
         fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
           if (err) {
             console.error('write data error:', err);
-          } else {
-            console.log('Success saved.', jsonFileName);
           }
         });
         return jsonData as SuiMoveNormalizedModules;
