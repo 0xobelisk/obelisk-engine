@@ -1,7 +1,7 @@
 import { Obelisk } from '../src/obelisk';
 import * as process from 'process';
 import { NetworkType, ComponentContentType, SuiTxArgument } from '../src/types';
-import { TransactionBlock } from '@mysten/sui.js';
+import { DevInspectResults, TransactionBlock } from '@mysten/sui.js';
 import { initialize } from '../src/metadata/index';
 import { pure } from '../src/framework/util'
 
@@ -50,10 +50,14 @@ async function init() {
     let params = [tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324") as SuiTxArgument, 
     tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1") as SuiTxArgument,
     tx.pure("0x6") as SuiTxArgument] as SuiTxArgument[]
-    let res1 = await obelisk.query.pet_system.get_pet_basic_info(tx, params);
-    console.log(JSON.stringify(res1.results![0].returnValues))
 
-    const input: DataItem[] = res1.results![0].returnValues!;
+    let res1 = await obelisk.query.pet_system.get_pet_basic_info(tx, params, true) as TransactionBlock;
+    let data1 = await obelisk.inspectTxn(res1);
+    console.log(data1.results![0].returnValues!)
+
+    let res2 = await obelisk.query.pet_system.get_pet_basic_info(tx, params) as DevInspectResults;
+    console.log(JSON.stringify(res2.results![0].returnValues))
+    const input: DataItem[] = res2.results![0].returnValues!;
 
     const formattedOutput: string = formatData(input);
     console.log(formattedOutput);
