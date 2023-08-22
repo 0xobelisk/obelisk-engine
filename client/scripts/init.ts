@@ -3,6 +3,7 @@ import * as process from 'process';
 import { NetworkType, ComponentContentType, SuiTxArgument } from "../src/types";
 import { TransactionBlock } from "@mysten/sui.js";
 import { initialize } from '../src/metadata/index';
+import { pure } from '../src/framework/util'
 
 type DataItem = [number[], string];
 
@@ -63,15 +64,13 @@ async function init() {
     let res1 = await obelisk.query.pet_system.get_pet_basic_info(tx, params);
     console.log(JSON.stringify(res1.results![0].returnValues))
 
-    const input: DataItem[] = [
-    [[7, 66, 97, 111, 76, 111, 110, 103], "0x1::string::String"],
-    [[0], "bool"],
-    [[157, 136, 137, 14, 138, 1, 0, 0], "u64"],
-    [[11, 129, 14, 11, 0, 0, 0, 0], "u64"],
-    ];
+    const input: DataItem[] = res1.results![0].returnValues!;
 
     const formattedOutput: string = formatData(input);
     console.log(formattedOutput);
+
+
+
     // console.log(obelisk.contractFactory.metadata)
 
   // console.log(obelisk.contractFactory.metadata)

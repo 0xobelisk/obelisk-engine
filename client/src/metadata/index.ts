@@ -11,7 +11,21 @@ import { NetworkType } from '../libs/suiRpcProvider/types';
 import * as fs from 'fs';
 
 export async function initialize(networkType: NetworkType, packageId: string) {
-    const jsonFileName = `metadata/${packageId}.json`;
+  const folderPath = "./metadata"
+    fs.access(folderPath, (error) => {
+      if (error) {
+        fs.mkdir(folderPath, (mkdirError) => {
+          if (mkdirError) {
+            console.error('Create folder error:', mkdirError);
+          } else {
+            console.log('This folder already exist.');
+          }
+        });
+      } else {
+        console.log('This folder already exist.');
+      }
+    });
+    const jsonFileName = `${folderPath}/${packageId}.json`;
 
     const rpcProvider = new SuiRpcProvider({
       networkType,
@@ -27,9 +41,9 @@ export async function initialize(networkType: NetworkType, packageId: string) {
 
         fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
           if (err) {
-            console.error('写入文件时出错:', err);
+            console.error('write data error:', err);
           } else {
-            console.log('JSON 数据已保存到文件:', jsonFileName);
+            console.log('Success saved.', jsonFileName);
           }
         });
         return jsonData as SuiMoveNormalizedModules;

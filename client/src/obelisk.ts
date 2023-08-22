@@ -406,7 +406,6 @@ export class Obelisk {
   ): Promise<DevInspectResults> {
     
     tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
-    console.log(this.getAddress(derivePathParams))
     return this.rpcProvider.provider.devInspectTransactionBlock({
       transactionBlock: tx,
       sender: this.getAddress(derivePathParams),
