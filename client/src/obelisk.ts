@@ -10,16 +10,17 @@ import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import { SuiMoveMoudleValueType, SuiMoveMoudleFuncType } from './libs/suiContractFactory/types';
-import { 
-  ObeliskParams, 
-  DerivePathParams, 
-  SuiTxArg, SuiVecTxArg, 
-  ComponentContentType, 
-  SuiTxArgument, ContractQuery, 
+import {
+  ObeliskParams,
+  DerivePathParams,
+  SuiTxArg, SuiVecTxArg,
+  ComponentContentType,
+  SuiTxArgument, ContractQuery,
   ContractTx, MapMoudleFuncQuery,
-  MapMoudleFuncTx 
+  MapMoudleFuncTx
 } from './types';
 import {ObjectArg, obj, pure} from "./framework/util";
+
 
 export function isUndefined (value?: unknown): value is undefined {
   return value === undefined;
@@ -64,7 +65,7 @@ export class Obelisk {
   public metadata: SuiMoveNormalizedModules;
   public epsId: string;
   public componentsId: string;
-  
+
   readonly #query: MapMoudleFuncQuery = {};
   readonly #tx: MapMoudleFuncTx = {};
   /**
@@ -108,7 +109,7 @@ export class Obelisk {
       Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
         let meta = value as SuiMoveMoudleFuncType;
         meta.moudleName = moduleName;
-        meta.funcName = funcName; 
+        meta.funcName = funcName;
 
         if (isUndefined(this.#query[moduleName])) {
           this.#query[moduleName] = {};
@@ -126,8 +127,8 @@ export class Obelisk {
       });
     })
 
-    this.contractFactory = new SuiContractFactory({ 
-      packageId, 
+    this.contractFactory = new SuiContractFactory({
+      packageId,
       metadata
     })
   }
@@ -135,8 +136,8 @@ export class Obelisk {
   // async initialize() {
   //   const metadata = await this.loadData();
   //   this.metadata = metadata as SuiMoveNormalizedModules;
-  //   this.contractFactory = new SuiContractFactory({ 
-  //     packageId: this.packageId, 
+  //   this.contractFactory = new SuiContractFactory({
+  //     packageId: this.packageId,
   //     metadata: this.metadata
   //   })
   //   return metadata
@@ -155,7 +156,7 @@ export class Obelisk {
       target: `${this.contractFactory.packageId}::${meta.moudleName}::${meta.funcName}`,
       arguments: params,
     })
-    
+
     if (isRaw === true) {
       return tx;
     }
@@ -404,7 +405,7 @@ export class Obelisk {
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
   ): Promise<DevInspectResults> {
-    
+
     tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
     return this.rpcProvider.provider.devInspectTransactionBlock({
       transactionBlock: tx,
@@ -422,9 +423,9 @@ export class Obelisk {
         // tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324"),
         // tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1"),
         // tx.pure("0x6"),
-        
-        obj(tx, "0x26804211486be597a89c46c16b929d7031fb7c701ecf89d4c750e49459b4bea2"), 
-        pure(tx, "0x35ba3bfb8590dbd060f41cd58c7b140d67efd2126648409cd231c74cff2828b8", `0x2::object::ID`), 
+
+        obj(tx, "0x26804211486be597a89c46c16b929d7031fb7c701ecf89d4c750e49459b4bea2"),
+        pure(tx, "0x35ba3bfb8590dbd060f41cd58c7b140d67efd2126648409cd231c74cff2828b8", `0x2::object::ID`),
         obj(tx, "0x6")
       ],
     })

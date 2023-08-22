@@ -1,61 +1,50 @@
 import { Obelisk } from '../src/obelisk';
 import * as process from 'process';
-import { NetworkType, ComponentContentType, SuiTxArgument } from "../src/types";
-import { TransactionBlock } from "@mysten/sui.js";
+import { NetworkType, ComponentContentType, SuiTxArgument } from '../src/types';
+import { TransactionBlock } from '@mysten/sui.js';
 import { initialize } from '../src/metadata/index';
 import { pure } from '../src/framework/util'
 
 type DataItem = [number[], string];
 
-type DataType = "string" | "bool" | "u64";
+type DataType = 'string' | 'bool' | 'u64';
 
 function formatData(data: DataItem[]): string {
-    const formattedData: string[] = [];
+  const formattedData: string[] = [];
 
-    data.forEach(([values, format]) => {
-        let formattedValue: string;
+  data.forEach(([values, format]) => {
+    let formattedValue: string;
 
-        if (format === "0x1::string::String") {
-        formattedValue = values.map((num) => String.fromCharCode(num)).join("");
-        } else if (format === "bool") {
-        formattedValue = values[0] !== 0 ? "true" : "false";
-        } else if (format === "u64") {
-        const u64Value = new DataView(new ArrayBuffer(8));
-        values.forEach((num, index) => u64Value.setUint8(index, num));
-        formattedValue = u64Value.getBigUint64(0).toString();
-        } else {
-        formattedValue = "Unknown Format";
-        }
+    if (format === '0x1::string::String') {
+      formattedValue = values.map((num) => String.fromCharCode(num)).join('');
+    } else if (format === 'bool') {
+      formattedValue = values[0] !== 0 ? 'true' : 'false';
+    } else if (format === 'u64') {
+      const u64Value = new DataView(new ArrayBuffer(8));
+      values.forEach((num, index) => u64Value.setUint8(index, num));
+      formattedValue = u64Value.getBigUint64(0).toString();
+    } else {
+      formattedValue = 'Unknown Format';
+    }
 
-        formattedData.push(formattedValue);
-    });
+    formattedData.push(formattedValue);
+  });
 
-    return formattedData.join("\n");
+  return formattedData.join('\n');
 }
 
 async function init() {
-    const network = process.argv[2]
-    const packageId = process.argv[3]
+  const network = process.argv[2];
+  const packageId = process.argv[3];
 
-    const metadata = await initialize(network as NetworkType, packageId)
+  const metadata = await initialize(network as NetworkType, packageId);
 
-    let obelisk = new Obelisk({
-        networkType: network as NetworkType,
-        packageId: packageId,
-        metadata: metadata
-        // secretKey: privkey
-    })
-
-    let data3 = obelisk.query;
-    console.log(data3)
-
-  // let data2 = obelisk.queryt.pet_centre.update_pet_name
-  // let data2 = obelisk.queryt
-  // console.log(data2)
-  //
-  //
-  // let data3 = obelisk.query;
-  // console.log(data3)
+  const obelisk = new Obelisk({
+    networkType: network as NetworkType,
+    packageId: packageId,
+    metadata: metadata,
+    // secretKey: privkey
+  });
 
     const tx = new TransactionBlock();
     let params = [tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324") as SuiTxArgument, 
