@@ -12,37 +12,37 @@ import * as fs from 'fs';
 
 export async function initialize(networkType: NetworkType, packageId: string) {
   const folderPath = "./metadata"
-    fs.access(folderPath, (error) => {
-      if (error) {
-        fs.mkdir(folderPath, (mkdirError) => {
-          if (mkdirError) {
-            console.error('Create folder error:', mkdirError);
-          }
-        });
-      }
-    });
-    const jsonFileName = `${folderPath}/${packageId}.json`;
+  fs.access(folderPath, (error) => {
+    if (error) {
+      fs.mkdir(folderPath, (mkdirError) => {
+        if (mkdirError) {
+          console.error('Create folder error:', mkdirError);
+        }
+      });
+    }
+  });
+  const jsonFileName = `${folderPath}/${packageId}.json`;
 
-    const rpcProvider = new SuiRpcProvider({
-      networkType,
-    });
-    try {
-      const data = await fs.promises.readFile(jsonFileName, 'utf-8');
-      const jsonData = JSON.parse(data);
+  const rpcProvider = new SuiRpcProvider({
+    networkType,
+  });
+  try {
+    const data = await fs.promises.readFile(jsonFileName, 'utf-8');
+    const jsonData = JSON.parse(data);
 
+    return jsonData as SuiMoveNormalizedModules;
+  } catch (error) {
+    if (packageId !== undefined) {
+      const jsonData = await rpcProvider.getNormalizedMoveModulesByPackage(packageId);
+
+      fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
+        if (err) {
+          console.error('write data error:', err);
+        }
+      });
       return jsonData as SuiMoveNormalizedModules;
-    } catch (error) {
-      if (packageId !== undefined) {
-        const jsonData = await rpcProvider.getNormalizedMoveModulesByPackage(packageId);
-
-        fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
-          if (err) {
-            console.error('write data error:', err);
-          }
-        });
-        return jsonData as SuiMoveNormalizedModules;
-      } else {
-        console.error('please set your package id.');
-      }
+    } else {
+      console.error('please set your package id.');
     }
   }
+}
