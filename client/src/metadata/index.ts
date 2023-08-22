@@ -1,11 +1,4 @@
-import {
-  RawSigner,
-  TransactionBlock,
-  DevInspectResults,
-  SuiTransactionBlockResponse, JsonRpcProvider, testnetConnection,
-  SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName,
-} from '@mysten/sui.js';
-import { SuiAddress } from "@mysten/sui.js/src/types";
+import { SuiMoveNormalizedModules } from '@mysten/sui.js';
 import { SuiRpcProvider } from '../libs/suiRpcProvider';
 import { NetworkType } from '../libs/suiRpcProvider/types';
 import * as fs from 'fs';
