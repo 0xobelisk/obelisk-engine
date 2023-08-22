@@ -34,10 +34,10 @@ export function withMeta<T extends { meta: SuiMoveMoudleFuncType }>(meta: SuiMov
 
 function createQuery(
   meta: SuiMoveMoudleFuncType,
-  fn: (tx: TransactionBlock, params: SuiTxArgument[]) => Promise<DevInspectResults>
+  fn: (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean) => Promise<DevInspectResults | TransactionBlock>
 ): ContractQuery {
-  return withMeta(meta, async (tx: TransactionBlock, params: SuiTxArgument[]): Promise<DevInspectResults> => {
-    const result = await fn(tx, params);
+  return withMeta(meta, async (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean): Promise<DevInspectResults | TransactionBlock> => {
+    const result = await fn(tx, params, isRaw);
     return result;
   });
 }
@@ -115,7 +115,7 @@ export class Obelisk {
           this.#query[moduleName] = {};
         }
         if (isUndefined(this.#query[moduleName][funcName])) {
-          this.#query[moduleName][funcName] = createQuery(meta, (tx, p) => this.#read(meta, tx, p))
+          this.#query[moduleName][funcName] = createQuery(meta, (tx, p, isRaw) => this.#read(meta, tx, p, isRaw))
         }
 
         if (isUndefined(this.#tx[moduleName])) {
@@ -164,11 +164,15 @@ export class Obelisk {
   };
 
 
-  #read = async (meta: SuiMoveMoudleFuncType, tx: TransactionBlock, params: SuiTxArgument[]) => {
+  #read = async (meta: SuiMoveMoudleFuncType, tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean) => {
     tx.moveCall({
       target: `${this.contractFactory.packageId}::${meta.moudleName}::${meta.funcName}`,
       arguments: params,
     })
+    
+    if (isRaw === true) {
+      return tx;
+    }
     return await this.inspectTxn(tx);
   };
   /**
