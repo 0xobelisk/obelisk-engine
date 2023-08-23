@@ -1,41 +1,17 @@
 import { SuiMoveNormalizedModules } from '@mysten/sui.js';
 import { SuiRpcProvider } from '../libs/suiRpcProvider';
 import { NetworkType } from '../libs/suiRpcProvider/types';
-import * as fs from 'fs';
 
-export async function initialize(networkType: NetworkType, packageId: string) {
-  const folderPath = "./metadata"
-  fs.access(folderPath, (error) => {
-    if (error) {
-      fs.mkdir(folderPath, (mkdirError) => {
-        if (mkdirError) {
-          console.error('Create folder error:', mkdirError);
-        }
-      });
-    }
-  });
-  const jsonFileName = `${folderPath}/${packageId}.json`;
-
+export async function getMetadata(networkType: NetworkType, packageId: string) {
   const rpcProvider = new SuiRpcProvider({
     networkType,
   });
-  try {
-    const data = await fs.promises.readFile(jsonFileName, 'utf-8');
-    const jsonData = JSON.parse(data);
+
+  if (packageId !== undefined) {
+    const jsonData = await rpcProvider.getNormalizedMoveModulesByPackage(packageId);
 
     return jsonData as SuiMoveNormalizedModules;
-  } catch (error) {
-    if (packageId !== undefined) {
-      const jsonData = await rpcProvider.getNormalizedMoveModulesByPackage(packageId);
-
-      fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
-        if (err) {
-          console.error('write data error:', err);
-        }
-      });
-      return jsonData as SuiMoveNormalizedModules;
-    } else {
-      console.error('please set your package id.');
-    }
+  } else {
+    console.error('please set your package id.');
   }
 }

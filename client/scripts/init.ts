@@ -2,7 +2,7 @@ import { Obelisk } from '../src/obelisk';
 import * as process from 'process';
 import { NetworkType, ComponentContentType, SuiTxArgument } from '../src/types';
 import { DevInspectResults, TransactionBlock } from '@mysten/sui.js';
-import { initialize } from '../src/metadata/index';
+import { getMetadata } from '../src/metadata/index';
 import { pure } from '../src/framework/util'
 
 type DataItem = [number[], string];
@@ -37,7 +37,7 @@ async function init() {
   const network = process.argv[2];
   const packageId = process.argv[3];
 
-  const metadata = await initialize(network as NetworkType, packageId);
+  const metadata = await getMetadata(network as NetworkType, packageId);
 
   const obelisk = new Obelisk({
     networkType: network as NetworkType,

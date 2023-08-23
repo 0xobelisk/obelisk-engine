@@ -8,5 +8,5 @@ export { SuiAccountManager } from './libs/suiAccountManager';
 export { SuiTxBlock } from './libs/suiTxBuilder';
 export { SuiRpcProvider } from './libs/suiRpcProvider';
 export { SuiContractFactory } from './libs/suiContractFactory';
-export { initialize } from './metadata';
+export { getMetadata } from './metadata';
 export type * from './types';

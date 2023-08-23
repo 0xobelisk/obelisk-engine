@@ -59,7 +59,6 @@
     "@scure/bip39": "^1.2.1",
     "assert": "^2.0.0",
     "colorts": "^0.1.63",
-    "fs": "^0.0.1-security",
     "husky": "^8.0.3",
     "process": "^0.11.10",
     "superstruct": "^1.0.3",
