@@ -77,4 +77,8 @@ module eps::world {
         let entity_key = object::id(obj);
        bag::remove<ID,Entity>(&mut world.entities,entity_key)
     }
+
+    public fun entities_length(world: &mut World) : u64 {
+        bag::length(&mut world.entities)
+    }
 }
