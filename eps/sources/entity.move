@@ -37,4 +37,7 @@ module eps::entity {
         bag::borrow_mut<vector<u8>,T>(&mut entity.components,component_id)
     }
 
+    public fun components_length(entity: &mut Entity) : u64 {
+        bag::length(get_mut_components(entity))
+    }
 }

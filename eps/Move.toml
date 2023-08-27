@@ -5,7 +5,7 @@ published-at = "0xcd81c2e6f3589375c1a01f64034dcb3c1819a40c773d7f2ddf667a8d2683c1
 
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet-v1.6.1" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet-v1.8.0" }
 
 [addresses]
 eps =  "0xcd81c2e6f3589375c1a01f64034dcb3c1819a40c773d7f2ddf667a8d2683c104"
