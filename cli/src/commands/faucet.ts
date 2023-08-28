@@ -1,14 +1,10 @@
 import type { CommandModule } from "yargs";
+import { requestSuiFromFaucetV0, getFaucetHost } from '@mysten/sui.js/faucet';
 
 type Options = {
-  dripDev?: boolean;
-  faucetUrl: string;
-  address: string;
+  network: any;
+  recipient: string;
 };
-
-function createFaucetService(url: string) {
-  console.log(url)
-}
 
 const commandModule: CommandModule<Options, Options> = {
   command: "faucet",
@@ -17,17 +13,13 @@ const commandModule: CommandModule<Options, Options> = {
 
   builder(yargs) {
     return yargs.options({
-      dripDev: {
-        type: "boolean",
-        desc: "Request a drip from the dev endpoint (requires faucet to have dev mode enabled)",
-        default: true,
-      },
-      faucetUrl: {
+      network: {
         type: "string",
         desc: "URL of the Obelisk faucet",
-        default: "https://faucet.testnet-obelisk-services.com",
+        choices: ['mainnet', 'testnet', 'devnet', 'localnet'],
+        default: 'localnet'
       },
-      address: {
+      recipient: {
         type: "string",
         desc: "Sui address to fund",
         required: true,
@@ -35,8 +27,11 @@ const commandModule: CommandModule<Options, Options> = {
     });
   },
 
-  async handler({ dripDev, faucetUrl, address }) {
-    createFaucetService(faucetUrl);
+  async handler({ network, recipient }) {
+    await requestSuiFromFaucetV0({
+      host: getFaucetHost(network),
+      recipient: recipient,
+    });
     process.exit(0);
   },
 };
