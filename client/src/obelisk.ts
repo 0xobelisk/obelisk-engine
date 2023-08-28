@@ -448,6 +448,19 @@ export class Obelisk {
   async getEntity(worldId: string, entityId: string) {
     const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.entities.fields.id.id;
 
+    console.log(parentId)
+    const name = {
+      type: "0x2::object::ID",
+      value: entityId
+    } as DynamicFieldName
+    return await this.rpcProvider.getDynamicFieldObject(parentId, name);
+  }
+
+
+  async getTable(worldId: string, entityId: string) {
+    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.storages.fields.id.id;
+
+    console.log(parentId)
     const name = {
       type: "0x2::object::ID",
       value: entityId

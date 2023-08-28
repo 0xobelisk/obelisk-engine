@@ -46,21 +46,23 @@ async function init() {
     // secretKey: privkey
   });
 
-    const tx = new TransactionBlock();
-    let params = [tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324") as SuiTxArgument, 
-    tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1") as SuiTxArgument,
-    tx.pure("0x6") as SuiTxArgument] as SuiTxArgument[]
+  let data = await obelisk.getEntity("0xae87cf1803bb186b871b52f43aaed4f00d60836bfc8feb3731e75c888cf53242", "0x52e54063b0a17017bea84032e736313e2074ab7461cda51d64b51019701d7adc")
+  console.log(JSON.stringify(data))
+    // const tx = new TransactionBlock();
+    // let params = [tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324") as SuiTxArgument, 
+    // tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1") as SuiTxArgument,
+    // tx.pure("0x6") as SuiTxArgument] as SuiTxArgument[]
 
-    let res1 = await obelisk.query.pet_system.get_pet_basic_info(tx, params, true) as TransactionBlock;
-    let data1 = await obelisk.inspectTxn(res1);
-    console.log(data1.results![0].returnValues!)
+    // let res1 = await obelisk.query.pet_system.get_pet_basic_info(tx, params, true) as TransactionBlock;
+    // let data1 = await obelisk.inspectTxn(res1);
+    // console.log(data1.results![0].returnValues!)
 
-    let res2 = await obelisk.query.pet_system.get_pet_basic_info(tx, params) as DevInspectResults;
-    console.log(JSON.stringify(res2.results![0].returnValues))
-    const input: DataItem[] = res2.results![0].returnValues!;
+    // let res2 = await obelisk.query.pet_system.get_pet_basic_info(tx, params) as DevInspectResults;
+    // console.log(JSON.stringify(res2.results![0].returnValues))
+    // const input: DataItem[] = res2.results![0].returnValues!;
 
-    const formattedOutput: string = formatData(input);
-    console.log(formattedOutput);
+    // const formattedOutput: string = formatData(input);
+    // console.log(formattedOutput);
 
 
 
