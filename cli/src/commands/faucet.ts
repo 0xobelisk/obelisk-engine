@@ -1,5 +1,6 @@
 import type { CommandModule } from "yargs";
 import { requestSuiFromFaucetV0, getFaucetHost } from '@mysten/sui.js/faucet';
+import { SuiClient, getFullnodeUrl, GetBalanceParams } from '@mysten/sui.js/client';
 
 type Options = {
   network: any;
@@ -16,7 +17,7 @@ const commandModule: CommandModule<Options, Options> = {
       network: {
         type: "string",
         desc: "URL of the Obelisk faucet",
-        choices: ['mainnet', 'testnet', 'devnet', 'localnet'],
+        choices: ['testnet', 'devnet', 'localnet'],
         default: 'localnet'
       },
       recipient: {
@@ -32,6 +33,11 @@ const commandModule: CommandModule<Options, Options> = {
       host: getFaucetHost(network),
       recipient: recipient,
     });
+    const client = new SuiClient({ url: getFullnodeUrl(network) });
+    let params = {
+      owner: recipient
+    } as GetBalanceParams;
+    console.log(await client.getBalance(params))
     process.exit(0);
   },
 };
