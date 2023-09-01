@@ -30,7 +30,7 @@
     "obelisk": "./dist/obelisk.js"
   },
   "scripts": {
-    "build": "pnpm run build:js && pnpm run build:test-tables",
+    "build": "pnpm run build:js",
     "build:js": "tsup && chmod +x ./dist/obelisk.js",
     "build:test-tables": "tsx ./scripts/compgen-test.ts",
     "clean": "pnpm run clean:js",
