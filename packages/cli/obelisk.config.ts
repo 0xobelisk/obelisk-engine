@@ -23,7 +23,10 @@ export const obeliskConfig = {
     },
     // Key - Single value
     suifren: {
-      data: "bool"
+      value: "bool"
+    },
+    admin: {
+      user: "bool"
     },
   },  
 } as ObeliskConfig;
