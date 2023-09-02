@@ -1,5 +1,7 @@
 import { formatAndWriteMove } from './formatAndWrite';
 import { ComponentMapType, ObeliskConfig } from '../types';
+import { rmdirSync, existsSync } from "fs";
+import * as fs from 'fs';
 
 export function capitalizeFirstLetter(input: string): string {
   return input.charAt(0).toUpperCase() + input.slice(1);
@@ -314,6 +316,23 @@ export function generateSystemMove(config: ObeliskConfig, srcPrefix: string) {
   })
 }
 
+function deleteFolderRecursive(path: string) {
+  if (fs.existsSync(path)) {
+    fs.readdirSync(path).forEach((file) => {
+      const curPath = `${path}/${file}`;
+      if (fs.lstatSync(curPath).isDirectory()) {
+        // 递归删除子文件夹
+        deleteFolderRecursive(curPath);
+      } else {
+        // 删除文件
+        fs.unlinkSync(curPath);
+      }
+    });
+    // 删除空文件夹
+    fs.rmdirSync(path);
+  }
+}
+
 export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   let path = "";
   if (srcPrefix === undefined) {
@@ -322,6 +341,9 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
     path = srcPrefix;
   }
 
+  if (existsSync(`${path}/contracts/${config.project_name}`)) {
+    deleteFolderRecursive(`${path}/contracts/${config.project_name}`)
+  }
   generateComponentMove(config, path);
   generateEpsMove(config, path);
   generateMoveToml(config, path);
