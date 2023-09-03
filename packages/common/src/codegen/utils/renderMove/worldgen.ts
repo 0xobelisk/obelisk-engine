@@ -6,7 +6,7 @@ import { generateToml } from './generateToml';
 import { generateEntityKey } from './generateEntityKey';
 import { generateInit } from './generateInit';
 import { generateEps } from './generateEps';
-import { generateComponent } from './generateComponent';
+import { generateComponent, generateSingletonComponent } from './generateComponent';
 
 export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   let path = "";
@@ -26,6 +26,7 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
 
   // generate codegen
   generateComponent(config, path);
+  generateSingletonComponent(config, path);
   generateEps(config, path);
   generateInit(config, path);
 }

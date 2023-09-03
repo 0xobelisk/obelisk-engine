@@ -1,4 +1,4 @@
-import { ComponentMapType } from '../../types';
+import { ComponentMapType, isSingletonType, SingletonType } from '../../types';
 import fs from 'fs';
 
 export function deleteFolderRecursive(path: string) {
@@ -28,6 +28,10 @@ export function getUseComponent(projectName: string, values: Record<string, Comp
 
 export function getRegisterComponent(values: Record<string, ComponentMapType>): string[] {
   return Object.entries(values).map(([key, _]) => `\t\t${key}_component::register(&mut world, ctx);`)
+}
+
+export function getRegisterSingletonComponent(values: Record<string, ComponentMapType>): string[] {
+  return Object.entries(values).map(([key, _]) => `\t\t${key}_component::register(&mut world);`)
 }
 
 export function getFriendSystem(projectName: string, values: string[]): string {
@@ -66,16 +70,18 @@ export function getStructAttrsQuery(values: ComponentMapType, prefixArgs: string
     : Object.entries(values).map(([key, _]) => `${prefixArgs}data.${key}`)
 }
 
-export function renderStruct(componentName: string, values: ComponentMapType): string {
+export function renderStruct(componentName: string, values: ComponentMapType | SingletonType): string {
+  const map = isSingletonType(values) ? values.type : values;
   return `\tstruct ${capitalizeFirstLetter(componentName)}Data has drop, store {
-    ${getStructAttrsWithType(values).join(',\n')}
+    ${getStructAttrsWithType(map).join(',\n')}
 \t}`
 }
 
 export function renderNewStructFunc(componentName: string, values: ComponentMapType): string {
-  return `\tpublic fun new(${getStructAttrsWithType(values).join(', ')}): ${capitalizeFirstLetter(componentName)}Data {
+  const map = isSingletonType(values) ? values.type : values;
+  return `\tpublic fun new(${getStructAttrsWithType(map).join(', ')}): ${capitalizeFirstLetter(componentName)}Data {
 \t\t${capitalizeFirstLetter(componentName)}Data {
-${getStructAttrs(values, "\t\t\t").join(", \n")}
+${getStructAttrs(map, "\t\t\t").join(", \n")}
 \t\t}
 \t}`
 }
@@ -86,6 +92,21 @@ export function renderRegisterFunc(componentName: string, values: ComponentMapTy
 \t\t\tworld,
 \t\t\tCOMPONENT_NAME,
 \t\t\ttable::new<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(ctx)
+\t\t);
+\t}
+  `
+}
+
+export function renderRegisterFuncWithInit(componentName: string, values: ComponentMapType): string {
+  let init = values.init
+  if (values.type === 'address') {
+    init = `@` + values.init
+  }
+  return `\tpublic fun register(world: &mut World) {
+  \t\tworld::add_component<${capitalizeFirstLetter(componentName)}Data>(
+\t\t\tworld,
+\t\t\tCOMPONENT_NAME,
+\t\t\tnew(${init})
 \t\t);
 \t}
   `
@@ -108,15 +129,16 @@ export function renderRemoveFunc(componentName: string): string {
 }
 
 export function renderUpdateFunc(componentName: string, values: ComponentMapType): string {
-  const total =  `\tpublic(friend) fun update(world : &mut World, key: vector<u8>, ${getStructAttrsWithType(values).join(", ")}) {
+  const map = isSingletonType(values) ? values.type : values;
+  const total =  `\tpublic(friend) fun update(world : &mut World, key: vector<u8>, ${getStructAttrsWithType(map).join(", ")}) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\tlet data =  table::borrow_mut<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key);
-${getStructAttrsUpdate(values, "\t\t").join(";\n")}
+${getStructAttrsUpdate(map, "\t\t").join(";\n")}
 \t} \n`
 
-  const all =  typeof values === 'string'
+  const all =  typeof map === 'string'
     ? ''
-    : Object.entries(values).map(([key, type]) =>
+    : Object.entries(map).map(([key, type]) =>
     `\tpublic(friend) fun update_${key}(world : &mut World, key: vector<u8>, ${key}: ${type}) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::borrow_mut<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key).${key} = ${key};
@@ -126,24 +148,37 @@ ${getStructAttrsUpdate(values, "\t\t").join(";\n")}
   return total + all
 }
 
+export function renderSingletonUpdateFunc(componentName: string, values: ComponentMapType): string {
+  return `\tpublic(friend) fun update(world : &mut World, ${getStructAttrsWithType(values.type).join(", ")}) {
+world::get_mut_component<${capitalizeFirstLetter(componentName)}Data>(world, COMPONENT_NAME).value = value; 
+} \n`
+}
+
 export function renderQueryFunc(componentName: string, values: ComponentMapType): string {
-  const total =  `\tpublic fun get(world : &World, key: vector<u8>) : ${getStructTypes(values) } {
+  const map = isSingletonType(values) ? values.type : values;
+  const total =  `\tpublic fun get(world : &World, key: vector<u8>) : ${getStructTypes(map) } {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\tlet data = table::borrow<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key);
 \t\t(
-${getStructAttrsQuery(values, "\t\t\t").join(",\n")}
+${getStructAttrsQuery(map, "\t\t\t").join(",\n")}
 \t\t)
 \t} \n`
 
-  const all =  typeof values === 'string'
+  const all =  typeof map === 'string'
     ? ''
-    : Object.entries(values).map(([key, type]) => `\tpublic fun get_${key}(world : &World, key: vector<u8>) : ${type} {
+    : Object.entries(map).map(([key, type]) => `\tpublic fun get_${key}(world : &World, key: vector<u8>) : ${type} {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::borrow<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key).${key}
 \t}
 `).join("\n");
 
   return total + all
+}
+
+export function renderSingletonQueryFunc(componentName: string, values: ComponentMapType): string {
+  return  `\tpublic fun get(world : &World) : ${getStructTypes(values.type)} {
+        world::get_component<${capitalizeFirstLetter(componentName)}Data>(world, COMPONENT_NAME).value
+    } \n`
 }
 
 export function renderContainFunc(componentName: string): string {
