@@ -124,6 +124,30 @@ function renderContainFunc(componentName: string): string {
 \t}`
 }
 
+export function generateSingletonComponentMove(config: ObeliskConfig, srcPrefix: string) {
+  Object.entries(config.singletonComponents).forEach(([componentName, value]) => {
+    let code = `module ${config.project_name}::${componentName}_component {
+\tuse ${config.project_name}::world::{Self , World};
+  
+\t// Systems
+${config.systems.map((data) => `\tfriend ${config.project_name}::${data};`).join("\n")}
+
+\tconst COMPONENT_NAME: vector<u8> = b"${capitalizeFirstLetter(componentName)} Component";
+
+${renderStructMap(componentName, value)}
+${renderAddFunc(componentName, value)}
+${renderRemoveFunc(componentName)}
+${renderUpdateTotalFunc(componentName, value)}
+${renderAllUpdateFunc(componentName, value)}
+${renderGetTotalFunc(componentName, value)}
+${renderAllGetFunc(componentName, value)}
+${renderContainFunc(componentName)}
+}
+`
+    formatAndWriteMove(code, `${srcPrefix}/contracts/${config.project_name}/sources/codegen/components/${componentName}.move`, "formatAndWriteMove");
+  })
+}
+
 export function generateComponentMove(config: ObeliskConfig, srcPrefix: string) {
   Object.entries(config.components).forEach(([componentName, value]) => {
     let code = `module ${config.project_name}::${componentName}_component {
@@ -236,6 +260,18 @@ export function generateSystemMove(config: ObeliskConfig, srcPrefix: string) {
   })
 }
 
+export function generateEntityKey(config: ObeliskConfig, srcPrefix: string) {
+    let code = `module ${config.project_name}::entity_key {
+    use sui::object;
+
+    public fun object_to_entity_key<T: key + store>(object: &T): vector<u8> {
+        object::id_bytes(object)
+    }
+}
+`
+    formatAndWriteMove(code, `${srcPrefix}/contracts/${config.project_name}/sources/entity_key.move`, "formatAndWriteMove");
+}
+
 export function generateInitMove(config: ObeliskConfig, srcPrefix: string) {
     let code = `module ${config.project_name}::init {
     use sui::transfer;
@@ -292,6 +328,7 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   } else {
     generateSystemMove(config, path);
     generateMoveToml(config, path);
+    generateEntityKey(config, path);
   }
 
   // generate codegen
