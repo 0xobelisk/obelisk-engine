@@ -1,6 +1,6 @@
 {
-  "name": "@obelisk/cli",
-  "version": "0.0.4",
+  "name": "@0xobelisk/cli",
+  "version": "0.0.1",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "sui",
@@ -41,7 +41,7 @@
     "test": "tsc --noEmit && forge test"
   },
   "dependencies": {
-    "@obelisk/common": "link:../common",
+    "@0xobelisk/common": "0.0.1",
     "@mysten/sui.js": "^0.41.0",
     "chalk": "^5.0.1",
     "chokidar": "^3.5.3",

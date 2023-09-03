@@ -1,4 +1,4 @@
-import { formatAndWriteMove } from "@obelisk/common/codegen";
+import { formatAndWriteMove } from "@0xobelisk/common/codegen";
 
 type ComponentMapType = Record<string, string>
 type ComponentValueType = string
@@ -65,9 +65,9 @@ async function init() {
       },
       // Key - Single value
       suifren: "bool",
-    },  
+    },
   } as ObeliskConfig;
-  
+
   let output = `module eps::entity {
     use sui::bag::Bag;
     use sui::bag;
