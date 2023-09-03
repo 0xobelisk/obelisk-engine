@@ -1,5 +1,5 @@
 export * from "./format";
 export * from "./formatAndWrite";
 export * from "./posixPath";
-export * from "./renderMove";
+export * from "./renderMove/worldgen";
 export * from "./config";
