@@ -7,32 +7,50 @@ export function capitalizeFirstLetter(input: string): string {
   return input.charAt(0).toUpperCase() + input.slice(1);
 }
 
-export function renderMapEnterKeyWithType(values: ComponentMapType): string[] {
+export function renderMapEnterKeyWithType(values: string | ComponentMapType): string[] {
+  if (typeof values === 'string') {
+    return [`\t\tvalue: ${values}`]
+  }
   const combinedStrings = Object.entries(values).map(([key, type]) => `\t\t${key}: ${type}`);
   return combinedStrings
 }
 
 export function renderMapKey(values: ComponentMapType, prefixArgs: string): string[] {
+  if (typeof values === 'string') {
+    return [`${prefixArgs}value`]
+  }
   const combinedStrings = Object.entries(values).map(([key, _]) => `${prefixArgs}${key}`);
   return combinedStrings
 }
 
-export function renderMapType(values: ComponentMapType): string[] {
+export function renderMapType(values: ComponentMapType): string {
+  if (typeof values === 'string') {
+    return `${values}`
+  }
   const combinedStrings = Object.entries(values).map(([_, type]) => `${type}`);
-  return combinedStrings
+  return `(${combinedStrings.join(', ')})`
 }
 
 export function renderMapKeyWithType(values: ComponentMapType): string[] {
+  if (typeof values === 'string') {
+    return [`value: ${values}`]
+  }
   const combinedStrings = Object.entries(values).map(([key, type]) => `${key}: ${type}`);
   return combinedStrings
 }
 
 export function renderDataMapKey(values: ComponentMapType, prefixArgs: string): string[] {
+  if (typeof values === 'string') {
+    return [`${prefixArgs}data.value = value`]
+  }
   const combinedStrings = Object.entries(values).map(([key, _]) => `${prefixArgs}data.${key} = ${key}`);
   return combinedStrings
 }
 
 export function renderGetDataMapKey(values: ComponentMapType, prefixArgs: string): string[] {
+  if (typeof values === 'string') {
+    return [`${prefixArgs}data.value`]
+  }
   const combinedStrings = Object.entries(values).map(([key, _]) => `${prefixArgs}data.${key}`);
   return combinedStrings
 }
@@ -85,6 +103,9 @@ ${renderDataMapKey(values, "\t\t").join(";\n")}
 }
 
 function renderAllUpdateFunc(componentName: string, values: ComponentMapType): string {
+  if (typeof values === 'string') {
+    return ''
+  }
   const combinedStrings = Object.entries(values).map(([key, type]) => `\tpublic(friend) fun update_${key}(world : &mut World, key: vector<u8>, ${key}: ${type}) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::borrow_mut<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key).${key} = ${key};
@@ -96,7 +117,7 @@ function renderAllUpdateFunc(componentName: string, values: ComponentMapType): s
 }
 
 function renderGetTotalFunc(componentName: string, values: ComponentMapType): string {
-  return `\tpublic fun get(world : &World, key: vector<u8>) : (${renderMapType(values).join(", ")}) {
+  return `\tpublic fun get(world : &World, key: vector<u8>) : ${renderMapType(values) } {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\tlet data = table::borrow<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key);
 \t\t(
@@ -107,6 +128,9 @@ ${renderGetDataMapKey(values, "\t\t\t").join(",\n")}
 }
 
 function renderAllGetFunc(componentName: string, values: ComponentMapType): string {
+  if (typeof values === 'string') {
+    return ''
+  }
   const combinedStrings = Object.entries(values).map(([key, type]) => `\tpublic fun get_${key}(world : &World, key: vector<u8>) : ${type} {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::borrow<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key).${key}

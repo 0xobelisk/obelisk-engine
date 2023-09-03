@@ -1,4 +1,4 @@
-export type ComponentMapType = Record<string, string>
+export type ComponentMapType = string | Record<string, string | object>
 
 export type ObeliskConfig = {
     project_name: string,
