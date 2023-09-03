@@ -1,4 +1,5 @@
-import { ComponentMapType, isSingletonType, SingletonType } from '../../types';
+// import { ComponentMapType, isSingletonType, SingletonType } from '../../types';
+import { ComponentMapType, SingletonType, isSingletonType } from '../../types';
 import fs from 'fs';
 
 export function deleteFolderRecursive(path: string) {
@@ -55,7 +56,7 @@ export function getRegisterSingletonComponent(values: Record<string, ComponentMa
  * @return [ friend projectName::name_system, friend projectName::info_system ]
  */
 export function getFriendSystem(projectName: string, values: string[]): string {
-  return values.map((key) => `friend ${projectName}::${key};`).join("\n")
+  return values.map((key) => `\tfriend ${projectName}::${key};`).join("\n")
 }
 
 /**
@@ -86,10 +87,10 @@ export function getStructTypes(values: ComponentMapType): string {
  * @param values
  * @return Attributes and types of the struct. [ name: string, age: u64 ]
  */
-export function getStructAttrsWithType(values: ComponentMapType): string[] {
+export function getStructAttrsWithType(values: ComponentMapType, prefix: string): string[] {
   return typeof values === 'string'
-    ? [`\t\tvalue: ${values}`]
-    : Object.entries(values).map(([key, type]) => `\t\t${key}: ${type}`)
+    ? [`${prefix}value: ${values}`]
+    : Object.entries(values).map(([key, type]) => `${prefix}${key}: ${type}`)
 }
 
 /**
@@ -115,22 +116,32 @@ export function getStructAttrsQuery(values: ComponentMapType, prefixArgs: string
 }
 
 export function renderStruct(componentName: string, values: ComponentMapType | SingletonType): string {
-  const map = isSingletonType(values) ? values.type : values;
+  let map = values
+  if (isSingletonType(values)) {
+    let singleValue = values as SingletonType;
+    map = singleValue.type
+  }
+
   return `\tstruct ${capitalizeFirstLetter(componentName)}Data has drop, store {
-    ${getStructAttrsWithType(map).join(',\n')}
-\t}`
+${getStructAttrsWithType(map, "\t\t").join(',\n')}
+\t}\n`
 }
 
-export function renderNewStructFunc(componentName: string, values: ComponentMapType): string {
-  const map = isSingletonType(values) ? values.type : values;
-  return `\tpublic fun new(${getStructAttrsWithType(map).join(', ')}): ${capitalizeFirstLetter(componentName)}Data {
+export function renderNewStructFunc(componentName: string, values: ComponentMapType | SingletonType): string {
+  let map = values
+  if (isSingletonType(values)) {
+    let singleValue = values as SingletonType;
+    map = singleValue.type
+  }
+
+  return `\tpublic fun new(${getStructAttrsWithType(map, "").join(', ')}): ${capitalizeFirstLetter(componentName)}Data {
 \t\t${capitalizeFirstLetter(componentName)}Data {
 ${getStructAttrs(map, "\t\t\t").join(", \n")}
 \t\t}
-\t}`
+\t}\n`
 }
 
-export function renderRegisterFunc(componentName: string, values: ComponentMapType): string {
+export function renderRegisterFunc(componentName: string): string {
   return `\tpublic fun register(world: &mut World, ctx: &mut TxContext) {
   \t\tworld::add_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(
 \t\t\tworld,
@@ -141,23 +152,8 @@ export function renderRegisterFunc(componentName: string, values: ComponentMapTy
   `
 }
 
-export function renderRegisterFuncWithInit(componentName: string, values: ComponentMapType): string {
-  let init = values.init
-  if (values.type === 'address') {
-    init = `@` + values.init
-  }
-  return `\tpublic fun register(world: &mut World) {
-  \t\tworld::add_component<${capitalizeFirstLetter(componentName)}Data>(
-\t\t\tworld,
-\t\t\tCOMPONENT_NAME,
-\t\t\tnew(${init})
-\t\t);
-\t}
-  `
-}
-
 export function renderAddFunc(componentName: string, values: ComponentMapType): string {
-  return `\tpublic(friend) fun add(world : &mut World, key: vector<u8>, ${getStructAttrsWithType(values).join(", ")}) {
+  return `\tpublic(friend) fun add(world : &mut World, key: vector<u8>, ${getStructAttrsWithType(values, "").join(", ")}) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::add(component, key, new(${getStructAttrs(values, "").join(", ")}));
 \t}
@@ -172,13 +168,18 @@ export function renderRemoveFunc(componentName: string): string {
 `
 }
 
-export function renderUpdateFunc(componentName: string, values: ComponentMapType): string {
-  const map = isSingletonType(values) ? values.type : values;
-  const total =  `\tpublic(friend) fun update(world : &mut World, key: vector<u8>, ${getStructAttrsWithType(map).join(", ")}) {
+export function renderUpdateFunc(componentName: string, values: ComponentMapType | SingletonType): string {
+  let map = values
+  if (isSingletonType(values)) {
+    let singleValue = values as SingletonType;
+    map = singleValue.type
+  }
+  
+  const total =  `\tpublic(friend) fun update(world : &mut World, key: vector<u8>, ${getStructAttrsWithType(map, "").join(", ")}) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\tlet data =  table::borrow_mut<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key);
 ${getStructAttrsUpdate(map, "\t\t").join(";\n")}
-\t} \n`
+\t}\n`
 
   const all =  typeof map === 'string'
     ? ''
@@ -192,15 +193,20 @@ ${getStructAttrsUpdate(map, "\t\t").join(";\n")}
   return total + all
 }
 
-export function renderSingletonUpdateFunc(componentName: string, values: ComponentMapType): string {
-  return `\tpublic(friend) fun update(world : &mut World, ${getStructAttrsWithType(values.type).join(", ")}) {
-world::get_mut_component<${capitalizeFirstLetter(componentName)}Data>(world, COMPONENT_NAME).value = value; 
-} \n`
+export function renderSingletonUpdateFunc(componentName: string, values: SingletonType): string {
+  return `\tpublic(friend) fun update(world : &mut World, ${getStructAttrsWithType(values.type, "").join(", ")}) {
+\t\tworld::get_mut_component<${capitalizeFirstLetter(componentName)}Data>(world, COMPONENT_NAME).value = value; 
+\t}\n`
 }
 
-export function renderQueryFunc(componentName: string, values: ComponentMapType): string {
-  const map = isSingletonType(values) ? values.type : values;
-  const total =  `\tpublic fun get(world : &World, key: vector<u8>) : ${getStructTypes(map) } {
+export function renderQueryFunc(componentName: string, values: ComponentMapType | SingletonType): string {
+  let map = values
+  if (isSingletonType(values)) {
+    let singleValue = values as SingletonType;
+    map = singleValue.type
+  }
+
+  const total = `\tpublic fun get(world : &World, key: vector<u8>) : ${getStructTypes(map) } {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\tlet data = table::borrow<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key);
 \t\t(
@@ -208,7 +214,7 @@ ${getStructAttrsQuery(map, "\t\t\t").join(",\n")}
 \t\t)
 \t} \n`
 
-  const all =  typeof map === 'string'
+  const all = typeof map === 'string'
     ? ''
     : Object.entries(map).map(([key, type]) => `\tpublic fun get_${key}(world : &World, key: vector<u8>) : ${type} {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
@@ -219,10 +225,10 @@ ${getStructAttrsQuery(map, "\t\t\t").join(",\n")}
   return total + all
 }
 
-export function renderSingletonQueryFunc(componentName: string, values: ComponentMapType): string {
+export function renderSingletonQueryFunc(componentName: string, values: SingletonType): string {
   return  `\tpublic fun get(world : &World) : ${getStructTypes(values.type)} {
-        world::get_component<${capitalizeFirstLetter(componentName)}Data>(world, COMPONENT_NAME).value
-    } \n`
+\t\tworld::get_component<${capitalizeFirstLetter(componentName)}Data>(world, COMPONENT_NAME).value
+\t}`
 }
 
 export function renderContainFunc(componentName: string): string {
@@ -230,4 +236,30 @@ export function renderContainFunc(componentName: string): string {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::contains<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key)
 \t}`
+}
+
+function formatData(value: SingletonType): string {
+  // TODO: Support other type (string, time, table, bag...)
+  let fmtData = value.init
+  if (value.type === 'address') {
+    fmtData = `@` + value.init
+  // } else if (value.type === "table") {
+  //   fmtData = ''
+  }
+
+  return fmtData
+
+}
+
+export function renderRegisterFuncWithInit(componentName: string, values: SingletonType): string {
+  const initData = formatData(values);
+
+  return `\tpublic fun register(world: &mut World) {
+  \t\tworld::add_component<${capitalizeFirstLetter(componentName)}Data>(
+\t\t\tworld,
+\t\t\tCOMPONENT_NAME,
+\t\t\tnew(${initData})
+\t\t);
+\t}
+  `
 }

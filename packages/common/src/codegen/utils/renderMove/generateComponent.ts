@@ -17,13 +17,13 @@ export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
     use ${config.project_name}::world::{Self , World};
   
     // Systems
-    ${getFriendSystem(config.project_name,config.systems)}
+  ${getFriendSystem(config.project_name,config.systems)}
       
-  const COMPONENT_NAME: vector<u8> = b"${capitalizeFirstLetter(componentName)} Component";
+\tconst COMPONENT_NAME: vector<u8> = b"${capitalizeFirstLetter(componentName)} Component";
     
   ${renderStruct(componentName, value)}
   ${renderNewStructFunc(componentName, value)}
-  ${renderRegisterFunc(componentName, value)}
+  ${renderRegisterFunc(componentName)}
   ${renderAddFunc(componentName, value)}
   ${renderRemoveFunc(componentName)}
   ${renderUpdateFunc(componentName, value)}
@@ -41,9 +41,9 @@ export function generateSingletonComponent(config: ObeliskConfig, srcPrefix: str
     use ${config.project_name}::world::{Self , World};
   
     // Systems
-    ${getFriendSystem(config.project_name,config.systems)}
+${getFriendSystem(config.project_name,config.systems)}
       
-  const COMPONENT_NAME: vector<u8> = b"${capitalizeFirstLetter(componentName)} Component";
+\tconst COMPONENT_NAME: vector<u8> = b"${capitalizeFirstLetter(componentName)} Component";
     
   ${renderStruct(componentName, value)}
   ${renderNewStructFunc(componentName, value)}
