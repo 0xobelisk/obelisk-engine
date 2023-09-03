@@ -22,48 +22,92 @@ export function capitalizeFirstLetter(input: string): string {
   return input.charAt(0).toUpperCase() + input.slice(1);
 }
 
+/**
+ *
+ * @param projectName
+ * @param values
+ * @return [use projectName::name_component, use projectName::info_component]
+ */
 export function getUseComponent(projectName: string, values: Record<string, ComponentMapType>): string[] {
   return Object.entries(values).map(([key, _]) => `\tuse ${projectName}::${key}_component;`)
 }
 
+/**
+ * @param values
+ * @return [ name_component::register(&mut world, ctx) ,info_component::register(&mut world, ctx) ]
+ */
 export function getRegisterComponent(values: Record<string, ComponentMapType>): string[] {
   return Object.entries(values).map(([key, _]) => `\t\t${key}_component::register(&mut world, ctx);`)
 }
 
+/**
+ * @param values
+ * @return [ name_component::register(&mut world) ,info_component::register(&mut world) ]
+ */
 export function getRegisterSingletonComponent(values: Record<string, ComponentMapType>): string[] {
   return Object.entries(values).map(([key, _]) => `\t\t${key}_component::register(&mut world);`)
 }
 
+/**
+ *
+ * @param projectName
+ * @param values
+ * @return [ friend projectName::name_system, friend projectName::info_system ]
+ */
 export function getFriendSystem(projectName: string, values: string[]): string {
   return values.map((key) => `friend ${projectName}::${key};`).join("\n")
 }
 
+/**
+ *
+ * @param values
+ * @param prefixArgs
+ * @return [ name, age, birth_time ]
+ */
 export function getStructAttrs(values: ComponentMapType, prefixArgs: string): string[] {
   return typeof values === 'string'
     ? [`${prefixArgs}value`]
     : Object.entries(values).map(([key, _]) => `${prefixArgs}${key}`)
 }
 
+/**
+ *
+ * @param values
+ * @return ( bool , u64 , u64)
+ */
 export function getStructTypes(values: ComponentMapType): string {
   return typeof values === 'string'
     ? values
     : `(${Object.entries(values).map(([_, type]) => `${type}`)})`
 }
 
-
-/// Returns Attributes and types of the struct. [ name: string, age: u64 ]
+/**
+ *
+ * @param values
+ * @return Attributes and types of the struct. [ name: string, age: u64 ]
+ */
 export function getStructAttrsWithType(values: ComponentMapType): string[] {
   return typeof values === 'string'
     ? [`\t\tvalue: ${values}`]
     : Object.entries(values).map(([key, type]) => `\t\t${key}: ${type}`)
 }
 
+/**
+ * @param values
+ * @param prefixArgs
+ * @return [ data.name = name , data.age = age ]
+ */
 export function getStructAttrsUpdate(values: ComponentMapType, prefixArgs: string): string[] {
   return typeof values === 'string'
     ? [`${prefixArgs}data.value = value`]
     : Object.entries(values).map(([key, _]) => `${prefixArgs}data.${key} = ${key}`)
 }
 
+/**
+ * @param values
+ * @param prefixArgs
+ * @return [ data.name, data.age ]
+ */
 export function getStructAttrsQuery(values: ComponentMapType, prefixArgs: string): string[] {
   return typeof values === 'string'
     ? [`${prefixArgs}data.value`]
