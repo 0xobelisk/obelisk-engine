@@ -22,11 +22,18 @@ export const obeliskConfig = {
         last_update_time: "u64" ,
     },
     // Key - Single value
-    suifren: {
-      value: "bool"
-    },
+    suifren: "bool",
+    // Key - Single value
+    le: "u64",
+  },
+  singletonComponents: {
     admin: {
-      user: "bool"
+      type: "address",
+      init: "0x1"
     },
-  },  
+    counter: {
+      type: "u64",
+      init: "1000"
+    },
+  }
 } as ObeliskConfig;
