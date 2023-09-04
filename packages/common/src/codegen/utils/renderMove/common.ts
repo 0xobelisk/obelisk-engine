@@ -153,7 +153,7 @@ export function renderRegisterFunc(componentName: string): string {
 }
 
 export function renderAddFunc(componentName: string, values: ComponentMapType): string {
-  return `\tpublic(friend) fun add(world : &mut World, key: vector<u8>, ${getStructAttrsWithType(values, "").join(", ")}) {
+  return `\tpublic(friend) fun add(world: &mut World, key: vector<u8>, ${getStructAttrsWithType(values, "").join(", ")}) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::add(component, key, new(${getStructAttrs(values, "").join(", ")}));
 \t}
@@ -161,7 +161,7 @@ export function renderAddFunc(componentName: string, values: ComponentMapType): 
 }
 
 export function renderRemoveFunc(componentName: string): string {
-  return `\tpublic(friend) fun remove(world : &mut World, key: vector<u8>) {
+  return `\tpublic(friend) fun remove(world: &mut World, key: vector<u8>) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::remove(component, key);
 \t}
@@ -175,7 +175,7 @@ export function renderUpdateFunc(componentName: string, values: ComponentMapType
     map = singleValue.type
   }
   
-  const total =  `\tpublic(friend) fun update(world : &mut World, key: vector<u8>, ${getStructAttrsWithType(map, "").join(", ")}) {
+  const total =  `\tpublic(friend) fun update(world: &mut World, key: vector<u8>, ${getStructAttrsWithType(map, "").join(", ")}) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\tlet data =  table::borrow_mut<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key);
 ${getStructAttrsUpdate(map, "\t\t").join(";\n")}
@@ -184,7 +184,7 @@ ${getStructAttrsUpdate(map, "\t\t").join(";\n")}
   const all =  typeof map === 'string'
     ? ''
     : Object.entries(map).map(([key, type]) =>
-    `\tpublic(friend) fun update_${key}(world : &mut World, key: vector<u8>, ${key}: ${type}) {
+    `\tpublic(friend) fun update_${key}(world: &mut World, key: vector<u8>, ${key}: ${type}) {
 \t\tlet component = world::get_mut_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::borrow_mut<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key).${key} = ${key};
 \t}
@@ -194,7 +194,7 @@ ${getStructAttrsUpdate(map, "\t\t").join(";\n")}
 }
 
 export function renderSingletonUpdateFunc(componentName: string, values: SingletonType): string {
-  return `\tpublic(friend) fun update(world : &mut World, ${getStructAttrsWithType(values.type, "").join(", ")}) {
+  return `\tpublic(friend) fun update(world: &mut World, ${getStructAttrsWithType(values.type, "").join(", ")}) {
 \t\tworld::get_mut_component<${capitalizeFirstLetter(componentName)}Data>(world, COMPONENT_NAME).value = value; 
 \t}\n`
 }
@@ -206,7 +206,7 @@ export function renderQueryFunc(componentName: string, values: ComponentMapType 
     map = singleValue.type
   }
 
-  const total = `\tpublic fun get(world : &World, key: vector<u8>) : ${getStructTypes(map) } {
+  const total = `\tpublic fun get(world: &World, key: vector<u8>): ${getStructTypes(map) } {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\tlet data = table::borrow<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key);
 \t\t(
@@ -216,7 +216,7 @@ ${getStructAttrsQuery(map, "\t\t\t").join(",\n")}
 
   const all = typeof map === 'string'
     ? ''
-    : Object.entries(map).map(([key, type]) => `\tpublic fun get_${key}(world : &World, key: vector<u8>) : ${type} {
+    : Object.entries(map).map(([key, type]) => `\tpublic fun get_${key}(world: &World, key: vector<u8>): ${type} {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::borrow<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key).${key}
 \t}
@@ -226,13 +226,13 @@ ${getStructAttrsQuery(map, "\t\t\t").join(",\n")}
 }
 
 export function renderSingletonQueryFunc(componentName: string, values: SingletonType): string {
-  return  `\tpublic fun get(world : &World) : ${getStructTypes(values.type)} {
+  return  `\tpublic fun get(world: &World): ${getStructTypes(values.type)} {
 \t\tworld::get_component<${capitalizeFirstLetter(componentName)}Data>(world, COMPONENT_NAME).value
 \t}`
 }
 
 export function renderContainFunc(componentName: string): string {
-  return `\tpublic fun contains(world : &World, key: vector<u8>): bool {
+  return `\tpublic fun contains(world: &World, key: vector<u8>): bool {
 \t\tlet component = world::get_component<Table<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>>(world, COMPONENT_NAME);
 \t\ttable::contains<vector<u8>, ${capitalizeFirstLetter(componentName)}Data>(component, key)
 \t}`
