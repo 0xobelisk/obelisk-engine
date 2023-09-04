@@ -6,7 +6,8 @@ import {
   getObjectFields,
   getObjectDisplay,
   getObjectVersion,
-  DynamicFieldName
+  DynamicFieldName,
+  SuiAddress
 } from '@mysten/sui.js';
 import { requestFaucet } from './faucet';
 import { getDefaultNetworkParams } from './defaultChainConfigs';
@@ -62,6 +63,10 @@ export class SuiRpcProvider {
 
   async getDynamicFields(parentId: string, cursor?: string, limit?: number) {
     return this.provider.getDynamicFields({ parentId, cursor, limit })
+  }
+
+  async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
+    return await this.provider.getOwnedObjects({ owner, cursor, limit });
   }
 
   async getObject(id: string) {

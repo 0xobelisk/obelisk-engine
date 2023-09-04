@@ -46,8 +46,18 @@ async function init() {
     // secretKey: privkey
   });
 
-  let data = await obelisk.getEntity("0xae87cf1803bb186b871b52f43aaed4f00d60836bfc8feb3731e75c888cf53242", "0x52e54063b0a17017bea84032e736313e2074ab7461cda51d64b51019701d7adc")
+  let data = await obelisk.getComponents("0x7116f5fee88d91a77555ae1a3728b80171168eef5db9fc59cc9133dfce7cf03b")
   console.log(JSON.stringify(data))
+
+  let ownerdObjects = await obelisk.getOwnedEntities("0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8")
+  console.log(ownerdObjects)
+  
+  // ownerdObjects.data.map(async (object) => {
+  //   console.log(object.data?.objectId)
+  //   let objectDetail = await obelisk.getObject(object.data!.objectId)
+  //   console.log(JSON.stringify(objectDetail))
+  // })
+
     // const tx = new TransactionBlock();
     // let params = [tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324") as SuiTxArgument, 
     // tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1") as SuiTxArgument,

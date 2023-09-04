@@ -1,9 +1,10 @@
+import { ObjectData } from './libs/suiRpcProvider/types';
 import {
   RawSigner,
   TransactionBlock,
   DevInspectResults,
   SuiTransactionBlockResponse,
-  SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName,
+  SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName, SuiAddress,
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiRpcProvider } from './libs/suiRpcProvider';
@@ -456,6 +457,38 @@ export class Obelisk {
     return await this.rpcProvider.getDynamicFieldObject(parentId, name);
   }
 
+  async getComponents(worldId: string) {
+    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.components.fields.id.id;
+
+    return await this.rpcProvider.getDynamicFields(parentId);
+  }
+
+
+  async getComponent(worldId: string, componentId: string) {
+    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.components.fields.id.id;
+
+    console.log(parentId)
+    const name = {
+      type: "0x2::object::ID",
+      value: componentId
+    } as DynamicFieldName
+    return await this.rpcProvider.getDynamicFieldObject(parentId, name);
+  }
+
+  async getOwnedEntities(owner: SuiAddress, cursor?: string, limit?: number) {
+    const ownedObjects = await this.rpcProvider.getOwnedObjects(owner, cursor, limit)
+    let ownedEntities: ObjectData[] = [];
+  
+    for (const object of ownedObjects.data) {
+      let objectDetail = await this.getObject(object.data!.objectId);
+  
+      if (objectDetail.objectType.split("::")[0] === this.contractFactory.packageId) {
+        ownedEntities.push(objectDetail);
+      }
+    }
+  
+    return ownedEntities;
+  }
 
   async getTable(worldId: string, entityId: string) {
     const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.storages.fields.id.id;
