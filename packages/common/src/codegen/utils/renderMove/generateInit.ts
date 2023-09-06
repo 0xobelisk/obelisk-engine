@@ -6,7 +6,7 @@ export function generateInit(config: ObeliskConfig, srcPrefix: string) {
   let code = `module ${config.project_name}::init {
     use sui::transfer;
     use sui::tx_context::TxContext;
-    use withinfinity::world;
+    use ${config.project_name}::world;
 ${getUseComponent(config.project_name, config.components).join("\n")}
 ${getUseComponent(config.project_name, config.singletonComponents).join("\n")}
 
