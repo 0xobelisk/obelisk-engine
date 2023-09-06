@@ -14,27 +14,7 @@ import {
  
 import {ObeliskCliError} from "./errors";
 import {getFullnodeUrl, SuiClient} from "@mysten/sui.js/client";
-
-function validatePrivateKey(privateKey: string): boolean | string {
-  if (privateKey.startsWith("0x")) {
-    const strippedPrivateKey = privateKey.slice(2); // 去掉 "0x"
-    if (strippedPrivateKey.length === 64) {
-      return strippedPrivateKey;
-    } else {
-      return false
-    //   throw new ObeliskCliError(
-    //     `Please check your privateKey.`
-    // );
-  
-    }
-  } else {
-    if (privateKey.length === 64) {
-      return privateKey;
-    } else {
-      return false
-    }
-  }
-}
+import {validatePrivateKey} from "./validatePrivateKey";
 
 export async function publishHandler(projectName: string, nodeUrl: 'mainnet' | 'testnet' | 'devnet' | 'localnet') {
   const privateKey = process.env.PRIVATE_KEY;
