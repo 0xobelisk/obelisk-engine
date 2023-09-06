@@ -1,6 +1,6 @@
 import type { CommandModule } from "yargs";
-import { worldgen, loadConfig } from "@0xobelisk/common/src/codegen";
-import { ObeliskConfig } from "@0xobelisk/common/src/codegen/types";
+import { worldgen, loadConfig } from "../../../common/src/codegen";
+import { ObeliskConfig } from "../../../common/src/codegen/types";
 import path from "path";
 
 
