@@ -51,9 +51,6 @@ const commandModule: CommandModule<Options, Options> = {
         );
       }
       const privateKeyRaw = Buffer.from(privateKeyFormat as string, 'hex')
-      // const keypair = Ed25519Keypair.deriveKeypair(privateKey);
-      // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
-      // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
       const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
       faucet_address = keypair.toSuiAddress();
     } else {
