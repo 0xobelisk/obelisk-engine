@@ -2,6 +2,33 @@
 # yarn lockfile v1
 
 
+"@0xobelisk/common@0.0.1":
+  version "0.0.1"
+  resolved "https://registry.npmmirror.com/@0xobelisk/common/-/common-0.0.1.tgz#444f8ba1dfc167d7b67b29f2ae49c34bedcf53a6"
+  integrity sha512-H+A5ou/92L33IKESCzGiaHivL1yBcw3NtGdDYqpVS2dPzxa9KwZq4ZCWH7zbeoSDuCZLlg1W2hQ/VUB/izDraA==
+  dependencies:
+    "@mysten/sui.js" "^0.41.0"
+    chalk "^5.0.1"
+    chokidar "^3.5.3"
+    dotenv "^16.0.3"
+    ejs "^3.1.8"
+    esbuild "^0.17.15"
+    execa "^7.0.0"
+    find-up "^6.3.0"
+    glob "^8.0.3"
+    nice-grpc-web "^2.0.1"
+    openurl "^1.1.1"
+    path "^0.12.7"
+    prettier "^2.8.4"
+    prettier-plugin-rust "^0.1.9"
+    prettier-plugin-solidity "^1.1.2"
+    throttle-debounce "^5.0.0"
+    typechain "^8.1.1"
+    typescript "5.1.6"
+    yargs "^17.7.1"
+    zod "^3.21.4"
+    zod-validation-error "^1.3.0"
+
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.npmmirror.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"
@@ -355,10 +382,6 @@
   dependencies:
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
-
-"@obelisk/common@link:../common":
-  version "0.0.0"
-  uid ""
 
 "@open-rpc/client-js@^1.8.1":
   version "1.8.1"
@@ -734,6 +757,11 @@ check-error@^1.0.2:
   version "1.0.2"
   resolved "https://registry.npmmirror.com/check-error/-/check-error-1.0.2.tgz#574d312edd88bb5dd8912e9286dd6c0aed4aac82"
   integrity sha512-BrgHpW9NURQgzoNyjfq0Wu6VFO6D7IZEmJNdtgNqpzGG8RuNFHt2jQxWlAs4HMe119chBnv+34syEZtc6IhLtA==
+
+child_process@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.npmmirror.com/child_process/-/child_process-1.0.2.tgz#b1f7e7fc73d25e7fd1d455adc94e143830182b5a"
+  integrity sha512-Wmza/JzL0SiWz7kl6MhIKT5ceIlnFPJX+lwUGj7Clhy5MMldsSoJR0+uvRzOS5Kv45Mq7t1PoE8TsOA9bzvb6g==
 
 chokidar@^3.5.1, chokidar@^3.5.3:
   version "3.5.3"

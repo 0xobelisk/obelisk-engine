@@ -1,27 +1,69 @@
 import {execSync} from "child_process";
 import {
-  Ed25519Keypair,
   TransactionBlock
+} from "@mysten/sui.js/transactions";
+
+import {
+  Ed25519Keypair,
+} from "@mysten/sui.js/keypairs/ed25519";
+
+import {
+
 } from "@mysten/sui.js";
+ 
+ 
 import {ObeliskCliError} from "./errors";
 import {getFullnodeUrl, SuiClient} from "@mysten/sui.js/client";
 
-export async function publishHandler(packagePath: string, nodeUrl: 'mainnet' | 'testnet' | 'devnet' | 'localnet') {
+function validatePrivateKey(privateKey: string): boolean | string {
+  if (privateKey.startsWith("0x")) {
+    const strippedPrivateKey = privateKey.slice(2); // 去掉 "0x"
+    if (strippedPrivateKey.length === 64) {
+      return strippedPrivateKey;
+    } else {
+      return false
+    //   throw new ObeliskCliError(
+    //     `Please check your privateKey.`
+    // );
+  
+    }
+  } else {
+    if (privateKey.length === 64) {
+      return privateKey;
+    } else {
+      return false
+    }
+  }
+}
 
-  const { execSync } = require('child_process');
-  const privateKey = process.env.SUI_ACCOUNT_SECRET;
+export async function publishHandler(projectName: string, nodeUrl: 'mainnet' | 'testnet' | 'devnet' | 'localnet') {
+  const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey)
     throw new ObeliskCliError(
         `Missing PRIVATE_KEY environment variable.
-Run 'echo "PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" > .env'
+Run 'echo "PRIVATE_KEY=0xYOUR_PRIVATE_KEY" > .env'
 in your contracts directory to use the default sui private key.`
     );
-  const keypair = Ed25519Keypair.deriveKeypair(privateKey);
+  
+  const privateKeyFormat = validatePrivateKey(privateKey);
+  if (privateKeyFormat === false) {
+    throw new ObeliskCliError(
+      `Please check your privateKey.`
+    );
+  }
+  const privateKeyRaw = Buffer.from(privateKeyFormat as string, 'hex')
+  // const keypair = Ed25519Keypair.deriveKeypair(privateKey);
+  // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
+  // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
+  const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
   const client = new SuiClient({
     url: getFullnodeUrl(nodeUrl),
   });
+
+  const path = process.cwd()
+
   const { modules, dependencies } = JSON.parse(
-      execSync(`sui move build --dump-bytecode-as-base64 --path ${packagePath}`, {
+      execSync(`sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${projectName}`, {
         encoding: 'utf-8',
       }),
   );
@@ -34,6 +76,13 @@ in your contracts directory to use the default sui private key.`
   const result = await client.signAndExecuteTransactionBlock({
     signer: keypair,
     transactionBlock: tx,
+    options: {
+      showObjectChanges: true,
+    },
   });
-  console.log({ result });
+  result.objectChanges!.map((object) => {
+    if (object.type === "published") {
+      console.log(`${projectName} PackageId: ${object.packageId}`)
+    }
+  })
 }

@@ -12,7 +12,6 @@ const TEMP_CONFIG = "obelisk.config.example.mjs";
 
 export async function loadConfig(configPath?: string): Promise<unknown> {
   configPath = await resolveConfigPath(configPath);
-  console.log(configPath)
   try {
     await esbuild.build({
       entryPoints: [configPath],
@@ -26,7 +25,6 @@ export async function loadConfig(configPath?: string): Promise<unknown> {
       packages: "external",
     });
     configPath = await resolveConfigPath(TEMP_CONFIG, true);
-    console.log(configPath)
     // Node.js caches dynamic imports, so without appending a cache breaking
     // param like `?update={Date.now()}` this import always returns the same config
     // if called multiple times in a single process, like the `dev-contracts` cli
