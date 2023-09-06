@@ -1,14 +1,14 @@
 import { findUp } from "find-up";
 import path from "path";
-import { NotInsideProjectError } from "../utils";
 import esbuild from "esbuild";
+import { NotInsideProjectError } from "./errors";
 import { rmSync } from "fs";
 import { pathToFileURL } from "url";
 import os from "os";
 
 // In order of preference files are checked
-const configFiles = ["mud.config.js", "mud.config.mjs", "mud.config.ts", "mud.config.mts"];
-const TEMP_CONFIG = "mud.config.temp.mjs";
+const configFiles = ["obelisk.config.js", "obelisk.config.mjs", "obelisk.config.ts", "obelisk.config.mts"];
+const TEMP_CONFIG = "obelisk.config.example.mjs";
 
 export async function loadConfig(configPath?: string): Promise<unknown> {
   configPath = await resolveConfigPath(configPath);
@@ -28,7 +28,7 @@ export async function loadConfig(configPath?: string): Promise<unknown> {
     // Node.js caches dynamic imports, so without appending a cache breaking
     // param like `?update={Date.now()}` this import always returns the same config
     // if called multiple times in a single process, like the `dev-contracts` cli
-    return (await import(configPath + `?update=${Date.now()}`)).default;
+    return (await import(configPath + `?update=${Date.now()}`)).obeliskConfig;
   } finally {
     rmSync(TEMP_CONFIG, { force: true });
   }
