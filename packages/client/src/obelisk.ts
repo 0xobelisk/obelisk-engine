@@ -20,7 +20,8 @@ import {
   ContractTx, MapMoudleFuncQuery,
   MapMoudleFuncTx
 } from './types';
-import {ObjectArg, obj, pure} from "./framework/util";
+import {capitalizeFirstLetter} from "./utils"
+const keccak256 = require('keccak256');
 
 
 export function isUndefined (value?: unknown): value is undefined {
@@ -418,25 +419,6 @@ export class Obelisk {
     });
   }
 
-  async getBirthTime(objectId: string, derivePathParams?: DerivePathParams) {
-    const tx = new TransactionBlock();
-
-    tx.moveCall({
-      // target: `0x12b216923e5454e1f076ccb5fc638b59f8aba2175c34df9899de71124d66badd::status_system::get_pet_state`,
-      target: `0x6afbf113a5872b781a2a0068b95c0d9d0ee89428518fdd65f862c841eab45b82::pet_system::get_pet_basic_info`,
-      arguments: [
-        // tx.pure("0x6fa43c68221960f942572905f3c198a5bccaa0700506b3b6bd83dd9b007e6324"),
-        // tx.pure("0xbf64721f0961a0426ccde6b8d9343e2cb2c26a105a5c33e57074580fd98b2cb1"),
-        // tx.pure("0x6"),
-
-        obj(tx, "0x26804211486be597a89c46c16b929d7031fb7c701ecf89d4c750e49459b4bea2"),
-        pure(tx, "0x35ba3bfb8590dbd060f41cd58c7b140d67efd2126648409cd231c74cff2828b8", `0x2::object::ID`),
-        obj(tx, "0x6")
-      ],
-    })
-    return await this.inspectTxn(tx, derivePathParams);
-  }
-
   async getWorld(worldObjectId: string) {
     return this.rpcProvider.getObject(worldObjectId)
   }
@@ -464,13 +446,20 @@ export class Obelisk {
   }
 
 
-  async getComponent(worldId: string, componentId: string) {
-    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.components.fields.id.id;
+  async getComponentByName(worldId: string, componentName: string) {
+    const componentId = keccak256(`${capitalizeFirstLetter(componentName)} Component`);
+    return await this.getComponent(worldId, componentId);
+  }
 
+  async getComponent(worldId: string, componentId: Buffer) {
+    const componentIdValue: number[] = Array.from(componentId);
+    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.components.fields.id.id;
     console.log(parentId)
     const name = {
-      type: "0x2::object::ID",
-      value: componentId
+      // type: "0x2::object::ID",
+      type: "vector<u8>",
+      value: componentIdValue
+      // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
     } as DynamicFieldName
     return await this.rpcProvider.getDynamicFieldObject(parentId, name);
   }

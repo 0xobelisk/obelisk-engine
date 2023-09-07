@@ -4,6 +4,8 @@ import { NetworkType, ComponentContentType, SuiTxArgument } from '../src/types';
 import { DevInspectResults, TransactionBlock } from '@mysten/sui.js';
 import { getMetadata } from '../src/metadata/index';
 import { pure } from '../src/framework/util'
+const keccak256 = require('keccak256');
+import * as crypto from 'crypto';
 
 type DataItem = [number[], string];
 
@@ -46,11 +48,16 @@ async function init() {
     // secretKey: privkey
   });
 
-  let data = await obelisk.getComponents("0x7116f5fee88d91a77555ae1a3728b80171168eef5db9fc59cc9133dfce7cf03b")
-  console.log(JSON.stringify(data))
 
-  let ownerdObjects = await obelisk.getOwnedEntities("0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8")
-  console.log(ownerdObjects)
+  const hexdata = keccak256("Counter Component");
+  const txb = new TransactionBlock();
+  let data = await obelisk.getComponents("0x81b6ee204cb81d187e86a37ae7c15b6ac000654ee31f1f5f1c88d1094792b03e")
+  // let data1 = await obelisk.getComponent("0x81b6ee204cb81d187e86a37ae7c15b6ac000654ee31f1f5f1c88d1094792b03e", hexdata)
+  let data1 = await obelisk.getComponentByName("0x81b6ee204cb81d187e86a37ae7c15b6ac000654ee31f1f5f1c88d1094792b03e", "counter")
+  console.log(JSON.stringify(data1))
+
+  // let ownerdObjects = await obelisk.getOwnedEntities("0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8")
+  // console.log(ownerdObjects)
   
   // ownerdObjects.data.map(async (object) => {
   //   console.log(object.data?.objectId)

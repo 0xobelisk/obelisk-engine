@@ -5,11 +5,9 @@ import {
 
 import {
   Ed25519Keypair,
-} from "@mysten/sui.js/keypairs/ed25519";
+} from "@mysten/sui.js/keypairs/ed25519"
 
-import {
-
-} from "@mysten/sui.js";
+import chalk from "chalk";
  
  
 import {ObeliskCliError} from "./errors";
@@ -60,9 +58,15 @@ in your contracts directory to use the default sui private key.`
       showObjectChanges: true,
     },
   });
+  console.log("")
+  console.log(chalk.blue(`Transaction Digest: ${result.digest}`))
+
   result.objectChanges!.map((object) => {
     if (object.type === "published") {
-      console.log(`${projectName} PackageId: ${object.packageId}`)
+      console.log(chalk.green(`${projectName} PackageId: ${object.packageId}`))
+    }
+    if (object.type === "created" && object.objectType.endsWith('::world::World')) {
+      console.log(chalk.green(`${projectName} WorldId: ${object.objectId}`))
     }
   })
 }
