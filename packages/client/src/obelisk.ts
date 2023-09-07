@@ -430,7 +430,6 @@ export class Obelisk {
   async getEntity(worldId: string, entityId: string) {
     const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.entities.fields.id.id;
 
-    console.log(parentId)
     const name = {
       type: "0x2::object::ID",
       value: entityId
@@ -453,7 +452,7 @@ export class Obelisk {
   async getComponent(worldId: string, componentId: Buffer) {
     const componentIdValue: number[] = Array.from(componentId);
     const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.components.fields.id.id;
-    console.log(parentId)
+
     const name = {
       // type: "0x2::object::ID",
       type: "vector<u8>",
@@ -481,7 +480,6 @@ export class Obelisk {
   async getTable(worldId: string, entityId: string) {
     const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.storages.fields.id.id;
 
-    console.log(parentId)
     const name = {
       type: "0x2::object::ID",
       value: entityId

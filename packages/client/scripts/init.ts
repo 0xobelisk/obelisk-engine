@@ -49,9 +49,6 @@ async function init() {
   });
 
 
-  const hexdata = keccak256("Counter Component");
-  const txb = new TransactionBlock();
-  let data = await obelisk.getComponents("0x81b6ee204cb81d187e86a37ae7c15b6ac000654ee31f1f5f1c88d1094792b03e")
   // let data1 = await obelisk.getComponent("0x81b6ee204cb81d187e86a37ae7c15b6ac000654ee31f1f5f1c88d1094792b03e", hexdata)
   let data1 = await obelisk.getComponentByName("0x81b6ee204cb81d187e86a37ae7c15b6ac000654ee31f1f5f1c88d1094792b03e", "counter")
   console.log(JSON.stringify(data1))
