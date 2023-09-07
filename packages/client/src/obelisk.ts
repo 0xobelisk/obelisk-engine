@@ -21,8 +21,7 @@ import {
   MapMoudleFuncTx
 } from './types';
 import {capitalizeFirstLetter} from "./utils"
-const keccak256 = require('keccak256');
-
+import keccak256 from "keccak256";
 
 export function isUndefined (value?: unknown): value is undefined {
   return value === undefined;
