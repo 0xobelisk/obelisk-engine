@@ -16,7 +16,6 @@ export function logError(error: unknown) {
     console.log(chalk.redBright(error.message));
   } else if (error instanceof ZodError) {
     // TODO currently this error shouldn't happen, use `fromZodErrorCustom`
-    // (see https://github.com/latticexyz/mud/issues/438)
     const validationError = fromZodError(error, {
       prefixSeparator: "\n- ",
       issueSeparator: "\n- ",
@@ -26,8 +25,7 @@ export function logError(error: unknown) {
     console.log(chalk.red(error.message));
     console.log("");
     // TODO add docs to the website and update the link to the specific page
-    // (see https://github.com/latticexyz/mud/issues/445)
-    console.log(chalk.blue(`To learn more about MUD's configuration, please go to https://mud.dev/packages/cli/`));
+    console.log(chalk.blue(`To learn more about Obelisk's configuration, please go to https://github.com/0xobelisk`));
   } else if (error instanceof ObeliskCliError) {
     console.log(chalk.red(error));
   } else {
