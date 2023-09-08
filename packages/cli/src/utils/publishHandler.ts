@@ -13,8 +13,16 @@ import chalk from "chalk";
 import {ObeliskCliError} from "./errors";
 import {getFullnodeUrl, SuiClient} from "@mysten/sui.js/client";
 import {validatePrivateKey} from "./validatePrivateKey";
+import { generateIdConfig } from "../../../common/src/codegen";
 
-export async function publishHandler(projectName: string, nodeUrl: 'mainnet' | 'testnet' | 'devnet' | 'localnet') {
+// type publishRes = {
+//   projectName: string,
+//   transactionHash: string,
+//   packageId: string,
+//   worldId: string
+// }
+
+export async function publishHandler(projectName: string, network: 'mainnet' | 'testnet' | 'devnet' | 'localnet', savePath?: string | undefined) {
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey)
     throw new ObeliskCliError(
@@ -35,7 +43,7 @@ in your contracts directory to use the default sui private key.`
   // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
   const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
   const client = new SuiClient({
-    url: getFullnodeUrl(nodeUrl),
+    url: getFullnodeUrl(network),
   });
 
   const path = process.cwd()
@@ -60,13 +68,20 @@ in your contracts directory to use the default sui private key.`
   });
   console.log("")
   console.log(chalk.blue(`Transaction Digest: ${result.digest}`))
-
+  
+  let packageId = ""
+  let worldId = ""
   result.objectChanges!.map((object) => {
     if (object.type === "published") {
       console.log(chalk.green(`${projectName} PackageId: ${object.packageId}`))
+      packageId = object.packageId
     }
     if (object.type === "created" && object.objectType.endsWith('::world::World')) {
       console.log(chalk.green(`${projectName} WorldId: ${object.objectId}`))
+      worldId = object.objectId
     }
   })
+  if (savePath !== undefined) {
+    generateIdConfig(network, packageId, worldId, savePath)
+  }
 }

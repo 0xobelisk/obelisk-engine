@@ -7,6 +7,7 @@ import { ObeliskConfig } from "../../../common/src/codegen/types";
 type Options = {
   configPath: string,
   network: any
+  savePath?: string
 }
 
 const commandModule: CommandModule<Options, Options> = {
@@ -17,15 +18,16 @@ const commandModule: CommandModule<Options, Options> = {
   builder(yargs) {
     return yargs.options({
       configPath: { type: "string", default: ".", decs: "Path to the config file" },
-      network: { type: 'string', choices: ['mainnet', 'testnet', 'devnet', 'localnet'], desc: "Network of the node (mainnet/testnet/devnet/localnet)" }
+      network: { type: 'string', choices: ['mainnet', 'testnet', 'devnet', 'localnet'], desc: "Network of the node (mainnet/testnet/devnet/localnet)" },
+      savePath: { type: 'string', desc: "Path to the save template file" }
     });
   },
 
-  async handler({ configPath, network}) {
+  async handler({ configPath, network, savePath}) {
     try {
       const obeliskConfig = await loadConfig(configPath) as ObeliskConfig;
 
-      await publishHandler(obeliskConfig.project_name, network);
+      await publishHandler(obeliskConfig.project_name, network, savePath);
     } catch (error: any) {
       logError(error);
       process.exit(1);
