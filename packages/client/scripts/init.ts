@@ -34,7 +34,12 @@ function formatData(data: DataItem[]): string {
 
   return formattedData.join('\n');
 }
-
+type data = {
+  type: string;
+  fields: Record<string, any>;
+  hasPublicTransfer: boolean;
+  dataType: "moveObject";
+}
 async function init() {
   const network = process.argv[2];
   const packageId = process.argv[3];
@@ -52,6 +57,8 @@ async function init() {
   // let data1 = await obelisk.getComponent("0x81b6ee204cb81d187e86a37ae7c15b6ac000654ee31f1f5f1c88d1094792b03e", hexdata)
   let data1 = await obelisk.getComponentByName("0x81b6ee204cb81d187e86a37ae7c15b6ac000654ee31f1f5f1c88d1094792b03e", "counter")
   console.log(JSON.stringify(data1))
+  let content = data1.data!.content as data;
+  console.log(content.fields.value.fields.value);
 
   // let ownerdObjects = await obelisk.getOwnedEntities("0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8")
   // console.log(ownerdObjects)
