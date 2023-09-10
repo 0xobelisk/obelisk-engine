@@ -88,7 +88,6 @@ export class SuiContractFactory {
       }
     );
   }
-  async worldCall() {}
 
   //   async call(arguments: ({
   //     kind: "Input";
