@@ -66,7 +66,7 @@ export class Obelisk {
   public suiInteractor: SuiInteractor;
   public contractFactory: SuiContractFactory;
   public packageId: string | undefined;
-  public metadata: SuiMoveNormalizedModules;
+  public metadata: SuiMoveNormalizedModules | undefined;
 
   readonly #query: MapMoudleFuncQuery = {};
   readonly #tx: MapMoudleFuncTx = {};
@@ -97,31 +97,32 @@ export class Obelisk {
     this.suiInteractor = new SuiInteractor(fullnodeUrls, networkType);
 
     this.packageId = packageId;
-    this.metadata = metadata as SuiMoveNormalizedModules;
-    Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
-      let data = value as SuiMoveMoudleValueType;
-      let moduleName = data.name;
-      Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
-        let meta = value as SuiMoveMoudleFuncType;
-        meta.moudleName = moduleName;
-        meta.funcName = funcName;
-
-        if (isUndefined(this.#query[moduleName])) {
-          this.#query[moduleName] = {};
-        }
-        if (isUndefined(this.#query[moduleName][funcName])) {
-          this.#query[moduleName][funcName] = createQuery(meta, (tx, p, isRaw) => this.#read(meta, tx, p, isRaw))
-        }
-
-        if (isUndefined(this.#tx[moduleName])) {
-          this.#tx[moduleName] = {};
-        }
-        if (isUndefined(this.#tx[moduleName][funcName])) {
-          this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) => this.#exec(meta, tx, p, isRaw))
-        }
-      });
-    })
-
+    if (metadata !== undefined) {
+      this.metadata = metadata as SuiMoveNormalizedModules;
+      Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
+        let data = value as SuiMoveMoudleValueType;
+        let moduleName = data.name;
+        Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
+          let meta = value as SuiMoveMoudleFuncType;
+          meta.moudleName = moduleName;
+          meta.funcName = funcName;
+  
+          if (isUndefined(this.#query[moduleName])) {
+            this.#query[moduleName] = {};
+          }
+          if (isUndefined(this.#query[moduleName][funcName])) {
+            this.#query[moduleName][funcName] = createQuery(meta, (tx, p, isRaw) => this.#read(meta, tx, p, isRaw))
+          }
+  
+          if (isUndefined(this.#tx[moduleName])) {
+            this.#tx[moduleName] = {};
+          }
+          if (isUndefined(this.#tx[moduleName][funcName])) {
+            this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) => this.#exec(meta, tx, p, isRaw))
+          }
+        });
+      })
+    }
     this.contractFactory = new SuiContractFactory({
       packageId,
       metadata

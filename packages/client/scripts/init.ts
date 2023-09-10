@@ -48,8 +48,8 @@ async function init() {
 
   const obelisk = new Obelisk({
     networkType: network as NetworkType,
-    packageId: packageId,
-    metadata: metadata,
+    // packageId: packageId,
+    // metadata: metadata,
     // secretKey: privkey
   });
 
@@ -59,7 +59,6 @@ async function init() {
   console.log(JSON.stringify(data1))
   let content = data1.data!.content as data;
   console.log(content.fields.value.fields.value);
-  // await obelisk.getBalance()
   await obelisk.requestFaucet("0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8", "devnet");
   // let ownerdObjects = await obelisk.getOwnedEntities("0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8")
   // console.log(ownerdObjects)
