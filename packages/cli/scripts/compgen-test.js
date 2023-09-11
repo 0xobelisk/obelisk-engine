@@ -42,7 +42,7 @@ function init() {
         var config, output, a;
         return __generator(this, function (_a) {
             config = {
-                project_name: "withinfinity",
+                projectName: "withinfinity",
                 systems: [
                     "fee_system",
                     "home_system",

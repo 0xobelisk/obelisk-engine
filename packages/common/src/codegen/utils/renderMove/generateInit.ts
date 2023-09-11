@@ -3,12 +3,12 @@ import { formatAndWriteMove } from '../formatAndWrite';
 import { getRegisterComponent, getRegisterSingletonComponent, getUseComponent } from './common';
 
 export function generateInit(config: ObeliskConfig, srcPrefix: string) {
-  let code = `module ${config.project_name}::init {
+  let code = `module ${config.projectName}::init {
     use sui::transfer;
     use sui::tx_context::TxContext;
-    use ${config.project_name}::world;
-${getUseComponent(config.project_name, config.components).join("\n")}
-${getUseComponent(config.project_name, config.singletonComponents).join("\n")}
+    use ${config.projectName}::world;
+${getUseComponent(config.projectName, config.components).join("\n")}
+${getUseComponent(config.projectName, config.singletonComponents).join("\n")}
 
     fun init(ctx: &mut TxContext) {
         let world = world::create_world(ctx);
@@ -26,5 +26,5 @@ ${getRegisterSingletonComponent(config.singletonComponents).join("\n")}
     }
 }
 `
-  formatAndWriteMove(code, `${srcPrefix}/contracts/${config.project_name}/sources/codegen/init.move`, "formatAndWriteMove");
+  formatAndWriteMove(code, `${srcPrefix}/contracts/${config.projectName}/sources/codegen/init.move`, "formatAndWriteMove");
 }

@@ -16,8 +16,8 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
     path = srcPrefix;
   }
 
-  if (existsSync(`${path}/contracts/${config.project_name}`)) {
-    deleteFolderRecursive(`${path}/contracts/${config.project_name}/sources/codegen`)
+  if (existsSync(`${path}/contracts/${config.projectName}`)) {
+    deleteFolderRecursive(`${path}/contracts/${config.projectName}/sources/codegen`)
   } else {
     generateSystem(config, path);
     generateToml(config, path);

@@ -1,7 +1,7 @@
 import { ObeliskConfig } from "@0xobelisk/common/src/codegen/types";
 
 export const obeliskConfig = {
-  project_name: "withinfinity",
+  projectName: "withinfinity",
   systems: [
       "fee_system",
       "home_system",
