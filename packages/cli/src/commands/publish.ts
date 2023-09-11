@@ -27,7 +27,7 @@ const commandModule: CommandModule<Options, Options> = {
     try {
       const obeliskConfig = await loadConfig(configPath) as ObeliskConfig;
 
-      await publishHandler(obeliskConfig.project_name, network, savePath);
+      await publishHandler(obeliskConfig.projectName, network, savePath);
     } catch (error: any) {
       logError(error);
       process.exit(1);

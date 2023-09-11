@@ -1,14 +1,18 @@
-import { ObjectData } from './libs/suiRpcProvider/types';
 import {
   RawSigner,
   TransactionBlock,
   DevInspectResults,
   SuiTransactionBlockResponse,
-  SuiMoveNormalizedModules, DynamicFieldPage, DynamicFieldName, SuiAddress,
+  SuiMoveNormalizedModules,
+  DynamicFieldName,
+  SuiAddress
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
-import { SuiRpcProvider } from './libs/suiRpcProvider';
 import { SuiTxBlock } from './libs/suiTxBuilder';
+import { SuiInteractor, getDefaultConnection } from './libs/suiInteractor';
+import { SuiSharedObject, SuiOwnedObject } from './libs/suiModel';
+
+import { ObeliskObjectData } from 'src/types';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import { SuiMoveMoudleValueType, SuiMoveMoudleFuncType } from './libs/suiContractFactory/types';
 import {
@@ -18,7 +22,7 @@ import {
   ComponentContentType,
   SuiTxArgument, ContractQuery,
   ContractTx, MapMoudleFuncQuery,
-  MapMoudleFuncTx
+  MapMoudleFuncTx, FaucetNetworkType
 } from './types';
 import {capitalizeFirstLetter} from "./utils"
 import keccak256 from "keccak256";
@@ -59,18 +63,15 @@ function createTx(
  */
 export class Obelisk {
   public accountManager: SuiAccountManager;
-  public rpcProvider: SuiRpcProvider;
+  public suiInteractor: SuiInteractor;
   public contractFactory: SuiContractFactory;
   public packageId: string | undefined;
-  // public needLoad: boolean | undefined;
-  public metadata: SuiMoveNormalizedModules;
-  public epsId: string;
-  public componentsId: string;
+  public metadata: SuiMoveNormalizedModules | undefined;
 
   readonly #query: MapMoudleFuncQuery = {};
   readonly #tx: MapMoudleFuncTx = {};
   /**
-   * Support the following ways to init the SuiToolkit:
+   * Support the following ways to init the ObeliskClient:
    * 1. mnemonics
    * 2. secretKey (base64 or hex)
    * If none of them is provided, will generate a random mnemonics with 24 words.
@@ -79,70 +80,54 @@ export class Obelisk {
    * @param secretKey, base64 or hex string, when mnemonics is provided, secretKey will be ignored
    * @param networkType, 'testnet' | 'mainnet' | 'devnet' | 'localnet', default is 'devnet'
    * @param fullnodeUrl, the fullnode url, default is the preconfig fullnode url for the given network type
-   * @param faucetUrl, the faucet url, default is the preconfig faucet url for the given network type
    * @param packageId
    */
   constructor({
     mnemonics,
     secretKey,
     networkType,
-    fullnodeUrl,
-    faucetUrl,
+    fullnodeUrls,
     packageId,
     metadata
   }: ObeliskParams = {}) {
     // Init the account manager
     this.accountManager = new SuiAccountManager({ mnemonics, secretKey });
     // Init the rpc provider
-    this.rpcProvider = new SuiRpcProvider({
-      fullnodeUrl,
-      faucetUrl,
-      networkType,
-    });
+    fullnodeUrls = fullnodeUrls || [getDefaultConnection(networkType).fullnode];
+    this.suiInteractor = new SuiInteractor(fullnodeUrls, networkType);
 
-    this.epsId = "0xf2196f638c3174e18c0e31aa630a02fd516c2c5deec1ded72c0fea864c9f091a"
-    this.componentsId = "0x3bc407eb543149e42846ade59ac2a3c901584af4339dc1ecd0affd090529545f"
     this.packageId = packageId;
-    this.metadata = metadata as SuiMoveNormalizedModules;
-    Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
-      let data = value as SuiMoveMoudleValueType;
-      let moduleName = data.name;
-      Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
-        let meta = value as SuiMoveMoudleFuncType;
-        meta.moudleName = moduleName;
-        meta.funcName = funcName;
-
-        if (isUndefined(this.#query[moduleName])) {
-          this.#query[moduleName] = {};
-        }
-        if (isUndefined(this.#query[moduleName][funcName])) {
-          this.#query[moduleName][funcName] = createQuery(meta, (tx, p, isRaw) => this.#read(meta, tx, p, isRaw))
-        }
-
-        if (isUndefined(this.#tx[moduleName])) {
-          this.#tx[moduleName] = {};
-        }
-        if (isUndefined(this.#tx[moduleName][funcName])) {
-          this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) => this.#exec(meta, tx, p, isRaw))
-        }
-      });
-    })
-
+    if (metadata !== undefined) {
+      this.metadata = metadata as SuiMoveNormalizedModules;
+      Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
+        let data = value as SuiMoveMoudleValueType;
+        let moduleName = data.name;
+        Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
+          let meta = value as SuiMoveMoudleFuncType;
+          meta.moudleName = moduleName;
+          meta.funcName = funcName;
+  
+          if (isUndefined(this.#query[moduleName])) {
+            this.#query[moduleName] = {};
+          }
+          if (isUndefined(this.#query[moduleName][funcName])) {
+            this.#query[moduleName][funcName] = createQuery(meta, (tx, p, isRaw) => this.#read(meta, tx, p, isRaw))
+          }
+  
+          if (isUndefined(this.#tx[moduleName])) {
+            this.#tx[moduleName] = {};
+          }
+          if (isUndefined(this.#tx[moduleName][funcName])) {
+            this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) => this.#exec(meta, tx, p, isRaw))
+          }
+        });
+      })
+    }
     this.contractFactory = new SuiContractFactory({
       packageId,
       metadata
     })
   }
-
-  // async initialize() {
-  //   const metadata = await this.loadData();
-  //   this.metadata = metadata as SuiMoveNormalizedModules;
-  //   this.contractFactory = new SuiContractFactory({
-  //     packageId: this.packageId,
-  //     metadata: this.metadata
-  //   })
-  //   return metadata
-  // }
 
   public get query (): MapMoudleFuncQuery {
     return this.#query;
@@ -184,7 +169,7 @@ export class Obelisk {
    */
   getSigner(derivePathParams?: DerivePathParams) {
     const keyPair = this.accountManager.getKeyPair(derivePathParams);
-    return new RawSigner(keyPair, this.rpcProvider.provider);
+    return new RawSigner(keyPair, this.suiInteractor.currentProvider);
   }
 
   /**
@@ -207,7 +192,7 @@ export class Obelisk {
   }
 
   provider() {
-    return this.rpcProvider.provider;
+    return this.suiInteractor.currentProvider;
   }
 
   getPackageId() {
@@ -221,23 +206,24 @@ export class Obelisk {
    * Request some SUI from faucet
    * @Returns {Promise<boolean>}, true if the request is successful, false otherwise.
    */
-  async requestFaucet(derivePathParams?: DerivePathParams) {
-    const addr = this.accountManager.getAddress(derivePathParams);
-    return this.rpcProvider.requestFaucet(addr);
+  async requestFaucet(address: SuiAddress, network: FaucetNetworkType) {
+    // const addr = this.accountManager.getAddress(derivePathParams);
+    return this.suiInteractor.requestFaucet(address, network);
   }
 
   async getBalance(coinType?: string, derivePathParams?: DerivePathParams) {
     const owner = this.accountManager.getAddress(derivePathParams);
-    return this.rpcProvider.getBalance(owner, coinType);
+    return this.suiInteractor.currentProvider.getBalance({ owner, coinType });
   }
 
   async getObject(objectId: string) {
-    return this.rpcProvider.getObject(objectId);
+    return this.suiInteractor.getObject(objectId);
   }
 
   async getObjects(objectIds: string[]) {
-    return this.rpcProvider.getObjects(objectIds);
+    return this.suiInteractor.getObjects(objectIds);
   }
+
 
   async signTxn(
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
@@ -252,16 +238,11 @@ export class Obelisk {
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
   ): Promise<SuiTransactionBlockResponse> {
-    tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
-    const signer = this.getSigner(derivePathParams);
-    return signer.signAndExecuteTransactionBlock({
-      transactionBlock: tx,
-      options: {
-        showEffects: true,
-        showEvents: true,
-        showObjectChanges: true,
-      },
-    });
+    const { transactionBlockBytes, signature } = await this.signTxn(
+      tx,
+      derivePathParams
+    );
+    return this.suiInteractor.sendTx(transactionBlockBytes, signature);
   }
 
   /**
@@ -312,7 +293,7 @@ export class Obelisk {
     const tx = new SuiTxBlock();
     const owner = this.accountManager.getAddress(derivePathParams);
     const totalAmount = amounts.reduce((a, b) => a + b, 0);
-    const coins = await this.rpcProvider.selectCoins(
+    const coins = await this.suiInteractor.selectCoins(
       owner,
       totalAmount,
       coinType
@@ -379,7 +360,7 @@ export class Obelisk {
     owner?: string
   ) {
     owner = owner || this.accountManager.currentAddress;
-    const coins = await this.rpcProvider.selectCoins(owner, amount, coinType);
+    const coins = await this.suiInteractor.selectCoins(owner, amount, coinType);
     return coins.map((c) => c.objectId);
   }
 
@@ -410,37 +391,21 @@ export class Obelisk {
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
   ): Promise<DevInspectResults> {
-
     tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
-    return this.rpcProvider.provider.devInspectTransactionBlock({
+    return this.suiInteractor.currentProvider.devInspectTransactionBlock({
       transactionBlock: tx,
       sender: this.getAddress(derivePathParams),
     });
   }
 
   async getWorld(worldObjectId: string) {
-    return this.rpcProvider.getObject(worldObjectId)
-  }
-
-  async getAllEntities(worldId: string, cursor?: string, limit?: number) {
-    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.entities.fields.id.id;
-    return await this.rpcProvider.getDynamicFields(parentId, cursor, limit) as DynamicFieldPage;
-  }
-
-  async getEntity(worldId: string, entityId: string) {
-    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.entities.fields.id.id;
-
-    const name = {
-      type: "0x2::object::ID",
-      value: entityId
-    } as DynamicFieldName
-    return await this.rpcProvider.getDynamicFieldObject(parentId, name);
+    return this.suiInteractor.getObject(worldObjectId)
   }
 
   async getComponents(worldId: string) {
-    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.components.fields.id.id;
+    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields.components.fields.id.id;
 
-    return await this.rpcProvider.getDynamicFields(parentId);
+    return await this.suiInteractor.getDynamicFields(parentId);
   }
 
 
@@ -451,20 +416,19 @@ export class Obelisk {
 
   async getComponent(worldId: string, componentId: Buffer) {
     const componentIdValue: number[] = Array.from(componentId);
-    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.components.fields.id.id;
+    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields.components.fields.id.id;
 
     const name = {
-      // type: "0x2::object::ID",
       type: "vector<u8>",
       value: componentIdValue
       // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
     } as DynamicFieldName
-    return await this.rpcProvider.getDynamicFieldObject(parentId, name);
+    return await this.suiInteractor.getDynamicFieldObject(parentId, name);
   }
 
   async getOwnedEntities(owner: SuiAddress, cursor?: string, limit?: number) {
-    const ownedObjects = await this.rpcProvider.getOwnedObjects(owner, cursor, limit)
-    let ownedEntities: ObjectData[] = [];
+    const ownedObjects = await this.suiInteractor.getOwnedObjects(owner, cursor, limit)
+    let ownedEntities: ObeliskObjectData[] = [];
   
     for (const object of ownedObjects.data) {
       let objectDetail = await this.getObject(object.data!.objectId);
@@ -476,57 +440,4 @@ export class Obelisk {
   
     return ownedEntities;
   }
-
-  async getTable(worldId: string, entityId: string) {
-    const parentId = (await this.rpcProvider.getObject(worldId)).objectFields.storages.fields.id.id;
-
-    const name = {
-      type: "0x2::object::ID",
-      value: entityId
-    } as DynamicFieldName
-    return await this.rpcProvider.getDynamicFieldObject(parentId, name);
-  }
-
-  async getEntityComponents(worldId: string, entityId: string, cursor?: string, limit?: number) {
-    const parentContent = (await this.getEntity(worldId, entityId)).data!.content as ComponentContentType;
-    const parentId = parentContent.fields.value.fields.components.fields.id.id;
-    return await this.rpcProvider.getDynamicFields(parentId, cursor, limit) as DynamicFieldPage;
-  }
-
-  async getEntityComponent(entityId: string, componentId: string) {
-    const parentId = (await this.rpcProvider.getObject(entityId)).objectFields.id.id;
-
-    const name = {
-      type: "0x2::object::ID",
-      value: componentId
-    } as DynamicFieldName
-    return await this.rpcProvider.getDynamicFieldObject(parentId, name);
-  }
-
-
-  // async loadData() {
-  //   const jsonFileName = `metadata/${this.packageId}.json`;
-
-  //   try {
-  //     const data = await fs.promises.readFile(jsonFileName, 'utf-8');
-  //     const jsonData = JSON.parse(data);
-
-  //     return jsonData as SuiMoveNormalizedModules;
-  //   } catch (error) {
-  //     if (this.packageId !== undefined) {
-  //       const jsonData = await this.rpcProvider.getNormalizedMoveModulesByPackage(this.packageId);
-
-  //       fs.writeFile(jsonFileName, JSON.stringify(jsonData, null, 2), (err) => {
-  //         if (err) {
-  //           console.error('写入文件时出错:', err);
-  //         } else {
-  //           console.log('JSON 数据已保存到文件:', jsonFileName);
-  //         }
-  //       });
-  //       return jsonData as SuiMoveNormalizedModules;
-  //     } else {
-  //       console.error('please set your package id.');
-  //     }
-  //   }
-  // }
 }

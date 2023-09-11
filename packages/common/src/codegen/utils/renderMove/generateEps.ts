@@ -2,7 +2,7 @@ import { ObeliskConfig } from '../../types';
 import { formatAndWriteMove } from '../formatAndWrite';
 
 export function generateEps(config: ObeliskConfig, srcPrefix: string) {
-  let code = `module ${config.project_name}::world {
+  let code = `module ${config.projectName}::world {
     use sui::tx_context::TxContext;
     use sui::hash::keccak256;
     use sui::bag::{ Self, Bag };
@@ -43,5 +43,5 @@ export function generateEps(config: ObeliskConfig, srcPrefix: string) {
     }
 }
 `
-  formatAndWriteMove(code, `${srcPrefix}/contracts/${config.project_name}/sources/codegen/eps/world.move`, "formatAndWriteMove");
+  formatAndWriteMove(code, `${srcPrefix}/contracts/${config.projectName}/sources/codegen/eps/world.move`, "formatAndWriteMove");
 }
