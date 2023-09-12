@@ -48,8 +48,8 @@ async function init() {
 
   const obelisk = new Obelisk({
     networkType: network as NetworkType,
-    packageId: packageId,
-    metadata: metadata,
+    // packageId: packageId,
+    // metadata: metadata,
     // secretKey: privkey
   });
 
