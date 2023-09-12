@@ -1,5 +1,20 @@
 ## Obelisk-Engine
 
+<div align="center">
+  <img src="assets/obelisk-full.jpeg">
+</div>
+<div align="center">
+<br />
+<!-- markdownlint-restore -->
+
+<a href="https://twitter.com/0xObeliskLabs">
+<img src="https://img.shields.io/twitter/follow/0xObeliskLabs?style=social"/>
+</a>
+<a href="https://github.com/0xobelisk/obelisk-engine">
+
+[//]: # (<img src="https://img.shields.io/github/stars/0xobelisk/obelisk-engine?style=social"/>)
+</a>
+</div>
 
 ![Github Actions][gha-badge] 
 
@@ -16,29 +31,20 @@ Obelisk-Engine is still in its early stages of development, yet the dedicated co
 - Typed SDKs
 
 ## 🚀 Quick Start
-
+See the [start guide](https://obelisk.build/pack/docs/quick-start) in the document website.
 
 
 ## 🗒️ Documentation
 
-
+You can find more detailed documentation in [here](https://obelisk.build/pack/docs).
 
 ## ❓ Support
 
-
+If you encounter issues or have questions, [you can submit an issue on GitHub](https://github.com/0xobelisk/obelisk-engine/issues). You can also join our Discord for discussion and help.
 
 ## 🏗️ Contributing
 
 We'd love your support in improving Obelisk! This monorepo includes all of Obelisk source code, and pull requests are always welcome. To discuss new features or changes [join our Telegram](https://t.me/+0_98p03Fbv1hNzY1).
-
-
-
-## ✏️ Environment
-
-
-
-## ⛩️ Built with Obelisk
-
 
 ## Contributors ✨
 
