@@ -1,16 +1,16 @@
 module examples::init {
+    use std::ascii::string;
     use sui::transfer;
     use sui::tx_context::TxContext;
     use examples::world;
 
-	use examples::counter_component;
+	use examples::counter_comp;
 
     fun init(ctx: &mut TxContext) {
-        let world = world::create_world(ctx);
+        let world = world::create(string(b"Examples Name"), string(b"Examples Description"),ctx);
 
         // Add Component
-
-		counter_component::register(&mut world);
+		counter_comp::register(&mut world);
 
         transfer::public_share_object(world);
     }
