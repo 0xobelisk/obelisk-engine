@@ -1,9 +1,15 @@
-import { ObeliskConfig } from '../../types';
-import { formatAndWriteMove } from '../formatAndWrite';
-import { getRegisterComponent, getRegisterSingletonComponent, getUseComponent } from './common';
+import { ObeliskConfig } from "../../types";
+import { formatAndWriteMove } from "../formatAndWrite";
+import {
+  getRegisterComponent,
+  getRegisterSingletonComponent,
+  getUseComponent,
+  capitalizeFirstLetter,
+} from "./common";
 
 export function generateInit(config: ObeliskConfig, srcPrefix: string) {
   let code = `module ${config.projectName}::init {
+    use std::ascii::string;
     use sui::transfer;
     use sui::tx_context::TxContext;
     use ${config.projectName}::world;
@@ -11,7 +17,11 @@ ${getUseComponent(config.projectName, config.components).join("\n")}
 ${getUseComponent(config.projectName, config.singletonComponents).join("\n")}
 
     fun init(ctx: &mut TxContext) {
-        let world = world::create_world(ctx);
+        let world = world::create(string(b"${capitalizeFirstLetter(
+          config.projectName
+        )} Name"), string(b"${capitalizeFirstLetter(
+    config.projectName
+  )} Description"),ctx);
 
         // Add Component
 ${getRegisterComponent(config.components).join("\n")}
@@ -25,6 +35,10 @@ ${getRegisterSingletonComponent(config.singletonComponents).join("\n")}
         init(ctx)
     }
 }
-`
-  formatAndWriteMove(code, `${srcPrefix}/contracts/${config.projectName}/sources/codegen/init.move`, "formatAndWriteMove");
+`;
+  formatAndWriteMove(
+    code,
+    `${srcPrefix}/contracts/${config.projectName}/sources/codegen/init.move`,
+    "formatAndWriteMove"
+  );
 }

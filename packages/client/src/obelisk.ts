@@ -5,7 +5,7 @@ import {
   SuiTransactionBlockResponse,
   SuiMoveNormalizedModules,
   DynamicFieldName,
-  SuiAddress
+  SuiAddress,
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
@@ -14,47 +14,79 @@ import { SuiSharedObject, SuiOwnedObject } from './libs/suiModel';
 
 import { ObeliskObjectData } from 'src/types';
 import { SuiContractFactory } from './libs/suiContractFactory';
-import { SuiMoveMoudleValueType, SuiMoveMoudleFuncType } from './libs/suiContractFactory/types';
+import {
+  SuiMoveMoudleValueType,
+  SuiMoveMoudleFuncType,
+} from './libs/suiContractFactory/types';
 import {
   ObeliskParams,
   DerivePathParams,
-  SuiTxArg, SuiVecTxArg,
+  SuiTxArg,
+  SuiVecTxArg,
   ComponentContentType,
-  SuiTxArgument, ContractQuery,
-  ContractTx, MapMoudleFuncQuery,
-  MapMoudleFuncTx, FaucetNetworkType
+  SuiTxArgument,
+  ContractQuery,
+  ContractTx,
+  MapMoudleFuncQuery,
+  MapMoudleFuncTx,
+  FaucetNetworkType,
 } from './types';
-import {capitalizeFirstLetter} from "./utils"
-import keccak256 from "keccak256";
+import { capitalizeFirstLetter } from './utils';
+import keccak256 from 'keccak256';
 
-export function isUndefined (value?: unknown): value is undefined {
+export function isUndefined(value?: unknown): value is undefined {
   return value === undefined;
 }
 
-export function withMeta<T extends { meta: SuiMoveMoudleFuncType }>(meta: SuiMoveMoudleFuncType,creator: Omit<T, 'meta'>): T {
-  (creator as T).meta = meta
+export function withMeta<T extends { meta: SuiMoveMoudleFuncType }>(
+  meta: SuiMoveMoudleFuncType,
+  creator: Omit<T, 'meta'>
+): T {
+  (creator as T).meta = meta;
 
   return creator as T;
 }
 
 function createQuery(
   meta: SuiMoveMoudleFuncType,
-  fn: (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean) => Promise<DevInspectResults | TransactionBlock>
+  fn: (
+    tx: TransactionBlock,
+    params: SuiTxArgument[],
+    isRaw?: boolean
+  ) => Promise<DevInspectResults | TransactionBlock>
 ): ContractQuery {
-  return withMeta(meta, async (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean): Promise<DevInspectResults | TransactionBlock> => {
-    const result = await fn(tx, params, isRaw);
-    return result;
-  });
+  return withMeta(
+    meta,
+    async (
+      tx: TransactionBlock,
+      params: SuiTxArgument[],
+      isRaw?: boolean
+    ): Promise<DevInspectResults | TransactionBlock> => {
+      const result = await fn(tx, params, isRaw);
+      return result;
+    }
+  );
 }
 
 function createTx(
   meta: SuiMoveMoudleFuncType,
-  fn: (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean) => Promise<SuiTransactionBlockResponse | TransactionBlock>
+  fn: (
+    tx: TransactionBlock,
+    params: SuiTxArgument[],
+    isRaw?: boolean
+  ) => Promise<SuiTransactionBlockResponse | TransactionBlock>
 ): ContractTx {
-  return withMeta(meta, async (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean): Promise<SuiTransactionBlockResponse | TransactionBlock> => {
-    const result = await fn(tx, params, isRaw);
-    return result;
-  });
+  return withMeta(
+    meta,
+    async (
+      tx: TransactionBlock,
+      params: SuiTxArgument[],
+      isRaw?: boolean
+    ): Promise<SuiTransactionBlockResponse | TransactionBlock> => {
+      const result = await fn(tx, params, isRaw);
+      return result;
+    }
+  );
 }
 
 /**
@@ -88,7 +120,7 @@ export class Obelisk {
     networkType,
     fullnodeUrls,
     packageId,
-    metadata
+    metadata,
   }: ObeliskParams = {}) {
     // Init the account manager
     this.accountManager = new SuiAccountManager({ mnemonics, secretKey });
@@ -99,49 +131,59 @@ export class Obelisk {
     this.packageId = packageId;
     if (metadata !== undefined) {
       this.metadata = metadata as SuiMoveNormalizedModules;
-      Object.values(metadata as SuiMoveNormalizedModules).forEach(value => {
+      Object.values(metadata as SuiMoveNormalizedModules).forEach((value) => {
         let data = value as SuiMoveMoudleValueType;
         let moduleName = data.name;
         Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
           let meta = value as SuiMoveMoudleFuncType;
           meta.moudleName = moduleName;
           meta.funcName = funcName;
-  
+
           if (isUndefined(this.#query[moduleName])) {
             this.#query[moduleName] = {};
           }
           if (isUndefined(this.#query[moduleName][funcName])) {
-            this.#query[moduleName][funcName] = createQuery(meta, (tx, p, isRaw) => this.#read(meta, tx, p, isRaw))
+            this.#query[moduleName][funcName] = createQuery(
+              meta,
+              (tx, p, isRaw) => this.#read(meta, tx, p, isRaw)
+            );
           }
-  
+
           if (isUndefined(this.#tx[moduleName])) {
             this.#tx[moduleName] = {};
           }
           if (isUndefined(this.#tx[moduleName][funcName])) {
-            this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) => this.#exec(meta, tx, p, isRaw))
+            this.#tx[moduleName][funcName] = createTx(meta, (tx, p, isRaw) =>
+              this.#exec(meta, tx, p, isRaw)
+            );
           }
         });
-      })
+      });
     }
     this.contractFactory = new SuiContractFactory({
       packageId,
-      metadata
-    })
+      metadata,
+    });
   }
 
-  public get query (): MapMoudleFuncQuery {
+  public get query(): MapMoudleFuncQuery {
     return this.#query;
   }
 
-  public get tx (): MapMoudleFuncTx {
+  public get tx(): MapMoudleFuncTx {
     return this.#tx;
   }
 
-  #exec = async (meta: SuiMoveMoudleFuncType, tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean) => {
+  #exec = async (
+    meta: SuiMoveMoudleFuncType,
+    tx: TransactionBlock,
+    params: SuiTxArgument[],
+    isRaw?: boolean
+  ) => {
     tx.moveCall({
       target: `${this.contractFactory.packageId}::${meta.moudleName}::${meta.funcName}`,
       arguments: params,
-    })
+    });
 
     if (isRaw === true) {
       return tx;
@@ -149,13 +191,17 @@ export class Obelisk {
     return await this.signAndSendTxn(tx);
   };
 
-
-  #read = async (meta: SuiMoveMoudleFuncType, tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean) => {
+  #read = async (
+    meta: SuiMoveMoudleFuncType,
+    tx: TransactionBlock,
+    params: SuiTxArgument[],
+    isRaw?: boolean
+  ) => {
     tx.moveCall({
       target: `${this.contractFactory.packageId}::${meta.moudleName}::${meta.funcName}`,
       arguments: params,
-    })
-    
+    });
+
     if (isRaw === true) {
       return tx;
     }
@@ -200,7 +246,7 @@ export class Obelisk {
   }
 
   getMetadata() {
-    return this.contractFactory.metadata
+    return this.contractFactory.metadata;
   }
   /**
    * Request some SUI from faucet
@@ -223,7 +269,6 @@ export class Obelisk {
   async getObjects(objectIds: string[]) {
     return this.suiInteractor.getObjects(objectIds);
   }
-
 
   async signTxn(
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
@@ -399,45 +444,83 @@ export class Obelisk {
   }
 
   async getWorld(worldObjectId: string) {
-    return this.suiInteractor.getObject(worldObjectId)
+    return this.suiInteractor.getObject(worldObjectId);
   }
 
   async getComponents(worldId: string) {
-    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields.components.fields.id.id;
+    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
+      .components.fields.id.id;
 
     return await this.suiInteractor.getDynamicFields(parentId);
   }
 
-
-  async getComponentByName(worldId: string, componentName: string) {
-    const componentId = keccak256(`${capitalizeFirstLetter(componentName)} Component`);
+  async getComponentByName(
+    worldId: string,
+    packageName: string,
+    componentName: string
+  ) {
+    const componentNameId = `${capitalizeFirstLetter(
+      packageName
+    )} ${capitalizeFirstLetter(componentName)} Comp`;
+    // const componentId = keccak256(componentNameId);
+    const textEncoder = new TextEncoder();
+    const componentId = this.fromBytes(textEncoder.encode(componentNameId));
     return await this.getComponent(worldId, componentId);
   }
 
-  async getComponent(worldId: string, componentId: Buffer) {
-    const componentIdValue: number[] = Array.from(componentId);
-    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields.components.fields.id.id;
+  fromBytes(bytes: Uint8Array) {
+    const len = bytes.length;
+    const addrLen = 32;
 
+    if (len === 0 || len > addrLen) {
+      throw new Error('Invalid input');
+    }
+
+    const offset = addrLen - len;
+    const paddedBytes = new Uint8Array(addrLen);
+
+    for (let i = 0; i < len; i++) {
+      paddedBytes[i] = bytes[i]; // 将字节从原始数组复制到填充后的数组
+    }
+    return (
+      '0x' +
+      Array.from(paddedBytes)
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('')
+    );
+  }
+
+  async getComponent(worldId: string, componentId: string) {
+    // const componentIdValue: number[] = Array.from(componentId);
+    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
+      .components.fields.id.id;
     const name = {
-      type: "vector<u8>",
-      value: componentIdValue
+      type: 'address',
+      value: componentId,
       // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
-    } as DynamicFieldName
+    } as DynamicFieldName;
     return await this.suiInteractor.getDynamicFieldObject(parentId, name);
   }
 
   async getOwnedEntities(owner: SuiAddress, cursor?: string, limit?: number) {
-    const ownedObjects = await this.suiInteractor.getOwnedObjects(owner, cursor, limit)
+    const ownedObjects = await this.suiInteractor.getOwnedObjects(
+      owner,
+      cursor,
+      limit
+    );
     let ownedEntities: ObeliskObjectData[] = [];
-  
+
     for (const object of ownedObjects.data) {
       let objectDetail = await this.getObject(object.data!.objectId);
-  
-      if (objectDetail.objectType.split("::")[0] === this.contractFactory.packageId) {
+
+      if (
+        objectDetail.objectType.split('::')[0] ===
+        this.contractFactory.packageId
+      ) {
         ownedEntities.push(objectDetail);
       }
     }
-  
+
     return ownedEntities;
   }
 }
