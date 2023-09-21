@@ -456,16 +456,14 @@ export class Obelisk {
 
   async getComponentByName(
     worldId: string,
-    packageName: string,
-    componentName: string
+    componentName: string,
+    packageName: string
   ) {
-    const componentNameId = `${capitalizeFirstLetter(
-      packageName
-    )} ${capitalizeFirstLetter(componentName)} Comp`;
+    const componentNameId = `${capitalizeFirstLetter(componentName)} Comp`;
     const componentId = keccak256(componentNameId);
     return await this.getComponent(worldId, componentId);
   }
-  
+
   async getComponent(worldId: string, componentId: Buffer) {
     const componentIdValue: number[] = Array.from(componentId);
     const parentId = (await this.suiInteractor.getObject(worldId)).objectFields

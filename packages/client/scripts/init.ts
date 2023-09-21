@@ -58,17 +58,46 @@ async function init() {
   // let data1 = await obelisk.getComponent("0x36cbd7d72444757040b496e7380af38c873e3ce4a88a30a0800ed7d3a24b3929", hexdata)
   let data1 = await obelisk.getComponentByName(
     '0x8ca551499f40b18ee42e9537ce1e22c2f40120c014ee13c77ab8162b546c3575',
-    'withinfinity',
-    'counter'
+    'counter',
+    'withinfinity'
   );
-  // console.log(JSON.stringify(data1.data?.content ));
+  console.log(JSON.stringify(data1.data?.content));
   let content = data1.data!.content as data;
   let res = content.fields!.value!.fields.data;
   const bcs = new BCS(getSuiMoveConfig());
-
+  console.log(res);
   const byteArray = new Uint8Array(res);
   const data2 = bcs.de('u64', byteArray);
   console.log(data2);
+
+  const tx = new TransactionBlock();
+  let params = [] as SuiTxArgument[];
+  // let res2 = await obelisk.query.pet_system.get_pet_basic_info(tx, params) as DevInspectResults;
+  const resq = (await obelisk.query.counter_comp.field_types(
+    tx,
+    params
+  )) as DevInspectResults;
+  // console.log(JSON.stringify(resq.results![0].returnValues!));
+  let returnData = resq.results![0].returnValues!;
+
+  console.log(returnData);
+  let databytes = new Uint8Array(returnData[0][0]);
+  const data3 = bcs.de('vector<vector<u8>>', databytes)[0];
+  const asciiString: string = String.fromCharCode(...data3);
+
+  console.log(data3);
+  console.log(asciiString);
+
+  // const tx = new TransactionBlock();
+  // let params = [tx.pure(res) as SuiTxArgument] as SuiTxArgument[];
+  // // let res2 = await obelisk.query.pet_system.get_pet_basic_info(tx, params) as DevInspectResults;
+  // const resq = (await obelisk.query.counter_comp.decode(
+  //   tx,
+  //   params
+  // )) as DevInspectResults;
+  // console.log(JSON.stringify(resq.results![0].returnValues!));
+  // let returnData = resq.results![0].returnValues!;
+  // const data3 = bcs.de(returnData[0][1], byteArray);
 
   // // Same with deserialization
   // let data_restored = bcs.de('vector<u8>', data_bytes);

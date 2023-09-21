@@ -373,6 +373,7 @@ export function renderSigletonEncodeFunc(): string {
 `;
 }
 
+// todo: struct / bag
 function renderBcsDecodeFunc(type: string) {
   if (type === "address") {
     return `bcs::peel_address(&mut data)`;
