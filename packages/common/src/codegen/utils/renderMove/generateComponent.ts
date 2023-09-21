@@ -33,7 +33,7 @@ export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
     use ${config.projectName}::world::{Self, World};
   
     // Systems
-  ${getFriendSystem(config.projectName, config.systems)}
+${getFriendSystem(config.projectName, config.systems)}
 
 \tpublic fun id() : address {
 \t\tentity_key::from_bytes(b"${capitalizeFirstLetter(componentName)} Comp")
@@ -75,9 +75,7 @@ export function generateSingletonComponent(
 ${getFriendSystem(config.projectName, config.systems)}
 
 \tpublic fun id() : address {
-\t\tentity_key::from_bytes(b"${capitalizeFirstLetter(
-        config.projectName
-      )} ${capitalizeFirstLetter(componentName)} Comp")
+\t\tentity_key::from_bytes(b"${capitalizeFirstLetter(componentName)} Comp")
 \t}
 ${renderStruct(value)}
 ${renderRegisterFuncWithInit(value)}
