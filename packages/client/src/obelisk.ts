@@ -462,41 +462,17 @@ export class Obelisk {
     const componentNameId = `${capitalizeFirstLetter(
       packageName
     )} ${capitalizeFirstLetter(componentName)} Comp`;
-    // const componentId = keccak256(componentNameId);
-    const textEncoder = new TextEncoder();
-    const componentId = this.fromBytes(textEncoder.encode(componentNameId));
+    const componentId = keccak256(componentNameId);
     return await this.getComponent(worldId, componentId);
   }
-
-  fromBytes(bytes: Uint8Array) {
-    const len = bytes.length;
-    const addrLen = 32;
-
-    if (len === 0 || len > addrLen) {
-      throw new Error('Invalid input');
-    }
-
-    const offset = addrLen - len;
-    const paddedBytes = new Uint8Array(addrLen);
-
-    for (let i = 0; i < len; i++) {
-      paddedBytes[i] = bytes[i]; // 将字节从原始数组复制到填充后的数组
-    }
-    return (
-      '0x' +
-      Array.from(paddedBytes)
-        .map((byte) => byte.toString(16).padStart(2, '0'))
-        .join('')
-    );
-  }
-
-  async getComponent(worldId: string, componentId: string) {
-    // const componentIdValue: number[] = Array.from(componentId);
+  
+  async getComponent(worldId: string, componentId: Buffer) {
+    const componentIdValue: number[] = Array.from(componentId);
     const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
       .components.fields.id.id;
     const name = {
       type: 'address',
-      value: componentId,
+      value: componentIdValue,
       // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
     } as DynamicFieldName;
     return await this.suiInteractor.getDynamicFieldObject(parentId, name);

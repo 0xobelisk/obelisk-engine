@@ -3,7 +3,7 @@ import { formatAndWriteMove } from "../formatAndWrite";
 
 export function generateEntityKey(config: ObeliskConfig, srcPrefix: string) {
   let code = `module ${config.projectName}::entity_key {
-    use std::vector;
+    use sui::hash::keccak256;
     use sui::address;
     use sui::object;
 
@@ -12,18 +12,7 @@ export function generateEntityKey(config: ObeliskConfig, srcPrefix: string) {
     }
 
     public fun from_bytes(bytes: vector<u8>): address {
-        let len = vector::length(&bytes);
-        assert!(len != 0 && len <= 32, 0);
-
-        let offset = address::length() - len;
-
-        let i = 0;
-        while (i < offset) {
-            vector::push_back(&mut bytes,0u8);
-            i = i + 1;
-        };
-
-        address::from_bytes(bytes)
+        address::from_bytes(keccak256(&bytes))
     }
 
     public fun from_u256(x: u256): address {

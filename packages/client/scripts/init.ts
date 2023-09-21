@@ -57,7 +57,7 @@ async function init() {
 
   // let data1 = await obelisk.getComponent("0x36cbd7d72444757040b496e7380af38c873e3ce4a88a30a0800ed7d3a24b3929", hexdata)
   let data1 = await obelisk.getComponentByName(
-    '0x6e30da518dd8f64f27f45c1f7b75a13c1852c0c04172df3f9ef1e05b4d4379e9',
+    '0x8ca551499f40b18ee42e9537ce1e22c2f40120c014ee13c77ab8162b546c3575',
     'withinfinity',
     'counter'
   );
@@ -69,10 +69,6 @@ async function init() {
   const byteArray = new Uint8Array(res);
   const data2 = bcs.de('u64', byteArray);
   console.log(data2);
-
-  const view = new DataView(byteArray.buffer);
-  const numberValue = view.getUint32(0, true); // 第二个参数设置为 true 表示使用小端字节序
-  console.log(numberValue);
 
   // // Same with deserialization
   // let data_restored = bcs.de('vector<u8>', data_bytes);
