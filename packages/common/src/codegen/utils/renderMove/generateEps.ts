@@ -2,7 +2,7 @@ import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 
 export function generateEps(config: ObeliskConfig, srcPrefix: string) {
-  let code = `module ${config.projectName}::world {
+  let code = `module ${config.name}::world {
     use std::ascii::String;
     use std::option::Option;
     use sui::event;
@@ -87,7 +87,7 @@ export function generateEps(config: ObeliskConfig, srcPrefix: string) {
 `;
   formatAndWriteMove(
     code,
-    `${srcPrefix}/contracts/${config.projectName}/sources/codegen/eps/world.move`,
+    `${srcPrefix}/contracts/${config.name}/sources/codegen/eps/world.move`,
     "formatAndWriteMove"
   );
 }

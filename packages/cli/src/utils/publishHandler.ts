@@ -16,13 +16,13 @@ import {validatePrivateKey} from "./validatePrivateKey";
 import { generateIdConfig } from "../../../common/src/codegen";
 
 // type publishRes = {
-//   projectName: string,
+//   name: string,
 //   transactionHash: string,
 //   packageId: string,
 //   worldId: string
 // }
 
-export async function publishHandler(projectName: string, network: 'mainnet' | 'testnet' | 'devnet' | 'localnet', savePath?: string | undefined) {
+export async function publishHandler(name: string, network: 'mainnet' | 'testnet' | 'devnet' | 'localnet', savePath?: string | undefined) {
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey)
     throw new ObeliskCliError(
@@ -49,7 +49,7 @@ in your contracts directory to use the default sui private key.`
   const path = process.cwd()
 
   const { modules, dependencies } = JSON.parse(
-      execSync(`sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${projectName}`, {
+      execSync(`sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`, {
         encoding: 'utf-8',
       }),
   );
@@ -73,11 +73,11 @@ in your contracts directory to use the default sui private key.`
   let worldId = ""
   result.objectChanges!.map((object) => {
     if (object.type === "published") {
-      console.log(chalk.green(`${projectName} PackageId: ${object.packageId}`))
+      console.log(chalk.green(`${name} PackageId: ${object.packageId}`))
       packageId = object.packageId
     }
     if (object.type === "created" && object.objectType.endsWith('::world::World')) {
-      console.log(chalk.green(`${projectName} WorldId: ${object.objectId}`))
+      console.log(chalk.green(`${name} WorldId: ${object.objectId}`))
       worldId = object.objectId
     }
   })

@@ -6,7 +6,7 @@ type ComponentValueType = string
 type ConfigDataType = Record<string, string>
 
 type ObeliskConfig = {
-    projectName: string,
+    name: string,
     systems: string[],
     components: Record<string, ComponentMapType | ComponentValueType>
     // world 的顶级存储，适合定义world的规则，比如一个admin, 一个fee，并且可以帮你初始化数据
@@ -43,7 +43,7 @@ type ObeliskConfig = {
 
 async function init() {
   let config = {
-    projectName: "withinfinity",
+    name: "withinfinity",
     systems: [
         "fee_system",
         "home_system",

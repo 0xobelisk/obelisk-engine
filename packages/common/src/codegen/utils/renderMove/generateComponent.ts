@@ -22,18 +22,18 @@ import {
 
 export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
   Object.entries(config.components).forEach(([componentName, value]) => {
-    let code = `module ${config.projectName}::${componentName}_comp {
+    let code = `module ${config.name}::${componentName}_comp {
     use std::ascii::{String, string};
     use std::option::some;
     use std::vector;
     use sui::bcs;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
-    use ${config.projectName}::entity_key;
-    use ${config.projectName}::world::{Self, World};
+    use ${config.name}::entity_key;
+    use ${config.name}::world::{Self, World};
   
     // Systems
-${getFriendSystem(config.projectName, config.systems)}
+${getFriendSystem(config.name, config.systems)}
 
 \tpublic fun id() : address {
 \t\tentity_key::from_bytes(b"${capitalizeFirstLetter(componentName)} Comp")
@@ -51,7 +51,7 @@ ${renderDecodeFunc(value)}
 `;
     formatAndWriteMove(
       code,
-      `${srcPrefix}/contracts/${config.projectName}/sources/codegen/components/${componentName}.move`,
+      `${srcPrefix}/contracts/${config.name}/sources/codegen/components/${componentName}.move`,
       "formatAndWriteMove"
     );
   });
@@ -63,16 +63,16 @@ export function generateSingletonComponent(
 ) {
   Object.entries(config.singletonComponents).forEach(
     ([componentName, value]) => {
-      let code = `module ${config.projectName}::${componentName}_comp {
+      let code = `module ${config.name}::${componentName}_comp {
     use std::ascii::{String, string};
     use std::option::none;
     use std::vector;
     use sui::bcs;
-    use ${config.projectName}::entity_key;
-    use ${config.projectName}::world::{Self, World};
+    use ${config.name}::entity_key;
+    use ${config.name}::world::{Self, World};
   
     // Systems
-${getFriendSystem(config.projectName, config.systems)}
+${getFriendSystem(config.name, config.systems)}
 
 \tpublic fun id() : address {
 \t\tentity_key::from_bytes(b"${capitalizeFirstLetter(componentName)} Comp")
@@ -87,7 +87,7 @@ ${renderSigletonDecodeFunc(value)}
 `;
       formatAndWriteMove(
         code,
-        `${srcPrefix}/contracts/${config.projectName}/sources/codegen/components/${componentName}.move`,
+        `${srcPrefix}/contracts/${config.name}/sources/codegen/components/${componentName}.move`,
         "formatAndWriteMove"
       );
     }

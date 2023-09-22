@@ -3,7 +3,7 @@ import { formatAndWriteMove } from '../formatAndWrite';
 
 export function generateToml(config: ObeliskConfig, srcPrefix: string) {
   let code = `[package]
-name = "${config.projectName}"
+name = "${config.name}"
 version = "0.0.1"
 
 [dependencies]
@@ -11,7 +11,7 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 
 [addresses]
 sui =  "0x2"
-${config.projectName} = "0x0"
+${config.name} = "0x0"
 `
-  formatAndWriteMove(code, `${srcPrefix}/contracts/${config.projectName}/Move.toml`, "formatAndWriteMove");
+  formatAndWriteMove(code, `${srcPrefix}/contracts/${config.name}/Move.toml`, "formatAndWriteMove");
 }

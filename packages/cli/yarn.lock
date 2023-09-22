@@ -2,32 +2,9 @@
 # yarn lockfile v1
 
 
-"@0xobelisk/common@workspace:*":
-  version "0.1.3"
-  resolved "https://registry.npmjs.org/@0xobelisk/common/-/common-0.1.3.tgz#ce6a4e6d24debc7b6b5b83d7573261d78c33cdd0"
-  integrity sha512-YT2laH3JSpX8TCzXLlN4lhMocEij6LgSSCoxrk1KC+rPNl0nXxtfpnhh8N6qk8qgVegGXl8zuXZkIjiil3q5cQ==
-  dependencies:
-    "@mysten/sui.js" "^0.41.0"
-    chalk "^5.0.1"
-    chokidar "^3.5.3"
-    dotenv "^16.0.3"
-    ejs "^3.1.8"
-    esbuild "^0.17.15"
-    execa "^7.0.0"
-    find-up "^6.3.0"
-    glob "^8.0.3"
-    nice-grpc-web "^2.0.1"
-    openurl "^1.1.1"
-    path "^0.12.7"
-    prettier "^2.8.4"
-    prettier-plugin-rust "^0.1.9"
-    prettier-plugin-solidity "^1.1.2"
-    throttle-debounce "^5.0.0"
-    typechain "^8.1.1"
-    typescript "5.1.6"
-    yargs "^17.7.1"
-    zod "^3.21.4"
-    zod-validation-error "^1.3.0"
+"@0xobelisk/common@link:../common":
+  version "0.0.0"
+  uid ""
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"

@@ -25,16 +25,16 @@ export function capitalizeFirstLetter(input: string): string {
 
 /**
  *
- * @param projectName
+ * @param name
  * @param values
- * @return [use projectName::name_component, use projectName::info_component]
+ * @return [use name::name_component, use name::info_component]
  */
 export function getUseComponent(
-  projectName: string,
+  name: string,
   values: Record<string, ComponentMapType>
 ): string[] {
   return Object.entries(values).map(
-    ([key, _]) => `\tuse ${projectName}::${key}_comp;`
+    ([key, _]) => `\tuse ${name}::${key}_comp;`
   );
 }
 
@@ -64,12 +64,12 @@ export function getRegisterSingletonComponent(
 
 /**
  *
- * @param projectName
+ * @param name
  * @param values
- * @return [ friend projectName::name_system, friend projectName::info_system ]
+ * @return [ friend name::name_system, friend name::info_system ]
  */
-export function getFriendSystem(projectName: string, values: string[]): string {
-  return values.map((key) => `\tfriend ${projectName}::${key};`).join("\n");
+export function getFriendSystem(name: string, values: string[]): string {
+  return values.map((key) => `\tfriend ${name}::${key};`).join("\n");
 }
 
 /**

@@ -13,7 +13,8 @@ export type SingletonType = {
 export type singletonComponentMapType = string | Record<string, string>;
 
 export type ObeliskConfig = {
-  projectName: string;
+  name: string;
+  description: string;
   systems: string[];
   components: Record<string, ComponentMapType>;
   singletonComponents: Record<string, SingletonType>;

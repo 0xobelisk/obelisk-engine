@@ -2,7 +2,7 @@ import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 
 export function generateEntityKey(config: ObeliskConfig, srcPrefix: string) {
-  let code = `module ${config.projectName}::entity_key {
+  let code = `module ${config.name}::entity_key {
     use sui::hash::keccak256;
     use sui::address;
     use sui::object;
@@ -22,7 +22,7 @@ export function generateEntityKey(config: ObeliskConfig, srcPrefix: string) {
 `;
   formatAndWriteMove(
     code,
-    `${srcPrefix}/contracts/${config.projectName}/sources/entity_key.move`,
+    `${srcPrefix}/contracts/${config.name}/sources/entity_key.move`,
     "formatAndWriteMove"
   );
 }
