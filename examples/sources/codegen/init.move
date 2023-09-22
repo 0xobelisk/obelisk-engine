@@ -3,14 +3,17 @@ module examples::init {
     use sui::transfer;
     use sui::tx_context::TxContext;
     use examples::world;
-
-	use examples::counter_comp;
+    use examples::single_column_comp;
+    use examples::multi_column_comp;
+    use examples::single_value_comp;
 
     fun init(ctx: &mut TxContext) {
-        let world = world::create(string(b"Examples Name"), string(b"Examples Description"),ctx);
+        let world = world::create(string(b"Examples"), string(b"Examples description"),ctx);
 
         // Add Component
-		counter_comp::register(&mut world);
+        single_column_comp::register(&mut world, ctx);
+        multi_column_comp::register(&mut world, ctx);
+        single_value_comp::register(&mut world);
 
         transfer::public_share_object(world);
     }

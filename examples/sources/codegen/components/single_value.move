@@ -1,23 +1,22 @@
-module examples::counter_comp {
-	use std::ascii::{String, string};
-	use std::option::none;
-	use std::vector;
-	use sui::bcs;
-	use examples::entity_key;
-	use examples::world::{Self , World};
-
-	// Systems
+module examples::single_value_comp {
+    use std::ascii::{String, string};
+    use std::option::none;
+    use std::vector;
+    use sui::bcs;
+    use examples::entity_key;
+    use examples::world::{Self, World};
+  
+    // Systems
 	friend examples::counter_system;
 
 	public fun id() : address {
-		entity_key::from_bytes(b"Examples Counter Comp")
+		entity_key::from_bytes(b"Single_value Comp")
 	}
 
 	public fun field_types() : vector<String> {
 		vector[string(b"u64")]
 	}
-
-	/// value: u64
+  
 	struct Field has drop, store {
 		data: vector<u8>
 	}
@@ -26,17 +25,17 @@ module examples::counter_comp {
 		world::add_component<Field>(
 			world,
 			id(),
-			Field { data: encode(10) }
+			Field { data: encode(1000) }
 		);
 	}
 
-  	public(friend) fun update(world: &mut World, value: u64) {
+	public(friend) fun update(world: &mut World, value: u64) {
 		let data = encode(value);
 		world::get_mut_component<Field>(world, id()).data = data;
 		world::emit_update_event(id(), none(), data)
 	}
 
-  	public fun get(world: &World): u64 {
+	public fun get(world: &World): u64 {
 		let field = world::get_component<Field>(world, id());
 		decode(field.data)
 	}
@@ -53,4 +52,5 @@ module examples::counter_comp {
 			bcs::peel_u64(&mut data)
 		)
 	}
+
 }
