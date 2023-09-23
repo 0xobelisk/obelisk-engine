@@ -1,13 +1,14 @@
 // export type ComponentMapType = string | Record<string, string | object>
 export type ComponentMapType = string | Record<string, string>;
-export type SingletonType = {
-  type: string;
-  init: string;
-};
-// | {
-//     type: Record<string, string>;
-//     init: Record<string, string>;
-//   };
+export type SingletonType =
+  | {
+      type: string;
+      init: string;
+    }
+  | {
+      type: Record<string, string>;
+      init: Record<string, string>;
+    };
 
 // export type singletonComponentMapType = string | Record<string, string | object>
 export type singletonComponentMapType = string | Record<string, string>;

@@ -1,4 +1,4 @@
-import { ObeliskConfig } from "@0xobelisk/common/src/codegen/types";
+import { ObeliskConfig } from "../common/src/codegen/types";
 
 export const obeliskConfig = {
   name: "examples",
@@ -11,7 +11,7 @@ export const obeliskConfig = {
     multi_column: {
       state: "vector<u8>",
       last_update_time: "u64",
-    }
+    },
   },
   singletonComponents: {
     // Single value
@@ -20,15 +20,15 @@ export const obeliskConfig = {
       init: "1000",
     },
     // TODO: Struct value
-    // Manager: {
-    //   type: {
-    //     admin: "address",
-    //     fee: "u64"
-    //   },
-    //   init: {
-    //     admin: "0x1",
-    //     fee: "100",
-    //   },
-    // },
+    Manager: {
+      type: {
+        admin: "address",
+        fee: "u64",
+      },
+      init: {
+        admin: "@0x1",
+        fee: "100",
+      },
+    },
   },
 } as ObeliskConfig;

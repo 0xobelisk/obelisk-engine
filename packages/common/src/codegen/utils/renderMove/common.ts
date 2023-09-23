@@ -31,7 +31,7 @@ export function capitalizeFirstLetter(input: string): string {
  */
 export function getUseComponent(
   name: string,
-  values: Record<string, ComponentMapType>
+  values: Record<string, ComponentMapType | SingletonType>
 ): string[] {
   return Object.entries(values).map(
     ([key, _]) => `\tuse ${name}::${key}_comp;`
@@ -55,7 +55,7 @@ export function getRegisterComponent(
  * @return [ name_component::register(&mut world) ,info_component::register(&mut world) ]
  */
 export function getRegisterSingletonComponent(
-  values: Record<string, ComponentMapType>
+  values: Record<string, SingletonType>
 ): string[] {
   return Object.entries(values).map(
     ([key, _]) => `\t\t${key}_comp::register(&mut world);`
@@ -79,7 +79,7 @@ export function getFriendSystem(name: string, values: string[]): string {
  * @return [ name, age, birth_time ]
  */
 export function getStructAttrs(
-  values: ComponentMapType,
+  values: string | Record<string, string>,
   prefixArgs: string
 ): string[] {
   return typeof values === "string"
@@ -87,12 +87,23 @@ export function getStructAttrs(
     : Object.entries(values).map(([key, _]) => `${prefixArgs}${key}`);
 }
 
+export function getStructInitValue(
+  values: string | Record<string, string>
+): string[] {
+  return typeof values === "string"
+    ? [`${values}`]
+    : Object.entries(values).map(([_, value]) => `${value}`);
+}
+
 /**
  *
  * @param values
  * @return ( bool , u64 , u64)
  */
-export function getStructTypes(values: ComponentMapType): string {
+// export function getStructTypes(values: ComponentMapType): string {
+export function getStructTypes(
+  values: string | Record<string, string>
+): string {
   return typeof values === "string"
     ? values
     : `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
@@ -104,7 +115,7 @@ export function getStructTypes(values: ComponentMapType): string {
  * @return Attributes and types of the struct. [ name: string, age: u64 ]
  */
 export function getStructAttrsWithType(
-  values: ComponentMapType,
+  values: string | Record<string, string>,
   prefix: string
 ): string[] {
   return typeof values === "string"
@@ -113,7 +124,7 @@ export function getStructAttrsWithType(
 }
 
 export function getFieldAttrsWithType(
-  values: ComponentMapType
+  values: string | Record<string, string>
   // prefix: string
 ): string[] {
   return typeof values === "string"
@@ -140,7 +151,7 @@ export function getFieldTypes(
  * @return [ data.name = name , data.age = age ]
  */
 export function getStructAttrsEncode(
-  values: ComponentMapType,
+  values: string | Record<string, string>,
   prefixArgs: string
 ): string[] {
   return typeof values === "string"
@@ -157,7 +168,7 @@ export function getStructAttrsEncode(
  * @return [ data.name, data.age ]
  */
 export function getStructAttrsQuery(
-  values: ComponentMapType,
+  values: string | Record<string, string>,
   prefixArgs: string
 ): string[] {
   return typeof values === "string"
@@ -248,101 +259,139 @@ function updateDecodeData(values: ComponentMapType, key: string) {
 export function renderUpdateFunc(
   values: ComponentMapType | SingletonType
 ): string {
-  let map = values;
+  let map: string | Record<string, string> = "";
+  let total = "";
+  let all = "";
   if (isSingletonType(values)) {
     let singleValue = values as SingletonType;
     map = singleValue.type;
-  }
 
-  const total = `\tpublic(friend) fun update(world: &mut World, key: address, ${getStructAttrsWithType(
-    map,
-    ""
-  ).join(", ")}) {
-\t\tlet component = world::get_mut_component<Table<address, Field>>(world, id());
-\t\tlet field = table::borrow_mut<address, Field>(component, key);
-\t\tlet data = encode(${getStructAttrs(values, "").join(", ")});
-\t\tfield.data = data;
-\t\tworld::emit_update_event(id(), some(key), data)
-\t}
-`;
-
-  const all =
-    typeof map === "string"
-      ? ""
-      : Object.entries(map)
-          .map(
-            ([key, type]) =>
-              `\tpublic(friend) fun update_${key}(world: &mut World, key: address, ${key}: ${type}) {
-\t\tlet component = world::get_mut_component<Table<address,Field>>(world, id());
-\t\tlet field = table::borrow_mut<address, Field>(component, key);
-\t\tlet ${updateDecodeData(map, key)} = decode(field.data);
-\t\tlet data = encode(${getStructAttrs(values, "").join(", ")});
-\t\tfield.data = data;
-\t\tworld::emit_update_event(id(), some(key), data)
-\t}
-`
-          )
-          .join("\n");
-
-  return total + all;
-}
-
-export function renderSingletonUpdateFunc(values: SingletonType): string {
-  return `\tpublic(friend) fun update(world: &mut World, ${getStructAttrsWithType(
-    values.type,
-    ""
-  ).join(", ")}) {
-\t\tlet data = encode(value);
+    total = `\tpublic(friend) fun update(world: &mut World, ${getStructAttrsWithType(
+      map,
+      ""
+    ).join(", ")}) {
+\t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
 \t\tworld::get_mut_component<Field>(world, id()).data = data;
 \t\tworld::emit_update_event(id(), none(), data)
 \t}
 `;
+
+    all =
+      typeof map === "string"
+        ? ""
+        : Object.entries(map)
+            .map(
+              ([key, type]) =>
+                `\tpublic(friend) fun update_${key}(world: &mut World, ${key}: ${type}) {
+\t\tlet field = world::get_mut_component<Field>(world, id());
+\t\tlet ${updateDecodeData(map, key)} = decode(field.data);
+\t\tfield.data = encode(${getStructAttrs(map, "").join(", ")});
+\t\tworld::emit_update_event(id(), none(), field.data)
+\t}
+`
+            )
+            .join("\n");
+  } else {
+    map = values as ComponentMapType;
+
+    total = `\tpublic(friend) fun update(world: &mut World, key: address, ${getStructAttrsWithType(
+      map,
+      ""
+    ).join(", ")}) {
+\t\tlet component = world::get_mut_component<Table<address, Field>>(world, id());
+\t\tlet field = table::borrow_mut<address, Field>(component, key);
+\t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
+\t\tfield.data = data;
+\t\tworld::emit_update_event(id(), some(key), data)
+\t}
+`;
+
+    all =
+      typeof map === "string"
+        ? ""
+        : Object.entries(map)
+            .map(
+              ([key, type]) =>
+                `\tpublic(friend) fun update_${key}(world: &mut World, key: address, ${key}: ${type}) {
+\t\tlet component = world::get_mut_component<Table<address,Field>>(world, id());
+\t\tlet field = table::borrow_mut<address, Field>(component, key);
+\t\tlet ${updateDecodeData(map, key)} = decode(field.data);
+\t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
+\t\tfield.data = data;
+\t\tworld::emit_update_event(id(), some(key), data)
+\t}
+`
+            )
+            .join("\n");
+  }
+
+  return total + all;
 }
 
 export function renderQueryFunc(
   values: ComponentMapType | SingletonType
 ): string {
-  let map = values;
+  let map: string | Record<string, string> = "";
+  let total = "";
+  let all = "";
   if (isSingletonType(values)) {
     let singleValue = values as SingletonType;
     map = singleValue.type;
-  }
 
-  const total = `\tpublic fun get(world: &World, key: address): ${getStructTypes(
-    map
-  )} {
+    total = `\tpublic fun get(world: &World): ${getStructTypes(map)} {
+\t\tlet data = world::get_component<Field>(world, id()).data;
+\t\tdecode(data)
+\t}\n`;
+
+    all =
+      typeof map === "string"
+        ? ""
+        : "\n" +
+          Object.entries(map)
+            .map(
+              ([
+                key,
+                type,
+              ]) => `\tpublic fun get_${key}(world: &World): ${type} {
+\t\tlet data = world::get_component<Field>(world, id()).data;
+\t\tlet ${getDecodeData(map, key)} = decode(data);
+\t\t${key}
+\t}
+`
+            )
+            .join("\n");
+  } else {
+    map = values as ComponentMapType;
+
+    total = `\tpublic fun get(world: &World, key: address): ${getStructTypes(
+      map
+    )} {
 \t\tlet component = world::get_component<Table<address,Field>>(world, id());
 \t\tlet field = table::borrow<address, Field>(component, key);
 \t\tdecode(field.data)
 \t}\n`;
 
-  const all =
-    typeof map === "string"
-      ? ""
-      : "\n" +
-        Object.entries(map)
-          .map(
-            ([
-              key,
-              type,
-            ]) => `\tpublic fun get_${key}(world: &World, key: address): ${type} {
+    all =
+      typeof map === "string"
+        ? ""
+        : "\n" +
+          Object.entries(map)
+            .map(
+              ([
+                key,
+                type,
+              ]) => `\tpublic fun get_${key}(world: &World, key: address): ${type} {
 \t\tlet component = world::get_component<Table<address,Field>>(world, id());
 \t\tlet field = table::borrow<address, Field>(component, key);
 \t\tlet ${getDecodeData(map, key)} = decode(field.data);
 \t\t${key}
 \t}
 `
-          )
-          .join("\n");
-  return total + all;
-}
+            )
+            .join("\n");
+  }
 
-export function renderSingletonQueryFunc(values: SingletonType): string {
-  return `\tpublic fun get(world: &World): ${getStructTypes(values.type)} {
-\t\tlet field = world::get_component<Field>(world, id());
-\t\tdecode(field.data)
-\t}
-`;
+  return total + all;
 }
 
 export function renderContainFunc(): string {
@@ -353,25 +402,35 @@ export function renderContainFunc(): string {
 `;
 }
 
-export function renderEncodeFunc(values: ComponentMapType): string {
-  return `\tpublic fun encode(${getStructAttrsWithType(values, "").join(
+export function renderEncodeFunc(
+  values: ComponentMapType | SingletonType
+): string {
+  let map: string | Record<string, string> = "";
+  if (isSingletonType(values)) {
+    let singleValue = values as SingletonType;
+    map = singleValue.type;
+  } else {
+    map = values as ComponentMapType;
+  }
+
+  return `\tpublic fun encode(${getStructAttrsWithType(map, "").join(
     ", "
   )}): vector<u8> {
 \t\tlet data = vector::empty<u8>();
-${getStructAttrsEncode(values, "\t\t").join("\n")}
+${getStructAttrsEncode(map, "\t\t").join("\n")}
 \t\tdata
 \t}
 `;
 }
 
-export function renderSigletonEncodeFunc(): string {
-  return `\tpublic fun encode(value: u64): vector<u8> {
-\t\tlet data = vector::empty<u8>();
-\t\tvector::append(&mut data, bcs::to_bytes(&value));
-\t\tdata
-\t}
-`;
-}
+// export function renderSigletonEncodeFunc(): string {
+//   return `\tpublic fun encode(value: u64): vector<u8> {
+// \t\tlet data = vector::empty<u8>();
+// \t\tvector::append(&mut data, bcs::to_bytes(&value));
+// \t\tdata
+// \t}
+// `;
+// }
 
 // todo: struct / bag
 function renderBcsDecodeFunc(type: string) {
@@ -410,18 +469,27 @@ function renderBcsDecodeFunc(type: string) {
   }
 }
 
-export function renderSigletonDecodeFunc(values: SingletonType): string {
-  return `\tpublic fun decode(bytes: vector<u8>): ${getFieldTypes(values)} {
-\t\tlet data = bcs::new(bytes);
-\t\t(
-\t\t\t${renderBcsDecodeFunc(values.type)}
-\t\t)
-\t}
-`;
-}
+// export function renderSigletonDecodeFunc(values: SingletonType): string {
+//   return `\tpublic fun decode(bytes: vector<u8>): ${getFieldTypes(values)} {
+// \t\tlet data = bcs::new(bytes);
+// \t\t(
+// \t\t\t${renderBcsDecodeFunc(values.type)}
+// \t\t)
+// \t}
+// `;
+// }
 
-export function renderDecodeFunc(values: ComponentMapType): string {
-  let map = values;
+export function renderDecodeFunc(
+  values: ComponentMapType | SingletonType
+): string {
+  let map: string | Record<string, string> = "";
+  if (isSingletonType(values)) {
+    let singleValue = values as SingletonType;
+    map = singleValue.type;
+  } else {
+    map = values as ComponentMapType;
+  }
+
   const all =
     typeof map === "string"
       ? `\t\t\t${renderBcsDecodeFunc(map)}`
@@ -429,7 +497,7 @@ export function renderDecodeFunc(values: ComponentMapType): string {
           .map(([key, type]) => `\t\t\t${renderBcsDecodeFunc(type)}`)
           .join(",\n");
 
-  return `\tpublic fun decode(bytes: vector<u8>): ${getStructTypes(values)} {
+  return `\tpublic fun decode(bytes: vector<u8>): ${getStructTypes(map)} {
 \t\tlet data = bcs::new(bytes);
 \t\t(
 ${all}
@@ -437,25 +505,26 @@ ${all}
 \t}`;
 }
 
-function formatData(value: SingletonType): string {
-  // TODO: Support other type (string, time, table, bag...)
-  let fmtData = value.init;
-  if (value.type === "address") {
-    fmtData = `@` + value.init;
-    // } else if (value.type === "table") {
-    //   fmtData = ''
-  }
+// function formatData(value: SingletonType): string {
+//   // TODO: Support other type (string, time, table, bag...)
+//   let fmtData = value.init;
+//   if (value.type === "address") {
+//     fmtData = `@` + value.init;
+//     // } else if (value.type === "table") {
+//     //   fmtData = ''
+//   }
 
-  return fmtData;
-}
+//   return fmtData;
+// }
 
 export function renderRegisterFuncWithInit(values: SingletonType): string {
   // const initData = formatData(values);
+
   return `\tpublic fun register(world: &mut World) {
 \t\tworld::add_component<Field>(
 \t\t\tworld,
 \t\t\tid(),
-\t\t\tField { data: encode(${values.init}) }
+\t\t\tField { data: encode(${getStructInitValue(values.init).join(", ")}) }
 \t\t);
 \t}
 `;

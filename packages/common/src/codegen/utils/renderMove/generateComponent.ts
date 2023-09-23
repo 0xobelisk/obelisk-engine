@@ -10,14 +10,14 @@ import {
   renderRegisterFunc,
   renderRegisterFuncWithInit,
   renderRemoveFunc,
-  renderSingletonQueryFunc,
-  renderSingletonUpdateFunc,
+  // renderSingletonQueryFunc,
+  // renderSingletonUpdateFunc,
   renderStruct,
   renderUpdateFunc,
   renderEncodeFunc,
-  renderSigletonEncodeFunc,
+  // renderSigletonEncodeFunc,
   renderDecodeFunc,
-  renderSigletonDecodeFunc,
+  // renderSigletonDecodeFunc,
 } from "./common";
 
 export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
@@ -79,10 +79,10 @@ ${getFriendSystem(config.name, config.systems)}
 \t}
 ${renderStruct(value)}
 ${renderRegisterFuncWithInit(value)}
-${renderSingletonUpdateFunc(value)}
-${renderSingletonQueryFunc(value)}
-${renderSigletonEncodeFunc()}
-${renderSigletonDecodeFunc(value)}
+${renderUpdateFunc(value)}
+${renderQueryFunc(value)}
+${renderEncodeFunc(value)}
+${renderDecodeFunc(value)}
 }
 `;
       formatAndWriteMove(
