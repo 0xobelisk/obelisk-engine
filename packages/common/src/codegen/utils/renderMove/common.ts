@@ -176,6 +176,21 @@ export function getStructAttrsQuery(
     : Object.entries(values).map(([key, _]) => `${prefixArgs}data.${key}`);
 }
 
+export function renderKeyName(
+  values: ComponentMapType | SingletonType
+): string {
+  let map: string | Record<string, string> = "";
+
+  if (isSingletonType(values)) {
+    let singleValue = values as SingletonType;
+    map = singleValue.type;
+  } else {
+    map = values as ComponentMapType;
+  }
+
+  return `\t${getStructAttrs(map, "//").join("\n\t")}`;
+}
+
 export function renderStruct(values: ComponentMapType | SingletonType): string {
   let map = values;
   if (isSingletonType(values)) {
@@ -183,8 +198,7 @@ export function renderStruct(values: ComponentMapType | SingletonType): string {
     map = singleValue.type;
   }
 
-  return `
-\tpublic fun field_types() : vector<String> {
+  return `\tpublic fun field_types() : vector<String> {
 \t\tvector[string(b"u64")]
 \t}
   

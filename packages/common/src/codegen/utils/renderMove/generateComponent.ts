@@ -3,6 +3,7 @@ import { formatAndWriteMove } from "../formatAndWrite";
 import {
   capitalizeFirstLetter,
   getFriendSystem,
+  renderKeyName,
   renderAddFunc,
   renderContainFunc,
   // renderNewStructFunc,
@@ -38,6 +39,8 @@ ${getFriendSystem(config.name, config.systems)}
 \tpublic fun id() : address {
 \t\tentity_key::from_bytes(b"${capitalizeFirstLetter(componentName)} Comp")
 \t}
+
+${renderKeyName(value)}
 ${renderStruct(value)}
 ${renderRegisterFunc()}
 ${renderAddFunc(value)}
@@ -77,6 +80,8 @@ ${getFriendSystem(config.name, config.systems)}
 \tpublic fun id() : address {
 \t\tentity_key::from_bytes(b"${capitalizeFirstLetter(componentName)} Comp")
 \t}
+
+${renderKeyName(value)}
 ${renderStruct(value)}
 ${renderRegisterFuncWithInit(value)}
 ${renderUpdateFunc(value)}
