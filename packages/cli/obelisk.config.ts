@@ -3,7 +3,7 @@ import { ObeliskConfig } from "../common/src/codegen/types";
 export const obeliskConfig = {
   name: "examples",
   description: "examples description",
-  systems: ["counter_system"],
+  systems: ["example_system"],
   components: {
     // Key - Single value
     single_column: "u64",
@@ -15,12 +15,12 @@ export const obeliskConfig = {
   },
   singletonComponents: {
     // Single value
-    counter: {
+    single_value: {
       type: "u64",
       init: "1000",
     },
-    // TODO: Struct value
-    Manager: {
+    // Struct value
+    single_struct: {
       type: {
         admin: "address",
         fee: "u64",
