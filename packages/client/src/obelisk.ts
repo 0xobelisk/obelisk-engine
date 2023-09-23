@@ -454,11 +454,7 @@ export class Obelisk {
     return await this.suiInteractor.getDynamicFields(parentId);
   }
 
-  async getComponentByName(
-    worldId: string,
-    componentName: string,
-    packageName: string
-  ) {
+  async getComponentByName(worldId: string, componentName: string) {
     const componentNameId = `${capitalizeFirstLetter(componentName)} Comp`;
     const componentId = keccak256(componentNameId);
     return await this.getComponent(worldId, componentId);
