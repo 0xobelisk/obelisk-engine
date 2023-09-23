@@ -9,13 +9,14 @@ module examples::single_column_comp {
     use examples::world::{Self, World};
   
     // Systems
-	friend examples::counter_system;
+	friend examples::example_system;
 
-	public fun id() : address {
+	public fun id(): address {
 		entity_key::from_bytes(b"Single_column Comp")
 	}
 
-	public fun field_types() : vector<String> {
+	// value
+	public fun field_types(): vector<String> {
 		vector[string(b"u64")]
 	}
   

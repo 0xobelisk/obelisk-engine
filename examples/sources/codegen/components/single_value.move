@@ -7,13 +7,14 @@ module examples::single_value_comp {
     use examples::world::{Self, World};
   
     // Systems
-	friend examples::counter_system;
+	friend examples::example_system;
 
-	public fun id() : address {
+	public fun id(): address {
 		entity_key::from_bytes(b"Single_value Comp")
 	}
 
-	public fun field_types() : vector<String> {
+	// value
+	public fun field_types(): vector<String> {
 		vector[string(b"u64")]
 	}
   
@@ -36,8 +37,8 @@ module examples::single_value_comp {
 	}
 
 	public fun get(world: &World): u64 {
-		let field = world::get_component<Field>(world, id());
-		decode(field.data)
+		let data = world::get_component<Field>(world, id()).data;
+		decode(data)
 	}
 
 	public fun encode(value: u64): vector<u8> {
@@ -52,5 +53,4 @@ module examples::single_value_comp {
 			bcs::peel_u64(&mut data)
 		)
 	}
-
 }

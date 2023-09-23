@@ -7,16 +7,18 @@ module examples::single_struct_comp {
     use examples::world::{Self, World};
   
     // Systems
-	friend examples::counter_system;
+	friend examples::example_system;
 
-	public fun id() : address {
+	public fun id(): address {
 		entity_key::from_bytes(b"Single_struct Comp")
 	}
 
-	public fun field_types() : vector<String> {
-		vector[string(b"address"), string(b"u64")]
+	// admin
+	// fee
+	public fun field_types(): vector<String> {
+		vector[string(b"u64")]
 	}
-
+  
 	struct Field has drop, store {
 		data: vector<u8>
 	}
@@ -34,7 +36,6 @@ module examples::single_struct_comp {
 		world::get_mut_component<Field>(world, id()).data = data;
 		world::emit_update_event(id(), none(), data)
 	}
-
 	public(friend) fun update_admin(world: &mut World, admin: address) {
 		let field = world::get_mut_component<Field>(world, id());
 		let (_, fee) = decode(field.data);
@@ -49,7 +50,7 @@ module examples::single_struct_comp {
 		world::emit_update_event(id(), none(), field.data)
 	}
 
-	public fun get(world: &World): (address, u64) {
+	public fun get(world: &World): (address,u64) {
 		let data = world::get_component<Field>(world, id()).data;
 		decode(data)
 	}
@@ -73,12 +74,11 @@ module examples::single_struct_comp {
 		data
 	}
 
-	public fun decode(bytes: vector<u8>): (address, u64) {
+	public fun decode(bytes: vector<u8>): (address,u64) {
 		let data = bcs::new(bytes);
 		(
 			bcs::peel_address(&mut data),
-			bcs::peel_u64(&mut data),
+			bcs::peel_u64(&mut data)
 		)
 	}
-
 }

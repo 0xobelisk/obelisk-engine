@@ -6,6 +6,7 @@ module examples::init {
     use examples::single_column_comp;
     use examples::multi_column_comp;
     use examples::single_value_comp;
+    use examples::single_struct_comp;
 
     fun init(ctx: &mut TxContext) {
         let world = world::create(string(b"Examples"), string(b"Examples description"),ctx);
@@ -14,6 +15,7 @@ module examples::init {
         single_column_comp::register(&mut world, ctx);
         multi_column_comp::register(&mut world, ctx);
         single_value_comp::register(&mut world);
+        single_struct_comp::register(&mut world);
 
         transfer::public_share_object(world);
     }

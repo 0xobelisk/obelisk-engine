@@ -9,13 +9,15 @@ module examples::multi_column_comp {
     use examples::world::{Self, World};
   
     // Systems
-	friend examples::counter_system;
+	friend examples::example_system;
 
-	public fun id() : address {
+	public fun id(): address {
 		entity_key::from_bytes(b"Multi_column Comp")
 	}
 
-	public fun field_types() : vector<String> {
+	// state
+	// last_update_time
+	public fun field_types(): vector<String> {
 		vector[string(b"u64")]
 	}
   
