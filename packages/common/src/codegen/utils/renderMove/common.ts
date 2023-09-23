@@ -198,7 +198,7 @@ export function renderStruct(values: ComponentMapType | SingletonType): string {
     map = singleValue.type;
   }
 
-  return `\tpublic fun field_types() : vector<String> {
+  return `\tpublic fun field_types(): vector<String> {
 \t\tvector[string(b"u64")]
 \t}
   
