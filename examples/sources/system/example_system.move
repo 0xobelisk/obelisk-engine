@@ -41,10 +41,11 @@ module examples::example_system {
 
         let world = test_scenario::take_shared<World>(scenario);
 
-        let (name,description) = world::info(&world);
+        let (name,description,version) = world::info(&world);
 
         assert!(name == string(b"Examples"), 0);
         assert!(description == string(b"Examples description"), 0);
+        assert!(version == 1, 0);
 
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);
