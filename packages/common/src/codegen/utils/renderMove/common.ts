@@ -188,7 +188,7 @@ export function renderKeyName(
     map = values as ComponentMapType;
   }
 
-  return `\t${getStructAttrs(map, "//").join("\n\t")}`;
+  return `\t${getStructAttrs(map, "// ").join("\n\t")}`;
 }
 
 export function renderStruct(values: ComponentMapType | SingletonType): string {
