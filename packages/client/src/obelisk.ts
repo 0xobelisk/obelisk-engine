@@ -447,11 +447,11 @@ export class Obelisk {
     return this.suiInteractor.getObject(worldObjectId);
   }
 
-  async getComponents(worldId: string) {
+  async getComponents(worldId: string, cursor?: string, limit?: number) {
     const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
       .components.fields.id.id;
 
-    return await this.suiInteractor.getDynamicFields(parentId);
+    return await this.suiInteractor.getDynamicFields(parentId, cursor, limit);
   }
 
   async getComponentByName(worldId: string, componentName: string) {

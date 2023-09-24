@@ -1,19 +1,43 @@
 import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 
-export function generateEps(config: ObeliskConfig, srcPrefix: string) {
-  let code = `module ${config.name}::world {
+export function generateEps(
+  projectName: string,
+  srcPrefix: string,
+  version?: number
+) {
+  if (version === undefined) {
+    version = 1;
+  }
+
+  let code = `module ${projectName}::world {
     use std::ascii::String;
     use std::option::Option;
+    use sui::tx_context;
+    use sui::transfer;
     use sui::event;
     use sui::tx_context::TxContext;
-    use sui::bag::{ Self, Bag };
-    use sui::object::{ Self, UID };
+    use sui::bag::{Self, Bag};
+    use sui::object::{Self, UID, ID};
 
-    const CompDoesNotExist: u64 = 0;
-    const CompAlreadyExists: u64 = 1;
+    const VERSION: u64 = ${version};
 
-    struct World has key, store{
+    /// Component does not exist
+    const ECompDoesNotExist: u64 = 0;
+    /// Component already exists
+    const ECompAlreadyExists: u64 = 1;
+    /// Not the right admin for this world
+    const ENotAdmin: u64 = 2;
+    /// Migration is not an upgrade
+    const ENotUpgrade: u64 = 3;
+    /// Calling functions from the wrong package version
+    const EWrongVersion: u64 = 4;
+
+    struct AdminCap has key {
+        id: UID,
+    }
+
+    struct World has key, store {
         id: UID,
         /// Name of the world
         name: String,
@@ -21,6 +45,10 @@ export function generateEps(config: ObeliskConfig, srcPrefix: string) {
         description: String,
         /// Components of the world
         components: Bag,
+        /// admin of the world
+        admin: ID,
+        /// Components of the world
+        version: u64
     }
 
     struct CompRemoveField has copy, drop {
@@ -41,34 +69,45 @@ export function generateEps(config: ObeliskConfig, srcPrefix: string) {
     }
 
     public fun create(name: String, description: String, ctx: &mut TxContext): World {
-        World {
+        let admin = AdminCap {
+            id: object::new(ctx),
+        };
+        let world = World {
             id: object::new(ctx),
             name,
             description,
             components: bag::new(ctx),
-        }
+            admin: object::id(&admin),
+            version: VERSION
+        };
+        transfer::transfer(admin, tx_context::sender(ctx));
+        world
     }
 
-    public fun info(world: &World): (String, String) {
-        (world.name, world.description)
+    public fun info(world: &World): (String, String, u64) {
+        (world.name, world.description, world.version)
     }
 
     public fun get_component<T : store>(world: &World, id: address): &T {
-        assert!(bag::contains(&world.components, id), CompDoesNotExist);
+        assert!(world.version == VERSION, EWrongVersion);
+        assert!(bag::contains(&world.components, id), ECompDoesNotExist);
         bag::borrow<address, T>(&world.components, id)
     }
 
     public fun get_mut_component<T : store>(world: &mut World, id: address): &mut T {
-        assert!(bag::contains(&world.components, id), CompDoesNotExist);
+        assert!(world.version == VERSION, EWrongVersion);
+        assert!(bag::contains(&world.components, id), ECompDoesNotExist);
         bag::borrow_mut<address, T>(&mut world.components, id)
     }
 
     public fun add_component<T : store>(world: &mut World, id: address, component: T){
-        assert!(!bag::contains(&world.components, id), CompAlreadyExists);
+        assert!(world.version == VERSION, EWrongVersion);
+        assert!(!bag::contains(&world.components, id), ECompAlreadyExists);
         bag::add<address,T>(&mut world.components, id, component);
     }
 
     public fun contains(world: &mut World, id: address): bool {
+        assert!(world.version == VERSION, EWrongVersion);
         bag::contains(&mut world.components, id)
     }
 
@@ -83,11 +122,17 @@ export function generateEps(config: ObeliskConfig, srcPrefix: string) {
     public fun emit_update_event(comp: address, key: Option<address>, data: vector<u8>) {
         event::emit(CompUpdateField { comp, key, data})
     }
+
+    entry fun migrate(world: &mut World, admin_cap: &AdminCap) {
+        assert!(world.admin == object::id(admin_cap), ENotAdmin);
+        assert!(world.version < VERSION, ENotUpgrade);
+        world.version = VERSION;
+    }
 }
 `;
   formatAndWriteMove(
     code,
-    `${srcPrefix}/contracts/${config.name}/sources/codegen/eps/world.move`,
+    `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/world.move`,
     "formatAndWriteMove"
   );
 }

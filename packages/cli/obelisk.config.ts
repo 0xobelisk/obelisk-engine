@@ -12,8 +12,13 @@ export const obeliskConfig = {
       state: "vector<u8>",
       last_update_time: "u64",
     },
+    counter: "u64",
   },
   singletonComponents: {
+    init_counter: {
+      type: "u64",
+      init: "100",
+    },
     // Single value
     single_value: {
       type: "u64",
