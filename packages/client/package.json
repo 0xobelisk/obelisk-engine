@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/client",
-  "version": "0.2.4",
+  "version": "0.2.6",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "sui",
@@ -57,7 +57,6 @@
     "prettier-plugin-rust": "^0.1.9"
   },
   "dependencies": {
-    "@0xobelisk/common": "workspace:*",
     "@mysten/bcs": "^0.7.3",
     "@mysten/sui.js": "^0.41.0",
     "@scure/bip39": "^1.2.1",
