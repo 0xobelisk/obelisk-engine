@@ -1,12 +1,28 @@
-// export type ComponentMapType = string | Record<string, string | object>
-export type ComponentMapType = string | Record<string, string>;
+export type baseType =
+  | "address"
+  | "bool"
+  | "u8"
+  | "u64"
+  | "u128"
+  | "vector<address"
+  | "vector<bool>"
+  | "vector<u8>"
+  | "vector<vector<u8>>"
+  | "vector<u64>"
+  | "vector<u128>"
+  | "Option<address>"
+  | "Option<bool>"
+  | "Option<u8>"
+  | "Option<u64>"
+  | "Option<u128>";
+export type ComponentMapType = baseType | Record<string, baseType>;
 export type SingletonType =
   | {
-      type: string;
+      type: baseType;
       init: string;
     }
   | {
-      type: Record<string, string>;
+      type: Record<string, baseType>;
       init: Record<string, string>;
     };
 
