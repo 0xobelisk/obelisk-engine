@@ -11,10 +11,10 @@ module examples::single_column_comp {
     // Systems
 	friend examples::example_system;
 
-	const COMPONENT_NAME: vector<u8> = b"single_column";
+	const NAME: vector<u8> = b"single_column";
 
 	public fun id(): address {
-		entity_key::from_bytes(COMPONENT_NAME)
+		entity_key::from_bytes(NAME)
 	}
 
 	// value
@@ -27,28 +27,28 @@ module examples::single_column_comp {
 	}
 
 	public fun register(world: &mut World, ctx: &mut TxContext) {
-		world::add_component<Table<address,Field>>(
+		world::add_comp<Table<address,Field>>(
 			world,
-			COMPONENT_NAME,
+			NAME,
 			table::new<address,Field>(ctx)
 		);
 	}
 
 	public(friend) fun add(world: &mut World, key: address, value: u64) {
-		let component = world::get_mut_component<Table<address,Field>>(world, id());
+		let component = world::get_mut_comp<Table<address,Field>>(world, id());
 		let data = encode(value);
 		table::add(component, key, Field { data });
 		world::emit_add_event(id(), key, data)
 	}
 
 	public(friend) fun remove(world: &mut World, key: address) {
-		let component = world::get_mut_component<Table<address,Field>>(world, id());
+		let component = world::get_mut_comp<Table<address,Field>>(world, id());
 		table::remove(component, key);
 		world::emit_remove_event(id(), key)
 	}
 
 	public(friend) fun update(world: &mut World, key: address, value: u64) {
-		let component = world::get_mut_component<Table<address, Field>>(world, id());
+		let component = world::get_mut_comp<Table<address, Field>>(world, id());
 		let field = table::borrow_mut<address, Field>(component, key);
 		let data = encode(value);
 		field.data = data;
@@ -56,13 +56,13 @@ module examples::single_column_comp {
 	}
 
 	public fun get(world: &World, key: address): u64 {
-		let component = world::get_component<Table<address,Field>>(world, id());
+		let component = world::get_comp<Table<address,Field>>(world, id());
 		let field = table::borrow<address, Field>(component, key);
 		decode(field.data)
 	}
 
 	public fun contains(world: &World, key: address): bool {
-		let component = world::get_component<Table<address,Field>>(world, id());
+		let component = world::get_comp<Table<address,Field>>(world, id());
 		table::contains<address, Field>(component, key)
 	}
 

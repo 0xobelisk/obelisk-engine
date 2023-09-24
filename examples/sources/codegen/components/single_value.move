@@ -9,10 +9,10 @@ module examples::single_value_comp {
     // Systems
 	friend examples::example_system;
 
-	const COMPONENT_NAME: vector<u8> = b"single_value";
+	const NAME: vector<u8> = b"single_value";
 
 	public fun id(): address {
-		entity_key::from_bytes(COMPONENT_NAME)
+		entity_key::from_bytes(NAME)
 	}
 
 	// value
@@ -25,21 +25,21 @@ module examples::single_value_comp {
 	}
 
 	public fun register(world: &mut World) {
-		world::add_component<Field>(
+		world::add_comp<Field>(
 			world,
-			COMPONENT_NAME,
+			NAME,
 			Field { data: encode(1000) }
 		);
 	}
 
 	public(friend) fun update(world: &mut World, value: u64) {
 		let data = encode(value);
-		world::get_mut_component<Field>(world, id()).data = data;
+		world::get_mut_comp<Field>(world, id()).data = data;
 		world::emit_update_event(id(), none(), data)
 	}
 
 	public fun get(world: &World): u64 {
-		let data = world::get_component<Field>(world, id()).data;
+		let data = world::get_comp<Field>(world, id()).data;
 		decode(data)
 	}
 

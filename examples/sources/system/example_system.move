@@ -51,7 +51,7 @@ module examples::example_system {
         assert!(description == string(b"Examples description"), 0);
         assert!(version == 1, 0);
 
-        let names = world::component_names(&world);
+        let names = world::compnames(&world);
         assert!(names == vector[
             string(b"single_column"),
             string(b"multi_column"),

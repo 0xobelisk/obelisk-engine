@@ -11,10 +11,10 @@ module examples::multi_column_comp {
     // Systems
 	friend examples::example_system;
 
-	const COMPONENT_NAME: vector<u8> = b"multi_column";
+	const NAME: vector<u8> = b"multi_column";
 
 	public fun id(): address {
-		entity_key::from_bytes(COMPONENT_NAME)
+		entity_key::from_bytes(NAME)
 	}
 
 	// state
@@ -28,35 +28,35 @@ module examples::multi_column_comp {
 	}
 
 	public fun register(world: &mut World, ctx: &mut TxContext) {
-		world::add_component<Table<address,Field>>(
+		world::add_comp<Table<address,Field>>(
 			world,
-			COMPONENT_NAME,
+			NAME,
 			table::new<address,Field>(ctx)
 		);
 	}
 
 	public(friend) fun add(world: &mut World, key: address, state: vector<u8>, last_update_time: u64) {
-		let component = world::get_mut_component<Table<address,Field>>(world, id());
+		let component = world::get_mut_comp<Table<address,Field>>(world, id());
 		let data = encode(state, last_update_time);
 		table::add(component, key, Field { data });
 		world::emit_add_event(id(), key, data)
 	}
 
 	public(friend) fun remove(world: &mut World, key: address) {
-		let component = world::get_mut_component<Table<address,Field>>(world, id());
+		let component = world::get_mut_comp<Table<address,Field>>(world, id());
 		table::remove(component, key);
 		world::emit_remove_event(id(), key)
 	}
 
 	public(friend) fun update(world: &mut World, key: address, state: vector<u8>, last_update_time: u64) {
-		let component = world::get_mut_component<Table<address, Field>>(world, id());
+		let component = world::get_mut_comp<Table<address, Field>>(world, id());
 		let field = table::borrow_mut<address, Field>(component, key);
 		let data = encode(state, last_update_time);
 		field.data = data;
 		world::emit_update_event(id(), some(key), data)
 	}
 	public(friend) fun update_state(world: &mut World, key: address, state: vector<u8>) {
-		let component = world::get_mut_component<Table<address,Field>>(world, id());
+		let component = world::get_mut_comp<Table<address,Field>>(world, id());
 		let field = table::borrow_mut<address, Field>(component, key);
 		let (_, last_update_time) = decode(field.data);
 		let data = encode(state, last_update_time);
@@ -65,7 +65,7 @@ module examples::multi_column_comp {
 	}
 
 	public(friend) fun update_last_update_time(world: &mut World, key: address, last_update_time: u64) {
-		let component = world::get_mut_component<Table<address,Field>>(world, id());
+		let component = world::get_mut_comp<Table<address,Field>>(world, id());
 		let field = table::borrow_mut<address, Field>(component, key);
 		let (state, _) = decode(field.data);
 		let data = encode(state, last_update_time);
@@ -74,27 +74,27 @@ module examples::multi_column_comp {
 	}
 
 	public fun get(world: &World, key: address): (vector<u8>,u64) {
-		let component = world::get_component<Table<address,Field>>(world, id());
+		let component = world::get_comp<Table<address,Field>>(world, id());
 		let field = table::borrow<address, Field>(component, key);
 		decode(field.data)
 	}
 
 	public fun get_state(world: &World, key: address): vector<u8> {
-		let component = world::get_component<Table<address,Field>>(world, id());
+		let component = world::get_comp<Table<address,Field>>(world, id());
 		let field = table::borrow<address, Field>(component, key);
 		let (state, _) = decode(field.data);
 		state
 	}
 
 	public fun get_last_update_time(world: &World, key: address): u64 {
-		let component = world::get_component<Table<address,Field>>(world, id());
+		let component = world::get_comp<Table<address,Field>>(world, id());
 		let field = table::borrow<address, Field>(component, key);
 		let (_, last_update_time) = decode(field.data);
 		last_update_time
 	}
 
 	public fun contains(world: &World, key: address): bool {
-		let component = world::get_component<Table<address,Field>>(world, id());
+		let component = world::get_comp<Table<address,Field>>(world, id());
 		table::contains<address, Field>(component, key)
 	}
 
