@@ -12,7 +12,7 @@ module examples::multi_column_comp {
 	friend examples::example_system;
 
 	public fun id(): address {
-		entity_key::from_bytes(b"Multi_column Comp")
+		entity_key::from_bytes(b"multi_column")
 	}
 
 	// state

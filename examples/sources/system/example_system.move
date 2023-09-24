@@ -1,4 +1,6 @@
 module examples::example_system {
+    use examples::single_value_comp;
+    use examples::world::World;
     #[test_only]
     use std::ascii::string;
     #[test_only]
@@ -12,15 +14,17 @@ module examples::example_system {
     #[test_only]
     use examples::single_struct_comp;
     #[test_only]
-    use examples::single_value_comp;
-    #[test_only]
     use examples::world;
-    #[test_only]
-    use examples::world::World;
     #[test_only]
     use sui::test_scenario;
     #[test_only]
     use sui::test_scenario::Scenario;
+
+    public entry fun increase(world: &mut World) {
+        let old_number = single_value_comp::get(world);
+        let new_number = old_number + 10;
+        single_value_comp::update(world, new_number);
+    }
 
     #[test_only]
     public fun init_test(): Scenario {

@@ -12,7 +12,7 @@ module examples::single_column_comp {
 	friend examples::example_system;
 
 	public fun id(): address {
-		entity_key::from_bytes(b"Single_column Comp")
+		entity_key::from_bytes(b"single_column")
 	}
 
 	// value
