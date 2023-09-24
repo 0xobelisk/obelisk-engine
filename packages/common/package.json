@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/common",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "Common low level logic shared between packages",
   "keywords": [
     "sui",
@@ -23,20 +23,12 @@
     "node": ">=18"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./codegen": "./dist/codegen.js",
-    "./utils": "./dist/utils.js"
+    ".": "./dist/index.js"
   },
   "typesVersions": {
     "*": {
       "index": [
         "./src/index.ts"
-      ],
-      "codegen": [
-        "./src/codegen/index.ts"
-      ],
-      "utils": [
-        "./src/utils/index.ts"
       ]
     }
   },
