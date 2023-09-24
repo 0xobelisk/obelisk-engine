@@ -209,9 +209,9 @@ export function renderStruct(values: ComponentMapType | SingletonType): string {
 
 export function renderRegisterFunc(): string {
   return `\tpublic fun register(world: &mut World, ctx: &mut TxContext) {
-\t\tworld::add_component<Table<address,Field>>(
+\t\tworld::add_comp<Table<address,Field>>(
 \t\t\tworld,
-\t\t\tid(),
+\t\t\tNAME,
 \t\t\ttable::new<address,Field>(ctx)
 \t\t);
 \t}
@@ -223,7 +223,7 @@ export function renderAddFunc(values: ComponentMapType): string {
     values,
     ""
   ).join(", ")}) {
-\t\tlet component = world::get_mut_component<Table<address,Field>>(world, id());
+\t\tlet component = world::get_mut_comp<Table<address,Field>>(world, id());
 \t\tlet data = encode(${getStructAttrs(values, "").join(", ")});
 \t\ttable::add(component, key, Field { data });
 \t\tworld::emit_add_event(id(), key, data)
@@ -233,7 +233,7 @@ export function renderAddFunc(values: ComponentMapType): string {
 
 export function renderRemoveFunc(): string {
   return `\tpublic(friend) fun remove(world: &mut World, key: address) {
-\t\tlet component = world::get_mut_component<Table<address,Field>>(world, id());
+\t\tlet component = world::get_mut_comp<Table<address,Field>>(world, id());
 \t\ttable::remove(component, key);
 \t\tworld::emit_remove_event(id(), key)
 \t}
@@ -285,7 +285,7 @@ export function renderUpdateFunc(
       ""
     ).join(", ")}) {
 \t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
-\t\tworld::get_mut_component<Field>(world, id()).data = data;
+\t\tworld::get_mut_comp<Field>(world, id()).data = data;
 \t\tworld::emit_update_event(id(), none(), data)
 \t}
 `;
@@ -297,7 +297,7 @@ export function renderUpdateFunc(
             .map(
               ([key, type]) =>
                 `\tpublic(friend) fun update_${key}(world: &mut World, ${key}: ${type}) {
-\t\tlet field = world::get_mut_component<Field>(world, id());
+\t\tlet field = world::get_mut_comp<Field>(world, id());
 \t\tlet ${updateDecodeData(map, key)} = decode(field.data);
 \t\tfield.data = encode(${getStructAttrs(map, "").join(", ")});
 \t\tworld::emit_update_event(id(), none(), field.data)
@@ -312,7 +312,7 @@ export function renderUpdateFunc(
       map,
       ""
     ).join(", ")}) {
-\t\tlet component = world::get_mut_component<Table<address, Field>>(world, id());
+\t\tlet component = world::get_mut_comp<Table<address, Field>>(world, id());
 \t\tlet field = table::borrow_mut<address, Field>(component, key);
 \t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
 \t\tfield.data = data;
@@ -327,7 +327,7 @@ export function renderUpdateFunc(
             .map(
               ([key, type]) =>
                 `\tpublic(friend) fun update_${key}(world: &mut World, key: address, ${key}: ${type}) {
-\t\tlet component = world::get_mut_component<Table<address,Field>>(world, id());
+\t\tlet component = world::get_mut_comp<Table<address,Field>>(world, id());
 \t\tlet field = table::borrow_mut<address, Field>(component, key);
 \t\tlet ${updateDecodeData(map, key)} = decode(field.data);
 \t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
@@ -353,7 +353,7 @@ export function renderQueryFunc(
     map = singleValue.type;
 
     total = `\tpublic fun get(world: &World): ${getStructTypes(map)} {
-\t\tlet data = world::get_component<Field>(world, id()).data;
+\t\tlet data = world::get_comp<Field>(world, id()).data;
 \t\tdecode(data)
 \t}\n`;
 
@@ -367,7 +367,7 @@ export function renderQueryFunc(
                 key,
                 type,
               ]) => `\tpublic fun get_${key}(world: &World): ${type} {
-\t\tlet data = world::get_component<Field>(world, id()).data;
+\t\tlet data = world::get_comp<Field>(world, id()).data;
 \t\tlet ${getDecodeData(map, key)} = decode(data);
 \t\t${key}
 \t}
@@ -380,7 +380,7 @@ export function renderQueryFunc(
     total = `\tpublic fun get(world: &World, key: address): ${getStructTypes(
       map
     )} {
-\t\tlet component = world::get_component<Table<address,Field>>(world, id());
+\t\tlet component = world::get_comp<Table<address,Field>>(world, id());
 \t\tlet field = table::borrow<address, Field>(component, key);
 \t\tdecode(field.data)
 \t}\n`;
@@ -395,7 +395,7 @@ export function renderQueryFunc(
                 key,
                 type,
               ]) => `\tpublic fun get_${key}(world: &World, key: address): ${type} {
-\t\tlet component = world::get_component<Table<address,Field>>(world, id());
+\t\tlet component = world::get_comp<Table<address,Field>>(world, id());
 \t\tlet field = table::borrow<address, Field>(component, key);
 \t\tlet ${getDecodeData(map, key)} = decode(field.data);
 \t\t${key}
@@ -410,7 +410,7 @@ export function renderQueryFunc(
 
 export function renderContainFunc(): string {
   return `\tpublic fun contains(world: &World, key: address): bool {
-\t\tlet component = world::get_component<Table<address,Field>>(world, id());
+\t\tlet component = world::get_comp<Table<address,Field>>(world, id());
 \t\ttable::contains<address, Field>(component, key)
 \t}
 `;
@@ -535,9 +535,9 @@ export function renderRegisterFuncWithInit(values: SingletonType): string {
   // const initData = formatData(values);
 
   return `\tpublic fun register(world: &mut World) {
-\t\tworld::add_component<Field>(
+\t\tworld::add_comp<Field>(
 \t\t\tworld,
-\t\t\tid(),
+\t\t\tNAME,
 \t\t\tField { data: encode(${getStructInitValue(values.init).join(", ")}) }
 \t\t);
 \t}

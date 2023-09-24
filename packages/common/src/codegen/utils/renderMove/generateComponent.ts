@@ -36,8 +36,10 @@ export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
     // Systems
 ${getFriendSystem(config.name, config.systems)}
 
+\tconst NAME: vector<u8> = b"${componentName}";
+
 \tpublic fun id(): address {
-\t\tentity_key::from_bytes(b"${capitalizeFirstLetter(componentName)} Comp")
+\t\tentity_key::from_bytes(NAME)
 \t}
 
 ${renderKeyName(value)}
@@ -77,8 +79,10 @@ export function generateSingletonComponent(
     // Systems
 ${getFriendSystem(config.name, config.systems)}
 
+\tconst NAME: vector<u8> = b"${componentName}";
+
 \tpublic fun id(): address {
-\t\tentity_key::from_bytes(b"${capitalizeFirstLetter(componentName)} Comp")
+\t\tentity_key::from_bytes(NAME)
 \t}
 
 ${renderKeyName(value)}
