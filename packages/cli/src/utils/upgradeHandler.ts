@@ -15,8 +15,16 @@ import {
   saveContractData,
 } from "../../../common/src/codegen";
 
+type ObjectContent = {
+  type: string;
+  fields: Record<string, any>;
+  hasPublicTransfer: boolean;
+  dataType: string;
+};
+
 export async function upgradeHandler(
   name: string,
+  compnames: string[],
   // network: "mainnet" | "testnet" | "devnet" | "localnet",
   savePath?: string | undefined
 ) {
@@ -44,16 +52,10 @@ in your contracts directory to use the default sui private key.`
 
   let oldVersion = Number(await getVersion(projectPath));
 
-  console.log(oldVersion);
-  console.log(network);
-
   const oldPackageId = await getOldPackageId(projectPath);
   const worldId = await getWorldId(projectPath);
   const upgradeCap = await getUpgradeCap(projectPath);
 
-  console.log(`old package_id: ${oldPackageId}`);
-  console.log(`wrold_id: ${worldId}`);
-  console.log(`upgrade_cap: ${upgradeCap}`);
   const newVersion = oldVersion + 1;
   generateEps(name, path, newVersion);
 
@@ -107,36 +109,20 @@ in your contracts directory to use the default sui private key.`
       },
     });
 
-
-
-
-
-
-
-    // const migrateTx = new TransactionBlock();
-
-    // migrateTx.setGasBudget(10000000000);
-
-    // tx.moveCall({
-    //   target: `::package::commit_upgrade`,
-    //   arguments: [tx.object(upgradeCap), receipt],
-    // });
-
-    // tx.transferObjects(
-    //   [tx.object(upgradeCap)],
-    //   tx.pure(keypair.getPublicKey().toSuiAddress())
-    // );
-
-    // const result = await client.signAndExecuteTransactionBlock({
-    //   signer: keypair,
-    //   transactionBlock: tx,
-    //   options: {
-    //     showObjectChanges: true,
-    //   },
-    // });
+    let worldObject = await client.getObject({
+      id: worldId,
+      options: {
+        showContent: true,
+        showDisplay: true,
+        showType: true,
+        showOwner: true,
+      },
+    });
+    let objectContent = worldObject.data!.content as ObjectContent;
 
     console.log("");
     console.log(chalk.blue(`Transaction Digest: ${result.digest}`));
+    console.log(`${name} WorldId: ${worldId}`);
 
     let newPackageId = "";
     let newUpgradeCap = "";
@@ -164,6 +150,104 @@ in your contracts directory to use the default sui private key.`
     if (savePath !== undefined) {
       generateIdConfig(network, newPackageId, worldId, savePath);
     }
+
+    const migrateTx = new TransactionBlock();
+
+    migrateTx.setGasBudget(10000000000);
+
+    migrateTx.moveCall({
+      target: `${newPackageId}::world::migrate`,
+      arguments: [
+        migrateTx.object(worldId),
+        migrateTx.object(objectContent.fields["admin"]),
+      ],
+    });
+
+    const migrateResult = await client.signAndExecuteTransactionBlock({
+      signer: keypair,
+      transactionBlock: migrateTx,
+      options: {
+        // showObjectChanges: true,
+        showEffects: true,
+      },
+    });
+
+    let newWorldObject = await client.getObject({
+      id: worldId,
+      options: {
+        showContent: true,
+        showDisplay: true,
+        showType: true,
+        showOwner: true,
+      },
+    });
+    let newObjectContent = newWorldObject.data!.content as ObjectContent;
+
+    if (migrateResult.effects?.status.status === "success") {
+      console.log(
+        chalk.blue(
+          `${name} migrate world success, new world version is: ${newObjectContent.fields["version"]}, package version is ${newVersion}`
+        )
+      );
+    } else {
+      console.log(
+        chalk.yellow(
+          `${name} migrate world failed, world version is: ${newObjectContent.fields["version"]}, package version is ${newVersion}`
+        )
+      );
+    }
+
+    const uniqueCompontent: string[] = compnames.filter(
+      (item) => !newObjectContent.fields["compnames"].includes(item)
+    );
+
+    console.log("\n----- new compontent -----");
+    console.log(uniqueCompontent);
+
+    for (const newCompontent of uniqueCompontent) {
+      const registerTx = new TransactionBlock();
+
+      registerTx.setGasBudget(10000000000);
+
+      registerTx.moveCall({
+        target: `${newPackageId}::${newCompontent}_comp::register`,
+        arguments: [registerTx.object(worldId)],
+      });
+
+      const registerResult = await client.signAndExecuteTransactionBlock({
+        signer: keypair,
+        transactionBlock: registerTx,
+        options: {
+          // showObjectChanges: true,
+          showEffects: true,
+        },
+      });
+      if (registerResult.effects?.status.status === "success") {
+        console.log(
+          chalk.blue(`new compontent: ${newCompontent}_comp register success.`)
+        );
+      } else {
+        console.log(chalk.yellow(`${newCompontent}_comp register failed.`));
+      }
+    }
+
+    let registerWorldObject = await client.getObject({
+      id: worldId,
+      options: {
+        showContent: true,
+        showDisplay: true,
+        showType: true,
+        showOwner: true,
+      },
+    });
+    let registerObjectContent = registerWorldObject.data!
+      .content as ObjectContent;
+
+    console.log(
+      chalk.blue(
+        `\n${name} world compontents is ${registerObjectContent.fields["compnames"]}`
+      )
+    );
   } catch {
     console.log("upgrade failed!");
     saveContractData(

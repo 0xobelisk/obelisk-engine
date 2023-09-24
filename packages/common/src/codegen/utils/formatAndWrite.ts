@@ -2,13 +2,19 @@ import { mkdirSync, writeFileSync } from "fs";
 import { dirname } from "path";
 import { formatMove, formatTypescript } from "./format";
 
-export async function formatAndWriteMove(output: string, fullOutputPath: string, logPrefix: string): Promise<void> {
+export async function formatAndWriteMove(
+  output: string,
+  fullOutputPath: string,
+  logPrefix?: string
+): Promise<void> {
   // const formattedOutput = await formatMove(output);
   // console.log(formattedOutput)
   mkdirSync(dirname(fullOutputPath), { recursive: true });
 
   writeFileSync(fullOutputPath, output);
-  console.log(`${logPrefix}: ${fullOutputPath}`);
+  if (logPrefix !== undefined) {
+    console.log(`${logPrefix}: ${fullOutputPath}`);
+  }
 }
 
 export async function formatAndWriteTypescript(

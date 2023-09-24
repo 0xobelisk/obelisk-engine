@@ -22,10 +22,11 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   if (existsSync(`${path}/contracts/${config.name}`)) {
     deleteFolderRecursive(`${path}/contracts/${config.name}/sources/codegen`);
   } else {
-    generateSystem(config, path);
     generateToml(config, path);
     generateEntityKey(config, path);
   }
+
+  generateSystem(config, path);
 
   // generate codegen
   generateComponent(config, path);

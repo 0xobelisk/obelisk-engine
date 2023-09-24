@@ -449,13 +449,13 @@ export class Obelisk {
 
   async getComponents(worldId: string, cursor?: string, limit?: number) {
     const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
-      .components.fields.id.id;
+      .comps.fields.id.id;
 
     return await this.suiInteractor.getDynamicFields(parentId, cursor, limit);
   }
 
   async getComponentByName(worldId: string, componentName: string) {
-    const componentNameId = `${capitalizeFirstLetter(componentName)} Comp`;
+    const componentNameId = `${componentName}`;
     const componentId = keccak256(componentNameId);
     return await this.getComponent(worldId, componentId);
   }
@@ -463,7 +463,7 @@ export class Obelisk {
   async getComponent(worldId: string, componentId: Buffer) {
     const componentIdValue: number[] = Array.from(componentId);
     const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
-      .components.fields.id.id;
+      .comps.fields.id.id;
     const name = {
       type: 'address',
       value: componentIdValue,

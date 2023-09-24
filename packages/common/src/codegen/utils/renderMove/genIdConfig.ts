@@ -34,13 +34,9 @@ export function saveContractData(
 ) {
   const path = process.cwd();
   const savePath = `${path}/contracts/${projectName}/.history`;
-  formatAndWriteMove(network, `${savePath}/network`, "saveContractData");
-  formatAndWriteMove(packageId, `${savePath}/package_id`, "saveContractData");
-  formatAndWriteMove(worldId, `${savePath}/world_id`, "saveContractData");
-  formatAndWriteMove(upgradeCap, `${savePath}/upgrade_cap`, "saveContractData");
-  formatAndWriteMove(
-    version.toString(),
-    `${savePath}/version`,
-    "saveContractData"
-  );
+  formatAndWriteMove(network, `${savePath}/network`);
+  formatAndWriteMove(packageId, `${savePath}/package_id`);
+  formatAndWriteMove(worldId, `${savePath}/world_id`);
+  formatAndWriteMove(upgradeCap, `${savePath}/upgrade_cap`);
+  formatAndWriteMove(version.toString(), `${savePath}/version`);
 }

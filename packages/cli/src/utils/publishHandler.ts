@@ -11,20 +11,17 @@ import { validatePrivateKey } from "./validatePrivateKey";
 import {
   generateIdConfig,
   saveContractData,
+  generateEps,
 } from "../../../common/src/codegen";
-
-// type publishRes = {
-//   name: string,
-//   transactionHash: string,
-//   packageId: string,
-//   worldId: string
-// }
+import fs from "fs";
 
 export async function publishHandler(
   name: string,
   network: "mainnet" | "testnet" | "devnet" | "localnet",
   savePath?: string | undefined
 ) {
+  const path = process.cwd();
+
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey)
     throw new ObeliskCliError(
@@ -45,8 +42,7 @@ in your contracts directory to use the default sui private key.`
   const client = new SuiClient({
     url: getFullnodeUrl(network),
   });
-
-  const path = process.cwd();
+  generateEps(name, path, 1);
 
   const { modules, dependencies } = JSON.parse(
     execSync(
