@@ -28,9 +28,8 @@ module examples::single_struct_comp {
 	public fun register(world: &mut World) {
 		world::add_component<Field>(
 			world,
-			id(),
-			Field { data: encode(@0x1, 100) },
-			string(COMPONENT_NAME)
+			COMPONENT_NAME,
+			Field { data: encode(@0x1, 100) }
 		);
 	}
 

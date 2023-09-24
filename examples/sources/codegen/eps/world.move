@@ -1,7 +1,8 @@
 module examples::world {
-    use std::ascii::String;
+    use std::ascii::{String, string};
     use std::option::Option;
     use std::vector;
+    use examples::entity_key;
     use sui::tx_context;
     use sui::transfer;
     use sui::event;
@@ -96,10 +97,11 @@ module examples::world {
         bag::borrow_mut<address, T>(&mut world.components, id)
     }
 
-    public fun add_component<T : store>(world: &mut World, id: address, component: T, component_name: String){
+    public fun add_component<T : store>(world: &mut World, component_name: vector<u8>, component: T){
         assert!(world.version == VERSION, EWrongVersion);
+        let id = entity_key::from_bytes(component_name);
         assert!(!bag::contains(&world.components, id), ECompAlreadyExists);
-        vector::push_back(&mut world.component_names, component_name);
+        vector::push_back(&mut world.component_names, string(component_name));
         bag::add<address,T>(&mut world.components, id, component);
     }
 

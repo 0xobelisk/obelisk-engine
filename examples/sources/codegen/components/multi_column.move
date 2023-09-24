@@ -30,9 +30,8 @@ module examples::multi_column_comp {
 	public fun register(world: &mut World, ctx: &mut TxContext) {
 		world::add_component<Table<address,Field>>(
 			world,
-			id(),
-			table::new<address,Field>(ctx),
-			string(COMPONENT_NAME)
+			COMPONENT_NAME,
+			table::new<address,Field>(ctx)
 		);
 	}
 

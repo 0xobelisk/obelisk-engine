@@ -27,9 +27,8 @@ module examples::single_value_comp {
 	public fun register(world: &mut World) {
 		world::add_component<Field>(
 			world,
-			id(),
-			Field { data: encode(1000) },
-			string(COMPONENT_NAME)
+			COMPONENT_NAME,
+			Field { data: encode(1000) }
 		);
 	}
 
