@@ -1,6 +1,7 @@
 module examples::world {
     use std::ascii::String;
     use std::option::Option;
+    use std::vector;
     use sui::tx_context;
     use sui::transfer;
     use sui::event;
@@ -33,6 +34,8 @@ module examples::world {
         description: String,
         /// Components of the world
         components: Bag,
+        /// Component names of the world
+        component_names: vector<String>,
         /// admin of the world
         admin: ID,
         /// Components of the world
@@ -65,6 +68,7 @@ module examples::world {
             name,
             description,
             components: bag::new(ctx),
+            component_names: vector::empty(),
             admin: object::id(&admin),
             version: VERSION
         };
@@ -74,6 +78,10 @@ module examples::world {
 
     public fun info(world: &World): (String, String, u64) {
         (world.name, world.description, world.version)
+    }
+
+    public fun component_names(world: &World): vector<String> {
+        world.component_names
     }
 
     public fun get_component<T : store>(world: &World, id: address): &T {
@@ -88,9 +96,10 @@ module examples::world {
         bag::borrow_mut<address, T>(&mut world.components, id)
     }
 
-    public fun add_component<T : store>(world: &mut World, id: address, component: T){
+    public fun add_component<T : store>(world: &mut World, id: address, component: T, component_name: String){
         assert!(world.version == VERSION, EWrongVersion);
         assert!(!bag::contains(&world.components, id), ECompAlreadyExists);
+        vector::push_back(&mut world.component_names, component_name);
         bag::add<address,T>(&mut world.components, id, component);
     }
 

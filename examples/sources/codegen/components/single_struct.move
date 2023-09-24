@@ -9,8 +9,10 @@ module examples::single_struct_comp {
     // Systems
 	friend examples::example_system;
 
+	const COMPONENT_NAME: vector<u8> = b"single_struct";
+
 	public fun id(): address {
-		entity_key::from_bytes(b"single_struct")
+		entity_key::from_bytes(COMPONENT_NAME)
 	}
 
 	// admin
@@ -27,7 +29,8 @@ module examples::single_struct_comp {
 		world::add_component<Field>(
 			world,
 			id(),
-			Field { data: encode(@0x1, 100) }
+			Field { data: encode(@0x1, 100) },
+			string(COMPONENT_NAME)
 		);
 	}
 

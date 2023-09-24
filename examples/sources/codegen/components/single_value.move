@@ -9,8 +9,10 @@ module examples::single_value_comp {
     // Systems
 	friend examples::example_system;
 
+	const COMPONENT_NAME: vector<u8> = b"single_value";
+
 	public fun id(): address {
-		entity_key::from_bytes(b"single_value")
+		entity_key::from_bytes(COMPONENT_NAME)
 	}
 
 	// value
@@ -26,7 +28,8 @@ module examples::single_value_comp {
 		world::add_component<Field>(
 			world,
 			id(),
-			Field { data: encode(1000) }
+			Field { data: encode(1000) },
+			string(COMPONENT_NAME)
 		);
 	}
 

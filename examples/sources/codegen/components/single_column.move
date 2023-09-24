@@ -11,8 +11,10 @@ module examples::single_column_comp {
     // Systems
 	friend examples::example_system;
 
+	const COMPONENT_NAME: vector<u8> = b"single_column";
+
 	public fun id(): address {
-		entity_key::from_bytes(b"single_column")
+		entity_key::from_bytes(COMPONENT_NAME)
 	}
 
 	// value
@@ -28,7 +30,8 @@ module examples::single_column_comp {
 		world::add_component<Table<address,Field>>(
 			world,
 			id(),
-			table::new<address,Field>(ctx)
+			table::new<address,Field>(ctx),
+			string(COMPONENT_NAME)
 		);
 	}
 

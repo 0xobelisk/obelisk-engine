@@ -11,8 +11,10 @@ module examples::multi_column_comp {
     // Systems
 	friend examples::example_system;
 
+	const COMPONENT_NAME: vector<u8> = b"multi_column";
+
 	public fun id(): address {
-		entity_key::from_bytes(b"multi_column")
+		entity_key::from_bytes(COMPONENT_NAME)
 	}
 
 	// state
@@ -29,7 +31,8 @@ module examples::multi_column_comp {
 		world::add_component<Table<address,Field>>(
 			world,
 			id(),
-			table::new<address,Field>(ctx)
+			table::new<address,Field>(ctx),
+			string(COMPONENT_NAME)
 		);
 	}
 

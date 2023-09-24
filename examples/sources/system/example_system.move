@@ -51,6 +51,14 @@ module examples::example_system {
         assert!(description == string(b"Examples description"), 0);
         assert!(version == 1, 0);
 
+        let names = world::component_names(&world);
+        assert!(names == vector[
+            string(b"single_column"),
+            string(b"multi_column"),
+            string(b"single_value"),
+            string(b"single_struct")
+        ], 0);
+
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);
     }
