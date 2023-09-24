@@ -1,4 +1,4 @@
-import { ObeliskConfig } from "../common/src/codegen/types";
+import { ObeliskConfig } from "@0xobelisk/common/src/codegen/types";
 
 export const obeliskConfig = {
   name: "examples",

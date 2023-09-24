@@ -1,14 +1,14 @@
 import type { CommandModule } from "yargs";
 import { logError } from "../utils/errors";
 import { publishHandler } from "../utils";
-import { loadConfig } from "../../../common/src/codegen";
-import { ObeliskConfig } from "../../../common/src/codegen/types";
+import { loadConfig } from "@0xobelisk/common/src/codegen";
+import { ObeliskConfig } from "@0xobelisk/common/src/codegen/types";
 
 type Options = {
-  configPath: string,
-  network: any
-  savePath?: string
-}
+  configPath: string;
+  network: any;
+  savePath?: string;
+};
 
 const commandModule: CommandModule<Options, Options> = {
   command: "publish",
@@ -17,15 +17,23 @@ const commandModule: CommandModule<Options, Options> = {
 
   builder(yargs) {
     return yargs.options({
-      configPath: { type: "string", default: ".", decs: "Path to the config file" },
-      network: { type: 'string', choices: ['mainnet', 'testnet', 'devnet', 'localnet'], desc: "Network of the node (mainnet/testnet/devnet/localnet)" },
-      savePath: { type: 'string', desc: "Path to the save template file" }
+      configPath: {
+        type: "string",
+        default: ".",
+        decs: "Path to the config file",
+      },
+      network: {
+        type: "string",
+        choices: ["mainnet", "testnet", "devnet", "localnet"],
+        desc: "Network of the node (mainnet/testnet/devnet/localnet)",
+      },
+      savePath: { type: "string", desc: "Path to the save template file" },
     });
   },
 
-  async handler({ configPath, network, savePath}) {
+  async handler({ configPath, network, savePath }) {
     try {
-      const obeliskConfig = await loadConfig(configPath) as ObeliskConfig;
+      const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
 
       await publishHandler(obeliskConfig.name, network, savePath);
     } catch (error: any) {

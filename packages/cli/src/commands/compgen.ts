@@ -1,8 +1,6 @@
 import type { CommandModule } from "yargs";
-import { worldgen, loadConfig } from "../../../common/src/codegen";
-import { ObeliskConfig } from "../../../common/src/codegen/types";
-import path from "path";
-
+import { worldgen, loadConfig } from "@0xobelisk/common/codegen";
+import { ObeliskConfig } from "@0xobelisk/common/src/codegen";
 
 type Options = {
   configPath?: string;
@@ -20,8 +18,8 @@ const commandModule: CommandModule<Options, Options> = {
   },
 
   async handler({ configPath }) {
-    const obeliskConfig = await loadConfig(configPath) as ObeliskConfig;
-    worldgen(obeliskConfig)
+    const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
+    worldgen(obeliskConfig);
     process.exit(0);
   },
 };
