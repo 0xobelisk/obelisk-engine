@@ -3,11 +3,11 @@ import { ObeliskConfig } from "../common/src/codegen/types";
 export const obeliskConfig = {
   name: "examples",
   description: "examples description",
-  systems: ["example_system", "b_system"],
+  systems: ["example_system", "b_system", "a_system"],
   components: {
     // Key - Single value
     single_column: "u64",
-    counter: "u64",
+    // counter: "u64",
     b_counter: "u64",
     // Key - Struct value
     multi_column: {
@@ -19,6 +19,10 @@ export const obeliskConfig = {
     init_counter: {
       type: "u64",
       init: "100",
+    },
+    test_counter: {
+      type: "u64",
+      init: "123",
     },
     i_counter: {
       type: "u64",
