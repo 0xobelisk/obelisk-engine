@@ -1,4 +1,6 @@
 module examples::example_system {
+    use examples::single_value_comp;
+    use examples::world::World;
     #[test_only]
     use std::ascii::string;
     #[test_only]
@@ -12,15 +14,17 @@ module examples::example_system {
     #[test_only]
     use examples::single_struct_comp;
     #[test_only]
-    use examples::single_value_comp;
-    #[test_only]
     use examples::world;
-    #[test_only]
-    use examples::world::World;
     #[test_only]
     use sui::test_scenario;
     #[test_only]
     use sui::test_scenario::Scenario;
+
+    public entry fun increase(world: &mut World) {
+        let old_number = single_value_comp::get(world);
+        let new_number = old_number + 10;
+        single_value_comp::update(world, new_number);
+    }
 
     #[test_only]
     public fun init_test(): Scenario {
@@ -46,6 +50,14 @@ module examples::example_system {
         assert!(name == string(b"Examples"), 0);
         assert!(description == string(b"Examples description"), 0);
         assert!(version == 1, 0);
+
+        let names = world::compnames(&world);
+        assert!(names == vector[
+            string(b"single_column"),
+            string(b"multi_column"),
+            string(b"single_value"),
+            string(b"single_struct")
+        ], 0);
 
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);

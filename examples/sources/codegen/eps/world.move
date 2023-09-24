@@ -1,6 +1,8 @@
 module examples::world {
-    use std::ascii::String;
+    use std::ascii::{String, string};
     use std::option::Option;
+    use std::vector;
+    use examples::entity_key;
     use sui::tx_context;
     use sui::transfer;
     use sui::event;
@@ -32,7 +34,9 @@ module examples::world {
         /// Description of the world
         description: String,
         /// Components of the world
-        components: Bag,
+        comps: Bag,
+        /// Component names of the world
+        compnames: vector<String>,
         /// admin of the world
         admin: ID,
         /// Components of the world
@@ -64,7 +68,8 @@ module examples::world {
             id: object::new(ctx),
             name,
             description,
-            components: bag::new(ctx),
+            comps: bag::new(ctx),
+            compnames: vector::empty(),
             admin: object::id(&admin),
             version: VERSION
         };
@@ -76,27 +81,33 @@ module examples::world {
         (world.name, world.description, world.version)
     }
 
-    public fun get_component<T : store>(world: &World, id: address): &T {
-        assert!(world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&world.components, id), ECompDoesNotExist);
-        bag::borrow<address, T>(&world.components, id)
+    public fun compnames(world: &World): vector<String> {
+        world.compnames
     }
 
-    public fun get_mut_component<T : store>(world: &mut World, id: address): &mut T {
+    public fun get_comp<T : store>(world: &World, id: address): &T {
         assert!(world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&world.components, id), ECompDoesNotExist);
-        bag::borrow_mut<address, T>(&mut world.components, id)
+        assert!(bag::contains(&world.comps, id), ECompDoesNotExist);
+        bag::borrow<address, T>(&world.comps, id)
     }
 
-    public fun add_component<T : store>(world: &mut World, id: address, component: T){
+    public fun get_mut_comp<T : store>(world: &mut World, id: address): &mut T {
         assert!(world.version == VERSION, EWrongVersion);
-        assert!(!bag::contains(&world.components, id), ECompAlreadyExists);
-        bag::add<address,T>(&mut world.components, id, component);
+        assert!(bag::contains(&world.comps, id), ECompDoesNotExist);
+        bag::borrow_mut<address, T>(&mut world.comps, id)
+    }
+
+    public fun add_comp<T : store>(world: &mut World, component_name: vector<u8>, component: T){
+        assert!(world.version == VERSION, EWrongVersion);
+        let id = entity_key::from_bytes(component_name);
+        assert!(!bag::contains(&world.comps, id), ECompAlreadyExists);
+        vector::push_back(&mut world.compnames, string(component_name));
+        bag::add<address,T>(&mut world.comps, id, component);
     }
 
     public fun contains(world: &mut World, id: address): bool {
         assert!(world.version == VERSION, EWrongVersion);
-        bag::contains(&mut world.components, id)
+        bag::contains(&mut world.comps, id)
     }
 
     public fun emit_remove_event(comp: address, key: address) {
