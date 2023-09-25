@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/client",
-  "version": "0.1.3",
+  "version": "0.2.6",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "sui",
@@ -59,7 +59,6 @@
   "dependencies": {
     "@mysten/bcs": "^0.7.3",
     "@mysten/sui.js": "^0.41.0",
-    "@obelisk/common": "workspace:*",
     "@scure/bip39": "^1.2.1",
     "assert": "^2.0.0",
     "colorts": "^0.1.63",

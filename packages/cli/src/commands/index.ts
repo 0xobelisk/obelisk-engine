@@ -3,8 +3,9 @@ import { CommandModule } from "yargs";
 import localnode from "./localnode";
 import faucet from "./faucet";
 import hello from "./hello";
-import tablegen from "./compgen";
+import compgen from "./compgen";
 import publish from "./publish";
+import upgrade from "./upgrade";
 import test from "./test";
 import trace from "./trace";
 
@@ -14,7 +15,8 @@ export const commands: CommandModule<any, any>[] = [
   localnode,
   faucet,
   hello,
-  tablegen,
+  compgen,
+  upgrade,
   test,
   trace,
 ];

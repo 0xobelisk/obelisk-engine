@@ -1,39 +1,48 @@
-import { ObeliskConfig } from "@0xobelisk/common/src/codegen/types";
+import { ObeliskConfig } from "@0xobelisk/common";
 
 export const obeliskConfig = {
-  projectName: "withinfinity",
-  systems: [
-      "fee_system",
-      "home_system",
-      "pet_system",
-      "state_system",
-  ],
+  name: "examples",
+  description: "examples description",
+  systems: ["example_system", "b_system", "a_system"],
   components: {
-    // Key - Struct value
-    level: {
-        hunger: "u64",
-        cleanliness: "u64",
-        mood: "u64",
-        level: "u64",
-    },
-    // Key - Struct value
-    state: {
-        state: "vector<u8>" ,
-        last_update_time: "u64" ,
-    },
     // Key - Single value
-    suifren: "bool",
-    // Key - Single value
-    le: "u64",
+    single_column: "u64",
+    // counter: "u64",
+    b_counter: "u64",
+    // Key - Struct value
+    multi_column: {
+      state: "vector<u8>",
+      last_update_time: "u64",
+    },
   },
   singletonComponents: {
-    admin: {
-      type: "address",
-      init: "0x1"
-    },
-    counter: {
+    init_counter: {
       type: "u64",
-      init: "1000"
+      init: "100",
     },
-  }
+    test_counter: {
+      type: "u64",
+      init: "123",
+    },
+    i_counter: {
+      type: "u64",
+      init: "100",
+    },
+    // Single value
+    single_value: {
+      type: "u64",
+      init: "1000",
+    },
+    // Struct value
+    single_struct: {
+      type: {
+        admin: "address",
+        fee: "u64",
+      },
+      init: {
+        admin: "@0x1",
+        fee: "100",
+      },
+    },
+  },
 } as ObeliskConfig;

@@ -1,18 +1,17 @@
 import type { CommandModule } from "yargs";
 import { logError } from "../utils/errors";
-import { publishHandler } from "../utils";
+import { upgradeHandler } from "../utils";
 import { loadConfig, ObeliskConfig } from "@0xobelisk/common";
 
 type Options = {
   configPath: string;
-  network: any;
   savePath?: string;
 };
 
 const commandModule: CommandModule<Options, Options> = {
-  command: "publish",
+  command: "upgrade",
 
-  describe: "Publish obelisk move contracts",
+  describe: "Upgrade your move contracts",
 
   builder(yargs) {
     return yargs.options({
@@ -21,20 +20,19 @@ const commandModule: CommandModule<Options, Options> = {
         default: ".",
         decs: "Path to the config file",
       },
-      network: {
-        type: "string",
-        choices: ["mainnet", "testnet", "devnet", "localnet"],
-        desc: "Network of the node (mainnet/testnet/devnet/localnet)",
-      },
       savePath: { type: "string", desc: "Path to the save template file" },
     });
   },
 
-  async handler({ configPath, network, savePath }) {
+  async handler({ configPath, savePath }) {
     try {
       const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
 
-      await publishHandler(obeliskConfig.name, network, savePath);
+      let compnames = Object.keys(obeliskConfig.components).concat(
+        Object.keys(obeliskConfig.singletonComponents)
+      );
+
+      await upgradeHandler(obeliskConfig.name, compnames, savePath);
     } catch (error: any) {
       logError(error);
       process.exit(1);

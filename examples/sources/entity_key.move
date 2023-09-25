@@ -1,5 +1,5 @@
 module examples::entity_key {
-    use std::vector;
+    use sui::hash::keccak256;
     use sui::address;
     use sui::object;
 
@@ -8,18 +8,7 @@ module examples::entity_key {
     }
 
     public fun from_bytes(bytes: vector<u8>): address {
-        let len = vector::length(&bytes);
-        assert!(len != 0 && len <= 32, 0);
-
-        let offset = address::length() - len;
-
-        let i = 0;
-        while (i < offset) {
-            vector::push_back(&mut bytes,0u8);
-            i = i + 1;
-        };
-
-        address::from_bytes(bytes)
+        address::from_bytes(keccak256(&bytes))
     }
 
     public fun from_u256(x: u256): address {
@@ -28,7 +17,7 @@ module examples::entity_key {
 
     #[test]
     public fun test_from_bytes() {
-        assert!(from_bytes(b"Hello") == @0x48656c6c6f000000000000000000000000000000000000000000000000000000, 0);
+        assert!(from_bytes(b"Hello") == @0x6b3dfaec148fb1bb2b066f10ec285e7c9bf402ab32aa78a5d38e34566810cd2, 0);
     }
 
     #[test]

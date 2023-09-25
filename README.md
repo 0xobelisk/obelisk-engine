@@ -31,12 +31,12 @@ Obelisk-Engine is still in its early stages of development, yet the dedicated co
 - Typed SDKs
 
 ## 🚀 Quick Start
-See the [start guide](https://obelisk.build/pack/docs/quick-start) in the document website.
+See the [start guide](https://obelisk.build/engine/docs/quick-start) in the document website.
 
 
 ## 🗒️ Documentation
 
-You can find more detailed documentation in [here](https://obelisk.build/pack/docs).
+You can find more detailed documentation in [here](https://obelisk.build/engine/docs).
 
 ## ❓ Support
 
