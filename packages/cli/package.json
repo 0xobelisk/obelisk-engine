@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/cli",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "sui",
@@ -39,7 +39,7 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@0xobelisk/common": "0.2.5",
+    "@0xobelisk/common": "0.2.7",
     "@mysten/sui.js": "^0.41.0",
     "chalk": "^5.0.1",
     "child_process": "^1.0.2",
