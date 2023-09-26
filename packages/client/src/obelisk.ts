@@ -472,13 +472,13 @@ export class Obelisk {
     return await this.suiInteractor.getDynamicFieldObject(parentId, name);
   }
 
-  async getOwnedEntities(owner: SuiAddress, cursor?: string, limit?: number) {
+  async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
     const ownedObjects = await this.suiInteractor.getOwnedObjects(
       owner,
       cursor,
       limit
     );
-    let ownedEntities: ObeliskObjectData[] = [];
+    let ownedObjectsRes: ObeliskObjectData[] = [];
 
     for (const object of ownedObjects.data) {
       let objectDetail = await this.getObject(object.data!.objectId);
@@ -487,10 +487,10 @@ export class Obelisk {
         objectDetail.objectType.split('::')[0] ===
         this.contractFactory.packageId
       ) {
-        ownedEntities.push(objectDetail);
+        ownedObjectsRes.push(objectDetail);
       }
     }
 
-    return ownedEntities;
+    return ownedObjectsRes;
   }
 }

@@ -109,7 +109,7 @@ export function generateEps(
         bag::borrow_mut<address, T>(&mut world.comps, id)
     }
 
-        public fun add_comp<T : store>(world: &mut World, component_name: vector<u8>, component: T){
+    public fun add_comp<T : store>(world: &mut World, component_name: vector<u8>, component: T){
         assert!(world.version == VERSION, EWrongVersion);
         let id = entity_key::from_bytes(component_name);
         assert!(!bag::contains(&world.comps, id), ECompAlreadyExists);

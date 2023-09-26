@@ -248,8 +248,10 @@ in your contracts directory to use the default sui private key.`
         `\n${name} world compontents is ${registerObjectContent.fields["compnames"]}`
       )
     );
-  } catch {
+  } catch (error) {
     console.log("upgrade failed!");
+    console.error(error);
+
     saveContractData(
       name,
       network,

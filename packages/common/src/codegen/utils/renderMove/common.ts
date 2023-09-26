@@ -254,7 +254,7 @@ function generateUpdatePlaceholderString(
   return `(${keys.map((key) => (key === targetKey ? "_" : key)).join(", ")})`;
 }
 
-function getDecodeData(values: ComponentMapType, key: string) {
+function getDecodeData(values: string | Record<string, string>, key: string) {
   if (typeof values !== "string") {
     let allKey = Object.keys(values);
     const result = generateGetPlaceholderString(allKey, key);
@@ -262,7 +262,10 @@ function getDecodeData(values: ComponentMapType, key: string) {
   }
 }
 
-function updateDecodeData(values: ComponentMapType, key: string) {
+function updateDecodeData(
+  values: string | Record<string, string>,
+  key: string
+) {
   if (typeof values !== "string") {
     let allKey = Object.keys(values);
     const result = generateUpdatePlaceholderString(allKey, key);
