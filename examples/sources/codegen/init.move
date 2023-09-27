@@ -14,8 +14,8 @@ module examples::init {
         // Add Component
         single_column_comp::register(&mut world, ctx);
         multi_column_comp::register(&mut world, ctx);
-        single_value_comp::register(&mut world);
-        single_struct_comp::register(&mut world);
+        single_value_comp::register(&mut world, ctx);
+        single_struct_comp::register(&mut world, ctx);
 
         transfer::public_share_object(world);
     }

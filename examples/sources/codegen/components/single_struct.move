@@ -2,7 +2,10 @@ module examples::single_struct_comp {
     use std::ascii::{String, string};
     use std::option::none;
     use std::vector;
-    use sui::bcs;
+	use sui::table;
+	use sui::tx_context::TxContext;
+	use sui::table::Table;
+	use sui::bcs;
     use examples::entity_key;
     use examples::world::{Self, World};
   
@@ -11,61 +14,89 @@ module examples::single_struct_comp {
 
 	const NAME: vector<u8> = b"single_struct";
 
+	struct CompMetadata has store {
+		id: address,
+		name: String,
+		types: vector<String>,
+		entities: vector<address>,
+		data: Table<address, vector<u8>>
+	}
+
+	public fun new(ctx: &mut TxContext): CompMetadata {
+		let component = CompMetadata {
+			id: id(),
+			name: name(),
+			types: types(),
+			entities: vector::empty<address>(),
+			data: table::new<address, vector<u8>>(ctx)
+		};
+		table::add(&mut component.data, id(), encode(@0x1, 100));
+		component
+	}
+
 	public fun id(): address {
 		entity_key::from_bytes(NAME)
 	}
 
-	// admin
-	// fee
-	public fun field_types(): vector<String> {
-		vector[string(b"u64")]
-	}
-  
-	struct Field has drop, store {
-		data: vector<u8>
+	public fun name(): String {
+		string(NAME)
 	}
 
-	public fun register(world: &mut World) {
-		world::add_comp<Field>(
-			world,
-			NAME,
-			Field { data: encode(@0x1, 100) }
-		);
+	public fun types(): vector<String> {
+		vector[string(b"vector<u8>"), string(b"u64")]
+	}
+
+	public fun entities(world: &World): vector<address> {
+		let component = world::get_comp<CompMetadata>(world, id());
+		component.entities
+	}
+
+	public fun register(world: &mut World, ctx: &mut TxContext) {
+		world::add_comp<CompMetadata>(world, NAME, new(ctx));
 	}
 
 	public(friend) fun update(world: &mut World, admin: address, fee: u64) {
+		let component = world::get_mut_comp<CompMetadata>(world, id());
 		let data = encode(admin, fee);
-		world::get_mut_comp<Field>(world, id()).data = data;
+		*table::borrow_mut<address, vector<u8>>(&mut component.data, id()) = data;
 		world::emit_update_event(id(), none(), data)
 	}
+
 	public(friend) fun update_admin(world: &mut World, admin: address) {
-		let field = world::get_mut_comp<Field>(world, id());
-		let (_, fee) = decode(field.data);
-		field.data = encode(admin, fee);
-		world::emit_update_event(id(), none(), field.data)
+		let component = world::get_mut_comp<CompMetadata>(world, id());
+		let comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, id());
+		let (_, fee) = decode(*comp_data);
+		let data = encode(admin, fee);
+		*comp_data = data;
+		world::emit_update_event(id(), none(), data)
 	}
 
 	public(friend) fun update_fee(world: &mut World, fee: u64) {
-		let field = world::get_mut_comp<Field>(world, id());
-		let (admin, _) = decode(field.data);
-		field.data = encode(admin, fee);
-		world::emit_update_event(id(), none(), field.data)
+		let component = world::get_mut_comp<CompMetadata>(world, id());
+		let comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, id());
+		let (admin, _) = decode(*comp_data);
+		let data = encode(admin, fee);
+		*comp_data = data;
+		world::emit_update_event(id(), none(), data)
 	}
 
 	public fun get(world: &World): (address,u64) {
-		let data = world::get_comp<Field>(world, id()).data;
-		decode(data)
+		let component = world::get_comp<CompMetadata>(world, id());
+		let data = table::borrow<address, vector<u8>>(&component.data, id());
+		decode(*data)
 	}
 
 	public fun get_admin(world: &World): address {
-		let data = world::get_comp<Field>(world, id()).data;
-		let (admin, _) = decode(data);
+		let component = world::get_comp<CompMetadata>(world, id());
+		let data = table::borrow<address, vector<u8>>(&component.data, id());
+		let (admin, _) = decode(*data);
 		admin
 	}
 
 	public fun get_fee(world: &World): u64 {
-		let data = world::get_comp<Field>(world, id()).data;
-		let (_, fee) = decode(data);
+		let component = world::get_comp<CompMetadata>(world, id());
+		let data = table::borrow<address, vector<u8>>(&component.data, id());
+		let (_, fee) = decode(*data);
 		fee
 	}
 

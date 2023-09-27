@@ -1,24 +1,25 @@
 import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
-  capitalizeFirstLetter,
-  getFriendSystem,
-  renderKeyName,
-  renderAddFunc,
-  renderContainFunc,
-  // renderNewStructFunc,
-  renderQueryFunc,
-  renderRegisterFunc,
-  renderRegisterFuncWithInit,
-  renderRemoveFunc,
-  // renderSingletonQueryFunc,
-  // renderSingletonUpdateFunc,
-  renderStruct,
-  renderUpdateFunc,
-  renderEncodeFunc,
-  // renderSigletonEncodeFunc,
-  renderDecodeFunc,
-  // renderSigletonDecodeFunc,
+    capitalizeFirstLetter,
+    getFriendSystem,
+    renderKeyName,
+    renderAddFunc,
+    renderContainFunc,
+    // renderNewStructFunc,
+    renderQueryFunc,
+    renderRegisterFunc,
+    renderRegisterFuncWithInit,
+    renderRemoveFunc,
+    // renderSingletonQueryFunc,
+    // renderSingletonUpdateFunc,
+    renderStruct,
+    renderUpdateFunc,
+    renderEncodeFunc,
+    // renderSigletonEncodeFunc,
+    renderDecodeFunc,
+    getStructInitValue,
+    // renderSigletonDecodeFunc,
 } from "./common";
 
 export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
@@ -38,13 +39,47 @@ ${getFriendSystem(config.name, config.systems)}
 
 \tconst NAME: vector<u8> = b"${componentName}";
 
+${renderKeyName(value)}
+\tstruct CompMetadata has store {
+\t\tid: address,
+\t\tname: String,
+\t\ttypes: vector<String>,
+\t\tentities: vector<address>,
+\t\tdata: Table<address, vector<u8>>
+\t}
+
+\tpublic fun new(ctx: &mut TxContext): CompMetadata {
+\t\tlet component = CompMetadata {
+\t\t\tid: id(),
+\t\t\tname: name(),
+\t\t\ttypes: types(),
+\t\t\tentities: vector::empty<address>(),
+\t\t\tdata: table::new<address, vector<u8>>(ctx)
+\t\t};
+\t\tcomponent
+\t}
+
 \tpublic fun id(): address {
 \t\tentity_key::from_bytes(NAME)
 \t}
 
-${renderKeyName(value)}
-${renderStruct(value)}
-${renderRegisterFunc()}
+\tpublic fun name(): String {
+\t\tstring(NAME)
+\t}
+
+\tpublic fun types(): vector<String> {
+\t\tvector[string(b"vector<u8>"), string(b"u64")]
+\t}
+
+\tpublic fun entities(world: &World): vector<address> {
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\tcomponent.entities
+\t}
+
+\tpublic fun register(world: &mut World, ctx: &mut TxContext) {
+\t\tworld::add_comp<CompMetadata>(world, NAME, new(ctx));
+\t}
+
 ${renderAddFunc(value)}
 ${renderRemoveFunc()}
 ${renderUpdateFunc(value)}
@@ -86,8 +121,47 @@ ${getFriendSystem(config.name, config.systems)}
 \t}
 
 ${renderKeyName(value)}
-${renderStruct(value)}
-${renderRegisterFuncWithInit(value)}
+\tstruct CompMetadata has store {
+\t\tid: address,
+\t\tname: String,
+\t\ttypes: vector<String>,
+\t\tentities: vector<address>,
+\t\tdata: Table<address, vector<u8>>
+\t}
+
+\tpublic fun new(ctx: &mut TxContext): CompMetadata {
+\t\tlet component = CompMetadata {
+\t\t\tid: id(),
+\t\t\tname: name(),
+\t\t\ttypes: types(),
+\t\t\tentities: vector::empty<address>(),
+\t\t\tdata: table::new<address, vector<u8>>(ctx)
+\t\t};
+\t\ttable::add(&mut component.data, id(), encode(${getStructInitValue(value.init).join(", ")});
+\t\tcomponent
+\t}
+
+\tpublic fun id(): address {
+\t\tentity_key::from_bytes(NAME)
+\t}
+
+\tpublic fun name(): String {
+\t\tstring(NAME)
+\t}
+
+\tpublic fun types(): vector<String> {
+\t\tvector[string(b"vector<u8>"), string(b"u64")]
+\t}
+
+\tpublic fun entities(world: &World): vector<address> {
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\tcomponent.entities
+\t}
+
+\tpublic fun register(world: &mut World, ctx: &mut TxContext) {
+\t\tworld::add_comp<CompMetadata>(world, NAME, new(ctx));
+\t}
+
 ${renderUpdateFunc(value)}
 ${renderQueryFunc(value)}
 ${renderEncodeFunc(value)}

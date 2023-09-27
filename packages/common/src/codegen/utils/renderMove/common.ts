@@ -223,9 +223,10 @@ export function renderAddFunc(values: ComponentMapType): string {
     values,
     ""
   ).join(", ")}) {
-\t\tlet component = world::get_mut_comp<Table<address,Field>>(world, id());
+\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
 \t\tlet data = encode(${getStructAttrs(values, "").join(", ")});
-\t\ttable::add(component, key, Field { data });
+\t\tvector::push_back(&mut component.entities, key);
+\t\ttable::add(&mut component.data, key, data);
 \t\tworld::emit_add_event(id(), key, data)
 \t}
 `;
@@ -233,8 +234,10 @@ export function renderAddFunc(values: ComponentMapType): string {
 
 export function renderRemoveFunc(): string {
   return `\tpublic(friend) fun remove(world: &mut World, key: address) {
-\t\tlet component = world::get_mut_comp<Table<address,Field>>(world, id());
-\t\ttable::remove(component, key);
+\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet (_, entity_index) = vector::index_of(&component.entities, &key);
+\t\tvector::remove(&mut component.entities, entity_index);
+\t\ttable::remove(&mut component.data, key);
 \t\tworld::emit_remove_event(id(), key)
 \t}
 `;
@@ -287,8 +290,9 @@ export function renderUpdateFunc(
       map,
       ""
     ).join(", ")}) {
+\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
 \t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
-\t\tworld::get_mut_comp<Field>(world, id()).data = data;
+\t\t*table::borrow_mut<address, vector<u8>>(&mut component.data, id()) = data;
 \t\tworld::emit_update_event(id(), none(), data)
 \t}
 `;
@@ -300,9 +304,11 @@ export function renderUpdateFunc(
             .map(
               ([key, type]) =>
                 `\tpublic(friend) fun update_${key}(world: &mut World, ${key}: ${type}) {
-\t\tlet field = world::get_mut_comp<Field>(world, id());
-\t\tlet ${updateDecodeData(map, key)} = decode(field.data);
-\t\tfield.data = encode(${getStructAttrs(map, "").join(", ")});
+\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, id());
+\t\tlet ${updateDecodeData(map, key)} = decode(*comp_data);
+\t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
+\t\t*comp_data = data;
 \t\tworld::emit_update_event(id(), none(), field.data)
 \t}
 `
@@ -315,10 +321,9 @@ export function renderUpdateFunc(
       map,
       ""
     ).join(", ")}) {
-\t\tlet component = world::get_mut_comp<Table<address, Field>>(world, id());
-\t\tlet field = table::borrow_mut<address, Field>(component, key);
+\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
 \t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
-\t\tfield.data = data;
+\t\t*table::borrow_mut<address, vector<u8>>(&mut component.data, key) = data;
 \t\tworld::emit_update_event(id(), some(key), data)
 \t}
 `;
@@ -330,11 +335,11 @@ export function renderUpdateFunc(
             .map(
               ([key, type]) =>
                 `\tpublic(friend) fun update_${key}(world: &mut World, key: address, ${key}: ${type}) {
-\t\tlet component = world::get_mut_comp<Table<address,Field>>(world, id());
-\t\tlet field = table::borrow_mut<address, Field>(component, key);
-\t\tlet ${updateDecodeData(map, key)} = decode(field.data);
+\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, key);
+\t\tlet ${updateDecodeData(map, key)} = decode(*comp_data);
 \t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
-\t\tfield.data = data;
+\t\t*comp_data = data;
 \t\tworld::emit_update_event(id(), some(key), data)
 \t}
 `
@@ -356,8 +361,9 @@ export function renderQueryFunc(
     map = singleValue.type;
 
     total = `\tpublic fun get(world: &World): ${getStructTypes(map)} {
-\t\tlet data = world::get_comp<Field>(world, id()).data;
-\t\tdecode(data)
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\tlet data = table::borrow<address, vector<u8>>(&component.data, id());
+\t\tdecode(*data)
 \t}\n`;
 
     all =
@@ -370,8 +376,9 @@ export function renderQueryFunc(
                 key,
                 type,
               ]) => `\tpublic fun get_${key}(world: &World): ${type} {
-\t\tlet data = world::get_comp<Field>(world, id()).data;
-\t\tlet ${getDecodeData(map, key)} = decode(data);
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\tlet data = table::borrow<address, vector<u8>>(&component.data, id());
+\t\tlet ${getDecodeData(map, key)} = decode(*data);
 \t\t${key}
 \t}
 `
@@ -383,9 +390,9 @@ export function renderQueryFunc(
     total = `\tpublic fun get(world: &World, key: address): ${getStructTypes(
       map
     )} {
-\t\tlet component = world::get_comp<Table<address,Field>>(world, id());
-\t\tlet field = table::borrow<address, Field>(component, key);
-\t\tdecode(field.data)
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\tlet data = table::borrow<address, vector<u8>>(&component.data, key);
+\t\tdecode(*data)
 \t}\n`;
 
     all =
@@ -398,9 +405,9 @@ export function renderQueryFunc(
                 key,
                 type,
               ]) => `\tpublic fun get_${key}(world: &World, key: address): ${type} {
-\t\tlet component = world::get_comp<Table<address,Field>>(world, id());
-\t\tlet field = table::borrow<address, Field>(component, key);
-\t\tlet ${getDecodeData(map, key)} = decode(field.data);
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\tlet data = table::borrow<address, vector<u8>>(&component.data, key);
+\t\tlet ${getDecodeData(map, key)} = decode(*data);
 \t\t${key}
 \t}
 `
@@ -413,8 +420,8 @@ export function renderQueryFunc(
 
 export function renderContainFunc(): string {
   return `\tpublic fun contains(world: &World, key: address): bool {
-\t\tlet component = world::get_comp<Table<address,Field>>(world, id());
-\t\ttable::contains<address, Field>(component, key)
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\ttable::contains<address, vector<u8>>(&component.data, key)
 \t}
 `;
 }
