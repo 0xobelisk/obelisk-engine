@@ -472,6 +472,18 @@ export class Obelisk {
     return await this.suiInteractor.getDynamicFieldObject(parentId, name);
   }
 
+  async getEntity(worldId: string, entityId: Buffer) {
+    const entityIdValue: number[] = Array.from(entityId);
+    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
+      .comps.fields.id.id;
+    const name = {
+      type: 'address',
+      value: entityIdValue,
+      // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
+    } as DynamicFieldName;
+    return await this.suiInteractor.getDynamicFieldObject(parentId, name);
+  }
+
   async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
     const ownedObjects = await this.suiInteractor.getOwnedObjects(
       owner,

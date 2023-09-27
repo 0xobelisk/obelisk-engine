@@ -1,25 +1,25 @@
 import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
-    capitalizeFirstLetter,
-    getFriendSystem,
-    renderKeyName,
-    renderAddFunc,
-    renderContainFunc,
-    // renderNewStructFunc,
-    renderQueryFunc,
-    renderRegisterFunc,
-    renderRegisterFuncWithInit,
-    renderRemoveFunc,
-    // renderSingletonQueryFunc,
-    // renderSingletonUpdateFunc,
-    renderStruct,
-    renderUpdateFunc,
-    renderEncodeFunc,
-    // renderSigletonEncodeFunc,
-    renderDecodeFunc,
-    getStructInitValue,
-    // renderSigletonDecodeFunc,
+  capitalizeFirstLetter,
+  getFriendSystem,
+  renderKeyName,
+  renderAddFunc,
+  renderContainFunc,
+  // renderNewStructFunc,
+  renderQueryFunc,
+  renderRegisterFunc,
+  renderRegisterFuncWithInit,
+  renderRemoveFunc,
+  // renderSingletonQueryFunc,
+  // renderSingletonUpdateFunc,
+  renderStruct,
+  renderUpdateFunc,
+  renderEncodeFunc,
+  // renderSigletonEncodeFunc,
+  renderDecodeFunc,
+  getStructInitValue,
+  // renderSigletonDecodeFunc,
 } from "./common";
 
 export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
@@ -137,7 +137,9 @@ ${renderKeyName(value)}
 \t\t\tentities: vector::empty<address>(),
 \t\t\tdata: table::new<address, vector<u8>>(ctx)
 \t\t};
-\t\ttable::add(&mut component.data, id(), encode(${getStructInitValue(value.init).join(", ")});
+\t\ttable::add(&mut component.data, id(), encode(${getStructInitValue(
+        value.init
+      ).join(", ")});
 \t\tcomponent
 \t}
 

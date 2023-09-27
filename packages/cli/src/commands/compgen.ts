@@ -1,5 +1,9 @@
 import type { CommandModule } from "yargs";
-import { worldgen, loadConfig, ObeliskConfig } from "@0xobelisk/common";
+import {
+  worldgen,
+  loadConfig,
+  ObeliskConfig,
+} from "../../../common/src/codegen";
 
 type Options = {
   configPath?: string;

@@ -42,9 +42,16 @@ type data = {
   dataType: 'moveObject';
 };
 
+function uint8ArrayToHexString(uint8Array: Uint8Array): string {
+  return Array.from(uint8Array, (byte) => {
+    return ('0' + (byte & 0xff).toString(16)).slice(-2);
+  }).join('');
+}
+
 async function init() {
-  const network = process.argv[2];
-  const packageId = process.argv[3];
+  const network = 'devnet';
+  const packageId =
+    '0x284c284b75cf96a94ccab02bbc1abf77f17e1556c927c6c68da36f88e14ba391';
 
   const metadata = await getMetadata(network as NetworkType, packageId);
 
@@ -57,17 +64,25 @@ async function init() {
 
   // let data1 = await obelisk.getComponent("0x36cbd7d72444757040b496e7380af38c873e3ce4a88a30a0800ed7d3a24b3929", hexdata)
   let data1 = await obelisk.getComponentByName(
-    '0x88c4a2e650ef724596aeddc2a467f9a38dd82d77ab2052e9d9a06c530dd2d102',
-    'test_counter'
+    '0x775c80938d20cc7af849f3aed4105eba8a7e5cdf65d8f795f78cdf62e578012f',
+    'user_info'
   );
   console.log(JSON.stringify(data1.data?.content));
-  let content = data1.data!.content as data;
-  let res = content.fields!.value!.fields.data;
-  const bcs = new BCS(getSuiMoveConfig());
-  console.log(res);
-  const byteArray = new Uint8Array(res);
-  const data2 = bcs.de('u64', byteArray);
-  console.log(data2);
+  const senderAddress = `0xd2c36eea220c7deb9d1c7d4b01269eca9d9543050255432896cd13ade6550d90`;
+  const hashAddress = keccak256(senderAddress);
+  const entityKey = uint8ArrayToHexString(hashAddress);
+  const tx = new TransactionBlock();
+  let params = [
+    tx.pure(
+      '0x775c80938d20cc7af849f3aed4105eba8a7e5cdf65d8f795f78cdf62e578012f'
+    ),
+    tx.pure(entityKey),
+  ] as SuiTxArgument[];
+  let data2 = await obelisk.query.user_info_comp.get(tx, params);
+  console.log(JSON.stringify(data2));
+
+  // const data2 = bcs.de('u64', byteArray);
+  // console.log(data2);
 
   // const tx = new TransactionBlock();
   // let params = [] as SuiTxArgument[];
