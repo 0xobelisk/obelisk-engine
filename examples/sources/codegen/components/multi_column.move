@@ -2,7 +2,7 @@ module examples::multi_column_comp {
     use std::ascii::{String, string};
     use std::option::some;
     use std::vector;
-	use sui::bcs;
+    use sui::bcs;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
     use examples::entity_key;
@@ -12,7 +12,9 @@ module examples::multi_column_comp {
 	friend examples::example_system;
 
 	const NAME: vector<u8> = b"multi_column";
-  
+
+	// state
+	// last_update_time
 	struct CompMetadata has store {
 		id: address,
 		name: String,
@@ -53,6 +55,11 @@ module examples::multi_column_comp {
 		world::add_comp<CompMetadata>(world, NAME, new(ctx));
 	}
 
+	public fun data(world: &World): &Table<address, vector<u8>> {
+		let component = world::get_comp<CompMetadata>(world, id());
+		&component.data
+	}
+
 	public(friend) fun add(world: &mut World, key: address, state: vector<u8>, last_update_time: u64) {
 		let component = world::get_mut_comp<CompMetadata>(world, id());
 		let data = encode(state, last_update_time);
@@ -75,7 +82,6 @@ module examples::multi_column_comp {
 		*table::borrow_mut<address, vector<u8>>(&mut component.data, key) = data;
 		world::emit_update_event(id(), some(key), data)
 	}
-
 	public(friend) fun update_state(world: &mut World, key: address, state: vector<u8>) {
 		let component = world::get_mut_comp<CompMetadata>(world, id());
 		let comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, key);

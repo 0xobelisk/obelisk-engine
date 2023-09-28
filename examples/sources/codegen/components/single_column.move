@@ -13,6 +13,7 @@ module examples::single_column_comp {
 
 	const NAME: vector<u8> = b"single_column";
 
+	// value
 	struct CompMetadata has store {
 		id: address,
 		name: String,
@@ -41,7 +42,7 @@ module examples::single_column_comp {
 	}
 
 	public fun types(): vector<String> {
-		vector[string(b"vector<u8>"), string(b"u64")]
+		vector[string(b"u64")]
 	}
 
 	public fun entities(world: &World): vector<address> {
@@ -51,6 +52,11 @@ module examples::single_column_comp {
 
 	public fun register(world: &mut World, ctx: &mut TxContext) {
 		world::add_comp<CompMetadata>(world, NAME, new(ctx));
+	}
+
+	public fun data(world: &World): &Table<address, vector<u8>> {
+		let component = world::get_comp<CompMetadata>(world, id());
+		&component.data
 	}
 
 	public(friend) fun add(world: &mut World, key: address, value: u64) {

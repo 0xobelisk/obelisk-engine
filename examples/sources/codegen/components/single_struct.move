@@ -2,10 +2,9 @@ module examples::single_struct_comp {
     use std::ascii::{String, string};
     use std::option::none;
     use std::vector;
-	use sui::table;
-	use sui::tx_context::TxContext;
-	use sui::table::Table;
-	use sui::bcs;
+    use sui::bcs;
+    use sui::tx_context::TxContext;
+    use sui::table::{Self, Table};
     use examples::entity_key;
     use examples::world::{Self, World};
   
@@ -14,6 +13,8 @@ module examples::single_struct_comp {
 
 	const NAME: vector<u8> = b"single_struct";
 
+	// admin
+	// fee
 	struct CompMetadata has store {
 		id: address,
 		name: String,
@@ -43,7 +44,7 @@ module examples::single_struct_comp {
 	}
 
 	public fun types(): vector<String> {
-		vector[string(b"vector<u8>"), string(b"u64")]
+		vector[string(b"address"), string(b"u64")]
 	}
 
 	public fun entities(world: &World): vector<address> {
@@ -61,7 +62,6 @@ module examples::single_struct_comp {
 		*table::borrow_mut<address, vector<u8>>(&mut component.data, id()) = data;
 		world::emit_update_event(id(), none(), data)
 	}
-
 	public(friend) fun update_admin(world: &mut World, admin: address) {
 		let component = world::get_mut_comp<CompMetadata>(world, id());
 		let comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, id());

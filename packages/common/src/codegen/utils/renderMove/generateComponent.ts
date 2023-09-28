@@ -1,25 +1,25 @@
 import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
-  capitalizeFirstLetter,
-  getFriendSystem,
-  renderKeyName,
-  renderAddFunc,
-  renderContainFunc,
-  // renderNewStructFunc,
-  renderQueryFunc,
-  renderRegisterFunc,
-  renderRegisterFuncWithInit,
-  renderRemoveFunc,
-  // renderSingletonQueryFunc,
-  // renderSingletonUpdateFunc,
-  renderStruct,
-  renderUpdateFunc,
-  renderEncodeFunc,
-  // renderSigletonEncodeFunc,
-  renderDecodeFunc,
-  getStructInitValue,
-  // renderSigletonDecodeFunc,
+    capitalizeFirstLetter,
+    getFriendSystem,
+    renderKeyName,
+    renderAddFunc,
+    renderContainFunc,
+    // renderNewStructFunc,
+    renderQueryFunc,
+    renderRegisterFunc,
+    renderRegisterFuncWithInit,
+    renderRemoveFunc,
+    // renderSingletonQueryFunc,
+    // renderSingletonUpdateFunc,
+    renderStruct,
+    renderUpdateFunc,
+    renderEncodeFunc,
+    // renderSigletonEncodeFunc,
+    renderDecodeFunc,
+    getStructInitValue, getTypesCode,
+    // renderSigletonDecodeFunc,
 } from "./common";
 
 export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
@@ -68,7 +68,7 @@ ${renderKeyName(value)}
 \t}
 
 \tpublic fun types(): vector<String> {
-\t\tvector[string(b"vector<u8>"), string(b"u64")]
+\t\t${getTypesCode(value)}
 \t}
 
 \tpublic fun entities(world: &World): vector<address> {
@@ -78,6 +78,11 @@ ${renderKeyName(value)}
 
 \tpublic fun register(world: &mut World, ctx: &mut TxContext) {
 \t\tworld::add_comp<CompMetadata>(world, NAME, new(ctx));
+\t}
+
+\tpublic fun data(world: &World): &Table<address, vector<u8>> {
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\t&component.data
 \t}
 
 ${renderAddFunc(value)}
@@ -108,6 +113,8 @@ export function generateSingletonComponent(
     use std::option::none;
     use std::vector;
     use sui::bcs;
+    use sui::tx_context::TxContext;
+    use sui::table::{Self, Table};
     use ${config.name}::entity_key;
     use ${config.name}::world::{Self, World};
   
@@ -115,10 +122,6 @@ export function generateSingletonComponent(
 ${getFriendSystem(config.name, config.systems)}
 
 \tconst NAME: vector<u8> = b"${componentName}";
-
-\tpublic fun id(): address {
-\t\tentity_key::from_bytes(NAME)
-\t}
 
 ${renderKeyName(value)}
 \tstruct CompMetadata has store {
@@ -139,7 +142,7 @@ ${renderKeyName(value)}
 \t\t};
 \t\ttable::add(&mut component.data, id(), encode(${getStructInitValue(
         value.init
-      ).join(", ")});
+      ).join(", ")}));
 \t\tcomponent
 \t}
 
@@ -152,7 +155,7 @@ ${renderKeyName(value)}
 \t}
 
 \tpublic fun types(): vector<String> {
-\t\tvector[string(b"vector<u8>"), string(b"u64")]
+\t\t${getTypesCode(value.type)}
 \t}
 
 \tpublic fun entities(world: &World): vector<address> {

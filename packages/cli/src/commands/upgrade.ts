@@ -1,7 +1,8 @@
 import type { CommandModule } from "yargs";
 import { logError } from "../utils/errors";
 import { upgradeHandler } from "../utils";
-import { loadConfig, ObeliskConfig } from "@0xobelisk/common";
+import {  ObeliskConfig } from "../../../common/src/codegen/types";
+import {  loadConfig } from "../../../common/src/codegen";
 
 type Options = {
   configPath: string;

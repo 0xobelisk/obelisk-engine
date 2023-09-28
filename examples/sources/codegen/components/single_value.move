@@ -2,10 +2,9 @@ module examples::single_value_comp {
     use std::ascii::{String, string};
     use std::option::none;
     use std::vector;
-	use sui::table::Table;
-	use sui::table;
-	use sui::tx_context::TxContext;
-	use sui::bcs;
+    use sui::bcs;
+    use sui::tx_context::TxContext;
+    use sui::table::{Self, Table};
     use examples::entity_key;
     use examples::world::{Self, World};
   
@@ -14,6 +13,7 @@ module examples::single_value_comp {
 
 	const NAME: vector<u8> = b"single_value";
 
+	// value
 	struct CompMetadata has store {
 		id: address,
 		name: String,
@@ -43,7 +43,7 @@ module examples::single_value_comp {
 	}
 
 	public fun types(): vector<String> {
-		vector[string(b"vector<u8>"), string(b"u64")]
+		vector[string(b"u64")]
 	}
 
 	public fun entities(world: &World): vector<address> {

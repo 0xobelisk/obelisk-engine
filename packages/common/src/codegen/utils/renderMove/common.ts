@@ -58,7 +58,7 @@ export function getRegisterSingletonComponent(
   values: Record<string, SingletonType>
 ): string[] {
   return Object.entries(values).map(
-    ([key, _]) => `\t\t${key}_comp::register(&mut world);`
+    ([key, _]) => `\t\t${key}_comp::register(&mut world, ctx);`
   );
 }
 
@@ -107,6 +107,17 @@ export function getStructTypes(
   return typeof values === "string"
     ? values
     : `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
+}
+
+export function getTypesCode(
+    values: string | Record<string, string>
+): string {
+  if (typeof values === "string") {
+    return `vector[string(b"${values}")]`
+  } else {
+    const code = Object.keys(values).map(key => `string(b"${values[key]}")`).join(', ');
+    return `vector[${code}]`;
+  }
 }
 
 /**
@@ -309,7 +320,7 @@ export function renderUpdateFunc(
 \t\tlet ${updateDecodeData(map, key)} = decode(*comp_data);
 \t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
 \t\t*comp_data = data;
-\t\tworld::emit_update_event(id(), none(), field.data)
+\t\tworld::emit_update_event(id(), none(), data)
 \t}
 `
             )
