@@ -511,7 +511,7 @@ export class Obelisk {
     let type = entities[0].returnValues[0][1];
     let value = Uint8Array.from(entities[0].returnValues[0][0]);
     let data = bcs.de(type, value);
-    console.log(data);
+    return data;
   }
 
   async getEntity(worldId: string, componentName: string, entityId: string) {

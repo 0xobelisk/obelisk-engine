@@ -62,27 +62,31 @@ async function init() {
     // secretKey: privkey
   });
 
-  // let compTable = await obelisk.getCompontentTable(
-  //   '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
-  //   'multi_column_comp'
-  // );
-  // console.log(compTable);
-  // let entities = await obelisk.getEntities(
-  //   '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
-  //   'multi_column_comp'
-  // );
+  let compTable = await obelisk.getComponentTable(
+    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
+    'multi_column'
+  );
+  console.log(compTable);
+  let entities = await obelisk.getEntities(
+    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
+    'multi_column'
+  );
 
-  // let entity = await obelisk.getEntity(
-  //   '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
-  //   'multi_column_comp',
-  //   '0x00000000000000000000000000000000000000000000000000000000000003f2'
-  // );
+  console.log(entities);
 
-  // let entityData = await obelisk.getEntityData(
-  //   '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
-  //   'multi_column_comp',
-  //   '0x00000000000000000000000000000000000000000000000000000000000003f2'
-  // );
+  let entity = await obelisk.getEntity(
+    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
+    'multi_column',
+    '0x00000000000000000000000000000000000000000000000000000000000003f2'
+  );
+  console.log(entity);
+
+  let entityData = await obelisk.getEntityData(
+    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
+    'multi_column',
+    '0x00000000000000000000000000000000000000000000000000000000000003f2'
+  );
+  console.log(entityData);
 
   let objectAddress = await obelisk.entity_key_from_object(
     '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6'
