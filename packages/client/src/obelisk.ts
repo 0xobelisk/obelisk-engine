@@ -30,9 +30,16 @@ import {
   MapMoudleFuncQuery,
   MapMoudleFuncTx,
   FaucetNetworkType,
+  SuiReturnValues,
+  DynamicFieldContentType,
 } from './types';
-import { capitalizeFirstLetter } from './utils';
+import {
+  capitalizeFirstLetter,
+  normalizeHexAddress,
+  numberToAddressHex,
+} from './utils';
 import keccak256 from 'keccak256';
+import { BCS, getSuiMoveConfig, fromHEX, fromB64, fromB58 } from '@mysten/bcs';
 
 export function isUndefined(value?: unknown): value is undefined {
   return value === undefined;
@@ -467,21 +474,108 @@ export class Obelisk {
     const name = {
       type: 'address',
       value: componentIdValue,
-      // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
     } as DynamicFieldName;
     return await this.suiInteractor.getDynamicFieldObject(parentId, name);
   }
 
-  async getEntity(worldId: string, entityId: Buffer) {
-    const entityIdValue: number[] = Array.from(entityId);
-    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
-      .comps.fields.id.id;
+  async getComponentTable(worldId: string, componentName: string) {
+    let componentMoudleName = `${componentName}_comp`;
+    const tx = new TransactionBlock();
+    let params = [tx.pure(worldId)] as SuiTxArgument[];
+
+    const tableResult = (await this.query[componentMoudleName].data(
+      tx,
+      params
+    )) as DevInspectResults;
+    const tableId = tableResult.results as SuiReturnValues;
+    const bcs = new BCS(getSuiMoveConfig());
+
+    let value = Uint8Array.from(tableId[0].returnValues[0][0]);
+    let data = bcs.de('address', value);
+    return '0x' + data;
+  }
+
+  async getEntities(worldId: string, componentName: string) {
+    let componentMoudleName = `${componentName}_comp`;
+
+    const tx = new TransactionBlock();
+    let params = [tx.pure(worldId)] as SuiTxArgument[];
+
+    const tableResult = (await this.query[componentMoudleName].entities(
+      tx,
+      params
+    )) as DevInspectResults;
+    const entities = tableResult.results as SuiReturnValues;
+    const bcs = new BCS(getSuiMoveConfig());
+
+    let type = entities[0].returnValues[0][1];
+    let value = Uint8Array.from(entities[0].returnValues[0][0]);
+    let data = bcs.de(type, value);
+    console.log(data);
+  }
+
+  async getEntity(worldId: string, componentName: string, entityId: string) {
+    let checkWorldId = normalizeHexAddress(worldId);
+    if (checkWorldId) {
+      worldId = checkWorldId;
+    } else {
+      return undefined;
+    }
+
+    let checkEntityId = normalizeHexAddress(entityId);
+    if (checkEntityId) {
+      entityId = checkEntityId;
+    } else {
+      return undefined;
+    }
+
+    const parentId = await this.getComponentTable(worldId, componentName);
     const name = {
       type: 'address',
-      value: entityIdValue,
-      // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
+      value: entityId,
     } as DynamicFieldName;
-    return await this.suiInteractor.getDynamicFieldObject(parentId, name);
+
+    let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
+      parentId,
+      name
+    );
+    return dynamicFieldObject;
+  }
+
+  async getEntityData(
+    worldId: string,
+    componentName: string,
+    entityId: string
+  ) {
+    const parentId = await this.getComponentTable(worldId, componentName);
+    const name = {
+      type: 'address',
+      value: entityId,
+    } as DynamicFieldName;
+
+    let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
+      parentId,
+      name
+    );
+
+    let dynamicFieldContent = dynamicFieldObject.data!
+      .content as DynamicFieldContentType;
+
+    const type = dynamicFieldContent.type;
+    const regex = /Field<address, (.*)>/;
+    const match = regex.exec(type);
+
+    if (match) {
+      let entityType = match[1];
+      let entityValue = dynamicFieldContent.fields['value'];
+      const bcs = new BCS(getSuiMoveConfig());
+      let value = Uint8Array.from(entityValue);
+      let data = bcs.de(entityType, value);
+
+      return data;
+    } else {
+      return undefined;
+    }
   }
 
   async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
@@ -504,5 +598,28 @@ export class Obelisk {
     }
 
     return ownedObjectsRes;
+  }
+
+  async entity_key_from_object(objectId: string) {
+    let checkObjectId = normalizeHexAddress(objectId);
+    if (checkObjectId !== null) {
+      objectId = checkObjectId;
+      return objectId;
+    } else {
+      return undefined;
+    }
+  }
+
+  async entity_key_from_bytes(bytes: Uint8Array | Buffer | string) {
+    let hashBytes = keccak256(bytes);
+    const hashU8Array: number[] = Array.from(hashBytes);
+    const bcs = new BCS(getSuiMoveConfig());
+    let value = Uint8Array.from(hashU8Array);
+    let data = bcs.de('address', value);
+    return '0x' + data;
+  }
+
+  async entity_key_from_u256(x: number) {
+    return numberToAddressHex(x);
   }
 }
