@@ -46,8 +46,6 @@
     "watch": "pnpm run clean & pnpm run watch:types & pnpm run watch:tsup",
     "test": "pnpm test:typecheck && pnpm test:unit",
     "test:typecheck": "tsc -p ./test",
-    "test:unit": "vitest run --test-timeout=60000",
-    "test:watch": "vitest",
     "format:fix": "prettier --ignore-path 'dist/* docs/*' --write '**/*.{ts,json,md}'",
     "lint:fix": "eslint . --ignore-pattern dist --ext .ts --fix",
     "commit": "commit",
@@ -90,8 +88,7 @@
     "tsconfig-paths": "^4.2.0",
     "tsup": "^7.1.0",
     "typedoc": "^0.24.8",
-    "typescript": "^5.0.4",
-    "vitest": "^0.32.2"
+    "typescript": "^5.0.4"
   },
   "lint-staged": {
     "**/*.ts": [

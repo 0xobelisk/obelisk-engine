@@ -4,7 +4,6 @@ import { NetworkType, ComponentContentType, SuiTxArgument } from '../src/types';
 import { BCS, getSuiMoveConfig, fromHEX, fromB64, fromB58 } from '@mysten/bcs';
 import { DevInspectResults, TransactionBlock } from '@mysten/sui.js';
 import { getMetadata } from '../src/metadata/index';
-import { pure } from '../src/framework/util';
 const keccak256 = require('keccak256');
 import * as crypto from 'crypto';
 
