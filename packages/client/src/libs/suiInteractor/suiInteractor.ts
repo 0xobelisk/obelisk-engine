@@ -10,11 +10,21 @@ import {
   getObjectVersion,
   getSharedObjectInitialVersion,
   DynamicFieldName,
-  SuiAddress
+  SuiAddress,
 } from '@mysten/sui.js';
 import { requestSuiFromFaucetV0, getFaucetHost } from '@mysten/sui.js/faucet';
-import { SuiClient, getFullnodeUrl, GetBalanceParams } from '@mysten/sui.js/client';
-import { FaucetNetworkType, NetworkType, ObjectData } from 'src/types';
+import {
+  SuiClient,
+  getFullnodeUrl,
+  GetBalanceParams,
+} from '@mysten/sui.js/client';
+import {
+  FaucetNetworkType,
+  NetworkType,
+  ObjectData,
+  ObjectFieldType,
+  EntityData,
+} from 'src/types';
 import { SuiOwnedObject, SuiSharedObject } from '../suiModel';
 import { delay } from './util';
 
@@ -78,6 +88,7 @@ export class SuiInteractor {
     }
     throw new Error('Failed to send transaction with all fullnodes');
   }
+
   async getObjects(ids: string[]) {
     const options = {
       showContent: true,
@@ -129,11 +140,50 @@ export class SuiInteractor {
     return objects[0];
   }
 
+  async getEntitiesObjects(ids: string[]) {
+    const options = {
+      showContent: true,
+      showType: true,
+    };
 
-  async getDynamicFieldObject(parentId: string, name: string | DynamicFieldName) {
+    // const currentProviderIdx = this.providers.indexOf(this.currentProvider);
+    // const providers = [
+    //   ...this.providers.slice(currentProviderIdx, this.providers.length),
+    //   ...this.providers.slice(0, currentProviderIdx),
+    // ]
+
     for (const provider of this.providers) {
       try {
-        return provider.getDynamicFieldObject({ parentId, name })
+        const objects = await provider.multiGetObjects({ ids, options });
+        const parsedObjects = objects.map((object) => {
+          const objectId = getObjectId(object);
+          const objectFields = getObjectFields(object) as ObjectFieldType;
+          const index = objectFields.name;
+          const key = objectFields.value;
+          return {
+            objectId,
+            index,
+            key,
+          };
+        });
+        return parsedObjects as EntityData[];
+      } catch (err) {
+        await delay(2000);
+        console.warn(
+          `Failed to get objects with fullnode ${provider.connection.fullnode}: ${err}`
+        );
+      }
+    }
+    throw new Error('Failed to get objects with all fullnodes');
+  }
+
+  async getDynamicFieldObject(
+    parentId: string,
+    name: string | DynamicFieldName
+  ) {
+    for (const provider of this.providers) {
+      try {
+        return provider.getDynamicFieldObject({ parentId, name });
       } catch (err) {
         await delay(2000);
         console.warn(
@@ -147,7 +197,7 @@ export class SuiInteractor {
   async getDynamicFields(parentId: string, cursor?: string, limit?: number) {
     for (const provider of this.providers) {
       try {
-        return provider.getDynamicFields({ parentId, cursor, limit })
+        return provider.getDynamicFields({ parentId, cursor, limit });
       } catch (err) {
         await delay(2000);
         console.warn(
@@ -172,12 +222,12 @@ export class SuiInteractor {
     throw new Error('Failed to get objects with all fullnodes');
   }
 
-
   async getNormalizedMoveModulesByPackage(packageId: string) {
     for (const provider of this.providers) {
       try {
-        return provider.getNormalizedMoveModulesByPackage({package: packageId});
-
+        return provider.getNormalizedMoveModulesByPackage({
+          package: packageId,
+        });
       } catch (err) {
         await delay(2000);
         console.warn(

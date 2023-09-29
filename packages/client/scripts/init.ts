@@ -2,7 +2,7 @@ import { Obelisk } from '../src/obelisk';
 import * as process from 'process';
 import { NetworkType, ComponentContentType, SuiTxArgument } from '../src/types';
 import { BCS, getSuiMoveConfig, fromHEX, fromB64, fromB58 } from '@mysten/bcs';
-import { DevInspectResults, TransactionBlock } from '@mysten/sui.js';
+import { DevInspectResults, TransactionBlock, bcs } from '@mysten/sui.js';
 import { getMetadata } from '../src/metadata/index';
 const keccak256 = require('keccak256');
 import * as crypto from 'crypto';
@@ -11,29 +11,6 @@ type DataItem = [number[], string];
 
 type DataType = 'string' | 'bool' | 'u64';
 
-function formatData(data: DataItem[]): string {
-  const formattedData: string[] = [];
-
-  data.forEach(([values, format]) => {
-    let formattedValue: string;
-    console.log(values, format);
-    if (format === '0x1::string::String') {
-      formattedValue = values.map((num) => String.fromCharCode(num)).join('');
-    } else if (format === 'bool') {
-      formattedValue = values[0] !== 0 ? 'true' : 'false';
-    } else if (format === 'u64') {
-      const u64Value = new DataView(new ArrayBuffer(8));
-      values.forEach((num, index) => u64Value.setUint8(index, num));
-      formattedValue = u64Value.getBigUint64(0).toString();
-    } else {
-      formattedValue = 'Unknown Format';
-    }
-
-    formattedData.push(formattedValue);
-  });
-
-  return formattedData.join('\n');
-}
 type data = {
   type: string;
   fields: Record<string, any>;
@@ -50,7 +27,7 @@ function uint8ArrayToHexString(uint8Array: Uint8Array): string {
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0x390b4ba82cac5053aa391b0a340cfc73e0ba1a293f4405c07f5d409a95390452';
+    '0x309fae15a91b43e151f954033e2f9095c7dbad87036fdb8f193968deda7d824f';
 
   const metadata = await getMetadata(network as NetworkType, packageId);
 
@@ -61,29 +38,45 @@ async function init() {
     // secretKey: privkey
   });
 
-  let compTable = await obelisk.getComponentTable(
-    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
-    'multi_column'
-  );
-  console.log(compTable);
-  let entities = await obelisk.getEntities(
-    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
-    'multi_column'
-  );
+  // let compTable = await obelisk.getComponentTable(
+  //   '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
+  //   'multi_column'
+  // );
+  // console.log(compTable);
 
+  let entities = await obelisk.getEntities(
+    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
+    'multi_column'
+  );
   console.log(entities);
+  console.log(JSON.stringify(entities));
+
+  const tx = new TransactionBlock();
+  let params = [
+    tx.pure(
+      '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912'
+    ),
+  ] as SuiTxArgument[];
+  let entityDataRes = (await obelisk.query.single_value_comp.get(
+    tx,
+    params
+  )) as DevInspectResults;
+  const bcs = new BCS(getSuiMoveConfig());
+  let value = Uint8Array.from(entityDataRes.results![0].returnValues![0][0]);
+  let data = bcs.de('u64', value);
+  console.log(data);
 
   let entity = await obelisk.getEntity(
-    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
+    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
     'multi_column',
-    '0x00000000000000000000000000000000000000000000000000000000000003f2'
+    '0x0000000000000000000000000000000000000000000000000000000000000a07'
   );
   console.log(entity);
 
   let entityData = await obelisk.getEntityData(
-    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
+    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
     'multi_column',
-    '0x00000000000000000000000000000000000000000000000000000000000003f2'
+    '0x0000000000000000000000000000000000000000000000000000000000000a07'
   );
   console.log(entityData);
 
@@ -97,8 +90,6 @@ async function init() {
 
   let numberAddress = await obelisk.entity_key_from_u256(123);
   console.log(numberAddress);
-
-  // console.log
 
   // let data1 = await obelisk.getComponentByName(
   //   '0x775c80938d20cc7af849f3aed4105eba8a7e5cdf65d8f795f78cdf62e578012f',
