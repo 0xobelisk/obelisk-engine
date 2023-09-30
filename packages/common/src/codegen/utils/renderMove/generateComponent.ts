@@ -31,6 +31,7 @@ export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
     use sui::bcs;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
+    use sui::table_vec::{Self, TableVec};
     use ${config.name}::entity_key;
     use ${config.name}::world::{Self, World};
   
@@ -44,7 +45,8 @@ ${renderKeyName(value)}
 \t\tid: address,
 \t\tname: String,
 \t\ttypes: vector<String>,
-\t\tentities: vector<address>,
+\t\tentity_key_to_index: Table<address, u64>,
+\t\tentities: TableVec<address>,
 \t\tdata: Table<address, vector<u8>>
 \t}
 
@@ -53,7 +55,8 @@ ${renderKeyName(value)}
 \t\t\tid: id(),
 \t\t\tname: name(),
 \t\t\ttypes: types(),
-\t\t\tentities: vector::empty<address>(),
+\t\t\tentity_key_to_index: table::new<address, u64>(ctx),
+\t\t\tentities: table_vec::empty<address>(ctx),
 \t\t\tdata: table::new<address, vector<u8>>(ctx)
 \t\t};
 \t\tcomponent
@@ -71,18 +74,23 @@ ${renderKeyName(value)}
 \t\t${getTypesCode(value)}
 \t}
 
-\tpublic fun entities(world: &World): vector<address> {
+\tpublic fun entities(world: &World): &TableVec<address> {
 \t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\tcomponent.entities
+\t\t&component.entities
 \t}
 
-\tpublic fun register(world: &mut World, ctx: &mut TxContext) {
-\t\tworld::add_comp<CompMetadata>(world, NAME, new(ctx));
+\tpublic fun entity_length(world: &World): u64 {
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\ttable_vec::length(&component.entities)
 \t}
 
 \tpublic fun data(world: &World): &Table<address, vector<u8>> {
 \t\tlet component = world::get_comp<CompMetadata>(world, id());
 \t\t&component.data
+\t}
+
+\tpublic fun register(world: &mut World, ctx: &mut TxContext) {
+\t\tworld::add_comp<CompMetadata>(world, NAME, new(ctx));
 \t}
 
 ${renderAddFunc(value)}
@@ -115,6 +123,7 @@ export function generateSingletonComponent(
     use sui::bcs;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
+    use sui::table_vec::{Self, TableVec};
     use ${config.name}::entity_key;
     use ${config.name}::world::{Self, World};
   
@@ -128,7 +137,8 @@ ${renderKeyName(value)}
 \t\tid: address,
 \t\tname: String,
 \t\ttypes: vector<String>,
-\t\tentities: vector<address>,
+\t\tentity_key_to_index: Table<address, u64>,
+\t\tentities: TableVec<address>,
 \t\tdata: Table<address, vector<u8>>
 \t}
 
@@ -137,7 +147,8 @@ ${renderKeyName(value)}
 \t\t\tid: id(),
 \t\t\tname: name(),
 \t\t\ttypes: types(),
-\t\t\tentities: vector::empty<address>(),
+\t\t\tentity_key_to_index: table::new<address, u64>(ctx),
+\t\t\tentities: table_vec::empty<address>(ctx),
 \t\t\tdata: table::new<address, vector<u8>>(ctx)
 \t\t};
 \t\ttable::add(&mut component.data, id(), encode(${getStructInitValue(
@@ -158,9 +169,19 @@ ${renderKeyName(value)}
 \t\t${getTypesCode(value.type)}
 \t}
 
-\tpublic fun entities(world: &World): vector<address> {
+\tpublic fun entities(world: &World): &TableVec<address> {
 \t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\tcomponent.entities
+\t\t&component.entities
+\t}
+
+\tpublic fun entity_length(world: &World): u64 {
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\ttable_vec::length(&component.entities)
+\t}
+
+\tpublic fun data(world: &World): &Table<address, vector<u8>> {
+\t\tlet component = world::get_comp<CompMetadata>(world, id());
+\t\t&component.data
 \t}
 
 \tpublic fun register(world: &mut World, ctx: &mut TxContext) {

@@ -236,7 +236,8 @@ export function renderAddFunc(values: ComponentMapType): string {
   ).join(", ")}) {
 \t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
 \t\tlet data = encode(${getStructAttrs(values, "").join(", ")});
-\t\tvector::push_back(&mut component.entities, key);
+\t\ttable::add(&mut component.entity_key_to_index, key, table_vec::length(&component.entities));
+\t\ttable_vec::push_back(&mut component.entities, key);
 \t\ttable::add(&mut component.data, key, data);
 \t\tworld::emit_add_event(id(), key, data)
 \t}
@@ -246,8 +247,13 @@ export function renderAddFunc(values: ComponentMapType): string {
 export function renderRemoveFunc(): string {
   return `\tpublic(friend) fun remove(world: &mut World, key: address) {
 \t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
-\t\tlet (_, entity_index) = vector::index_of(&component.entities, &key);
-\t\tvector::remove(&mut component.entities, entity_index);
+\t\tlet index = table::remove(&mut component.entity_key_to_index, key);
+\t\tif(index == table_vec::length(&component.entities) - 1) {
+\t\t\ttable_vec::pop_back(&mut component.entities);
+\t\t} else {
+\t\t\tlet last_value = table_vec::pop_back(&mut component.entities);
+\t\t\t*table_vec::borrow_mut(&mut component.entities, index) = last_value;
+\t\t};
 \t\ttable::remove(&mut component.data, key);
 \t\tworld::emit_remove_event(id(), key)
 \t}
