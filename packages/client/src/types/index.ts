@@ -141,6 +141,20 @@ export type ObjectData = {
   objectFields: ObjectContentFields;
 };
 
+export type ObjectFieldType = {
+  id: {
+    id: string;
+  };
+  name: string;
+  value: string;
+};
+
+export type EntityData = {
+  objectId: string;
+  index: string;
+  key: string;
+};
+
 export type SuiTxArg =
   | Infer<typeof TransactionArgument>
   | Infer<typeof ObjectCallArg>

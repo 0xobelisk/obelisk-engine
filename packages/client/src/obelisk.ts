@@ -495,7 +495,12 @@ export class Obelisk {
     return '0x' + data;
   }
 
-  async getEntities(worldId: string, componentName: string) {
+  async getEntities(
+    worldId: string,
+    componentName: string,
+    cursor?: string,
+    limit?: number
+  ) {
     let componentMoudleName = `${componentName}_comp`;
 
     const tx = new TransactionBlock();
@@ -508,10 +513,20 @@ export class Obelisk {
     const entities = tableResult.results as SuiReturnValues;
     const bcs = new BCS(getSuiMoveConfig());
 
-    let type = entities[0].returnValues[0][1];
     let value = Uint8Array.from(entities[0].returnValues[0][0]);
-    let data = bcs.de(type, value);
-    return data;
+    let tableId = '0x' + bcs.de('address', value);
+    let dynamicFields = await this.suiInteractor.getDynamicFields(
+      tableId,
+      cursor,
+      limit
+    );
+    let objectIds = dynamicFields.data.map((field) => field.objectId);
+    let objectDatas = await this.suiInteractor.getEntitiesObjects(objectIds);
+    return {
+      data: objectDatas,
+      nextCursor: dynamicFields.nextCursor,
+      hasNextPage: dynamicFields.hasNextPage,
+    };
   }
 
   async getEntity(worldId: string, componentName: string, entityId: string) {
@@ -621,5 +636,11 @@ export class Obelisk {
 
   async entity_key_from_u256(x: number) {
     return numberToAddressHex(x);
+  }
+
+  async formatData(type: string, value: Buffer | number[] | Uint8Array) {
+    const bcs = new BCS(getSuiMoveConfig());
+    let u8Value = Uint8Array.from(value);
+    return bcs.de(type, u8Value);
   }
 }
