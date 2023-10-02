@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/common",
-  "version": "0.2.6",
+  "version": "0.2.9",
   "description": "Common low level logic shared between packages",
   "keywords": [
     "sui",
@@ -72,8 +72,7 @@
     "@types/throttle-debounce": "^5.0.0",
     "@types/yargs": "^17.0.10",
     "tsup": "^6.7.0",
-    "tsx": "^3.12.6",
-    "vitest": "0.31.4"
+    "tsx": "^3.12.6"
   },
   "type": "module"
 }

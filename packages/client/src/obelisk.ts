@@ -4,13 +4,11 @@ import {
   DevInspectResults,
   SuiTransactionBlockResponse,
   SuiMoveNormalizedModules,
-  DynamicFieldName,
   SuiAddress,
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiInteractor, getDefaultConnection } from './libs/suiInteractor';
-import { SuiSharedObject, SuiOwnedObject } from './libs/suiModel';
 
 import { ObeliskObjectData } from 'src/types';
 import { SuiContractFactory } from './libs/suiContractFactory';
@@ -23,16 +21,17 @@ import {
   DerivePathParams,
   SuiTxArg,
   SuiVecTxArg,
-  ComponentContentType,
   SuiTxArgument,
   ContractQuery,
   ContractTx,
   MapMoudleFuncQuery,
   MapMoudleFuncTx,
   FaucetNetworkType,
+  SuiReturnValues,
 } from './types';
-import { capitalizeFirstLetter } from './utils';
+import { normalizeHexAddress, numberToAddressHex } from './utils';
 import keccak256 from 'keccak256';
+import { BCS, getSuiMoveConfig } from '@mysten/bcs';
 
 export function isUndefined(value?: unknown): value is undefined {
   return value === undefined;
@@ -447,38 +446,152 @@ export class Obelisk {
     return this.suiInteractor.getObject(worldObjectId);
   }
 
-  async getComponents(worldId: string, cursor?: string, limit?: number) {
-    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
-      .comps.fields.id.id;
-
-    return await this.suiInteractor.getDynamicFields(parentId, cursor, limit);
+  async listComponentNames(worldId: string) {
+    let worldObject = await this.getObject(worldId);
+    let newObjectContent = worldObject.objectFields;
+    return newObjectContent['compnames'];
   }
 
-  async getComponentByName(worldId: string, componentName: string) {
-    const componentNameId = `${componentName}`;
-    const componentId = keccak256(componentNameId);
-    return await this.getComponent(worldId, componentId);
+  async getEntity(worldId: string, componentName: string, entityId?: string) {
+    let componentMoudleName = `${componentName}_comp`;
+    const tx = new TransactionBlock();
+    let params = [tx.pure(worldId)] as SuiTxArgument[];
+    if (entityId !== undefined) {
+      params.push(tx.pure(entityId));
+    }
+
+    const getResult = (await this.query[componentMoudleName].get(
+      tx,
+      params
+    )) as DevInspectResults;
+    let returnValue = [];
+    let resultList = getResult.results![0].returnValues!;
+    for (let res of resultList) {
+      const bcs = new BCS(getSuiMoveConfig());
+      let value = Uint8Array.from(res[0]);
+      let data = bcs.de(res[1], value);
+      returnValue.push(data);
+    }
+    return returnValue;
   }
 
-  async getComponent(worldId: string, componentId: Buffer) {
-    const componentIdValue: number[] = Array.from(componentId);
-    const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
-      .comps.fields.id.id;
-    const name = {
-      type: 'address',
-      value: componentIdValue,
-      // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
-    } as DynamicFieldName;
-    return await this.suiInteractor.getDynamicFieldObject(parentId, name);
+  async getEntities(
+    worldId: string,
+    componentName: string,
+    cursor?: string,
+    limit?: number
+  ) {
+    let componentMoudleName = `${componentName}_comp`;
+
+    const tx = new TransactionBlock();
+    let params = [tx.pure(worldId)] as SuiTxArgument[];
+
+    const tableResult = (await this.query[componentMoudleName].entities(
+      tx,
+      params
+    )) as DevInspectResults;
+    const entities = tableResult.results as SuiReturnValues;
+    const bcs = new BCS(getSuiMoveConfig());
+
+    let value = Uint8Array.from(entities[0].returnValues[0][0]);
+    let tableId = '0x' + bcs.de('address', value);
+    let dynamicFields = await this.suiInteractor.getDynamicFields(
+      tableId,
+      cursor,
+      limit
+    );
+    let objectIds = dynamicFields.data.map((field) => field.objectId);
+    let objectDatas = await this.suiInteractor.getEntitiesObjects(objectIds);
+    return {
+      data: objectDatas,
+      nextCursor: dynamicFields.nextCursor,
+      hasNextPage: dynamicFields.hasNextPage,
+    };
   }
 
-  async getOwnedEntities(owner: SuiAddress, cursor?: string, limit?: number) {
+  // async getEntity(worldId: string, componentName: string, entityId: string) {
+  //   let checkWorldId = normalizeHexAddress(worldId);
+  //   if (checkWorldId) {
+  //     worldId = checkWorldId;
+  //   } else {
+  //     return undefined;
+  //   }
+
+  //   let checkEntityId = normalizeHexAddress(entityId);
+  //   if (checkEntityId) {
+  //     entityId = checkEntityId;
+  //   } else {
+  //     return undefined;
+  //   }
+
+  //   const parentId = await this.getComponentTable(worldId, componentName);
+  //   const name = {
+  //     type: 'address',
+  //     value: entityId,
+  //   } as DynamicFieldName;
+
+  //   let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
+  //     parentId,
+  //     name
+  //   );
+  //   return dynamicFieldObject;
+  // }
+
+  // async getEntityData(
+  //   worldId: string,
+  //   componentName: string,
+  //   entityId: string
+  // ) {
+  //   const parentId = await this.getComponentTable(worldId, componentName);
+  //   const name = {
+  //     type: 'address',
+  //     value: entityId,
+  //   } as DynamicFieldName;
+
+  //   let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
+  //     parentId,
+  //     name
+  //   );
+  //   let componentMoudleName = `${componentName}_comp`;
+
+  //   const tx = new TransactionBlock();
+  //   let params = [] as SuiTxArgument[];
+
+  //   const typeResult = (await this.query[componentMoudleName].types(
+  //     tx,
+  //     params
+  //   )) as DevInspectResults;
+  //   let typeReturn = typeResult.results as SuiReturnValues;
+  //   console.log(typeReturn[0].returnValues[0][0]);
+
+  //   const typeBCS = new BCS(getSuiMoveConfig());
+  //   let typeValue = Uint8Array.from(typeReturn[0].returnValues[0][0]);
+
+  //   let typeData = typeBCS.de('vector<vector<u8>>', typeValue);
+  //   console.log(typeData);
+  //   const entityType = String.fromCharCode(...typeData[0]);
+
+  //   let dynamicFieldContent = dynamicFieldObject.data!
+  //     .content as DynamicFieldContentType;
+
+  //   let entityValue = dynamicFieldContent.fields['value'];
+  //   const bcs = new BCS(getSuiMoveConfig());
+  //   let value = Uint8Array.from(entityValue);
+  //   console.log(entityType);
+  //   console.log(value);
+
+  //   let data = bcs.de(entityType, value);
+  //   console.log(data);
+  //   return data;
+  // }
+
+  async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
     const ownedObjects = await this.suiInteractor.getOwnedObjects(
       owner,
       cursor,
       limit
     );
-    let ownedEntities: ObeliskObjectData[] = [];
+    let ownedObjectsRes: ObeliskObjectData[] = [];
 
     for (const object of ownedObjects.data) {
       let objectDetail = await this.getObject(object.data!.objectId);
@@ -487,10 +600,39 @@ export class Obelisk {
         objectDetail.objectType.split('::')[0] ===
         this.contractFactory.packageId
       ) {
-        ownedEntities.push(objectDetail);
+        ownedObjectsRes.push(objectDetail);
       }
     }
 
-    return ownedEntities;
+    return ownedObjectsRes;
+  }
+
+  async entity_key_from_object(objectId: string) {
+    let checkObjectId = normalizeHexAddress(objectId);
+    if (checkObjectId !== null) {
+      objectId = checkObjectId;
+      return objectId;
+    } else {
+      return undefined;
+    }
+  }
+
+  async entity_key_from_bytes(bytes: Uint8Array | Buffer | string) {
+    let hashBytes = keccak256(bytes);
+    const hashU8Array: number[] = Array.from(hashBytes);
+    const bcs = new BCS(getSuiMoveConfig());
+    let value = Uint8Array.from(hashU8Array);
+    let data = bcs.de('address', value);
+    return '0x' + data;
+  }
+
+  async entity_key_from_u256(x: number) {
+    return numberToAddressHex(x);
+  }
+
+  async formatData(type: string, value: Buffer | number[] | Uint8Array) {
+    const bcs = new BCS(getSuiMoveConfig());
+    let u8Value = Uint8Array.from(value);
+    return bcs.de(type, u8Value);
   }
 }

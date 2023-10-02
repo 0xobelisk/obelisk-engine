@@ -1,20 +1,25 @@
 module examples::example_system {
+    use examples::single_column_comp;
+    use examples::entity_key;
+    use examples::multi_column_comp;
     use examples::single_value_comp;
     use examples::world::World;
     #[test_only]
     use std::ascii::string;
     #[test_only]
-    use examples::entity_key;
+    use std::debug;
+    #[test_only]
+    use std::vector;
     #[test_only]
     use examples::init;
-    #[test_only]
-    use examples::multi_column_comp;
-    #[test_only]
-    use examples::single_column_comp;
     #[test_only]
     use examples::single_struct_comp;
     #[test_only]
     use examples::world;
+    #[test_only]
+    use sui::bcs;
+    #[test_only]
+    use sui::table_vec;
     #[test_only]
     use sui::test_scenario;
     #[test_only]
@@ -24,6 +29,42 @@ module examples::example_system {
         let old_number = single_value_comp::get(world);
         let new_number = old_number + 10;
         single_value_comp::update(world, new_number);
+    }
+
+    public entry fun add_value(world: &mut World) {
+        let old_number = single_value_comp::get(world);
+        let temp = old_number;
+        while (temp < old_number + 500) {
+            let key = entity_key::from_u256((temp as u256));
+            multi_column_comp::add(world, key, b"online", temp);
+            temp = temp + 1;
+        };
+        let new_number = old_number + 500;
+        single_value_comp::update(world, new_number);
+    }
+
+    public entry fun remove_value(world: &mut World) {
+        let old_number = single_value_comp::get(world) - 5;
+        let key = entity_key::from_u256((old_number as u256));
+        multi_column_comp::remove(world, key);
+    }
+
+    public entry fun add_value2(world: &mut World) {
+        let old_number = single_value_comp::get(world);
+        let temp = old_number;
+        while (temp < old_number + 200) {
+            let key = entity_key::from_u256((temp as u256));
+            single_column_comp::add(world, key, temp);
+            temp = temp + 1;
+        };
+        let new_number = old_number + 200;
+        single_value_comp::update(world, new_number);
+    }
+
+    public entry fun remove_value2(world: &mut World) {
+        let old_number = single_value_comp::get(world) - 1000;
+        let key = entity_key::from_u256((old_number as u256));
+        multi_column_comp::remove(world, key);
     }
 
     #[test_only]
@@ -173,9 +214,11 @@ module examples::example_system {
 
         let entity_key = entity_key::from_u256(0);
         // Add a field
-        multi_column_comp::add(&mut world, entity_key, b"online", 1000);
-        // is exist
-        assert!(multi_column_comp::contains(&world, entity_key) == true, 0);
+        multi_column_comp::add(&mut world, entity_key::from_u256(0), b"online", 1000);
+        multi_column_comp::add(&mut world, entity_key::from_u256(1), b"online", 1000);
+        multi_column_comp::add(&mut world, entity_key::from_u256(2), b"online", 1000);
+
+        assert!(multi_column_comp::contains(&world, entity_key), 0);
 
         // get online and get 1000
         let (state, last_update_time) = multi_column_comp::get(&mut world, entity_key);
@@ -202,6 +245,24 @@ module examples::example_system {
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);
     }
+
+    #[test]
+    public fun test_add_value()  {
+        // u8 1
+        // u64 8
+        // u128 16
+        // bool 1
+        // address 32
+        // vecotr length bcs
+        debug::print(&bcs::to_bytes(&true));
+        debug::print(&vector::length(&bcs::to_bytes(&false)));
+        debug::print(&bcs::to_bytes(&b"vector<u8>"));
+        debug::print(&bcs::to_bytes(&b"address"));
+        debug::print(&bcs::to_bytes(&vector[10,2u64]));
+        debug::print(&vector::length(&bcs::to_bytes(&vector[10,2u64])));
+    }
+
+
 }
 
 

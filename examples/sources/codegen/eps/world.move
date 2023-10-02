@@ -2,13 +2,13 @@ module examples::world {
     use std::ascii::{String, string};
     use std::option::Option;
     use std::vector;
-    use examples::entity_key;
     use sui::tx_context;
     use sui::transfer;
     use sui::event;
     use sui::tx_context::TxContext;
-    use sui::bag::{ Self, Bag };
-    use sui::object::{ Self, UID, ID };
+    use sui::bag::{Self, Bag};
+    use sui::object::{Self, UID, ID};
+    use examples::entity_key;
 
     const VERSION: u64 = 1;
 
@@ -39,8 +39,14 @@ module examples::world {
         compnames: vector<String>,
         /// admin of the world
         admin: ID,
-        /// Components of the world
+        /// Version of the world
         version: u64
+    }
+
+    struct CompRegister has copy, drop {
+        comp: address,
+        compname: String,
+        types: vector<String>
     }
 
     struct CompRemoveField has copy, drop {
@@ -108,6 +114,12 @@ module examples::world {
     public fun contains(world: &mut World, id: address): bool {
         assert!(world.version == VERSION, EWrongVersion);
         bag::contains(&mut world.comps, id)
+    }
+
+    public fun emit_register_event(component_name: vector<u8>, types: vector<String>) {
+        let comp = entity_key::from_bytes(component_name);
+        let compname = string(component_name);
+        event::emit(CompRegister { comp,  compname, types})
     }
 
     public fun emit_remove_event(comp: address, key: address) {

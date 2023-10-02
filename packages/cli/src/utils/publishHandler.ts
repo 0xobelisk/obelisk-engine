@@ -52,6 +52,9 @@ in your contracts directory to use the default sui private key.`
       }
     )
   );
+
+  console.log(chalk.blue(`Account: ${keypair.toSuiAddress()}`));
+
   const tx = new TransactionBlock();
   const [upgradeCap] = tx.publish({
     modules,
@@ -68,8 +71,7 @@ in your contracts directory to use the default sui private key.`
       showObjectChanges: true,
     },
   });
-  console.log("");
-  console.log(chalk.blue(`Transaction Digest: ${result.digest}`));
+  console.log(chalk.blue(`Publish transaction digest: ${result.digest}`));
 
   let version = 1;
   let packageId = "";
@@ -95,6 +97,7 @@ in your contracts directory to use the default sui private key.`
       upgradeCapId = object.objectId;
     }
   });
+
   saveContractData(name, network, packageId, worldId, upgradeCapId, version);
   if (savePath !== undefined) {
     generateIdConfig(network, packageId, worldId, savePath);
