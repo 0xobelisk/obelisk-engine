@@ -91,6 +91,7 @@ ${renderKeyName(value)}
 
 \tpublic fun register(world: &mut World, ctx: &mut TxContext) {
 \t\tworld::add_comp<CompMetadata>(world, NAME, new(ctx));
+\t\tworld::emit_register_event(NAME, types());
 \t}
 
 ${renderAddFunc(value)}
@@ -186,6 +187,7 @@ ${renderKeyName(value)}
 
 \tpublic fun register(world: &mut World, ctx: &mut TxContext) {
 \t\tworld::add_comp<CompMetadata>(world, NAME, new(ctx));
+\t\tworld::emit_register_event(NAME, types());
 \t}
 
 ${renderUpdateFunc(value)}

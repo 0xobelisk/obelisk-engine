@@ -51,8 +51,14 @@ export function generateEps(
         compnames: vector<String>,
         /// admin of the world
         admin: ID,
-        /// Components of the world
+        /// Version of the world
         version: u64
+    }
+    
+    struct CompRegister has copy, drop {
+        comp: address,
+        compname: String,
+        types: vector<String>
     }
 
     struct CompRemoveField has copy, drop {
@@ -120,6 +126,12 @@ export function generateEps(
     public fun contains(world: &mut World, id: address): bool {
         assert!(world.version == VERSION, EWrongVersion);
         bag::contains(&mut world.comps, id)
+    }
+    
+    public fun emit_register_event(component_name: vector<u8>, types: vector<String>) {
+        let comp = entity_key::from_bytes(component_name);
+        let compname = string(component_name);
+        event::emit(CompRegister { comp,  compname, types})
     }
 
     public fun emit_remove_event(comp: address, key: address) {

@@ -5,6 +5,7 @@ module examples::single_struct_comp {
     use sui::bcs;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
+    use sui::table_vec::{Self, TableVec};
     use examples::entity_key;
     use examples::world::{Self, World};
   
@@ -19,7 +20,8 @@ module examples::single_struct_comp {
 		id: address,
 		name: String,
 		types: vector<String>,
-		entities: vector<address>,
+		entity_key_to_index: Table<address, u64>,
+		entities: TableVec<address>,
 		data: Table<address, vector<u8>>
 	}
 
@@ -28,7 +30,8 @@ module examples::single_struct_comp {
 			id: id(),
 			name: name(),
 			types: types(),
-			entities: vector::empty<address>(),
+			entity_key_to_index: table::new<address, u64>(ctx),
+			entities: table_vec::empty<address>(ctx),
 			data: table::new<address, vector<u8>>(ctx)
 		};
 		table::add(&mut component.data, id(), encode(@0x1, 100));
@@ -47,13 +50,24 @@ module examples::single_struct_comp {
 		vector[string(b"address"), string(b"u64")]
 	}
 
-	public fun entities(world: &World): vector<address> {
+	public fun entities(world: &World): &TableVec<address> {
 		let component = world::get_comp<CompMetadata>(world, id());
-		component.entities
+		&component.entities
+	}
+
+	public fun entity_length(world: &World): u64 {
+		let component = world::get_comp<CompMetadata>(world, id());
+		table_vec::length(&component.entities)
+	}
+
+	public fun data(world: &World): &Table<address, vector<u8>> {
+		let component = world::get_comp<CompMetadata>(world, id());
+		&component.data
 	}
 
 	public fun register(world: &mut World, ctx: &mut TxContext) {
 		world::add_comp<CompMetadata>(world, NAME, new(ctx));
+		world::emit_register_event(NAME, types());
 	}
 
 	public(friend) fun update(world: &mut World, admin: address, fee: u64) {
