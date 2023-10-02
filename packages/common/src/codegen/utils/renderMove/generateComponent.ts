@@ -51,7 +51,7 @@ ${renderKeyName(value)}
 \t}
 
 \tpublic fun new(ctx: &mut TxContext): CompMetadata {
-\t\tlet component = CompMetadata {
+\t\tlet _obelisk_component = CompMetadata {
 \t\t\tid: id(),
 \t\t\tname: name(),
 \t\t\ttypes: types(),
@@ -59,7 +59,7 @@ ${renderKeyName(value)}
 \t\t\tentities: table_vec::empty<address>(ctx),
 \t\t\tdata: table::new<address, vector<u8>>(ctx)
 \t\t};
-\t\tcomponent
+\t\t_obelisk_component
 \t}
 
 \tpublic fun id(): address {
@@ -75,18 +75,18 @@ ${renderKeyName(value)}
 \t}
 
 \tpublic fun entities(world: &World): &TableVec<address> {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\t&component.entities
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\t&_obelisk_component.entities
 \t}
 
 \tpublic fun entity_length(world: &World): u64 {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\ttable_vec::length(&component.entities)
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\ttable_vec::length(&_obelisk_component.entities)
 \t}
 
 \tpublic fun data(world: &World): &Table<address, vector<u8>> {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\t&component.data
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\t&_obelisk_component.data
 \t}
 
 \tpublic fun register(world: &mut World, ctx: &mut TxContext) {
@@ -144,7 +144,7 @@ ${renderKeyName(value)}
 \t}
 
 \tpublic fun new(ctx: &mut TxContext): CompMetadata {
-\t\tlet component = CompMetadata {
+\t\tlet _obelisk_component = CompMetadata {
 \t\t\tid: id(),
 \t\t\tname: name(),
 \t\t\ttypes: types(),
@@ -152,10 +152,10 @@ ${renderKeyName(value)}
 \t\t\tentities: table_vec::empty<address>(ctx),
 \t\t\tdata: table::new<address, vector<u8>>(ctx)
 \t\t};
-\t\ttable::add(&mut component.data, id(), encode(${getStructInitValue(
+\t\ttable::add(&mut _obelisk_component.data, id(), encode(${getStructInitValue(
         value.init
       ).join(", ")}));
-\t\tcomponent
+\t\t_obelisk_component
 \t}
 
 \tpublic fun id(): address {
@@ -171,18 +171,18 @@ ${renderKeyName(value)}
 \t}
 
 \tpublic fun entities(world: &World): &TableVec<address> {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\t&component.entities
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\t&_obelisk_component.entities
 \t}
 
 \tpublic fun entity_length(world: &World): u64 {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\ttable_vec::length(&component.entities)
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\ttable_vec::length(&_obelisk_component.entities)
 \t}
 
 \tpublic fun data(world: &World): &Table<address, vector<u8>> {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\t&component.data
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\t&_obelisk_component.data
 \t}
 
 \tpublic fun register(world: &mut World, ctx: &mut TxContext) {

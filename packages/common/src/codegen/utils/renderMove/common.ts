@@ -166,10 +166,10 @@ export function getStructAttrsEncode(
   prefixArgs: string
 ): string[] {
   return typeof values === "string"
-    ? [`${prefixArgs}vector::append(&mut data, bcs::to_bytes(&value));`]
+    ? [`${prefixArgs}vector::append(&mut _obelisk_data, bcs::to_bytes(&value));`]
     : Object.entries(values).map(
         ([key, _]) =>
-          `${prefixArgs}vector::append(&mut data, bcs::to_bytes(&${key}));`
+          `${prefixArgs}vector::append(&mut _obelisk_data, bcs::to_bytes(&${key}));`
       );
 }
 
@@ -234,27 +234,27 @@ export function renderAddFunc(values: ComponentMapType): string {
     values,
     ""
   ).join(", ")}) {
-\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
-\t\tlet data = encode(${getStructAttrs(values, "").join(", ")});
-\t\ttable::add(&mut component.entity_key_to_index, key, table_vec::length(&component.entities));
-\t\ttable_vec::push_back(&mut component.entities, key);
-\t\ttable::add(&mut component.data, key, data);
-\t\tworld::emit_add_event(id(), key, data)
+\t\tlet _obelisk_component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet _obelisk_data = encode(${getStructAttrs(values, "").join(", ")});
+\t\ttable::add(&mut _obelisk_component.entity_key_to_index, key, table_vec::length(&_obelisk_component.entities));
+\t\ttable_vec::push_back(&mut _obelisk_component.entities, key);
+\t\ttable::add(&mut _obelisk_component.data, key, _obelisk_data);
+\t\tworld::emit_add_event(id(), key, _obelisk_data)
 \t}
 `;
 }
 
 export function renderRemoveFunc(): string {
   return `\tpublic(friend) fun remove(world: &mut World, key: address) {
-\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
-\t\tlet index = table::remove(&mut component.entity_key_to_index, key);
-\t\tif(index == table_vec::length(&component.entities) - 1) {
-\t\t\ttable_vec::pop_back(&mut component.entities);
+\t\tlet _obelisk_component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet index = table::remove(&mut _obelisk_component.entity_key_to_index, key);
+\t\tif(index == table_vec::length(&_obelisk_component.entities) - 1) {
+\t\t\ttable_vec::pop_back(&mut _obelisk_component.entities);
 \t\t} else {
-\t\t\tlet last_value = table_vec::pop_back(&mut component.entities);
-\t\t\t*table_vec::borrow_mut(&mut component.entities, index) = last_value;
+\t\t\tlet last_value = table_vec::pop_back(&mut _obelisk_component.entities);
+\t\t\t*table_vec::borrow_mut(&mut _obelisk_component.entities, index) = last_value;
 \t\t};
-\t\ttable::remove(&mut component.data, key);
+\t\ttable::remove(&mut _obelisk_component.data, key);
 \t\tworld::emit_remove_event(id(), key)
 \t}
 `;
@@ -307,10 +307,10 @@ export function renderUpdateFunc(
       map,
       ""
     ).join(", ")}) {
-\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
-\t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
-\t\t*table::borrow_mut<address, vector<u8>>(&mut component.data, id()) = data;
-\t\tworld::emit_update_event(id(), none(), data)
+\t\tlet _obelisk_component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet _obelisk_data = encode(${getStructAttrs(map, "").join(", ")});
+\t\t*table::borrow_mut<address, vector<u8>>(&mut _obelisk_component.data, id()) = _obelisk_data;
+\t\tworld::emit_update_event(id(), none(), _obelisk_data)
 \t}
 `;
 
@@ -321,12 +321,12 @@ export function renderUpdateFunc(
             .map(
               ([key, type]) =>
                 `\tpublic(friend) fun update_${key}(world: &mut World, ${key}: ${type}) {
-\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
-\t\tlet comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, id());
-\t\tlet ${updateDecodeData(map, key)} = decode(*comp_data);
-\t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
-\t\t*comp_data = data;
-\t\tworld::emit_update_event(id(), none(), data)
+\t\tlet _obelisk_component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet _storage_obelisk_data = table::borrow_mut<address, vector<u8>>(&mut _obelisk_component.data, id());
+\t\tlet ${updateDecodeData(map, key)} = decode(*_storage_obelisk_data);
+\t\tlet _obelisk_data = encode(${getStructAttrs(map, "").join(", ")});
+\t\t*_storage_obelisk_data = _obelisk_data;
+\t\tworld::emit_update_event(id(), none(), _obelisk_data)
 \t}
 `
             )
@@ -338,10 +338,10 @@ export function renderUpdateFunc(
       map,
       ""
     ).join(", ")}) {
-\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
-\t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
-\t\t*table::borrow_mut<address, vector<u8>>(&mut component.data, key) = data;
-\t\tworld::emit_update_event(id(), some(key), data)
+\t\tlet _obelisk_component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet _obelisk_data = encode(${getStructAttrs(map, "").join(", ")});
+\t\t*table::borrow_mut<address, vector<u8>>(&mut _obelisk_component.data, key) = _obelisk_data;
+\t\tworld::emit_update_event(id(), some(key), _obelisk_data)
 \t}
 `;
 
@@ -352,12 +352,12 @@ export function renderUpdateFunc(
             .map(
               ([key, type]) =>
                 `\tpublic(friend) fun update_${key}(world: &mut World, key: address, ${key}: ${type}) {
-\t\tlet component = world::get_mut_comp<CompMetadata>(world, id());
-\t\tlet comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, key);
-\t\tlet ${updateDecodeData(map, key)} = decode(*comp_data);
-\t\tlet data = encode(${getStructAttrs(map, "").join(", ")});
-\t\t*comp_data = data;
-\t\tworld::emit_update_event(id(), some(key), data)
+\t\tlet _obelisk_component = world::get_mut_comp<CompMetadata>(world, id());
+\t\tlet _storage_obelisk_data = table::borrow_mut<address, vector<u8>>(&mut _obelisk_component.data, key);
+\t\tlet ${updateDecodeData(map, key)} = decode(*_storage_obelisk_data);
+\t\tlet _obelisk_data = encode(${getStructAttrs(map, "").join(", ")});
+\t\t*_storage_obelisk_data = _obelisk_data;
+\t\tworld::emit_update_event(id(), some(key), _obelisk_data)
 \t}
 `
             )
@@ -378,9 +378,9 @@ export function renderQueryFunc(
     map = singleValue.type;
 
     total = `\tpublic fun get(world: &World): ${getStructTypes(map)} {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\tlet data = table::borrow<address, vector<u8>>(&component.data, id());
-\t\tdecode(*data)
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\tlet _obelisk_data = table::borrow<address, vector<u8>>(&_obelisk_component.data, id());
+\t\tdecode(*_obelisk_data)
 \t}\n`;
 
     all =
@@ -393,9 +393,9 @@ export function renderQueryFunc(
                 key,
                 type,
               ]) => `\tpublic fun get_${key}(world: &World): ${type} {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\tlet data = table::borrow<address, vector<u8>>(&component.data, id());
-\t\tlet ${getDecodeData(map, key)} = decode(*data);
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\tlet _obelisk_data = table::borrow<address, vector<u8>>(&_obelisk_component.data, id());
+\t\tlet ${getDecodeData(map, key)} = decode(*_obelisk_data);
 \t\t${key}
 \t}
 `
@@ -407,9 +407,9 @@ export function renderQueryFunc(
     total = `\tpublic fun get(world: &World, key: address): ${getStructTypes(
       map
     )} {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\tlet data = table::borrow<address, vector<u8>>(&component.data, key);
-\t\tdecode(*data)
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\tlet _obelisk_data = table::borrow<address, vector<u8>>(&_obelisk_component.data, key);
+\t\tdecode(*_obelisk_data)
 \t}\n`;
 
     all =
@@ -422,9 +422,9 @@ export function renderQueryFunc(
                 key,
                 type,
               ]) => `\tpublic fun get_${key}(world: &World, key: address): ${type} {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\tlet data = table::borrow<address, vector<u8>>(&component.data, key);
-\t\tlet ${getDecodeData(map, key)} = decode(*data);
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\tlet _obelisk_data = table::borrow<address, vector<u8>>(&_obelisk_component.data, key);
+\t\tlet ${getDecodeData(map, key)} = decode(*_obelisk_data);
 \t\t${key}
 \t}
 `
@@ -437,8 +437,8 @@ export function renderQueryFunc(
 
 export function renderContainFunc(): string {
   return `\tpublic fun contains(world: &World, key: address): bool {
-\t\tlet component = world::get_comp<CompMetadata>(world, id());
-\t\ttable::contains<address, vector<u8>>(&component.data, key)
+\t\tlet _obelisk_component = world::get_comp<CompMetadata>(world, id());
+\t\ttable::contains<address, vector<u8>>(&_obelisk_component.data, key)
 \t}
 `;
 }
@@ -457,16 +457,16 @@ export function renderEncodeFunc(
   return `\tpublic fun encode(${getStructAttrsWithType(map, "").join(
     ", "
   )}): vector<u8> {
-\t\tlet data = vector::empty<u8>();
+\t\tlet _obelisk_data = vector::empty<u8>();
 ${getStructAttrsEncode(map, "\t\t").join("\n")}
-\t\tdata
+\t\t_obelisk_data
 \t}
 `;
 }
 
 // export function renderSigletonEncodeFunc(): string {
 //   return `\tpublic fun encode(value: u64): vector<u8> {
-// \t\tlet data = vector::empty<u8>();
+// \t\tlet _obelisk_data = vector::empty<u8>();
 // \t\tvector::append(&mut data, bcs::to_bytes(&value));
 // \t\tdata
 // \t}
@@ -476,43 +476,43 @@ ${getStructAttrsEncode(map, "\t\t").join("\n")}
 // todo: struct / bag
 function renderBcsDecodeFunc(type: string) {
   if (type === "address") {
-    return `bcs::peel_address(&mut data)`;
+    return `bcs::peel_address(&mut _obelisk_data)`;
   } else if (type === "bool") {
-    return `bcs::peel_bool(&mut data)`;
+    return `bcs::peel_bool(&mut _obelisk_data)`;
   } else if (type === "u8") {
-    return `bcs::peel_u8(&mut data)`;
+    return `bcs::peel_u8(&mut _obelisk_data)`;
   } else if (type === "u64") {
-    return `bcs::peel_u64(&mut data)`;
+    return `bcs::peel_u64(&mut _obelisk_data)`;
   } else if (type === "u128") {
-    return `bcs::peel_u128(&mut data)`;
+    return `bcs::peel_u128(&mut _obelisk_data)`;
   } else if (type === "vector<address>") {
-    return `bcs::peel_vec_address(&mut data)`;
+    return `bcs::peel_vec_address(&mut _obelisk_data)`;
   } else if (type === "vector<bool>") {
-    return `bcs::peel_vec_bool(&mut data)`;
+    return `bcs::peel_vec_bool(&mut _obelisk_data)`;
   } else if (type === "vector<u8>") {
-    return `bcs::peel_vec_u8(&mut data)`;
+    return `bcs::peel_vec_u8(&mut _obelisk_data)`;
   } else if (type === "vector<vector<u8>>") {
-    return `bcs::peel_vec_vec_u8(&mut data)`;
+    return `bcs::peel_vec_vec_u8(&mut _obelisk_data)`;
   } else if (type === "vector<u64>") {
-    return `bcs::peel_vec_u64(&mut data)`;
+    return `bcs::peel_vec_u64(&mut _obelisk_data)`;
   } else if (type === "vector<u128>") {
-    return `bcs::peel_vec_u128(&mut data)`;
+    return `bcs::peel_vec_u128(&mut _obelisk_data)`;
   } else if (type === "Option<address>") {
-    return `bcs::peel_option_address(&mut data)`;
+    return `bcs::peel_option_address(&mut _obelisk_data)`;
   } else if (type === "Option<bool>") {
-    return `bcs::peel_option_bool(&mut data)`;
+    return `bcs::peel_option_bool(&mut _obelisk_data)`;
   } else if (type === "Option<u8>") {
-    return `bcs::peel_option_u8(&mut data)`;
+    return `bcs::peel_option_u8(&mut _obelisk_data)`;
   } else if (type === "Option<u64>") {
-    return `bcs::peel_option_u64(&mut data)`;
+    return `bcs::peel_option_u64(&mut _obelisk_data)`;
   } else if (type === "Option<u128>") {
-    return `bcs::peel_option_u128(&mut data)`;
+    return `bcs::peel_option_u128(&mut _obelisk_data)`;
   }
 }
 
 // export function renderSigletonDecodeFunc(values: SingletonType): string {
 //   return `\tpublic fun decode(bytes: vector<u8>): ${getFieldTypes(values)} {
-// \t\tlet data = bcs::new(bytes);
+// \t\tlet _obelisk_data = bcs::new(bytes);
 // \t\t(
 // \t\t\t${renderBcsDecodeFunc(values.type)}
 // \t\t)
@@ -539,7 +539,7 @@ export function renderDecodeFunc(
           .join(",\n");
 
   return `\tpublic fun decode(bytes: vector<u8>): ${getStructTypes(map)} {
-\t\tlet data = bcs::new(bytes);
+\t\tlet _obelisk_data = bcs::new(bytes);
 \t\t(
 ${all}
 \t\t)
