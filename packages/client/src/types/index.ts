@@ -199,3 +199,10 @@ export type DynamicFieldContentType = {
   hasPublicTransfer: boolean;
   dataType: string;
 };
+
+export type ObjectContent = {
+  type: string;
+  fields: Record<string, any>;
+  hasPublicTransfer: boolean;
+  dataType: string;
+};
