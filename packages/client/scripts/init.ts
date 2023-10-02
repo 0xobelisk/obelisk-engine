@@ -27,7 +27,7 @@ function uint8ArrayToHexString(uint8Array: Uint8Array): string {
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0x309fae15a91b43e151f954033e2f9095c7dbad87036fdb8f193968deda7d824f';
+    '0x9e03a7dc9e41246983f21e385abbf183d24563386886b50d74e5a9c36fa01041';
 
   const metadata = await getMetadata(network as NetworkType, packageId);
 
@@ -39,49 +39,49 @@ async function init() {
   });
 
   // let compTable = await obelisk.getComponentTable(
-  //   '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
-  //   'multi_column'
+  //   '0xa95356404c92adb706fe968912e6b7c0ab1761e046d142013e1d8cfa54a045f2',
+  //   'single_column'
   // );
   // console.log(compTable);
 
-  let entities = await obelisk.getEntities(
-    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
-    'multi_column'
-  );
-  console.log(entities);
-  console.log(JSON.stringify(entities));
+  // let entities = await obelisk.getEntities(
+  //   '0xa95356404c92adb706fe968912e6b7c0ab1761e046d142013e1d8cfa54a045f2',
+  //   'single_column'
+  // );
+  // console.log(entities);
 
-  const tx = new TransactionBlock();
-  let params = [
-    tx.pure(
-      '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912'
-    ),
-  ] as SuiTxArgument[];
-  let entityDataRes = (await obelisk.query.single_value_comp.get(
-    tx,
-    params
-  )) as DevInspectResults;
-  const bcs = new BCS(getSuiMoveConfig());
-  let value = Uint8Array.from(entityDataRes.results![0].returnValues![0][0]);
-  let data = bcs.de('u64', value);
-  console.log(data);
+  // const tx = new TransactionBlock();
+  // let params = [
+  //   tx.pure(
+  //     '0xa95356404c92adb706fe968912e6b7c0ab1761e046d142013e1d8cfa54a045f2'
+  //   ),
+  // ] as SuiTxArgument[];
+  // let entityDataRes = (await obelisk.query.single_value_comp.get(
+  //   tx,
+  //   params
+  // )) as DevInspectResults;
+  // const bcs = new BCS(getSuiMoveConfig());
+  // let value = Uint8Array.from(entityDataRes.results![0].returnValues![0][0]);
+  // let data = bcs.de('u64', value);
+  // console.log(data);
 
   let entity = await obelisk.getEntity(
-    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
-    'multi_column',
-    '0x0000000000000000000000000000000000000000000000000000000000000a07'
+    '0xa95356404c92adb706fe968912e6b7c0ab1761e046d142013e1d8cfa54a045f2',
+    'single_column',
+    '0x0000000000000000000000000000000000000000000000000000000000000463'
   );
   console.log(entity);
+  console.log(JSON.stringify(entity));
 
-  let entityData = await obelisk.getEntityData(
-    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
-    'multi_column',
-    '0x0000000000000000000000000000000000000000000000000000000000000a07'
-  );
-  console.log(entityData);
+  // let entityData = await obelisk.getEntityData(
+  //   '0xa95356404c92adb706fe968912e6b7c0ab1761e046d142013e1d8cfa54a045f2',
+  //   'single_column',
+  //   '0x0000000000000000000000000000000000000000000000000000000000000463'
+  // );
+  // console.log(entityData);
 
   let objectAddress = await obelisk.entity_key_from_object(
-    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6'
+    '0xa95356404c92adb706fe968912e6b7c0ab1761e046d142013e1d8cfa54a045f2'
   );
   console.log(objectAddress);
 

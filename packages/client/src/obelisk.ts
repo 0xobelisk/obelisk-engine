@@ -557,41 +557,53 @@ export class Obelisk {
     return dynamicFieldObject;
   }
 
-  async getEntityData(
-    worldId: string,
-    componentName: string,
-    entityId: string
-  ) {
-    const parentId = await this.getComponentTable(worldId, componentName);
-    const name = {
-      type: 'address',
-      value: entityId,
-    } as DynamicFieldName;
+  // async getEntityData(
+  //   worldId: string,
+  //   componentName: string,
+  //   entityId: string
+  // ) {
+  //   const parentId = await this.getComponentTable(worldId, componentName);
+  //   const name = {
+  //     type: 'address',
+  //     value: entityId,
+  //   } as DynamicFieldName;
 
-    let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
-      parentId,
-      name
-    );
+  //   let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
+  //     parentId,
+  //     name
+  //   );
+  //   let componentMoudleName = `${componentName}_comp`;
 
-    let dynamicFieldContent = dynamicFieldObject.data!
-      .content as DynamicFieldContentType;
+  //   const tx = new TransactionBlock();
+  //   let params = [] as SuiTxArgument[];
 
-    const type = dynamicFieldContent.type;
-    const regex = /Field<address, (.*)>/;
-    const match = regex.exec(type);
+  //   const typeResult = (await this.query[componentMoudleName].types(
+  //     tx,
+  //     params
+  //   )) as DevInspectResults;
+  //   let typeReturn = typeResult.results as SuiReturnValues;
+  //   console.log(typeReturn[0].returnValues[0][0]);
 
-    if (match) {
-      let entityType = match[1];
-      let entityValue = dynamicFieldContent.fields['value'];
-      const bcs = new BCS(getSuiMoveConfig());
-      let value = Uint8Array.from(entityValue);
-      let data = bcs.de(entityType, value);
+  //   const typeBCS = new BCS(getSuiMoveConfig());
+  //   let typeValue = Uint8Array.from(typeReturn[0].returnValues[0][0]);
 
-      return data;
-    } else {
-      return undefined;
-    }
-  }
+  //   let typeData = typeBCS.de('vector<vector<u8>>', typeValue);
+  //   console.log(typeData);
+  //   const entityType = String.fromCharCode(...typeData[0]);
+
+  //   let dynamicFieldContent = dynamicFieldObject.data!
+  //     .content as DynamicFieldContentType;
+
+  //   let entityValue = dynamicFieldContent.fields['value'];
+  //   const bcs = new BCS(getSuiMoveConfig());
+  //   let value = Uint8Array.from(entityValue);
+  //   console.log(entityType);
+  //   console.log(value);
+
+  //   let data = bcs.de(entityType, value);
+  //   console.log(data);
+  //   return data;
+  // }
 
   async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
     const ownedObjects = await this.suiInteractor.getOwnedObjects(
