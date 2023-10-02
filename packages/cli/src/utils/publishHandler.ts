@@ -12,7 +12,7 @@ import {
   generateIdConfig,
   saveContractData,
   generateEps,
-} from "../../../common/src/codegen";
+} from "@0xobelisk/common";
 import fs from "fs";
 
 export async function publishHandler(

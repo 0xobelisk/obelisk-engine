@@ -1,4 +1,4 @@
-import { ObeliskConfig } from "../common";
+import { ObeliskConfig } from "@0xobelisk/common";
 
 export const obeliskConfig = {
   name: "examples",
