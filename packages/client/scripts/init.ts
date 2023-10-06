@@ -27,7 +27,7 @@ function uint8ArrayToHexString(uint8Array: Uint8Array): string {
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0xa3cea02cbd57956a0a2f42593b951e9356bb48d7883d061a5cdf9f13a7a1c8ec';
+    '0x8e14c42fb382bbc9d20c4b0181475896473ed3e2a2affc640b5e3a2c99fbe504';
 
   const metadata = await getMetadata(network as NetworkType, packageId);
 
@@ -38,22 +38,22 @@ async function init() {
     // secretKey: privkey
   });
 
-  let comsName = await obelisk.listComponentNames(
-    '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
-  );
+  // let comsName = await obelisk.listComponentNames(
+  //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
+  // );
 
-  console.log(comsName);
+  // console.log(comsName);
 
-  let entities = await obelisk.getEntities(
-    '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0',
-    'multi_column'
-  );
-  console.log(entities);
+  // let entities = await obelisk.getEntities(
+  //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0',
+  //   'multi_column'
+  // );
+  // console.log(entities);
 
   let comData = await obelisk.getEntity(
-    '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0',
-    'multi_column',
-    '0x00000000000000000000000000000000000000000000000000000000000003ed'
+    '0x7c8e3197abf34b2135ac53d63af0a98d7b4818990119ba3a40ad5018f5f900c1',
+    'position',
+    '0x03b31a14a2a8d709cb801c883c6353cb1f04d3707d79863ef92996841a05d922'
   );
 
   console.log(comData);

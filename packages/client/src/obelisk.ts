@@ -465,13 +465,18 @@ export class Obelisk {
       params
     )) as DevInspectResults;
     let returnValue = [];
-    let resultList = getResult.results![0].returnValues!;
-    for (let res of resultList) {
-      const bcs = new BCS(getSuiMoveConfig());
-      let value = Uint8Array.from(res[0]);
-      let data = bcs.de(res[1], value);
-      returnValue.push(data);
+
+    // "success" | "failure";
+    if (getResult.effects.status.toString() === 'success') {
+      let resultList = getResult.results![0].returnValues!;
+      for (let res of resultList) {
+        const bcs = new BCS(getSuiMoveConfig());
+        let value = Uint8Array.from(res[0]);
+        let data = bcs.de(res[1], value);
+        returnValue.push(data);
+      }
     }
+
     return returnValue;
   }
 
