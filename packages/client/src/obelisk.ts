@@ -467,7 +467,39 @@ export class Obelisk {
     let returnValue = [];
 
     // "success" | "failure";
-    if (getResult.effects.status.toString() === 'success') {
+    if (getResult.effects.status.status === 'success') {
+      let resultList = getResult.results![0].returnValues!;
+      for (let res of resultList) {
+        const bcs = new BCS(getSuiMoveConfig());
+        let value = Uint8Array.from(res[0]);
+        let data = bcs.de(res[1], value);
+        returnValue.push(data);
+      }
+    }
+
+    return returnValue;
+  }
+
+  async containEntity(
+    worldId: string,
+    componentName: string,
+    entityId?: string
+  ) {
+    let componentMoudleName = `${componentName}_comp`;
+    const tx = new TransactionBlock();
+    let params = [tx.pure(worldId)] as SuiTxArgument[];
+    if (entityId !== undefined) {
+      params.push(tx.pure(entityId));
+    }
+
+    const getResult = (await this.query[componentMoudleName].contains(
+      tx,
+      params
+    )) as DevInspectResults;
+    let returnValue = [];
+
+    // "success" | "failure";
+    if (getResult.effects.status.status === 'success') {
       let resultList = getResult.results![0].returnValues!;
       for (let res of resultList) {
         const bcs = new BCS(getSuiMoveConfig());

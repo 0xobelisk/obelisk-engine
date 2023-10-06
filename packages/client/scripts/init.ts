@@ -27,7 +27,7 @@ function uint8ArrayToHexString(uint8Array: Uint8Array): string {
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0x8e14c42fb382bbc9d20c4b0181475896473ed3e2a2affc640b5e3a2c99fbe504';
+    '0x2995d4940249b81d7d98052aafc5cbacac55f86088615af48110663820e805d7';
 
   const metadata = await getMetadata(network as NetworkType, packageId);
 
@@ -50,13 +50,21 @@ async function init() {
   // );
   // console.log(entities);
 
-  let comData = await obelisk.getEntity(
-    '0x7c8e3197abf34b2135ac53d63af0a98d7b4818990119ba3a40ad5018f5f900c1',
+  let entityData = await obelisk.getEntity(
+    '0x1ebfc36f211f2459dd8394ddc2c3eb026b19763946292e986bdafaf0e04a789d',
     'position',
-    '0x03b31a14a2a8d709cb801c883c6353cb1f04d3707d79863ef92996841a05d922'
+    '0x2a994a77dda48ddf2413eabe96b6577b3511ecbd473621af37e06e824a788c23'
   );
 
-  console.log(comData);
+  console.log(entityData);
+
+  let containData = await obelisk.containEntity(
+    '0x1ebfc36f211f2459dd8394ddc2c3eb026b19763946292e986bdafaf0e04a789d',
+    'encounter',
+    '0x2a994a77dda48ddf2413eabe96b6577b3511ecbd473621af37e06e824a788c23'
+  );
+
+  console.log(containData);
 
   // let objectAddress = await obelisk.entity_key_from_object(
   //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
