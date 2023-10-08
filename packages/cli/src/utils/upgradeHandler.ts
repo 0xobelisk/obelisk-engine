@@ -24,7 +24,7 @@ type ObjectContent = {
 
 export async function upgradeHandler(
   name: string,
-  compnames: string[],
+  schemaNames: string[],
   // network: "mainnet" | "testnet" | "devnet" | "localnet",
   savePath?: string | undefined
 ) {
@@ -197,20 +197,20 @@ in your contracts directory to use the default sui private key.`
       );
     }
 
-    const uniqueCompontent: string[] = compnames.filter(
-      (item) => !newObjectContent.fields["compnames"].includes(item)
+    const uniqueSchema: string[] = schemaNames.filter(
+      (item) => !newObjectContent.fields["schemaNames"].includes(item)
     );
 
-    console.log("\n----- new compontent -----");
-    console.log(uniqueCompontent);
+    console.log("\n----- new schema -----");
+    console.log(uniqueSchema);
 
-    for (const newCompontent of uniqueCompontent) {
+    for (const newSchema of uniqueSchema) {
       const registerTx = new TransactionBlock();
 
       registerTx.setGasBudget(10000000000);
 
       registerTx.moveCall({
-        target: `${newPackageId}::${newCompontent}_comp::register`,
+        target: `${newPackageId}::${newSchema}_schema::register`,
         arguments: [registerTx.object(worldId)],
       });
 
@@ -224,10 +224,10 @@ in your contracts directory to use the default sui private key.`
       });
       if (registerResult.effects?.status.status === "success") {
         console.log(
-          chalk.blue(`new compontent: ${newCompontent}_comp register success.`)
+          chalk.blue(`new schema: ${newSchema}_schema register success.`)
         );
       } else {
-        console.log(chalk.yellow(`${newCompontent}_comp register failed.`));
+        console.log(chalk.yellow(`${newSchema}_schema register failed.`));
       }
     }
 
@@ -245,7 +245,7 @@ in your contracts directory to use the default sui private key.`
 
     console.log(
       chalk.blue(
-        `\n${name} world compontents is ${registerObjectContent.fields["compnames"]}`
+        `\n${name} world schemas is ${registerObjectContent.fields["schemaNames"]}`
       )
     );
   } catch (error) {

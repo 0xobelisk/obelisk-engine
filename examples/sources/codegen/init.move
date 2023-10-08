@@ -3,21 +3,23 @@ module examples::init {
     use sui::transfer;
     use sui::tx_context::TxContext;
     use examples::world;
-    use examples::single_column_comp;
-    use examples::multi_column_comp;
-    use examples::single_value_comp;
-    use examples::single_struct_comp;
+    use examples::single_column_schema;
+    use examples::multi_column_schema;
+    use examples::ephemeral_schema;
+    use examples::single_value_schema;
+    use examples::single_struct_schema;
 
     fun init(ctx: &mut TxContext) {
-        let world = world::create(string(b"Examples"), string(b"Examples description"),ctx);
+        let _obelisk_world = world::create(string(b"Examples"), string(b"Examples"),ctx);
 
-        // Add Component
-        single_column_comp::register(&mut world, ctx);
-        multi_column_comp::register(&mut world, ctx);
-        single_value_comp::register(&mut world, ctx);
-        single_struct_comp::register(&mut world, ctx);
+        // Add Schema
+        single_column_schema::register(&mut _obelisk_world, ctx);
+        multi_column_schema::register(&mut _obelisk_world, ctx);
+        ephemeral_schema::register(&mut _obelisk_world, ctx);
+        single_value_schema::register(&mut _obelisk_world, ctx);
+        single_struct_schema::register(&mut _obelisk_world, ctx);
 
-        transfer::public_share_object(world);
+        transfer::public_share_object(_obelisk_world);
     }
 
     #[test_only]
