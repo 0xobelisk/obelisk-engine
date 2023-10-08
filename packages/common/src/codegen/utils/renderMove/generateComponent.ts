@@ -1,4 +1,4 @@
-import {BaseType, ComponentMapType, ObeliskConfig, RenderComponentOptions, ValueSchemaType} from "../../types";
+import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
     getFriendSystem,
@@ -56,8 +56,7 @@ export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
     const NAME: vector<u8> = b"${option.componentName}";
     
 ${renderKeyName(option.resourceData)}
-${renderStruct(option.structName, option.resourceData)}
-            
+${renderStruct(option.structName, option.resourceData)}  
 \tstruct CompMetadata has store {
 \t\tname: String,
 \t\tdata: Table<address, ${option.structName}>
@@ -91,7 +90,6 @@ ${getFriendSystem(config.name, config.systems)}
 ${renderKeyName(option.resourceData)}
 ${renderStruct(option.structName, option.resourceData)}
 ${renderNewStructFunc(option.structName, option.resourceData)}
-
 \tstruct CompMetadata has store {
 \t\tname: String,
 \t\tdata: Table<address, ${option.structName}>
@@ -101,10 +99,8 @@ ${renderRegisterFunc(option.structName, option.singleton, option.init)}
 
 ${renderSetFunc(option.structName,option.resourceData, option.singleton)}
 ${renderSetAttrsFunc(option.structName,option.resourceData,option.singleton)}
-
 ${renderGetAllFunc(option.structName, option.resourceData, option.singleton)}
 ${renderGetAttrsFunc(option.structName, option.resourceData, option.singleton)}
-
 ${ option.singleton ? "" : renderRemoveFunc(option.structName)}
 ${ option.singleton ? "" : renderContainFunc(option.structName)}
 }

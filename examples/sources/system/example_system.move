@@ -8,6 +8,8 @@ module examples::example_system {
     #[test_only]
     use examples::entity_key;
     #[test_only]
+    use examples::ephemeral_comp;
+    #[test_only]
     use examples::init;
     #[test_only]
     use examples::multi_column_comp;
@@ -62,6 +64,19 @@ module examples::example_system {
             string(b"single_value"),
             string(b"single_struct"),
         ], 0);
+
+        test_scenario::return_shared<World>(world);
+        test_scenario::end(scenario_val);
+    }
+
+    #[test]
+    public fun test_ephemeral()  {
+        let scenario_val = init_test();
+        let scenario = &mut scenario_val;
+
+        let world = test_scenario::take_shared<World>(scenario);
+
+        ephemeral_comp::emit_ephemeral(100);
 
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);
