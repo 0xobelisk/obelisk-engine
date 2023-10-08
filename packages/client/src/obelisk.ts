@@ -514,114 +514,38 @@ export class Obelisk {
     }
   }
 
-  async getEntities(
-    worldId: string,
-    componentName: string,
-    cursor?: string,
-    limit?: number
-  ) {
-    let componentMoudleName = `${componentName}_comp`;
-
-    const tx = new TransactionBlock();
-    let params = [tx.pure(worldId)] as SuiTxArgument[];
-
-    const tableResult = (await this.query[componentMoudleName].entities(
-      tx,
-      params
-    )) as DevInspectResults;
-    const entities = tableResult.results as SuiReturnValues;
-    const bcs = new BCS(getSuiMoveConfig());
-
-    let value = Uint8Array.from(entities[0].returnValues[0][0]);
-    let tableId = '0x' + bcs.de('address', value);
-    let dynamicFields = await this.suiInteractor.getDynamicFields(
-      tableId,
-      cursor,
-      limit
-    );
-    let objectIds = dynamicFields.data.map((field) => field.objectId);
-    let objectDatas = await this.suiInteractor.getEntitiesObjects(objectIds);
-    return {
-      data: objectDatas,
-      nextCursor: dynamicFields.nextCursor,
-      hasNextPage: dynamicFields.hasNextPage,
-    };
-  }
-
-  // async getEntity(worldId: string, componentName: string, entityId: string) {
-  //   let checkWorldId = normalizeHexAddress(worldId);
-  //   if (checkWorldId) {
-  //     worldId = checkWorldId;
-  //   } else {
-  //     return undefined;
-  //   }
-
-  //   let checkEntityId = normalizeHexAddress(entityId);
-  //   if (checkEntityId) {
-  //     entityId = checkEntityId;
-  //   } else {
-  //     return undefined;
-  //   }
-
-  //   const parentId = await this.getComponentTable(worldId, componentName);
-  //   const name = {
-  //     type: 'address',
-  //     value: entityId,
-  //   } as DynamicFieldName;
-
-  //   let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
-  //     parentId,
-  //     name
-  //   );
-  //   return dynamicFieldObject;
-  // }
-
-  // async getEntityData(
+  // async getEntities(
   //   worldId: string,
   //   componentName: string,
-  //   entityId: string
+  //   cursor?: string,
+  //   limit?: number
   // ) {
-  //   const parentId = await this.getComponentTable(worldId, componentName);
-  //   const name = {
-  //     type: 'address',
-  //     value: entityId,
-  //   } as DynamicFieldName;
-
-  //   let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
-  //     parentId,
-  //     name
-  //   );
   //   let componentMoudleName = `${componentName}_comp`;
 
   //   const tx = new TransactionBlock();
-  //   let params = [] as SuiTxArgument[];
+  //   let params = [tx.pure(worldId)] as SuiTxArgument[];
 
-  //   const typeResult = (await this.query[componentMoudleName].types(
+  //   const tableResult = (await this.query[componentMoudleName].entities(
   //     tx,
   //     params
   //   )) as DevInspectResults;
-  //   let typeReturn = typeResult.results as SuiReturnValues;
-  //   console.log(typeReturn[0].returnValues[0][0]);
-
-  //   const typeBCS = new BCS(getSuiMoveConfig());
-  //   let typeValue = Uint8Array.from(typeReturn[0].returnValues[0][0]);
-
-  //   let typeData = typeBCS.de('vector<vector<u8>>', typeValue);
-  //   console.log(typeData);
-  //   const entityType = String.fromCharCode(...typeData[0]);
-
-  //   let dynamicFieldContent = dynamicFieldObject.data!
-  //     .content as DynamicFieldContentType;
-
-  //   let entityValue = dynamicFieldContent.fields['value'];
+  //   const entities = tableResult.results as SuiReturnValues;
   //   const bcs = new BCS(getSuiMoveConfig());
-  //   let value = Uint8Array.from(entityValue);
-  //   console.log(entityType);
-  //   console.log(value);
 
-  //   let data = bcs.de(entityType, value);
-  //   console.log(data);
-  //   return data;
+  //   let value = Uint8Array.from(entities[0].returnValues[0][0]);
+  //   let tableId = '0x' + bcs.de('address', value);
+  //   let dynamicFields = await this.suiInteractor.getDynamicFields(
+  //     tableId,
+  //     cursor,
+  //     limit
+  //   );
+  //   let objectIds = dynamicFields.data.map((field) => field.objectId);
+  //   let objectDatas = await this.suiInteractor.getEntitiesObjects(objectIds);
+  //   return {
+  //     data: objectDatas,
+  //     nextCursor: dynamicFields.nextCursor,
+  //     hasNextPage: dynamicFields.hasNextPage,
+  //   };
   // }
 
   async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
