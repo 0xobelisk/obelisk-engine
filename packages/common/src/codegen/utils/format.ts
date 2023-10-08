@@ -2,7 +2,10 @@
 import * as prettier from "prettier";
 import * as rustPlugin from "prettier-plugin-rust";
 
-export async function formatMove(content: string, prettierConfigPath?: string): Promise<string> {
+export async function formatMove(
+  content: string,
+  prettierConfigPath?: string
+): Promise<string> {
   let config;
   if (prettierConfigPath) {
     config = await prettier.resolveConfig(prettierConfigPath);

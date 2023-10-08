@@ -35,8 +35,8 @@ export type ObeliskParams = {
   metadata?: SuiMoveNormalizedModules;
 };
 
-export type ComponentFieldType = {
-  components: {
+export type SchemaFieldType = {
+  schemas: {
     type: string;
     fields: {
       id: {
@@ -47,14 +47,14 @@ export type ComponentFieldType = {
   };
 };
 
-export type ComponentValueType = {
+export type SchemaValueType = {
   id: {
     id: string;
   };
   name: string;
   value: {
     type: string;
-    fields: ComponentFieldType;
+    fields: SchemaFieldType;
   };
 };
 
@@ -77,9 +77,9 @@ export type SuiTxArgument =
       index: number;
       resultIndex: number;
     };
-export type ComponentContentType = {
+export type SchemaContentType = {
   type: string;
-  fields: ComponentValueType;
+  fields: SchemaValueType;
   hasPublicTransfer: boolean;
   dataType: 'moveObject';
 };

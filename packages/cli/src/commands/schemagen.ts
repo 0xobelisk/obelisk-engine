@@ -6,9 +6,9 @@ type Options = {
 };
 
 const commandModule: CommandModule<Options, Options> = {
-  command: "compgen <configPath>",
+  command: "schemagen <configPath>",
 
-  describe: "Autogenerate Obelisk components based on the config file",
+  describe: "Autogenerate Obelisk schemas based on the config file",
 
   builder(yargs) {
     return yargs.options({

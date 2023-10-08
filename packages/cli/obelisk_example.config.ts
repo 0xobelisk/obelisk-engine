@@ -6,7 +6,7 @@ export const obeliskConfig = {
   systems: [
     "example_system",
   ],
-  components: {
+  schemas: {
     single_column: "u64",
     multi_column: {
       valueSchema: {
@@ -27,7 +27,7 @@ export const obeliskConfig = {
       singleton: true,
       valueSchema: {
         admin: "address",
-        fee: "vector<u8>",
+        fee: "u64",
       },
       init: {
         admin: "@0x1",
@@ -35,4 +35,4 @@ export const obeliskConfig = {
       }
     },
   }
-} as unknown as ObeliskConfig;
+} as ObeliskConfig;

@@ -1,9 +1,9 @@
-module examples::ephemeral_comp {
-    use sui::event;
+module examples::ephemeral_schema {
     use sui::table::{Self, Table};
-    use examples::world::{Self, World};
     use std::ascii::{String, string};
     use sui::tx_context::TxContext;
+    use examples::events;
+    use examples::world::{Self, World};
     
     const NAME: vector<u8> = b"ephemeral";
     
@@ -11,21 +11,20 @@ module examples::ephemeral_comp {
 	struct EphemeralData has copy , drop, store {
 		value: u64
 	}
-
-            
-	struct CompMetadata has store {
+  
+	struct SchemaMetadata has store {
 		name: String,
 		data: Table<address, EphemeralData>
 	}
 
 	public fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
-		world::add_comp<CompMetadata>(_obelisk_world, NAME, CompMetadata {
+		world::add_schema<SchemaMetadata>(_obelisk_world, NAME, SchemaMetadata {
 			name: string(NAME),
 			data: table::new<address, EphemeralData>(ctx)
 		});
 	}
 
 	public fun emit_ephemeral(value: u64) {
-		event::emit(EphemeralData { value })
+		events::emit_ephemeral(string(NAME), EphemeralData { value })
 	}
 }
