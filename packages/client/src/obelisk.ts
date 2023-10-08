@@ -448,7 +448,7 @@ export class Obelisk {
   async listSchemaNames(worldId: string) {
     const worldObject = await this.getObject(worldId);
     const newObjectContent = worldObject.objectFields;
-    return newObjectContent['schemanames'];
+    return newObjectContent['schemaNames'];
   }
 
   async getEntity(

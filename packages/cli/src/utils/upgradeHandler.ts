@@ -245,7 +245,7 @@ in your contracts directory to use the default sui private key.`
 
     console.log(
       chalk.blue(
-        `\n${name} world schemas is ${registerObjectContent.fields["compnames"]}`
+        `\n${name} world schemas is ${registerObjectContent.fields["schemaNames"]}`
       )
     );
   } catch (error) {

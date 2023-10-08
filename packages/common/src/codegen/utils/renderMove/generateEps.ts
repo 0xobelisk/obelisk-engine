@@ -53,9 +53,9 @@ function generateWorld(
         /// Description of the world
         description: String,
         /// Schemas of the world
-        comps: Bag,
+        schemas: Bag,
         /// Schema names of the world
-        compnames: vector<String>,
+        schema_names: vector<String>,
         /// admin of the world
         admin: ID,
         /// Version of the world
@@ -70,8 +70,8 @@ function generateWorld(
             id: object::new(ctx),
             name,
             description,
-            comps: bag::new(ctx),
-            compnames: vector::empty(),
+            schemas: bag::new(ctx),
+            schema_names: vector::empty(),
             admin: object::id(&admin),
             version: VERSION
         };
@@ -83,33 +83,33 @@ function generateWorld(
         (_obelisk_world.name, _obelisk_world.description, _obelisk_world.version)
     }
     
-    public fun compnames(_obelisk_world: &World): vector<String> {
-        _obelisk_world.compnames
+    public fun schema_names(_obelisk_world: &World): vector<String> {
+        _obelisk_world.schema_names
     }
 
     public fun get_schema<T : store>(_obelisk_world: &World, id: address): &T {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&_obelisk_world.comps, id), ESchemaDoesNotExist);
-        bag::borrow<address, T>(&_obelisk_world.comps, id)
+        assert!(bag::contains(&_obelisk_world.schemas, id), ESchemaDoesNotExist);
+        bag::borrow<address, T>(&_obelisk_world.schemas, id)
     }
 
     public fun get_mut_schema<T : store>(_obelisk_world: &mut World, id: address): &mut T {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&_obelisk_world.comps, id), ESchemaDoesNotExist);
-        bag::borrow_mut<address, T>(&mut _obelisk_world.comps, id)
+        assert!(bag::contains(&_obelisk_world.schemas, id), ESchemaDoesNotExist);
+        bag::borrow_mut<address, T>(&mut _obelisk_world.schemas, id)
     }
 
     public fun add_schema<T : store>(_obelisk_world: &mut World, schema_name: vector<u8>, schema: T){
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
         let id = entity_key::from_bytes(schema_name);
-        assert!(!bag::contains(&_obelisk_world.comps, id), ESchemaAlreadyExists);
-        vector::push_back(&mut _obelisk_world.compnames, string(schema_name));
-        bag::add<address,T>(&mut _obelisk_world.comps, id, schema);
+        assert!(!bag::contains(&_obelisk_world.schemas, id), ESchemaAlreadyExists);
+        vector::push_back(&mut _obelisk_world.schema_names, string(schema_name));
+        bag::add<address,T>(&mut _obelisk_world.schemas, id, schema);
     }
 
     public fun contains(_obelisk_world: &mut World, id: address): bool {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        bag::contains(&mut _obelisk_world.comps, id)
+        bag::contains(&mut _obelisk_world.schemas, id)
     }
 
     entry fun migrate(_obelisk_world: &mut World, admin_cap: &AdminCap) {
