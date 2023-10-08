@@ -1,5 +1,3 @@
-import {getStructAttrs} from "../utils/renderMove/common";
-
 export type BaseType =
   | "address"
   | "bool"
@@ -31,7 +29,7 @@ export interface ValueSchemaType {
     valueSchema: Record<string, string> | string;
     ephemeral?: boolean;
     singleton?: boolean;
-    init?: Record<string, string> | string;
+    init?: any;
 }
 
 export type ComponentMapType = BaseType | ValueSchemaType;
@@ -51,15 +49,5 @@ export interface RenderComponentOptions {
     resourceData: BaseType | Record<string, BaseType>
     structAttrs: string[]
     structTypes: string[]
-    init: Record<string, string> | string
-}
-
-export function isSingletonType(s: ComponentMapType | SingletonType): boolean {
-  if (typeof s !== "object") {
-    // if s is string
-    return false;
-  }
-
-  // if s is single type
-  return "type" in s && "init" in s;
+    init: any
 }
