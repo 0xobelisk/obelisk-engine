@@ -26,7 +26,7 @@ export type SingletonType =
     };
 
 export interface ValueSchemaType {
-    valueSchema: Record<string, string> | string;
+    valueSchema: Record<string, BaseType> | BaseType;
     ephemeral?: boolean;
     singleton?: boolean;
     init?: any;
