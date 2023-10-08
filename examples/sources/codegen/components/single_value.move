@@ -1,97 +1,74 @@
 module examples::single_value_comp {
     use std::ascii::{String, string};
-    use std::option::none;
-    use std::vector;
-    use sui::bcs;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
-    use sui::table_vec::{Self, TableVec};
     use examples::entity_key;
+    use examples::events;
     use examples::world::{Self, World};
   
     // Systems
 	friend examples::example_system;
 
+	/// Entity does not exist
+	const EEntityDoesNotExist: u64 = 0;
+
 	const NAME: vector<u8> = b"single_value";
-
-	// value
-	struct CompMetadata has store {
-		id: address,
-		name: String,
-		types: vector<String>,
-		entity_key_to_index: Table<address, u64>,
-		entities: TableVec<address>,
-		data: Table<address, vector<u8>>
-	}
-
-	public fun new(ctx: &mut TxContext): CompMetadata {
-		let component = CompMetadata {
-			id: id(),
-			name: name(),
-			types: types(),
-			entity_key_to_index: table::new<address, u64>(ctx),
-			entities: table_vec::empty<address>(ctx),
-			data: table::new<address, vector<u8>>(ctx)
-		};
-		table::add(&mut component.data, id(), encode(1000));
-		component
-	}
 
 	public fun id(): address {
 		entity_key::from_bytes(NAME)
 	}
 
-	public fun name(): String {
-		string(NAME)
+	// value
+	struct SingleValueData has copy , drop, store {
+		value: u64
 	}
 
-	public fun types(): vector<String> {
-		vector[string(b"u64")]
+	public fun new(value: u64): SingleValueData {
+		SingleValueData {
+			value
+		}
 	}
 
-	public fun entities(world: &World): &TableVec<address> {
-		let component = world::get_comp<CompMetadata>(world, id());
-		&component.entities
+
+	struct CompMetadata has store {
+		name: String,
+		data: Table<address, SingleValueData>
 	}
 
-	public fun entity_length(world: &World): u64 {
-		let component = world::get_comp<CompMetadata>(world, id());
-		table_vec::length(&component.entities)
+	public fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
+		let _obelisk_component = CompMetadata {
+			name: string(NAME),
+			data: table::new<address, SingleValueData>(ctx)
+		};
+		table::add(&mut _obelisk_component.data, id(), new(1000));
+		world::add_comp<CompMetadata>(_obelisk_world, NAME, _obelisk_component);
+		events::emit_set(string(NAME), id(), new(1000));
 	}
 
-	public fun data(world: &World): &Table<address, vector<u8>> {
-		let component = world::get_comp<CompMetadata>(world, id());
-		&component.data
+	public(friend) fun set(_obelisk_world: &mut World,  value: u64) {
+		let _obelisk_component = world::get_mut_comp<CompMetadata>(_obelisk_world, id());
+		let _obelisk_data = new(value);
+		if(table::contains<address, SingleValueData>(&_obelisk_component.data, id())) {
+			*table::borrow_mut<address, SingleValueData>(&mut _obelisk_component.data, id()) = _obelisk_data;
+		} else {
+			table::add(&mut _obelisk_component.data, id(), _obelisk_data);
+		};
+		events::emit_set(string(NAME), id(), _obelisk_data)
 	}
 
-	public fun register(world: &mut World, ctx: &mut TxContext) {
-		world::add_comp<CompMetadata>(world, NAME, new(ctx));
-		world::emit_register_event(NAME, types());
-	}
 
-	public(friend) fun update(world: &mut World, value: u64) {
-		let component = world::get_mut_comp<CompMetadata>(world, id());
-		let data = encode(value);
-		*table::borrow_mut<address, vector<u8>>(&mut component.data, id()) = data;
-		world::emit_update_event(id(), none(), data)
-	}
 
-	public fun get(world: &World): u64 {
-		let component = world::get_comp<CompMetadata>(world, id());
-		let data = table::borrow<address, vector<u8>>(&component.data, id());
-		decode(*data)
-	}
-
-	public fun encode(value: u64): vector<u8> {
-		let data = vector::empty<u8>();
-		vector::append(&mut data, bcs::to_bytes(&value));
-		data
-	}
-
-	public fun decode(bytes: vector<u8>): u64 {
-		let data = bcs::new(bytes);
+	public fun get(_obelisk_world: &World ,): u64 {
+  		let _obelisk_component = world::get_comp<CompMetadata>(_obelisk_world, id());
+  		assert!(table::contains<address, SingleValueData>(&_obelisk_component.data, id()), EEntityDoesNotExist);
+		let _obelisk_data = table::borrow<address, SingleValueData>(&_obelisk_component.data, id());
 		(
-			bcs::peel_u64(&mut data)
+			_obelisk_data.value
 		)
 	}
+
+
+
+
+
 }

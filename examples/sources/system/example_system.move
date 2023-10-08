@@ -1,7 +1,4 @@
 module examples::example_system {
-    use examples::single_column_comp;
-    use examples::entity_key;
-    use examples::multi_column_comp;
     use examples::single_value_comp;
     use examples::world::World;
     #[test_only]
@@ -9,17 +6,17 @@ module examples::example_system {
     #[test_only]
     use std::debug;
     #[test_only]
-    use std::vector;
+    use examples::entity_key;
     #[test_only]
     use examples::init;
+    #[test_only]
+    use examples::multi_column_comp;
+    #[test_only]
+    use examples::single_column_comp;
     #[test_only]
     use examples::single_struct_comp;
     #[test_only]
     use examples::world;
-    #[test_only]
-    use sui::bcs;
-    #[test_only]
-    use sui::table_vec;
     #[test_only]
     use sui::test_scenario;
     #[test_only]
@@ -28,43 +25,7 @@ module examples::example_system {
     public entry fun increase(world: &mut World) {
         let old_number = single_value_comp::get(world);
         let new_number = old_number + 10;
-        single_value_comp::update(world, new_number);
-    }
-
-    public entry fun add_value(world: &mut World) {
-        let old_number = single_value_comp::get(world);
-        let temp = old_number;
-        while (temp < old_number + 500) {
-            let key = entity_key::from_u256((temp as u256));
-            multi_column_comp::add(world, key, b"online", temp);
-            temp = temp + 1;
-        };
-        let new_number = old_number + 500;
-        single_value_comp::update(world, new_number);
-    }
-
-    public entry fun remove_value(world: &mut World) {
-        let old_number = single_value_comp::get(world) - 5;
-        let key = entity_key::from_u256((old_number as u256));
-        multi_column_comp::remove(world, key);
-    }
-
-    public entry fun add_value2(world: &mut World) {
-        let old_number = single_value_comp::get(world);
-        let temp = old_number;
-        while (temp < old_number + 200) {
-            let key = entity_key::from_u256((temp as u256));
-            single_column_comp::add(world, key, temp);
-            temp = temp + 1;
-        };
-        let new_number = old_number + 200;
-        single_value_comp::update(world, new_number);
-    }
-
-    public entry fun remove_value2(world: &mut World) {
-        let old_number = single_value_comp::get(world) - 1000;
-        let key = entity_key::from_u256((old_number as u256));
-        multi_column_comp::remove(world, key);
+        single_value_comp::set(world, new_number);
     }
 
     #[test_only]
@@ -89,15 +50,17 @@ module examples::example_system {
         let (name,description,version) = world::info(&world);
 
         assert!(name == string(b"Examples"), 0);
-        assert!(description == string(b"Examples description"), 0);
+        assert!(description == string(b"Examples"), 0);
         assert!(version == 1, 0);
 
         let names = world::compnames(&world);
+        debug::print(&names);
         assert!(names == vector[
             string(b"single_column"),
             string(b"multi_column"),
+            string(b"ephemeral"),
             string(b"single_value"),
-            string(b"single_struct")
+            string(b"single_struct"),
         ], 0);
 
         test_scenario::return_shared<World>(world);
@@ -115,7 +78,7 @@ module examples::example_system {
         assert!(single_value_comp::get(&world) == 1000, 0 );
 
         // Update value to 1001
-        single_value_comp::update(&mut world, 1001);
+        single_value_comp::set(&mut world, 1001);
         // Value == 1001
         assert!(single_value_comp::get(&world) == 1001, 0 );
 
@@ -142,7 +105,7 @@ module examples::example_system {
         assert!(fee == 100, 0);
 
         // Update admin to 0x2, Update fee to 101,
-        single_struct_comp::update(&mut world, @0x2, 101);
+        single_struct_comp::set(&mut world, @0x2, 101);
         // admin == 0x2, fee == 101
         let (admin, fee) = single_struct_comp::get(&world);
         assert!(admin == @0x2, 0);
@@ -155,8 +118,8 @@ module examples::example_system {
         assert!(fee == 101, 0);
 
         // Update admin to 0x3, Update fee to 102,
-        single_struct_comp::update_admin(&mut world, @0x3);
-        single_struct_comp::update_fee(&mut world, 102);
+        single_struct_comp::set_admin(&mut world, @0x3);
+        single_struct_comp::set_fee(&mut world, 102);
 
         // admin == 0x3, fee == 102
         let (admin, fee) = single_struct_comp::get(&world);
@@ -182,7 +145,7 @@ module examples::example_system {
 
         let entity_key = entity_key::from_u256(0);
         // Add a field
-        single_column_comp::add(&mut world, entity_key, 10);
+        single_column_comp::set(&mut world, entity_key, 10);
         // is exist
         assert!(single_column_comp::contains(&world,entity_key) == true, 0);
 
@@ -191,7 +154,7 @@ module examples::example_system {
         assert!(level == 10, 0);
 
         // Update a field
-        single_column_comp::update(&mut world, entity_key::from_u256(0), 11);
+        single_column_comp::set(&mut world, entity_key::from_u256(0), 11);
         // get 11
         let level = single_column_comp::get(&mut world, entity_key::from_u256(0));
         assert!(level == 11, 0);
@@ -214,9 +177,9 @@ module examples::example_system {
 
         let entity_key = entity_key::from_u256(0);
         // Add a field
-        multi_column_comp::add(&mut world, entity_key::from_u256(0), b"online", 1000);
-        multi_column_comp::add(&mut world, entity_key::from_u256(1), b"online", 1000);
-        multi_column_comp::add(&mut world, entity_key::from_u256(2), b"online", 1000);
+        multi_column_comp::set(&mut world, entity_key::from_u256(0), b"online", 1000);
+        multi_column_comp::set(&mut world, entity_key::from_u256(1), b"online", 1000);
+        multi_column_comp::set(&mut world, entity_key::from_u256(2), b"online", 1000);
 
         assert!(multi_column_comp::contains(&world, entity_key), 0);
 
@@ -231,7 +194,7 @@ module examples::example_system {
         assert!(last_update_time == 1000, 0);
 
         // Update a field
-        multi_column_comp::update(&mut world, entity_key::from_u256(0), b"offline", 1001);
+        multi_column_comp::set(&mut world, entity_key::from_u256(0), b"offline", 1001);
         // get offline and get 1001
         let (state, last_update_time) = multi_column_comp::get(&mut world, entity_key::from_u256(0));
         assert!(state == b"offline", 0);
@@ -245,24 +208,6 @@ module examples::example_system {
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);
     }
-
-    #[test]
-    public fun test_add_value()  {
-        // u8 1
-        // u64 8
-        // u128 16
-        // bool 1
-        // address 32
-        // vecotr length bcs
-        debug::print(&bcs::to_bytes(&true));
-        debug::print(&vector::length(&bcs::to_bytes(&false)));
-        debug::print(&bcs::to_bytes(&b"vector<u8>"));
-        debug::print(&bcs::to_bytes(&b"address"));
-        debug::print(&bcs::to_bytes(&vector[10,2u64]));
-        debug::print(&vector::length(&bcs::to_bytes(&vector[10,2u64])));
-    }
-
-
 }
 
 
