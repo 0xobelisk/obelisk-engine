@@ -105,6 +105,17 @@ export function getStructTypes(values: SchemaMapType | SingletonType): string {
     : `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
 }
 
+export function getTypesCode(values: string | Record<string, string>): string {
+  if (typeof values === "string") {
+    return `vector[string(b"${values}")]`;
+  } else {
+    const code = Object.keys(values)
+      .map((key) => `string(b"${values[key]}")`)
+      .join(", ");
+    return `vector[${code}]`;
+  }
+}
+
 /**
  *
  * @param values
