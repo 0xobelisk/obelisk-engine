@@ -13,7 +13,7 @@ import {
   generateIdConfig,
   generateEps,
   saveContractData,
-} from '../../../common/src/codegen';
+} from "@0xobelisk/common";
 
 type ObjectContent = {
   type: string;

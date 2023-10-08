@@ -1,4 +1,4 @@
-import { ObeliskConfig } from "../common";
+import { ObeliskConfig } from "@0xobelisk/common";
 
 export const obeliskConfig = {
   name: "examples",
@@ -27,7 +27,7 @@ export const obeliskConfig = {
       singleton: true,
       valueSchema: {
         admin: "address",
-        fee: "u64",
+        fee: "vector<u8>",
       },
       init: {
         admin: "@0x1",

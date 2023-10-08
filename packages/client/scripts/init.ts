@@ -27,7 +27,7 @@ function uint8ArrayToHexString(uint8Array: Uint8Array): string {
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0x309fae15a91b43e151f954033e2f9095c7dbad87036fdb8f193968deda7d824f';
+    '0x2995d4940249b81d7d98052aafc5cbacac55f86088615af48110663820e805d7';
 
   const metadata = await getMetadata(network as NetworkType, packageId);
 
@@ -38,76 +38,44 @@ async function init() {
     // secretKey: privkey
   });
 
-  // let compTable = await obelisk.getComponentTable(
-  //   '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6',
+  // let comsName = await obelisk.listComponentNames(
+  //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
+  // );
+
+  // console.log(comsName);
+
+  // let entities = await obelisk.getEntities(
+  //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0',
   //   'multi_column'
   // );
-  // console.log(compTable);
+  // console.log(entities);
 
-  let entities = await obelisk.getEntities(
-    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
-    'multi_column'
+  let entityData = await obelisk.getEntity(
+    '0x1ebfc36f211f2459dd8394ddc2c3eb026b19763946292e986bdafaf0e04a789d',
+    'position',
+    '0x2a994a77dda48ddf2413eabe96b6577b3511ecbd473621af37e06e824a788c23'
   );
-  console.log(entities);
-  console.log(JSON.stringify(entities));
 
-  const tx = new TransactionBlock();
-  let params = [
-    tx.pure(
-      '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912'
-    ),
-  ] as SuiTxArgument[];
-  let entityDataRes = (await obelisk.query.single_value_comp.get(
-    tx,
-    params
-  )) as DevInspectResults;
-  const bcs = new BCS(getSuiMoveConfig());
-  let value = Uint8Array.from(entityDataRes.results![0].returnValues![0][0]);
-  let data = bcs.de('u64', value);
-  console.log(data);
-
-  let entity = await obelisk.getEntity(
-    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
-    'multi_column',
-    '0x0000000000000000000000000000000000000000000000000000000000000a07'
-  );
-  console.log(entity);
-
-  let entityData = await obelisk.getEntityData(
-    '0x000b01387ca3fcecfa94103e6ec43d0f2d089ccdb3c8dee77cfe5bbd1d2a0912',
-    'multi_column',
-    '0x0000000000000000000000000000000000000000000000000000000000000a07'
-  );
   console.log(entityData);
 
-  let objectAddress = await obelisk.entity_key_from_object(
-    '0xdd0fdf891ac70e1d0801f509c92b408aea239ebaa2ec93ab5ae1a805538311e6'
+  let containData = await obelisk.containEntity(
+    '0x1ebfc36f211f2459dd8394ddc2c3eb026b19763946292e986bdafaf0e04a789d',
+    'encounter',
+    '0x2a994a77dda48ddf2413eabe96b6577b3511ecbd473621af37e06e824a788c23'
   );
-  console.log(objectAddress);
 
-  let bytesAddress = await obelisk.entity_key_from_bytes('hello');
-  console.log(bytesAddress);
+  console.log(containData);
 
-  let numberAddress = await obelisk.entity_key_from_u256(123);
-  console.log(numberAddress);
-
-  // let data1 = await obelisk.getComponentByName(
-  //   '0x775c80938d20cc7af849f3aed4105eba8a7e5cdf65d8f795f78cdf62e578012f',
-  //   'user_info'
+  // let objectAddress = await obelisk.entity_key_from_object(
+  //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
   // );
-  // console.log(JSON.stringify(data1.data?.content));
-  // const senderAddress = `0xd2c36eea220c7deb9d1c7d4b01269eca9d9543050255432896cd13ade6550d90`;
-  // const hashAddress = keccak256(senderAddress);
-  // const entityKey = uint8ArrayToHexString(hashAddress);
-  // const tx = new TransactionBlock();
-  // let params = [
-  //   tx.pure(
-  //     '0x775c80938d20cc7af849f3aed4105eba8a7e5cdf65d8f795f78cdf62e578012f'
-  //   ),
-  //   tx.pure(entityKey),
-  // ] as SuiTxArgument[];
-  // let data2 = await obelisk.query.user_info_comp.get(tx, params);
-  // console.log(JSON.stringify(data2));
+  // console.log(objectAddress);
+
+  // let bytesAddress = await obelisk.entity_key_from_bytes('hello');
+  // console.log(bytesAddress);
+
+  // let numberAddress = await obelisk.entity_key_from_u256(123);
+  // console.log(numberAddress);
 }
 
 init();
