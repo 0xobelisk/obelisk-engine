@@ -2,7 +2,6 @@ import { CommandModule } from "yargs";
 
 import localnode from "./localnode";
 import faucet from "./faucet";
-import hello from "./hello";
 import schemagen from "./schemagen";
 import publish from "./publish";
 import upgrade from "./upgrade";
@@ -14,7 +13,6 @@ export const commands: CommandModule<any, any>[] = [
   publish,
   localnode,
   faucet,
-  hello,
   schemagen,
   upgrade,
   test,
