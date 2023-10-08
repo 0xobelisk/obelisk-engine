@@ -239,7 +239,7 @@ ${getStructAttrsQuery(struct, "\t\t\t").join(",\n")}
 export function renderGetAttrsFunc(structName: string, struct: ComponentMapType | SingletonType, isSingle: boolean): string {
   return typeof struct === "string"
       ? ""
-      : "\n" + Object.entries(struct)
+      : Object.entries(struct)
       .map(
           ([
              key,
