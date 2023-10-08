@@ -1,6 +1,6 @@
 import { ObeliskConfig } from "@0xobelisk/common";
 
-export const obelisk_exampleConfig = {
+export const obeliskConfig = {
   name: "examples",
   description: "examples",
   systems: [
