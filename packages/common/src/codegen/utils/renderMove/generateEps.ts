@@ -11,10 +11,10 @@ export function generateEps(
 }
 
 function generateWorld(
-    projectName: string,
-    srcPrefix: string,
-    version?: number
-) {undefined
+  projectName: string,
+  srcPrefix: string,
+  version?: number
+) {
   if (version === undefined) {
     version = 1;
   }
@@ -120,16 +120,13 @@ function generateWorld(
 }
 `;
   formatAndWriteMove(
-      code,
-      `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/world.move`,
-      "formatAndWriteMove"
+    code,
+    `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/world.move`,
+    "formatAndWriteMove"
   );
 }
 
-function generateEvents(
-    projectName: string,
-    srcPrefix: string,
-) {
+function generateEvents(projectName: string, srcPrefix: string) {
   let code = `module ${projectName}::events {
      use std::ascii::String;
     use sui::event;
@@ -164,9 +161,8 @@ function generateEvents(
 }
 `;
   formatAndWriteMove(
-      code,
-      `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/events.move`,
-      "formatAndWriteMove"
+    code,
+    `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/events.move`,
+    "formatAndWriteMove"
   );
 }
-

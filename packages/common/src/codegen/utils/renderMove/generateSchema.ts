@@ -1,52 +1,58 @@
 import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
-    getFriendSystem,
-    renderKeyName,
-    renderSetFunc,
-    renderContainFunc,
-    renderRemoveFunc,
-    renderStruct,
-    renderNewStructFunc,
-    convertToCamelCase, renderSetAttrsFunc, renderRegisterFunc, renderGetAllFunc, renderGetAttrsFunc, renderEmit,
+  getFriendSystem,
+  renderKeyName,
+  renderSetFunc,
+  renderContainFunc,
+  renderRemoveFunc,
+  renderStruct,
+  renderNewStructFunc,
+  convertToCamelCase,
+  renderSetAttrsFunc,
+  renderRegisterFunc,
+  renderGetAllFunc,
+  renderGetAttrsFunc,
+  renderEmit,
 } from "./common";
 
-
 export function getRenderSchemaOptions(config: ObeliskConfig) {
-    const options: any = [];
-    for (const schemaName of Object.keys(config.schemas)) {
-        const schemaData = config.schemas[schemaName];
-        let resourceData: Record<string, string> | string;
-        let init: any;
-        let ephemeral = false;
-        let singleton = false;
-        if ( typeof schemaData === "string") {
-            resourceData = schemaData;
-        } else {
-            resourceData = schemaData.valueSchema;
-            init = schemaData.init;
-            ephemeral = schemaData.ephemeral !== undefined ? schemaData.ephemeral : false;
-            singleton = schemaData.singleton !== undefined ? schemaData.singleton : false;
-        }
-            options.push({
-                schemaName: schemaName,
-                structName: convertToCamelCase(schemaName),
-                ephemeral,
-                singleton,
-                resourceData,
-                structAttrs: renderKeyName(resourceData),
-                structTypes: renderStruct(convertToCamelCase(schemaName), resourceData),
-                init
-            });
-        }
-    return options;
+  const options: any = [];
+  for (const schemaName of Object.keys(config.schemas)) {
+    const schemaData = config.schemas[schemaName];
+    let resourceData: Record<string, string> | string;
+    let init: any;
+    let ephemeral = false;
+    let singleton = false;
+    if (typeof schemaData === "string") {
+      resourceData = schemaData;
+    } else {
+      resourceData = schemaData.valueSchema;
+      init = schemaData.init;
+      ephemeral =
+        schemaData.ephemeral !== undefined ? schemaData.ephemeral : false;
+      singleton =
+        schemaData.singleton !== undefined ? schemaData.singleton : false;
+    }
+    options.push({
+      schemaName: schemaName,
+      structName: convertToCamelCase(schemaName),
+      ephemeral,
+      singleton,
+      resourceData,
+      structAttrs: renderKeyName(resourceData),
+      structTypes: renderStruct(convertToCamelCase(schemaName), resourceData),
+      init,
+    });
+  }
+  return options;
 }
 
 export function generateSchema(config: ObeliskConfig, srcPrefix: string) {
-    const options = getRenderSchemaOptions(config)
-    for (const option of options) {
+  const options = getRenderSchemaOptions(config);
+  for (const option of options) {
     let code = option.ephemeral
-        ? `module ${config.name}::${option.schemaName}_schema {
+      ? `module ${config.name}::${option.schemaName}_schema {
     use sui::table::{Self, Table};
     use std::ascii::{String, string};
     use sui::tx_context::TxContext;
@@ -66,8 +72,7 @@ ${renderRegisterFunc(option.structName, false, option.init)}
 
 ${renderEmit(option.schemaName, option.structName, option.resourceData)}
 }`
-
-        : `module ${config.name}::${option.schemaName}_schema {
+      : `module ${config.name}::${option.schemaName}_schema {
     use std::ascii::{String, string};
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
@@ -97,12 +102,12 @@ ${renderNewStructFunc(option.structName, option.resourceData)}
 
 ${renderRegisterFunc(option.structName, option.singleton, option.init)}
 
-${renderSetFunc(option.structName,option.resourceData, option.singleton)}
-${renderSetAttrsFunc(option.structName,option.resourceData,option.singleton)}
+${renderSetFunc(option.structName, option.resourceData, option.singleton)}
+${renderSetAttrsFunc(option.structName, option.resourceData, option.singleton)}
 ${renderGetAllFunc(option.structName, option.resourceData, option.singleton)}
 ${renderGetAttrsFunc(option.structName, option.resourceData, option.singleton)}
-${ option.singleton ? "" : renderRemoveFunc(option.structName)}
-${ option.singleton ? "" : renderContainFunc(option.structName)}
+${option.singleton ? "" : renderRemoveFunc(option.structName)}
+${option.singleton ? "" : renderContainFunc(option.structName)}
 }
 `;
     formatAndWriteMove(
