@@ -1,10 +1,12 @@
-export type baseType =
+import {getStructAttrs} from "../utils/renderMove/common";
+
+export type BaseType =
   | "address"
   | "bool"
   | "u8"
   | "u64"
   | "u128"
-  | "vector<address"
+  | "vector<address>"
   | "vector<bool>"
   | "vector<u8>"
   | "vector<vector<u8>>"
@@ -15,27 +17,42 @@ export type baseType =
   | "Option<u8>"
   | "Option<u64>"
   | "Option<u128>";
-export type ComponentMapType = baseType | Record<string, baseType>;
 export type SingletonType =
   | {
-      type: baseType;
+      type: BaseType;
       init: string;
     }
   | {
-      type: Record<string, baseType>;
+      type: Record<string, BaseType>;
       init: Record<string, string>;
     };
 
-// export type singletonComponentMapType = string | Record<string, string | object>
-export type singletonComponentMapType = string | Record<string, string>;
+export interface ValueSchemaType {
+    valueSchema: Record<string, string> | string;
+    ephemeral?: boolean;
+    singleton?: boolean;
+    init?: Record<string, string> | string;
+}
+
+export type ComponentMapType = BaseType | ValueSchemaType;
 
 export type ObeliskConfig = {
   name: string;
   description: string;
   systems: string[];
   components: Record<string, ComponentMapType>;
-  singletonComponents: Record<string, SingletonType>;
 };
+
+export interface RenderComponentOptions {
+    componentName: string;
+    structName: string;
+    ephemeral: boolean;
+    singleton: boolean;
+    resourceData: BaseType | Record<string, BaseType>
+    structAttrs: string[]
+    structTypes: string[]
+    init: Record<string, string> | string
+}
 
 export function isSingletonType(s: ComponentMapType | SingletonType): boolean {
   if (typeof s !== "object") {
