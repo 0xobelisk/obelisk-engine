@@ -1,33 +1,32 @@
 import {
-  RawSigner,
-  TransactionBlock,
   DevInspectResults,
-  SuiTransactionBlockResponse,
-  SuiMoveNormalizedModules,
+  RawSigner,
   SuiAddress,
+  SuiMoveNormalizedModules,
+  SuiTransactionBlockResponse,
+  TransactionBlock,
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
-import { SuiInteractor, getDefaultConnection } from './libs/suiInteractor';
+import { getDefaultConnection, SuiInteractor } from './libs/suiInteractor';
 
 import { ObeliskObjectData } from 'src/types';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import {
-  SuiMoveMoudleValueType,
   SuiMoveMoudleFuncType,
+  SuiMoveMoudleValueType,
 } from './libs/suiContractFactory/types';
 import {
-  ObeliskParams,
-  DerivePathParams,
-  SuiTxArg,
-  SuiVecTxArg,
-  SuiTxArgument,
   ContractQuery,
   ContractTx,
+  DerivePathParams,
+  FaucetNetworkType,
   MapMoudleFuncQuery,
   MapMoudleFuncTx,
-  FaucetNetworkType,
-  SuiReturnValues,
+  ObeliskParams,
+  SuiTxArg,
+  SuiTxArgument,
+  SuiVecTxArg,
 } from './types';
 import { normalizeHexAddress, numberToAddressHex } from './utils';
 import keccak256 from 'keccak256';
@@ -131,10 +130,10 @@ export class Obelisk {
     if (metadata !== undefined) {
       this.metadata = metadata as SuiMoveNormalizedModules;
       Object.values(metadata as SuiMoveNormalizedModules).forEach((value) => {
-        let data = value as SuiMoveMoudleValueType;
-        let moduleName = data.name;
+        const data = value as SuiMoveMoudleValueType;
+        const moduleName = data.name;
         Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
-          let meta = value as SuiMoveMoudleFuncType;
+          const meta = value as SuiMoveMoudleFuncType;
           meta.moudleName = moduleName;
           meta.funcName = funcName;
 
@@ -447,9 +446,9 @@ export class Obelisk {
   }
 
   async listSchemaNames(worldId: string) {
-    let worldObject = await this.getObject(worldId);
-    let newObjectContent = worldObject.objectFields;
-    return newObjectContent['compnames'];
+    const worldObject = await this.getObject(worldId);
+    const newObjectContent = worldObject.objectFields;
+    return newObjectContent['schemanames'];
   }
 
   async getEntity(
@@ -457,9 +456,9 @@ export class Obelisk {
     schemaName: string,
     entityId?: string
   ): Promise<any[] | undefined> {
-    let schemaMoudleName = `${schemaName}_schema`;
+    const schemaMoudleName = `${schemaName}_schema`;
     const tx = new TransactionBlock();
-    let params = [tx.pure(worldId)] as SuiTxArgument[];
+    const params = [tx.pure(worldId)] as SuiTxArgument[];
     if (entityId !== undefined) {
       params.push(tx.pure(entityId));
     }
@@ -468,15 +467,15 @@ export class Obelisk {
       tx,
       params
     )) as DevInspectResults;
-    let returnValue = [];
+    const returnValue = [];
 
     // "success" | "failure";
     if (getResult.effects.status.status === 'success') {
-      let resultList = getResult.results![0].returnValues!;
-      for (let res of resultList) {
+      const resultList = getResult.results![0].returnValues!;
+      for (const res of resultList) {
         const bcs = new BCS(getSuiMoveConfig());
-        let value = Uint8Array.from(res[0]);
-        let data = bcs.de(res[1], value);
+        const value = Uint8Array.from(res[0]);
+        const data = bcs.de(res[1], value);
         returnValue.push(data);
       }
       return returnValue;
@@ -490,9 +489,9 @@ export class Obelisk {
     schemaName: string,
     entityId?: string
   ): Promise<boolean | undefined> {
-    let schemaMoudleName = `${schemaName}_schema`;
+    const schemaMoudleName = `${schemaName}_schema`;
     const tx = new TransactionBlock();
-    let params = [tx.pure(worldId)] as SuiTxArgument[];
+    const params = [tx.pure(worldId)] as SuiTxArgument[];
     if (entityId !== undefined) {
       params.push(tx.pure(entityId));
     }
@@ -504,124 +503,47 @@ export class Obelisk {
 
     // "success" | "failure";
     if (getResult.effects.status.status === 'success') {
-      let res = getResult.results![0].returnValues![0];
+      const res = getResult.results![0].returnValues![0];
       const bcs = new BCS(getSuiMoveConfig());
-      let value = Uint8Array.from(res[0]);
-      let data = bcs.de(res[1], value);
-      return data;
+      const value = Uint8Array.from(res[0]);
+      return bcs.de(res[1], value);
     } else {
       return undefined;
     }
   }
 
-  async getEntities(
-    worldId: string,
-    schemaName: string,
-    cursor?: string,
-    limit?: number
-  ) {
-    let schemaMoudleName = `${schemaName}_schema`;
-
-    const tx = new TransactionBlock();
-    let params = [tx.pure(worldId)] as SuiTxArgument[];
-
-    const tableResult = (await this.query[schemaMoudleName].entities(
-      tx,
-      params
-    )) as DevInspectResults;
-    const entities = tableResult.results as SuiReturnValues;
-    const bcs = new BCS(getSuiMoveConfig());
-
-    let value = Uint8Array.from(entities[0].returnValues[0][0]);
-    let tableId = '0x' + bcs.de('address', value);
-    let dynamicFields = await this.suiInteractor.getDynamicFields(
-      tableId,
-      cursor,
-      limit
-    );
-    let objectIds = dynamicFields.data.map((field) => field.objectId);
-    let objectDatas = await this.suiInteractor.getEntitiesObjects(objectIds);
-    return {
-      data: objectDatas,
-      nextCursor: dynamicFields.nextCursor,
-      hasNextPage: dynamicFields.hasNextPage,
-    };
-  }
-
-  // async getEntity(worldId: string, schemaName: string, entityId: string) {
-  //   let checkWorldId = normalizeHexAddress(worldId);
-  //   if (checkWorldId) {
-  //     worldId = checkWorldId;
-  //   } else {
-  //     return undefined;
-  //   }
-
-  //   let checkEntityId = normalizeHexAddress(entityId);
-  //   if (checkEntityId) {
-  //     entityId = checkEntityId;
-  //   } else {
-  //     return undefined;
-  //   }
-
-  //   const parentId = await this.getSchemaTable(worldId, schemaName);
-  //   const name = {
-  //     type: 'address',
-  //     value: entityId,
-  //   } as DynamicFieldName;
-
-  //   let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
-  //     parentId,
-  //     name
-  //   );
-  //   return dynamicFieldObject;
-  // }
-
-  // async getEntityData(
+  // async getEntities(
   //   worldId: string,
   //   schemaName: string,
-  //   entityId: string
+  //   cursor?: string,
+  //   limit?: number
   // ) {
-  //   const parentId = await this.getSchemaTable(worldId, schemaName);
-  //   const name = {
-  //     type: 'address',
-  //     value: entityId,
-  //   } as DynamicFieldName;
-
-  //   let dynamicFieldObject = await this.suiInteractor.getDynamicFieldObject(
-  //     parentId,
-  //     name
-  //   );
   //   let schemaMoudleName = `${schemaName}_schema`;
 
   //   const tx = new TransactionBlock();
-  //   let params = [] as SuiTxArgument[];
+  //   let params = [tx.pure(worldId)] as SuiTxArgument[];
 
-  //   const typeResult = (await this.query[schemaMoudleName].types(
+  //   const tableResult = (await this.query[schemaonentMoudleName].entities(
   //     tx,
   //     params
   //   )) as DevInspectResults;
-  //   let typeReturn = typeResult.results as SuiReturnValues;
-  //   console.log(typeReturn[0].returnValues[0][0]);
-
-  //   const typeBCS = new BCS(getSuiMoveConfig());
-  //   let typeValue = Uint8Array.from(typeReturn[0].returnValues[0][0]);
-
-  //   let typeData = typeBCS.de('vector<vector<u8>>', typeValue);
-  //   console.log(typeData);
-  //   const entityType = String.fromCharCode(...typeData[0]);
-
-  //   let dynamicFieldContent = dynamicFieldObject.data!
-  //     .content as DynamicFieldContentType;
-
-  //   let entityValue = dynamicFieldContent.fields['value'];
+  //   const entities = tableResult.results as SuiReturnValues;
   //   const bcs = new BCS(getSuiMoveConfig());
-  //   let value = Uint8Array.from(entityValue);
-  //   console.log(entityType);
-  //   console.log(value);
 
-  //   let data = bcs.de(entityType, value);
-  //   console.log(data);
-  //   return data;
+  //   let value = Uint8Array.from(entities[0].returnValues[0][0]);
+  //   let tableId = '0x' + bcs.de('address', value);
+  //   let dynamicFields = await this.suiInteractor.getDynamicFields(
+  //     tableId,
+  //     cursor,
+  //     limit
+  //   );
+  //   let objectIds = dynamicFields.data.map((field) => field.objectId);
+  //   let objectDatas = await this.suiInteractor.getEntitiesObjects(objectIds);
+  //   return {
+  //     data: objectDatas,
+  //     nextCursor: dynamicFields.nextCursor,
+  //     hasNextPage: dynamicFields.hasNextPage,
+  //   };
   // }
 
   async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
@@ -630,10 +552,10 @@ export class Obelisk {
       cursor,
       limit
     );
-    let ownedObjectsRes: ObeliskObjectData[] = [];
+    const ownedObjectsRes: ObeliskObjectData[] = [];
 
     for (const object of ownedObjects.data) {
-      let objectDetail = await this.getObject(object.data!.objectId);
+      const objectDetail = await this.getObject(object.data!.objectId);
 
       if (
         objectDetail.objectType.split('::')[0] ===
@@ -647,7 +569,7 @@ export class Obelisk {
   }
 
   async entity_key_from_object(objectId: string) {
-    let checkObjectId = normalizeHexAddress(objectId);
+    const checkObjectId = normalizeHexAddress(objectId);
     if (checkObjectId !== null) {
       objectId = checkObjectId;
       return objectId;
@@ -657,11 +579,11 @@ export class Obelisk {
   }
 
   async entity_key_from_bytes(bytes: Uint8Array | Buffer | string) {
-    let hashBytes = keccak256(bytes);
+    const hashBytes = keccak256(bytes);
     const hashU8Array: number[] = Array.from(hashBytes);
     const bcs = new BCS(getSuiMoveConfig());
-    let value = Uint8Array.from(hashU8Array);
-    let data = bcs.de('address', value);
+    const value = Uint8Array.from(hashU8Array);
+    const data = bcs.de('address', value);
     return '0x' + data;
   }
 
@@ -671,7 +593,7 @@ export class Obelisk {
 
   async formatData(type: string, value: Buffer | number[] | Uint8Array) {
     const bcs = new BCS(getSuiMoveConfig());
-    let u8Value = Uint8Array.from(value);
+    const u8Value = Uint8Array.from(value);
     return bcs.de(type, u8Value);
   }
 }
