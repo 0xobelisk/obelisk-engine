@@ -31,10 +31,10 @@ function generateWorld(
 
     const VERSION: u64 = ${version};
 
-    /// Component does not exist
-    const ECompDoesNotExist: u64 = 0;
-    /// Component already exists
-    const ECompAlreadyExists: u64 = 1;
+    /// Schema does not exist
+    const ESchemaDoesNotExist: u64 = 0;
+    /// Schema already exists
+    const ESchemaAlreadyExists: u64 = 1;
     /// Not the right admin for this world
     const ENotAdmin: u64 = 2;
     /// Migration is not an upgrade
@@ -52,9 +52,9 @@ function generateWorld(
         name: String,
         /// Description of the world
         description: String,
-        /// Components of the world
+        /// Schemas of the world
         comps: Bag,
-        /// Component names of the world
+        /// Schema names of the world
         compnames: vector<String>,
         /// admin of the world
         admin: ID,
@@ -87,24 +87,24 @@ function generateWorld(
         _obelisk_world.compnames
     }
 
-    public fun get_comp<T : store>(_obelisk_world: &World, id: address): &T {
+    public fun get_schema<T : store>(_obelisk_world: &World, id: address): &T {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&_obelisk_world.comps, id), ECompDoesNotExist);
+        assert!(bag::contains(&_obelisk_world.comps, id), ESchemaDoesNotExist);
         bag::borrow<address, T>(&_obelisk_world.comps, id)
     }
 
-    public fun get_mut_comp<T : store>(_obelisk_world: &mut World, id: address): &mut T {
+    public fun get_mut_schema<T : store>(_obelisk_world: &mut World, id: address): &mut T {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&_obelisk_world.comps, id), ECompDoesNotExist);
+        assert!(bag::contains(&_obelisk_world.comps, id), ESchemaDoesNotExist);
         bag::borrow_mut<address, T>(&mut _obelisk_world.comps, id)
     }
 
-    public fun add_comp<T : store>(_obelisk_world: &mut World, component_name: vector<u8>, component: T){
+    public fun add_schema<T : store>(_obelisk_world: &mut World, schema_name: vector<u8>, schema: T){
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        let id = entity_key::from_bytes(component_name);
-        assert!(!bag::contains(&_obelisk_world.comps, id), ECompAlreadyExists);
-        vector::push_back(&mut _obelisk_world.compnames, string(component_name));
-        bag::add<address,T>(&mut _obelisk_world.comps, id, component);
+        let id = entity_key::from_bytes(schema_name);
+        assert!(!bag::contains(&_obelisk_world.comps, id), ESchemaAlreadyExists);
+        vector::push_back(&mut _obelisk_world.compnames, string(schema_name));
+        bag::add<address,T>(&mut _obelisk_world.comps, id, schema);
     }
 
     public fun contains(_obelisk_world: &mut World, id: address): bool {
@@ -134,23 +134,32 @@ function generateEvents(
      use std::ascii::String;
     use sui::event;
 
-    struct CompRemoveField has copy, drop {
-        _obelisk_comp_name: String,
+    struct SchemaRemoveField has copy, drop {
+        _obelisk_schema_name: String,
         _obelisk_entity_key: address
     }
 
-    struct CompSetField<T: copy + drop + store> has copy, drop {
-        _obelisk_comp_name: String,
+    struct SchemaSetField<T: copy + drop + store> has copy, drop {
+        _obelisk_schema_name: String,
         _obelisk_entity_key: address,
         data: T
     }
-
-    public fun emit_set<T: copy + drop + store>(_obelisk_comp_name: String, _obelisk_entity_key: address, data: T) {
-        event::emit(CompSetField { _obelisk_comp_name, _obelisk_entity_key, data})
+    
+    struct SchemaSetEphemeralRecord<T: copy + drop + store> has copy, drop {
+        _obelisk_schema_name: String,
+        data: T
     }
 
-    public fun emit_remove(_obelisk_comp_name: String, _obelisk_entity_key: address) {
-        event::emit(CompRemoveField { _obelisk_comp_name, _obelisk_entity_key })
+    public fun emit_set<T: copy + drop + store>(_obelisk_schema_name: String, _obelisk_entity_key: address, data: T) {
+        event::emit(SchemaSetField { _obelisk_schema_name, _obelisk_entity_key, data})
+    }
+    
+    public fun emit_ephemeral<T: copy + drop + store>(_obelisk_schema_name: String, data: T) {
+        event::emit(SchemaSetEphemeralRecord { _obelisk_schema_name, data })
+    }
+
+    public fun emit_remove(_obelisk_schema_name: String, _obelisk_entity_key: address) {
+        event::emit(SchemaRemoveField { _obelisk_schema_name, _obelisk_entity_key })
     }
 }
 `;

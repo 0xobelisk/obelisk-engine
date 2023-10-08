@@ -1,4 +1,4 @@
-module examples::single_value_comp {
+module examples::single_value_schema {
     use std::ascii::{String, string};
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
@@ -29,44 +29,41 @@ module examples::single_value_comp {
 		}
 	}
 
-
-	struct CompMetadata has store {
+	struct SchemaMetadata has store {
 		name: String,
 		data: Table<address, SingleValueData>
 	}
 
 	public fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
-		let _obelisk_component = CompMetadata {
+		let _obelisk_schema = SchemaMetadata {
 			name: string(NAME),
 			data: table::new<address, SingleValueData>(ctx)
 		};
-		table::add(&mut _obelisk_component.data, id(), new(1000));
-		world::add_comp<CompMetadata>(_obelisk_world, NAME, _obelisk_component);
+		table::add(&mut _obelisk_schema.data, id(), new(1000));
+		world::add_schema<SchemaMetadata>(_obelisk_world, NAME, _obelisk_schema);
 		events::emit_set(string(NAME), id(), new(1000));
 	}
 
 	public(friend) fun set(_obelisk_world: &mut World,  value: u64) {
-		let _obelisk_component = world::get_mut_comp<CompMetadata>(_obelisk_world, id());
+		let _obelisk_schema = world::get_mut_schema<SchemaMetadata>(_obelisk_world, id());
 		let _obelisk_data = new(value);
-		if(table::contains<address, SingleValueData>(&_obelisk_component.data, id())) {
-			*table::borrow_mut<address, SingleValueData>(&mut _obelisk_component.data, id()) = _obelisk_data;
+		if(table::contains<address, SingleValueData>(&_obelisk_schema.data, id())) {
+			*table::borrow_mut<address, SingleValueData>(&mut _obelisk_schema.data, id()) = _obelisk_data;
 		} else {
-			table::add(&mut _obelisk_component.data, id(), _obelisk_data);
+			table::add(&mut _obelisk_schema.data, id(), _obelisk_data);
 		};
 		events::emit_set(string(NAME), id(), _obelisk_data)
 	}
 
 
-
 	public fun get(_obelisk_world: &World ,): u64 {
-  		let _obelisk_component = world::get_comp<CompMetadata>(_obelisk_world, id());
-  		assert!(table::contains<address, SingleValueData>(&_obelisk_component.data, id()), EEntityDoesNotExist);
-		let _obelisk_data = table::borrow<address, SingleValueData>(&_obelisk_component.data, id());
+  		let _obelisk_schema = world::get_schema<SchemaMetadata>(_obelisk_world, id());
+  		assert!(table::contains<address, SingleValueData>(&_obelisk_schema.data, id()), EEntityDoesNotExist);
+		let _obelisk_data = table::borrow<address, SingleValueData>(&_obelisk_schema.data, id());
 		(
 			_obelisk_data.value
 		)
 	}
-
 
 
 

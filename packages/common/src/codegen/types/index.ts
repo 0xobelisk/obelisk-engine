@@ -32,17 +32,17 @@ export interface ValueSchemaType {
     init?: any;
 }
 
-export type ComponentMapType = BaseType | ValueSchemaType;
+export type SchemaMapType = BaseType | ValueSchemaType;
 
 export type ObeliskConfig = {
   name: string;
   description: string;
   systems: string[];
-  components: Record<string, ComponentMapType>;
+  schemas: Record<string, SchemaMapType>;
 };
 
-export interface RenderComponentOptions {
-    componentName: string;
+export interface RenderSchemaOptions {
+    schemaName: string;
     structName: string;
     ephemeral: boolean;
     singleton: boolean;

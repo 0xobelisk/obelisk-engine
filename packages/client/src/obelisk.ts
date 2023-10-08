@@ -446,7 +446,7 @@ export class Obelisk {
     return this.suiInteractor.getObject(worldObjectId);
   }
 
-  async listComponentNames(worldId: string) {
+  async listSchemaNames(worldId: string) {
     let worldObject = await this.getObject(worldId);
     let newObjectContent = worldObject.objectFields;
     return newObjectContent['compnames'];
@@ -454,17 +454,17 @@ export class Obelisk {
 
   async getEntity(
     worldId: string,
-    componentName: string,
+    schemaName: string,
     entityId?: string
   ): Promise<any[] | undefined> {
-    let componentMoudleName = `${componentName}_comp`;
+    let schemaMoudleName = `${schemaName}_schema`;
     const tx = new TransactionBlock();
     let params = [tx.pure(worldId)] as SuiTxArgument[];
     if (entityId !== undefined) {
       params.push(tx.pure(entityId));
     }
 
-    const getResult = (await this.query[componentMoudleName].get(
+    const getResult = (await this.query[schemaMoudleName].get(
       tx,
       params
     )) as DevInspectResults;
@@ -487,17 +487,17 @@ export class Obelisk {
 
   async containEntity(
     worldId: string,
-    componentName: string,
+    schemaName: string,
     entityId?: string
   ): Promise<boolean | undefined> {
-    let componentMoudleName = `${componentName}_comp`;
+    let schemaMoudleName = `${schemaName}_schema`;
     const tx = new TransactionBlock();
     let params = [tx.pure(worldId)] as SuiTxArgument[];
     if (entityId !== undefined) {
       params.push(tx.pure(entityId));
     }
 
-    const getResult = (await this.query[componentMoudleName].contains(
+    const getResult = (await this.query[schemaMoudleName].contains(
       tx,
       params
     )) as DevInspectResults;
@@ -516,16 +516,16 @@ export class Obelisk {
 
   async getEntities(
     worldId: string,
-    componentName: string,
+    schemaName: string,
     cursor?: string,
     limit?: number
   ) {
-    let componentMoudleName = `${componentName}_comp`;
+    let schemaMoudleName = `${schemaName}_schema`;
 
     const tx = new TransactionBlock();
     let params = [tx.pure(worldId)] as SuiTxArgument[];
 
-    const tableResult = (await this.query[componentMoudleName].entities(
+    const tableResult = (await this.query[schemaMoudleName].entities(
       tx,
       params
     )) as DevInspectResults;
@@ -548,7 +548,7 @@ export class Obelisk {
     };
   }
 
-  // async getEntity(worldId: string, componentName: string, entityId: string) {
+  // async getEntity(worldId: string, schemaName: string, entityId: string) {
   //   let checkWorldId = normalizeHexAddress(worldId);
   //   if (checkWorldId) {
   //     worldId = checkWorldId;
@@ -563,7 +563,7 @@ export class Obelisk {
   //     return undefined;
   //   }
 
-  //   const parentId = await this.getComponentTable(worldId, componentName);
+  //   const parentId = await this.getSchemaTable(worldId, schemaName);
   //   const name = {
   //     type: 'address',
   //     value: entityId,
@@ -578,10 +578,10 @@ export class Obelisk {
 
   // async getEntityData(
   //   worldId: string,
-  //   componentName: string,
+  //   schemaName: string,
   //   entityId: string
   // ) {
-  //   const parentId = await this.getComponentTable(worldId, componentName);
+  //   const parentId = await this.getSchemaTable(worldId, schemaName);
   //   const name = {
   //     type: 'address',
   //     value: entityId,
@@ -591,12 +591,12 @@ export class Obelisk {
   //     parentId,
   //     name
   //   );
-  //   let componentMoudleName = `${componentName}_comp`;
+  //   let schemaMoudleName = `${schemaName}_schema`;
 
   //   const tx = new TransactionBlock();
   //   let params = [] as SuiTxArgument[];
 
-  //   const typeResult = (await this.query[componentMoudleName].types(
+  //   const typeResult = (await this.query[schemaMoudleName].types(
   //     tx,
   //     params
   //   )) as DevInspectResults;

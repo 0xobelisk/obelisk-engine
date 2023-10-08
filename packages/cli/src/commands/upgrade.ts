@@ -29,11 +29,9 @@ const commandModule: CommandModule<Options, Options> = {
     try {
       const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
 
-      let compnames = Object.keys(obeliskConfig.components).concat(
-        Object.keys(obeliskConfig.singletonComponents)
-      );
+      let schemaNames = Object.keys(obeliskConfig.schemas)
 
-      await upgradeHandler(obeliskConfig.name, compnames, savePath);
+      await upgradeHandler(obeliskConfig.name, schemaNames, savePath);
     } catch (error: any) {
       logError(error);
       process.exit(1);

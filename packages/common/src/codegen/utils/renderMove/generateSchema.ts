@@ -12,62 +12,62 @@ import {
 } from "./common";
 
 
-export function getRenderComponentOptions(config: ObeliskConfig) {
+export function getRenderSchemaOptions(config: ObeliskConfig) {
     const options: any = [];
-    for (const componentName of Object.keys(config.components)) {
-        const componentData = config.components[componentName];
+    for (const schemaName of Object.keys(config.schemas)) {
+        const schemaData = config.schemas[schemaName];
         let resourceData: Record<string, string> | string;
         let init: any;
         let ephemeral = false;
         let singleton = false;
-        if ( typeof componentData === "string") {
-            resourceData = componentData;
+        if ( typeof schemaData === "string") {
+            resourceData = schemaData;
         } else {
-            resourceData = componentData.valueSchema;
-            init = componentData.init;
-            ephemeral = componentData.ephemeral !== undefined ? componentData.ephemeral : false;
-            singleton = componentData.singleton !== undefined ? componentData.singleton : false;
+            resourceData = schemaData.valueSchema;
+            init = schemaData.init;
+            ephemeral = schemaData.ephemeral !== undefined ? schemaData.ephemeral : false;
+            singleton = schemaData.singleton !== undefined ? schemaData.singleton : false;
         }
             options.push({
-                componentName: componentName,
-                structName: convertToCamelCase(componentName),
+                schemaName: schemaName,
+                structName: convertToCamelCase(schemaName),
                 ephemeral,
                 singleton,
                 resourceData,
                 structAttrs: renderKeyName(resourceData),
-                structTypes: renderStruct(convertToCamelCase(componentName), resourceData),
+                structTypes: renderStruct(convertToCamelCase(schemaName), resourceData),
                 init
             });
         }
     return options;
 }
 
-export function generateComponent(config: ObeliskConfig, srcPrefix: string) {
-    const options = getRenderComponentOptions(config)
+export function generateSchema(config: ObeliskConfig, srcPrefix: string) {
+    const options = getRenderSchemaOptions(config)
     for (const option of options) {
     let code = option.ephemeral
-        ? `module ${config.name}::${option.componentName}_comp {
-    use sui::event;
+        ? `module ${config.name}::${option.schemaName}_schema {
     use sui::table::{Self, Table};
-    use ${config.name}::world::{Self, World};
     use std::ascii::{String, string};
     use sui::tx_context::TxContext;
+    use ${config.name}::events;
+    use ${config.name}::world::{Self, World};
     
-    const NAME: vector<u8> = b"${option.componentName}";
+    const NAME: vector<u8> = b"${option.schemaName}";
     
 ${renderKeyName(option.resourceData)}
 ${renderStruct(option.structName, option.resourceData)}  
-\tstruct CompMetadata has store {
+\tstruct SchemaMetadata has store {
 \t\tname: String,
 \t\tdata: Table<address, ${option.structName}>
 \t}
 
 ${renderRegisterFunc(option.structName, false, option.init)}
 
-${renderEmit(option.componentName, option.structName, option.resourceData)}
+${renderEmit(option.schemaName, option.structName, option.resourceData)}
 }`
 
-        : `module ${config.name}::${option.componentName}_comp {
+        : `module ${config.name}::${option.schemaName}_schema {
     use std::ascii::{String, string};
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
@@ -81,7 +81,7 @@ ${getFriendSystem(config.name, config.systems)}
 \t/// Entity does not exist
 \tconst EEntityDoesNotExist: u64 = 0;
 
-\tconst NAME: vector<u8> = b"${option.componentName}";
+\tconst NAME: vector<u8> = b"${option.schemaName}";
 
 \tpublic fun id(): address {
 \t\tentity_key::from_bytes(NAME)
@@ -90,7 +90,7 @@ ${getFriendSystem(config.name, config.systems)}
 ${renderKeyName(option.resourceData)}
 ${renderStruct(option.structName, option.resourceData)}
 ${renderNewStructFunc(option.structName, option.resourceData)}
-\tstruct CompMetadata has store {
+\tstruct SchemaMetadata has store {
 \t\tname: String,
 \t\tdata: Table<address, ${option.structName}>
 \t}
@@ -107,7 +107,7 @@ ${ option.singleton ? "" : renderContainFunc(option.structName)}
 `;
     formatAndWriteMove(
       code,
-      `${srcPrefix}/contracts/${config.name}/sources/codegen/components/${option.componentName}.move`,
+      `${srcPrefix}/contracts/${config.name}/sources/codegen/schemas/${option.schemaName}.move`,
       "formatAndWriteMove"
     );
   }

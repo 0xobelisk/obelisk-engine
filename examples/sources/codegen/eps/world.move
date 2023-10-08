@@ -10,10 +10,10 @@ module examples::world {
 
     const VERSION: u64 = 1;
 
-    /// Component does not exist
-    const ECompDoesNotExist: u64 = 0;
-    /// Component already exists
-    const ECompAlreadyExists: u64 = 1;
+    /// Schema does not exist
+    const ESchemaDoesNotExist: u64 = 0;
+    /// Schema already exists
+    const ESchemaAlreadyExists: u64 = 1;
     /// Not the right admin for this world
     const ENotAdmin: u64 = 2;
     /// Migration is not an upgrade
@@ -31,9 +31,9 @@ module examples::world {
         name: String,
         /// Description of the world
         description: String,
-        /// Components of the world
+        /// Schemas of the world
         comps: Bag,
-        /// Component names of the world
+        /// Schema names of the world
         compnames: vector<String>,
         /// admin of the world
         admin: ID,
@@ -66,24 +66,24 @@ module examples::world {
         _obelisk_world.compnames
     }
 
-    public fun get_comp<T : store>(_obelisk_world: &World, id: address): &T {
+    public fun get_schema<T : store>(_obelisk_world: &World, id: address): &T {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&_obelisk_world.comps, id), ECompDoesNotExist);
+        assert!(bag::contains(&_obelisk_world.comps, id), ESchemaDoesNotExist);
         bag::borrow<address, T>(&_obelisk_world.comps, id)
     }
 
-    public fun get_mut_comp<T : store>(_obelisk_world: &mut World, id: address): &mut T {
+    public fun get_mut_schema<T : store>(_obelisk_world: &mut World, id: address): &mut T {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&_obelisk_world.comps, id), ECompDoesNotExist);
+        assert!(bag::contains(&_obelisk_world.comps, id), ESchemaDoesNotExist);
         bag::borrow_mut<address, T>(&mut _obelisk_world.comps, id)
     }
 
-    public fun add_comp<T : store>(_obelisk_world: &mut World, component_name: vector<u8>, component: T){
+    public fun add_schema<T : store>(_obelisk_world: &mut World, schema_name: vector<u8>, schema: T){
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        let id = entity_key::from_bytes(component_name);
-        assert!(!bag::contains(&_obelisk_world.comps, id), ECompAlreadyExists);
-        vector::push_back(&mut _obelisk_world.compnames, string(component_name));
-        bag::add<address,T>(&mut _obelisk_world.comps, id, component);
+        let id = entity_key::from_bytes(schema_name);
+        assert!(!bag::contains(&_obelisk_world.comps, id), ESchemaAlreadyExists);
+        vector::push_back(&mut _obelisk_world.compnames, string(schema_name));
+        bag::add<address,T>(&mut _obelisk_world.comps, id, schema);
     }
 
     public fun contains(_obelisk_world: &mut World, id: address): bool {

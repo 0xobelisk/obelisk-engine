@@ -1,4 +1,4 @@
-import { ComponentMapType, ObeliskConfig } from "../../types";
+import { SchemaMapType, ObeliskConfig } from "../../types";
 import { rmdirSync, existsSync } from "fs";
 import { deleteFolderRecursive } from "./common";
 import { generateSystem } from "./generateSystem";
@@ -7,8 +7,8 @@ import { generateEntityKey } from "./generateEntityKey";
 import { generateInit } from "./generateInit";
 import { generateEps } from "./generateEps";
 import {
-  generateComponent,
-} from "./generateComponent";
+  generateSchema,
+} from "./generateSchema";
 
 export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   let path = "";
@@ -28,7 +28,7 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   generateSystem(config, path);
 
   // generate codegen
-  generateComponent(config, path);
+  generateSchema(config, path);
   generateEps(config.name, path);
   generateInit(config, path);
 }

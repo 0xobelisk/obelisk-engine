@@ -1,6 +1,6 @@
 import { Obelisk } from '../src/obelisk';
 import * as process from 'process';
-import { NetworkType, ComponentContentType, SuiTxArgument } from '../src/types';
+import { NetworkType, SchemaContentType, SuiTxArgument } from '../src/types';
 import { BCS, getSuiMoveConfig, fromHEX, fromB64, fromB58 } from '@mysten/bcs';
 import { DevInspectResults, TransactionBlock, bcs } from '@mysten/sui.js';
 import { getMetadata } from '../src/metadata/index';
@@ -38,7 +38,7 @@ async function init() {
     // secretKey: privkey
   });
 
-  // let comsName = await obelisk.listComponentNames(
+  // let comsName = await obelisk.listSchemaNames(
   //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
   // );
 

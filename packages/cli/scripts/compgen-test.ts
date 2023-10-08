@@ -1,14 +1,14 @@
 import { formatAndWriteMove } from "@0xobelisk/common";
 
-type ComponentMapType = Record<string, string>;
-type ComponentValueType = string;
+type SchemaMapType = Record<string, string>;
+type SchemaValueType = string;
 
 type ConfigDataType = Record<string, string>;
 
 type ObeliskConfig = {
   name: string;
   systems: string[];
-  components: Record<string, ComponentMapType | ComponentValueType>;
+  schemas: Record<string, SchemaMapType | SchemaValueType>;
   // world 的顶级存储，适合定义world的规则，比如一个admin, 一个fee，并且可以帮你初始化数据
   // genesis_config: {
   //   admin: {
@@ -45,7 +45,7 @@ async function init() {
   let config = {
     name: "withinfinity",
     systems: ["fee_system", "home_system", "pet_system", "state_system"],
-    components: {
+    schemas: {
       // Key - Struct value
       level: {
         hunger: "u64",
@@ -69,41 +69,41 @@ async function init() {
     use sui::tx_context::TxContext;
 
     struct Entity has store  {
-        components: Bag
+        schemas: Bag
     }
 
     public fun create_entity(ctx: &mut TxContext): Entity {
         Entity {
-            components: bag::new(ctx)
+            schemas: bag::new(ctx)
         }
     }
 
-    public fun add_comp<T: store>(entity: &mut Entity, component_id: vector<u8>, component:T){
-        let components = get_mut_comps(entity);
-        bag::add(components, component_id, component);
+    public fun add_schema<T: store>(entity: &mut Entity, schema_id: vector<u8>, schema:T){
+        let schemas = get_mut_schemas(entity);
+        bag::add(schemas, schema_id, schema);
     }
 
-    public fun remove_component<T: drop + store>(entity: &mut Entity, component_id: vector<u8>){
-        let components= get_mut_comps(entity);
-        bag::remove<vector<u8>,T>(components, component_id);
+    public fun remove_schema<T: drop + store>(entity: &mut Entity, schema_id: vector<u8>){
+        let schemas= get_mut_schemas(entity);
+        bag::remove<vector<u8>,T>(schemas, schema_id);
     }
 
-    public fun get_mut_comps(entity: &mut Entity): &mut Bag {
-        &mut entity.components
+    public fun get_mut_schemas(entity: &mut Entity): &mut Bag {
+        &mut entity.schemas
     }
 
-    public fun get_comp<T: store>(entity: &Entity, component_id: vector<u8>): &T {
-        assert!(bag::contains(&entity.components, component_id),0);
-        bag::borrow<vector<u8>,T>(&entity.components, component_id)
+    public fun get_schema<T: store>(entity: &Entity, schema_id: vector<u8>): &T {
+        assert!(bag::contains(&entity.schemas, schema_id),0);
+        bag::borrow<vector<u8>,T>(&entity.schemas, schema_id)
     }
 
-    public fun get_mut_comp<T: store>(entity: &mut Entity, component_id: vector<u8>): &mut T {
-        assert!(bag::contains(&entity.components, component_id),0);
-        bag::borrow_mut<vector<u8>,T>(&mut entity.components,component_id)
+    public fun get_mut_schema<T: store>(entity: &mut Entity, schema_id: vector<u8>): &mut T {
+        assert!(bag::contains(&entity.schemas, schema_id),0);
+        bag::borrow_mut<vector<u8>,T>(&mut entity.schemas,schema_id)
     }
 
-    public fun components_length(entity: &mut Entity) : u64 {
-        bag::length(get_mut_comps(entity))
+    public fun schemas_length(entity: &mut Entity) : u64 {
+        bag::length(get_mut_schemas(entity))
     }
 }`;
   let a = formatAndWriteMove(
