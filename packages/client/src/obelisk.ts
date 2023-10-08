@@ -452,7 +452,11 @@ export class Obelisk {
     return newObjectContent['compnames'];
   }
 
-  async getEntity(worldId: string, componentName: string, entityId?: string) {
+  async getEntity(
+    worldId: string,
+    componentName: string,
+    entityId?: string
+  ): Promise<any[] | undefined> {
     let componentMoudleName = `${componentName}_comp`;
     const tx = new TransactionBlock();
     let params = [tx.pure(worldId)] as SuiTxArgument[];
@@ -475,16 +479,17 @@ export class Obelisk {
         let data = bcs.de(res[1], value);
         returnValue.push(data);
       }
+      return returnValue;
+    } else {
+      return undefined;
     }
-
-    return returnValue;
   }
 
   async containEntity(
     worldId: string,
     componentName: string,
     entityId?: string
-  ) {
+  ): Promise<boolean | undefined> {
     let componentMoudleName = `${componentName}_comp`;
     const tx = new TransactionBlock();
     let params = [tx.pure(worldId)] as SuiTxArgument[];
@@ -496,20 +501,17 @@ export class Obelisk {
       tx,
       params
     )) as DevInspectResults;
-    let returnValue = [];
 
     // "success" | "failure";
     if (getResult.effects.status.status === 'success') {
-      let resultList = getResult.results![0].returnValues!;
-      for (let res of resultList) {
-        const bcs = new BCS(getSuiMoveConfig());
-        let value = Uint8Array.from(res[0]);
-        let data = bcs.de(res[1], value);
-        returnValue.push(data);
-      }
+      let res = getResult.results![0].returnValues![0];
+      const bcs = new BCS(getSuiMoveConfig());
+      let value = Uint8Array.from(res[0]);
+      let data = bcs.de(res[1], value);
+      return data;
+    } else {
+      return undefined;
     }
-
-    return returnValue;
   }
 
   async getEntities(

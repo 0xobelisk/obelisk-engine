@@ -1,131 +1,107 @@
 module examples::single_struct_comp {
     use std::ascii::{String, string};
-    use std::option::none;
-    use std::vector;
-    use sui::bcs;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
-    use sui::table_vec::{Self, TableVec};
     use examples::entity_key;
+    use examples::events;
     use examples::world::{Self, World};
   
     // Systems
 	friend examples::example_system;
 
+	/// Entity does not exist
+	const EEntityDoesNotExist: u64 = 0;
+
 	const NAME: vector<u8> = b"single_struct";
-
-	// admin
-	// fee
-	struct CompMetadata has store {
-		id: address,
-		name: String,
-		types: vector<String>,
-		entity_key_to_index: Table<address, u64>,
-		entities: TableVec<address>,
-		data: Table<address, vector<u8>>
-	}
-
-	public fun new(ctx: &mut TxContext): CompMetadata {
-		let component = CompMetadata {
-			id: id(),
-			name: name(),
-			types: types(),
-			entity_key_to_index: table::new<address, u64>(ctx),
-			entities: table_vec::empty<address>(ctx),
-			data: table::new<address, vector<u8>>(ctx)
-		};
-		table::add(&mut component.data, id(), encode(@0x1, 100));
-		component
-	}
 
 	public fun id(): address {
 		entity_key::from_bytes(NAME)
 	}
 
-	public fun name(): String {
-		string(NAME)
+	// admin
+	// fee
+	struct SingleStructData has copy , drop, store {
+		admin: address,
+		fee: u64
 	}
 
-	public fun types(): vector<String> {
-		vector[string(b"address"), string(b"u64")]
+	public fun new(admin: address, fee: u64): SingleStructData {
+		SingleStructData {
+			admin, 
+			fee
+		}
 	}
 
-	public fun entities(world: &World): &TableVec<address> {
-		let component = world::get_comp<CompMetadata>(world, id());
-		&component.entities
+
+	struct CompMetadata has store {
+		name: String,
+		data: Table<address, SingleStructData>
 	}
 
-	public fun entity_length(world: &World): u64 {
-		let component = world::get_comp<CompMetadata>(world, id());
-		table_vec::length(&component.entities)
+	public fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
+		let _obelisk_component = CompMetadata {
+			name: string(NAME),
+			data: table::new<address, SingleStructData>(ctx)
+		};
+		table::add(&mut _obelisk_component.data, id(), new(@0x1, 100));
+		world::add_comp<CompMetadata>(_obelisk_world, NAME, _obelisk_component);
+		events::emit_set(string(NAME), id(), new(@0x1, 100));
 	}
 
-	public fun data(world: &World): &Table<address, vector<u8>> {
-		let component = world::get_comp<CompMetadata>(world, id());
-		&component.data
+	public(friend) fun set(_obelisk_world: &mut World,  admin: address, fee: u64) {
+		let _obelisk_component = world::get_mut_comp<CompMetadata>(_obelisk_world, id());
+		let _obelisk_data = new(admin, fee);
+		if(table::contains<address, SingleStructData>(&_obelisk_component.data, id())) {
+			*table::borrow_mut<address, SingleStructData>(&mut _obelisk_component.data, id()) = _obelisk_data;
+		} else {
+			table::add(&mut _obelisk_component.data, id(), _obelisk_data);
+		};
+		events::emit_set(string(NAME), id(), _obelisk_data)
 	}
 
-	public fun register(world: &mut World, ctx: &mut TxContext) {
-		world::add_comp<CompMetadata>(world, NAME, new(ctx));
-		world::emit_register_event(NAME, types());
+	public(friend) fun set_admin(_obelisk_world: &mut World,  admin: address) {
+		let _obelisk_component = world::get_mut_comp<CompMetadata>(_obelisk_world, id());
+		assert!(table::contains<address, SingleStructData>(&_obelisk_component.data, id()), EEntityDoesNotExist);
+		let _obelisk_data = table::borrow_mut<address, SingleStructData>(&mut _obelisk_component.data, id());
+		_obelisk_data.admin = admin;
+		events::emit_set(string(NAME), id(), *_obelisk_data)
 	}
 
-	public(friend) fun update(world: &mut World, admin: address, fee: u64) {
-		let component = world::get_mut_comp<CompMetadata>(world, id());
-		let data = encode(admin, fee);
-		*table::borrow_mut<address, vector<u8>>(&mut component.data, id()) = data;
-		world::emit_update_event(id(), none(), data)
-	}
-	public(friend) fun update_admin(world: &mut World, admin: address) {
-		let component = world::get_mut_comp<CompMetadata>(world, id());
-		let comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, id());
-		let (_, fee) = decode(*comp_data);
-		let data = encode(admin, fee);
-		*comp_data = data;
-		world::emit_update_event(id(), none(), data)
+	public(friend) fun set_fee(_obelisk_world: &mut World,  fee: u64) {
+		let _obelisk_component = world::get_mut_comp<CompMetadata>(_obelisk_world, id());
+		assert!(table::contains<address, SingleStructData>(&_obelisk_component.data, id()), EEntityDoesNotExist);
+		let _obelisk_data = table::borrow_mut<address, SingleStructData>(&mut _obelisk_component.data, id());
+		_obelisk_data.fee = fee;
+		events::emit_set(string(NAME), id(), *_obelisk_data)
 	}
 
-	public(friend) fun update_fee(world: &mut World, fee: u64) {
-		let component = world::get_mut_comp<CompMetadata>(world, id());
-		let comp_data = table::borrow_mut<address, vector<u8>>(&mut component.data, id());
-		let (admin, _) = decode(*comp_data);
-		let data = encode(admin, fee);
-		*comp_data = data;
-		world::emit_update_event(id(), none(), data)
-	}
 
-	public fun get(world: &World): (address,u64) {
-		let component = world::get_comp<CompMetadata>(world, id());
-		let data = table::borrow<address, vector<u8>>(&component.data, id());
-		decode(*data)
-	}
-
-	public fun get_admin(world: &World): address {
-		let component = world::get_comp<CompMetadata>(world, id());
-		let data = table::borrow<address, vector<u8>>(&component.data, id());
-		let (admin, _) = decode(*data);
-		admin
-	}
-
-	public fun get_fee(world: &World): u64 {
-		let component = world::get_comp<CompMetadata>(world, id());
-		let data = table::borrow<address, vector<u8>>(&component.data, id());
-		let (_, fee) = decode(*data);
-		fee
-	}
-
-	public fun encode(admin: address, fee: u64): vector<u8> {
-		let data = vector::empty<u8>();
-		vector::append(&mut data, bcs::to_bytes(&admin));
-		vector::append(&mut data, bcs::to_bytes(&fee));
-		data
-	}
-
-	public fun decode(bytes: vector<u8>): (address,u64) {
-		let data = bcs::new(bytes);
+	public fun get(_obelisk_world: &World ,): (address,u64) {
+  		let _obelisk_component = world::get_comp<CompMetadata>(_obelisk_world, id());
+  		assert!(table::contains<address, SingleStructData>(&_obelisk_component.data, id()), EEntityDoesNotExist);
+		let _obelisk_data = table::borrow<address, SingleStructData>(&_obelisk_component.data, id());
 		(
-			bcs::peel_address(&mut data),
-			bcs::peel_u64(&mut data)
+			_obelisk_data.admin,
+			_obelisk_data.fee
 		)
 	}
+
+
+	public fun get_admin(_obelisk_world: &World, ): address {
+		let _obelisk_component = world::get_comp<CompMetadata>(_obelisk_world, id());
+		assert!(table::contains<address, SingleStructData>(&_obelisk_component.data, id()), EEntityDoesNotExist);
+		let _obelisk_data = table::borrow<address, SingleStructData>(&_obelisk_component.data, id());
+		_obelisk_data.admin
+	}
+
+	public fun get_fee(_obelisk_world: &World, ): u64 {
+		let _obelisk_component = world::get_comp<CompMetadata>(_obelisk_world, id());
+		assert!(table::contains<address, SingleStructData>(&_obelisk_component.data, id()), EEntityDoesNotExist);
+		let _obelisk_data = table::borrow<address, SingleStructData>(&_obelisk_component.data, id());
+		_obelisk_data.fee
+	}
+
+
+
+
 }

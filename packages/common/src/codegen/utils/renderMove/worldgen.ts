@@ -8,7 +8,6 @@ import { generateInit } from "./generateInit";
 import { generateEps } from "./generateEps";
 import {
   generateComponent,
-  generateSingletonComponent,
 } from "./generateComponent";
 
 export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
@@ -30,7 +29,6 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
 
   // generate codegen
   generateComponent(config, path);
-  generateSingletonComponent(config, path);
   generateEps(config.name, path);
   generateInit(config, path);
 }

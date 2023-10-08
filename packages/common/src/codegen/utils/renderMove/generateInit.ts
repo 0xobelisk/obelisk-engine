@@ -2,7 +2,6 @@ import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
   getRegisterComponent,
-  getRegisterSingletonComponent,
   getUseComponent,
   capitalizeFirstLetter,
 } from "./common";
@@ -14,10 +13,9 @@ export function generateInit(config: ObeliskConfig, srcPrefix: string) {
     use sui::tx_context::TxContext;
     use ${config.name}::world;
 ${getUseComponent(config.name, config.components).join("\n")}
-${getUseComponent(config.name, config.singletonComponents).join("\n")}
 
     fun init(ctx: &mut TxContext) {
-        let world = world::create(string(b"${capitalizeFirstLetter(
+        let _obelisk_world = world::create(string(b"${capitalizeFirstLetter(
           config.name
         )}"), string(b"${capitalizeFirstLetter(
     config.description
@@ -25,9 +23,8 @@ ${getUseComponent(config.name, config.singletonComponents).join("\n")}
 
         // Add Component
 ${getRegisterComponent(config.components).join("\n")}
-${getRegisterSingletonComponent(config.singletonComponents).join("\n")}
 
-        transfer::public_share_object(world);
+        transfer::public_share_object(_obelisk_world);
     }
 
     #[test_only]
