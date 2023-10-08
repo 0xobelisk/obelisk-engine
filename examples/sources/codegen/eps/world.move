@@ -1,10 +1,8 @@
 module examples::world {
     use std::ascii::{String, string};
-    use std::option::Option;
     use std::vector;
     use sui::tx_context;
     use sui::transfer;
-    use sui::event;
     use sui::tx_context::TxContext;
     use sui::bag::{Self, Bag};
     use sui::object::{Self, UID, ID};
@@ -43,34 +41,11 @@ module examples::world {
         version: u64
     }
 
-    struct CompRegister has copy, drop {
-        comp: address,
-        compname: String,
-        types: vector<String>
-    }
-
-    struct CompRemoveField has copy, drop {
-        comp: address,
-        key: address
-    }
-
-    struct CompAddField has copy, drop {
-        comp: address,
-        key: address,
-        data: vector<u8>
-    }
-
-    struct CompUpdateField has copy, drop {
-        comp: address,
-        key: Option<address>,
-        data: vector<u8>
-    }
-
     public fun create(name: String, description: String, ctx: &mut TxContext): World {
         let admin = AdminCap {
             id: object::new(ctx),
         };
-        let world = World {
+        let _obelisk_world = World {
             id: object::new(ctx),
             name,
             description,
@@ -80,63 +55,45 @@ module examples::world {
             version: VERSION
         };
         transfer::transfer(admin, tx_context::sender(ctx));
-        world
+        _obelisk_world
     }
 
-    public fun info(world: &World): (String, String, u64) {
-        (world.name, world.description, world.version)
+    public fun info(_obelisk_world: &World): (String, String, u64) {
+        (_obelisk_world.name, _obelisk_world.description, _obelisk_world.version)
+    }
+    
+    public fun compnames(_obelisk_world: &World): vector<String> {
+        _obelisk_world.compnames
     }
 
-    public fun compnames(world: &World): vector<String> {
-        world.compnames
+    public fun get_comp<T : store>(_obelisk_world: &World, id: address): &T {
+        assert!(_obelisk_world.version == VERSION, EWrongVersion);
+        assert!(bag::contains(&_obelisk_world.comps, id), ECompDoesNotExist);
+        bag::borrow<address, T>(&_obelisk_world.comps, id)
     }
 
-    public fun get_comp<T : store>(world: &World, id: address): &T {
-        assert!(world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&world.comps, id), ECompDoesNotExist);
-        bag::borrow<address, T>(&world.comps, id)
+    public fun get_mut_comp<T : store>(_obelisk_world: &mut World, id: address): &mut T {
+        assert!(_obelisk_world.version == VERSION, EWrongVersion);
+        assert!(bag::contains(&_obelisk_world.comps, id), ECompDoesNotExist);
+        bag::borrow_mut<address, T>(&mut _obelisk_world.comps, id)
     }
 
-    public fun get_mut_comp<T : store>(world: &mut World, id: address): &mut T {
-        assert!(world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&world.comps, id), ECompDoesNotExist);
-        bag::borrow_mut<address, T>(&mut world.comps, id)
-    }
-
-    public fun add_comp<T : store>(world: &mut World, component_name: vector<u8>, component: T){
-        assert!(world.version == VERSION, EWrongVersion);
+    public fun add_comp<T : store>(_obelisk_world: &mut World, component_name: vector<u8>, component: T){
+        assert!(_obelisk_world.version == VERSION, EWrongVersion);
         let id = entity_key::from_bytes(component_name);
-        assert!(!bag::contains(&world.comps, id), ECompAlreadyExists);
-        vector::push_back(&mut world.compnames, string(component_name));
-        bag::add<address,T>(&mut world.comps, id, component);
+        assert!(!bag::contains(&_obelisk_world.comps, id), ECompAlreadyExists);
+        vector::push_back(&mut _obelisk_world.compnames, string(component_name));
+        bag::add<address,T>(&mut _obelisk_world.comps, id, component);
     }
 
-    public fun contains(world: &mut World, id: address): bool {
-        assert!(world.version == VERSION, EWrongVersion);
-        bag::contains(&mut world.comps, id)
+    public fun contains(_obelisk_world: &mut World, id: address): bool {
+        assert!(_obelisk_world.version == VERSION, EWrongVersion);
+        bag::contains(&mut _obelisk_world.comps, id)
     }
 
-    public fun emit_register_event(component_name: vector<u8>, types: vector<String>) {
-        let comp = entity_key::from_bytes(component_name);
-        let compname = string(component_name);
-        event::emit(CompRegister { comp,  compname, types})
-    }
-
-    public fun emit_remove_event(comp: address, key: address) {
-        event::emit(CompRemoveField { comp, key })
-    }
-
-    public fun emit_add_event(comp: address, key: address, data: vector<u8>) {
-        event::emit(CompAddField { comp, key, data})
-    }
-
-    public fun emit_update_event(comp: address, key: Option<address>, data: vector<u8>) {
-        event::emit(CompUpdateField { comp, key, data})
-    }
-
-    entry fun migrate(world: &mut World, admin_cap: &AdminCap) {
-        assert!(world.admin == object::id(admin_cap), ENotAdmin);
-        assert!(world.version < VERSION, ENotUpgrade);
-        world.version = VERSION;
+    entry fun migrate(_obelisk_world: &mut World, admin_cap: &AdminCap) {
+        assert!(_obelisk_world.admin == object::id(admin_cap), ENotAdmin);
+        assert!(_obelisk_world.version < VERSION, ENotUpgrade);
+        _obelisk_world.version = VERSION;
     }
 }
