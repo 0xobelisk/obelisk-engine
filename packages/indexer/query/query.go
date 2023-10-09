@@ -34,19 +34,19 @@ func (q *QueryServer) Start() {
 }
 
 func (q *QueryServer) initRouter() {
-	q.httpServer.GET("/get_comp_entities", q.GetComps)
+	q.httpServer.GET("/get_schema_entities", q.GetComps)
 }
 
 func (q *QueryServer) GetComps(c *gin.Context) {
 	packageId := c.Query("package_id")
-	compName := c.Query("comp_name")
+	schemaName := c.Query("schema_name")
 	entityKey := c.Query("entity_key")
 
-	if packageId == "" || compName == "" {
+	if packageId == "" || schemaName == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing required parameters"})
 		return
 	}
-	data, err := q.getCompsFromDB(packageId, compName, entityKey)
+	data, err := q.getCompsFromDB(packageId, schemaName, entityKey)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -55,8 +55,8 @@ func (q *QueryServer) GetComps(c *gin.Context) {
 	c.JSON(200, gin.H{"data": data})
 }
 
-func (q *QueryServer) getCompsFromDB(packageId string, compName string, entityKey string) ([]types.CompData, error) {
-	events, err := q.db.QueryCompEntities(packageId, compName, entityKey)
+func (q *QueryServer) getCompsFromDB(packageId string, schemaName string, entityKey string) ([]types.CompData, error) {
+	events, err := q.db.QueryCompEntities(packageId, schemaName, entityKey)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (q *QueryServer) getCompsFromDB(packageId string, compName string, entityKe
 	var comps []types.CompData
 	for _, event := range events {
 		comp := types.CompData{
-			CompName:    event.CompName,
+			SchemaName:  event.SchemaName,
 			PackageId:   event.PackageId,
 			EntityKey:   event.EntityKey,
 			TimestampMs: event.TimestampMs,
