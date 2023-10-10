@@ -11,10 +11,10 @@ export function generateEps(
 }
 
 function generateWorld(
-    projectName: string,
-    srcPrefix: string,
-    version?: number
-) {undefined
+  projectName: string,
+  srcPrefix: string,
+  version?: number
+) {
   if (version === undefined) {
     version = 1;
   }
@@ -60,6 +60,12 @@ function generateWorld(
         admin: ID,
         /// Version of the world
         version: u64
+    }
+    
+    struct CompRegister has copy, drop {
+        comp: address,
+        compname: String,
+        types: vector<String>
     }
 
     public fun create(name: String, description: String, ctx: &mut TxContext): World {
@@ -111,6 +117,12 @@ function generateWorld(
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
         bag::contains(&mut _obelisk_world.schemas, id)
     }
+    
+    public fun emit_register_event(component_name: vector<u8>, types: vector<String>) {
+        let comp = entity_key::from_bytes(component_name);
+        let compname = string(component_name);
+        event::emit(CompRegister { comp,  compname, types})
+    }
 
     entry fun migrate(_obelisk_world: &mut World, admin_cap: &AdminCap) {
         assert!(_obelisk_world.admin == object::id(admin_cap), ENotAdmin);
@@ -120,16 +132,13 @@ function generateWorld(
 }
 `;
   formatAndWriteMove(
-      code,
-      `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/world.move`,
-      "formatAndWriteMove"
+    code,
+    `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/world.move`,
+    "formatAndWriteMove"
   );
 }
 
-function generateEvents(
-    projectName: string,
-    srcPrefix: string,
-) {
+function generateEvents(projectName: string, srcPrefix: string) {
   let code = `module ${projectName}::events {
      use std::ascii::String;
     use sui::event;
@@ -164,9 +173,8 @@ function generateEvents(
 }
 `;
   formatAndWriteMove(
-      code,
-      `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/events.move`,
-      "formatAndWriteMove"
+    code,
+    `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/events.move`,
+    "formatAndWriteMove"
   );
 }
-

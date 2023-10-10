@@ -7,7 +7,12 @@ import { pathToFileURL } from "url";
 import os from "os";
 
 // In order of preference files are checked
-const configFiles = ["obelisk.config.js", "obelisk.config.mjs", "obelisk.config.ts", "obelisk.config.mts"];
+const configFiles = [
+  "obelisk.config.js",
+  "obelisk.config.mjs",
+  "obelisk.config.ts",
+  "obelisk.config.mts",
+];
 const TEMP_CONFIG = "obelisk.config.example.mjs";
 
 export async function loadConfig(configPath?: string): Promise<unknown> {
@@ -34,7 +39,10 @@ export async function loadConfig(configPath?: string): Promise<unknown> {
   }
 }
 
-export async function resolveConfigPath(configPath: string | undefined, toFileURL?: boolean) {
+export async function resolveConfigPath(
+  configPath: string | undefined,
+  toFileURL?: boolean
+) {
   if (configPath === undefined) {
     configPath = await getUserConfigPath();
   } else {
@@ -46,7 +54,9 @@ export async function resolveConfigPath(configPath: string | undefined, toFileUR
 
   // Add `file:///` for Windows support
   // (see https://github.com/nodejs/node/issues/31710)
-  return toFileURL && os.platform() === "win32" ? pathToFileURL(configPath).href : configPath;
+  return toFileURL && os.platform() === "win32"
+    ? pathToFileURL(configPath).href
+    : configPath;
 }
 
 async function getUserConfigPath() {

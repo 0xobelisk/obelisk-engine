@@ -1,6 +1,6 @@
 import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
-import { rmdirSync, existsSync } from "fs";
+import { existsSync } from "fs";
 
 export function generateSystem2(config: ObeliskConfig, srcPrefix: string) {
   config.systems.map((systemName) => {

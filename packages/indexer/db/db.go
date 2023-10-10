@@ -50,7 +50,7 @@ func NewDB(Path string) (*DB, error) {
 // insert or update event
 func (db *DB) UpsertCompEntity(event *models.Event) error {
 	var existingEvent models.Event
-	err := db.Where("package_id = ? AND comp_name = ? AND entity_key = ?", event.PackageId, event.CompName, event.EntityKey).First(&existingEvent).Error
+	err := db.Where("package_id = ? AND schema_name = ? AND entity_key = ?", event.PackageId, event.SchemaName, event.EntityKey).First(&existingEvent).Error
 
 	if err == nil {
 		existingEvent.TimestampMs = event.TimestampMs
@@ -64,21 +64,21 @@ func (db *DB) UpsertCompEntity(event *models.Event) error {
 }
 
 func (db *DB) DeleteCompEntity(event *models.Event) error {
-	if err := db.Where("package_id = ? AND comp_name = ? AND entity_key = ?", event.PackageId, event.CompName, event.EntityKey).First(event).Error; err != nil {
+	if err := db.Where("package_id = ? AND schema_name = ? AND entity_key = ?", event.PackageId, event.SchemaName, event.EntityKey).First(event).Error; err != nil {
 		return errors.New("event not found")
 	}
 	return db.Delete(event).Error
 }
 
-func (db *DB) QueryCompEntities(packageId string, compName string, entityKey string) ([]models.Event, error) {
+func (db *DB) QueryCompEntities(packageId string, schemaName string, entityKey string) ([]models.Event, error) {
 	var events []models.Event
 
 	var err error
 	if entityKey != "" {
-		err = db.Where("package_id = ? AND comp_name = ? AND entity_key = ?",
-			packageId, compName, entityKey).Find(&events).Error
+		err = db.Where("package_id = ? AND schema_name = ? AND entity_key = ?",
+			packageId, schemaName, entityKey).Find(&events).Error
 	} else {
-		err = db.Where("package_id = ? AND comp_name = ? ", packageId, compName).Find(&events).Error
+		err = db.Where("package_id = ? AND schema_name = ? ", packageId, schemaName).Find(&events).Error
 	}
 
 	if err != nil {

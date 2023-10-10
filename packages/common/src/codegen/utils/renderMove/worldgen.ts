@@ -6,9 +6,7 @@ import { generateToml } from "./generateToml";
 import { generateEntityKey } from "./generateEntityKey";
 import { generateInit } from "./generateInit";
 import { generateEps } from "./generateEps";
-import {
-  generateSchema,
-} from "./generateSchema";
+import { generateSchema } from "./generateSchema";
 
 export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   let path = "";

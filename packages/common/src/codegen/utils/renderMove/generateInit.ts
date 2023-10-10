@@ -17,9 +17,7 @@ ${getUseSchema(config.name, config.schemas).join("\n")}
     fun init(ctx: &mut TxContext) {
         let _obelisk_world = world::create(string(b"${capitalizeFirstLetter(
           config.name
-        )}"), string(b"${capitalizeFirstLetter(
-    config.description
-  )}"),ctx);
+        )}"), string(b"${capitalizeFirstLetter(config.description)}"),ctx);
 
         // Add Schema
 ${getRegisterSchema(config.schemas).join("\n")}
