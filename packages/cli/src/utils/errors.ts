@@ -11,6 +11,10 @@ export class ObeliskCliError extends Error {
   name = "ObeliskCliError";
 }
 
+export class FsIibError extends Error {
+  name = "FsIibError";
+}
+
 export function logError(error: unknown) {
   if (error instanceof ValidationError) {
     console.log(chalk.redBright(error.message));
@@ -25,7 +29,11 @@ export function logError(error: unknown) {
     console.log(chalk.red(error.message));
     console.log("");
     // TODO add docs to the website and update the link to the specific page
-    console.log(chalk.blue(`To learn more about Obelisk's configuration, please go to https://github.com/0xobelisk`));
+    console.log(
+      chalk.blue(
+        `To learn more about Obelisk's configuration, please go to https://github.com/0xobelisk`
+      )
+    );
   } else if (error instanceof ObeliskCliError) {
     console.log(chalk.red(error));
   } else {

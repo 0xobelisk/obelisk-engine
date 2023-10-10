@@ -4,8 +4,7 @@ import { formatAndWriteMove } from "../formatAndWrite";
 export function generateIdConfig(
   network: string,
   packageId: string,
-  worldId: string,
-  savePath: string
+  worldId: string
 ) {
   let code = `type NetworkType = 'testnet' | 'mainnet' | 'devnet' | 'localnet';
 
@@ -21,7 +20,7 @@ export {
 }
 `;
   const path = process.cwd();
-  console.log(path)
+  console.log(path);
   formatAndWriteMove(code, `${path}/src/chain/config.ts`, "formatAndWriteMove");
 }
 

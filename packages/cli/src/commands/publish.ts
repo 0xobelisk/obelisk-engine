@@ -1,10 +1,11 @@
 import type { CommandModule } from "yargs";
 import { logError } from "../utils/errors";
 import { publishHandler } from "../utils";
+import { loadConfig, ObeliskConfig } from "@0xobelisk/common";
 
 type Options = {
   network: any;
-  path?: string;
+  configPath: string;
 };
 
 const commandModule: CommandModule<Options, Options> = {
@@ -14,18 +15,23 @@ const commandModule: CommandModule<Options, Options> = {
 
   builder(yargs) {
     return yargs.options({
+      configPath: {
+        type: "string",
+        default: "obelisk.config.ts",
+        decs: "Path to the config file",
+      },
       network: {
         type: "string",
         choices: ["mainnet", "testnet", "devnet", "localnet"],
         desc: "Network of the node (mainnet/testnet/devnet/localnet)",
       },
-      path: { type: "string", desc: "Path to the save template file" },
     });
   },
 
-  async handler({ network, path }) {
+  async handler({ network, configPath }) {
     try {
-      await publishHandler(network, path);
+      const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
+      await publishHandler(obeliskConfig.name, network);
     } catch (error: any) {
       logError(error);
       process.exit(1);

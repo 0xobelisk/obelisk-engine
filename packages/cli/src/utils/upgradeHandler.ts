@@ -1,20 +1,19 @@
-import { execSync } from "child_process";
 import { TransactionBlock, UpgradePolicy } from "@mysten/sui.js/transactions";
-import * as fs from "fs";
-
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-
-import chalk from "chalk";
-
-import { ObeliskCliError } from "./errors";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
-import { validatePrivateKey } from "./validatePrivateKey";
+import { execSync } from "child_process";
+import chalk from "chalk";
+import { ObeliskCliError } from "./errors";
 import {
-  generateIdConfig,
-  generateEps,
+  updateVersionInFile,
+  getNetwork,
+  getOldPackageId,
+  getVersion,
+  getWorldId,
+  getUpgradeCap,
   saveContractData,
-} from "@0xobelisk/common";
-import {updateVersionInFile} from "./publishHandler";
+  validatePrivateKey,
+} from "./utils";
 
 type ObjectContent = {
   type: string;
@@ -25,9 +24,8 @@ type ObjectContent = {
 
 export async function upgradeHandler(
   name: string,
-  schemaNames: string[],
-  // network: "mainnet" | "testnet" | "devnet" | "localnet",
-  savePath?: string | undefined
+  schemaNames: string[]
+  // savePath?: string | undefined
 ) {
   const path = process.cwd();
   const projectPath = `${path}/contracts/${name}`;
@@ -58,7 +56,7 @@ in your contracts directory to use the default sui private key.`
   const upgradeCap = await getUpgradeCap(projectPath);
 
   const newVersion = oldVersion + 1;
-  await updateVersionInFile(`${projectPath}/sources/codegen/eps/world.move`, newVersion.toString());
+  await updateVersionInFile(projectPath, newVersion.toString());
 
   try {
     console.log(
@@ -148,9 +146,9 @@ in your contracts directory to use the default sui private key.`
       newUpgradeCap,
       newVersion
     );
-    if (savePath !== undefined) {
-      generateIdConfig(network, newPackageId, worldId, savePath);
-    }
+    // if (savePath !== undefined) {
+    //   generateIdConfig(network, newPackageId, worldId);
+    // }
 
     const migrateTx = new TransactionBlock();
 
@@ -261,71 +259,9 @@ in your contracts directory to use the default sui private key.`
       upgradeCap,
       newVersion
     );
-    if (savePath !== undefined) {
-      generateIdConfig(network, oldPackageId, worldId, savePath);
-    }
-    await updateVersionInFile(`${projectPath}/sources/codegen/eps/world.move`, oldVersion.toString());
+    // if (savePath !== undefined) {
+    //   generateIdConfig(network, oldPackageId, worldId);
+    // }
+    await updateVersionInFile(projectPath, oldVersion.toString());
   }
-}
-
-function getVersion(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/version`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getNetwork(
-  projectPath: string
-): Promise<"mainnet" | "testnet" | "devnet" | "localnet"> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/network`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data as "mainnet" | "testnet" | "devnet" | "localnet");
-      }
-    });
-  });
-}
-
-function getOldPackageId(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/package_id`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getWorldId(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/world_id`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getUpgradeCap(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/upgrade_cap`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
 }
