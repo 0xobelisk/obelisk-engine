@@ -14,6 +14,7 @@ import {
   generateEps,
   saveContractData,
 } from "@0xobelisk/common";
+import {updateVersionInFile} from "./publishHandler";
 
 type ObjectContent = {
   type: string;
@@ -57,7 +58,7 @@ in your contracts directory to use the default sui private key.`
   const upgradeCap = await getUpgradeCap(projectPath);
 
   const newVersion = oldVersion + 1;
-  generateEps(name, path, newVersion);
+  await updateVersionInFile(`${projectPath}/sources/codegen/eps/world.move`, newVersion.toString());
 
   try {
     console.log(
@@ -73,7 +74,7 @@ in your contracts directory to use the default sui private key.`
     );
     const tx = new TransactionBlock();
 
-    tx.setGasBudget(10000000000);
+    tx.setGasBudget(5000000000);
 
     const ticket = tx.moveCall({
       target: "0x2::package::authorize_upgrade",
@@ -153,7 +154,7 @@ in your contracts directory to use the default sui private key.`
 
     const migrateTx = new TransactionBlock();
 
-    migrateTx.setGasBudget(10000000000);
+    migrateTx.setGasBudget(5000000000);
 
     migrateTx.moveCall({
       target: `${newPackageId}::world::migrate`,
@@ -197,8 +198,9 @@ in your contracts directory to use the default sui private key.`
       );
     }
 
+    console.log(newObjectContent.fields)
     const uniqueSchema: string[] = schemaNames.filter(
-      (item) => !newObjectContent.fields["schemaNames"].includes(item)
+      (item) => !newObjectContent.fields["schema_names"].includes(item)
     );
 
     console.log("\n----- new schema -----");
@@ -207,7 +209,7 @@ in your contracts directory to use the default sui private key.`
     for (const newSchema of uniqueSchema) {
       const registerTx = new TransactionBlock();
 
-      registerTx.setGasBudget(10000000000);
+      registerTx.setGasBudget(5000000000);
 
       registerTx.moveCall({
         target: `${newPackageId}::${newSchema}_schema::register`,
@@ -263,7 +265,7 @@ in your contracts directory to use the default sui private key.`
     if (savePath !== undefined) {
       generateIdConfig(network, oldPackageId, worldId, savePath);
     }
-    generateEps(name, path, oldVersion);
+    await updateVersionInFile(`${projectPath}/sources/codegen/eps/world.move`, oldVersion.toString());
   }
 }
 

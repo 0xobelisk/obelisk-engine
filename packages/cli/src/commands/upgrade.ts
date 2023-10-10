@@ -5,8 +5,7 @@ import { ObeliskConfig } from "@0xobelisk/common";
 import { loadConfig } from "@0xobelisk/common";
 
 type Options = {
-  configPath: string;
-  savePath?: string;
+  path?: string;
 };
 
 const commandModule: CommandModule<Options, Options> = {
@@ -16,22 +15,18 @@ const commandModule: CommandModule<Options, Options> = {
 
   builder(yargs) {
     return yargs.options({
-      configPath: {
-        type: "string",
-        default: ".",
-        decs: "Path to the config file",
-      },
-      savePath: { type: "string", desc: "Path to the save template file" },
+      path: { type: "string", desc: "Path to the save template file" },
     });
   },
 
-  async handler({ configPath, savePath }) {
+  async handler({ path }) {
     try {
-      const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
+
+      const obeliskConfig = (await loadConfig(process.cwd() + "/obelisk.config.ts")) as ObeliskConfig;
 
       let schemaNames = Object.keys(obeliskConfig.schemas)
 
-      await upgradeHandler(obeliskConfig.name, schemaNames, savePath);
+      await upgradeHandler(obeliskConfig.name, schemaNames, path);
     } catch (error: any) {
       logError(error);
       process.exit(1);

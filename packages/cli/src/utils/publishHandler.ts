@@ -14,9 +14,9 @@ import {
   generateEps,
 } from "@0xobelisk/common";
 import fs from "fs";
+import * as fsAsync from 'fs/promises';
 
 export async function publishHandler(
-  name: string,
   network: "mainnet" | "testnet" | "devnet" | "localnet",
   savePath?: string | undefined
 ) {
@@ -35,14 +35,14 @@ in your contracts directory to use the default sui private key.`
     throw new ObeliskCliError(`Please check your privateKey.`);
   }
   const privateKeyRaw = Buffer.from(privateKeyFormat as string, "hex");
-  // const keypair = Ed25519Keypair.deriveKeypair(privateKey);
-  // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
-  // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
   const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
   const client = new SuiClient({
     url: getFullnodeUrl(network),
   });
-  generateEps(name, path, 1);
+
+  // Set version 1
+  const name = fs.readdirSync(path + "/contracts")[0]
+  await updateVersionInFile(path + `/contracts/${name}/sources/codegen/eps/world.move`, "1");
 
   const { modules, dependencies } = JSON.parse(
     execSync(
@@ -103,3 +103,21 @@ in your contracts directory to use the default sui private key.`
     generateIdConfig(network, packageId, worldId, savePath);
   }
 }
+
+export async function updateVersionInFile(filePath: string, newVersion: string) {
+  try {
+    // 读取文件
+    const data = await fsAsync.readFile(filePath, 'utf8');
+
+    // 更新数据
+    const updatedData = data.replace(/const VERSION: u64 = \d+;/, `const VERSION: u64 = ${newVersion};`);
+
+    // 写入文件
+    await fsAsync.writeFile(filePath, updatedData, 'utf8');
+
+    console.log('Version updated in the file.');
+  } catch (err) {
+    console.error('Error updating the file:', err);
+  }
+}
+

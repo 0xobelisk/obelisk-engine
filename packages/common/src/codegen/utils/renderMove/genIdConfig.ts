@@ -21,7 +21,8 @@ export {
 }
 `;
   const path = process.cwd();
-  formatAndWriteMove(code, `${path}/${savePath}`, "formatAndWriteMove");
+  console.log(path)
+  formatAndWriteMove(code, `${path}/src/chain/config.ts`, "formatAndWriteMove");
 }
 
 export function saveContractData(
