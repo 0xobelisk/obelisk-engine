@@ -40,7 +40,6 @@ func (p *Parser) Start() {
 }
 
 func (p *Parser) parseEvent(ev *types.SuiEvent) error {
-
 	typ := types.MatchEventType(ev.Type)
 	if typ == types.EVENT_UNKNOW {
 		return nil
@@ -110,3 +109,4 @@ func (p *Parser) parseRemoveEvent(e *models.Event) error {
 func (p *Parser) parseSetEphemeralEvent(e *models.Event) error {
 	return nil
 }
+

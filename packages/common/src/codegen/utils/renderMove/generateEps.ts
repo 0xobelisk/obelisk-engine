@@ -15,6 +15,15 @@ function generateWorld(
     srcPrefix: string,
     version?: number
 ) {
+  generateWorld(projectName, srcPrefix, version);
+  generateEvents(projectName, srcPrefix);
+}
+
+function generateWorld(
+  projectName: string,
+  srcPrefix: string,
+  version?: number
+) {
   if (version === undefined) {
     version = 1;
   }

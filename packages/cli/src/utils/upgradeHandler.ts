@@ -198,7 +198,6 @@ in your contracts directory to use the default sui private key.`
       );
     }
 
-    console.log(newObjectContent.fields)
     const uniqueSchema: string[] = schemaNames.filter(
       (item) => !newObjectContent.fields["schema_names"].includes(item)
     );

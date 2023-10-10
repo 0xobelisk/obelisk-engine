@@ -21,7 +21,6 @@ const commandModule: CommandModule<Options, Options> = {
 
   async handler({ path }) {
     try {
-
       const obeliskConfig = (await loadConfig(process.cwd() + "/obelisk.config.ts")) as ObeliskConfig;
 
       let schemaNames = Object.keys(obeliskConfig.schemas)
