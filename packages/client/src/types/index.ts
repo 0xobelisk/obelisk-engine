@@ -89,15 +89,21 @@ export interface MessageMeta {
 }
 
 export interface ContractQuery extends MessageMeta {
-  (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean): Promise<
-    DevInspectResults | TransactionBlock
-  >;
+  (
+    tx: TransactionBlock,
+    params: SuiTxArgument[],
+    typeArgs?: string[],
+    isRaw?: boolean
+  ): Promise<DevInspectResults | TransactionBlock>;
 }
 
 export interface ContractTx extends MessageMeta {
-  (tx: TransactionBlock, params: SuiTxArgument[], isRaw?: boolean):
-    | SuiTransactionBlockResponse
-    | TransactionBlock;
+  (
+    tx: TransactionBlock,
+    params: SuiTxArgument[],
+    typeArgs?: string[],
+    isRaw?: boolean
+  ): SuiTransactionBlockResponse | TransactionBlock;
 }
 
 export type MapMessageTx = Record<string, ContractTx>;

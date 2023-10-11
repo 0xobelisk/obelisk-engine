@@ -26,10 +26,10 @@ export type SingletonType =
     };
 
 export interface ValueSchemaType {
-    valueSchema: Record<string, BaseType> | BaseType;
-    ephemeral?: boolean;
-    singleton?: boolean;
-    init?: any;
+  valueSchema: Record<string, BaseType> | BaseType;
+  ephemeral?: boolean;
+  singleton?: boolean;
+  init?: any;
 }
 
 export type SchemaMapType = BaseType | ValueSchemaType;
@@ -42,12 +42,12 @@ export type ObeliskConfig = {
 };
 
 export interface RenderSchemaOptions {
-    schemaName: string;
-    structName: string;
-    ephemeral: boolean;
-    singleton: boolean;
-    resourceData: BaseType | Record<string, BaseType>
-    structAttrs: string[]
-    structTypes: string[]
-    init: any
+  schemaName: string;
+  structName: string;
+  ephemeral: boolean;
+  singleton: boolean;
+  resourceData: BaseType | Record<string, BaseType>;
+  structAttrs: string[];
+  structTypes: string[];
+  init: any;
 }
