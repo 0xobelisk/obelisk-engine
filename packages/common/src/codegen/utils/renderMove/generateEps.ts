@@ -2,18 +2,9 @@ import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 
 export function generateEps(
-    projectName: string,
-    srcPrefix: string,
-    version?: number
-) {
-  generateWorld(projectName, srcPrefix, version);
-  generateEvents(projectName, srcPrefix);
-}
-
-function generateWorld(
-    projectName: string,
-    srcPrefix: string,
-    version?: number
+  projectName: string,
+  srcPrefix: string,
+  version?: number
 ) {
   generateWorld(projectName, srcPrefix, version);
   generateEvents(projectName, srcPrefix);
@@ -129,9 +120,9 @@ function generateWorld(
 }
 `;
   formatAndWriteMove(
-      code,
-      `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/world.move`,
-      "formatAndWriteMove"
+    code,
+    `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/world.move`,
+    "formatAndWriteMove"
   );
 }
 
@@ -170,8 +161,8 @@ function generateEvents(projectName: string, srcPrefix: string) {
 }
 `;
   formatAndWriteMove(
-      code,
-      `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/events.move`,
-      "formatAndWriteMove"
+    code,
+    `${srcPrefix}/contracts/${projectName}/sources/codegen/eps/events.move`,
+    "formatAndWriteMove"
   );
 }
