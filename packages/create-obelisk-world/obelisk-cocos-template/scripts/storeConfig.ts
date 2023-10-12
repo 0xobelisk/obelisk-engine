@@ -1,7 +1,7 @@
 import * as fsAsync from "fs/promises";
 import { mkdirSync, writeFileSync } from "fs";
 import { exit } from "process";
-import { obeliskConfig } from "../obelisk.config";
+import { obeliskConfig } from "../assets/Scripts/obelisk.config";
 import { dirname } from "path";
 
 type DeploymentJsonType = {
