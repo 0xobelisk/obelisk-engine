@@ -2,15 +2,15 @@ import {useAtom} from "jotai";
 import React, {Fragment, useEffect} from "react";
 import Link from "next/link";
 import {Dialog,Transition} from "@headlessui/react";
-import {OpenBoxState, SellPop_up_boxState, SellState} from "../../jotai";
+import {OpenBoxState, SellPopUpBoxState, SellState} from "../../jotai";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
 }
 
 //右侧弹出框
-const Pop_up_box = () =>{
-    const [pop_up_boxState,setSop_up_boxState] = useAtom(SellPop_up_boxState)
+const PopUpBox = () =>{
+    const [pop_up_boxState,setSop_up_boxState] = useAtom(SellPopUpBoxState)
     const [pop_up_boxData,] =useAtom(SellState)
     let time
     useEffect(()=>{
@@ -144,6 +144,6 @@ const Loading = () =>{
         </>
     )
 }
-export {Pop_up_box,Loading}
+export {PopUpBox,Loading}
 
 

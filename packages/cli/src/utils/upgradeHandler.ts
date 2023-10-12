@@ -24,8 +24,8 @@ type ObjectContent = {
 
 export async function upgradeHandler(
   name: string,
+  network: "mainnet" | "testnet" | "devnet" | "localnet",
   schemaNames: string[]
-  // savePath?: string | undefined
 ) {
   const path = process.cwd();
   const projectPath = `${path}/contracts/${name}`;
@@ -44,16 +44,15 @@ in your contracts directory to use the default sui private key.`
   const privateKeyRaw = Buffer.from(privateKeyFormat as string, "hex");
   const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
 
-  const network = await getNetwork(projectPath);
+  // const network = await getNetwork(projectPath);
   const client = new SuiClient({
     url: getFullnodeUrl(network),
   });
 
-  let oldVersion = Number(await getVersion(projectPath));
-
-  const oldPackageId = await getOldPackageId(projectPath);
-  const worldId = await getWorldId(projectPath);
-  const upgradeCap = await getUpgradeCap(projectPath);
+  let oldVersion = Number(await getVersion(projectPath, network));
+  const oldPackageId = await getOldPackageId(projectPath, network);
+  const worldId = await getWorldId(projectPath, network);
+  const upgradeCap = await getUpgradeCap(projectPath, network);
 
   const newVersion = oldVersion + 1;
   await updateVersionInFile(projectPath, newVersion.toString());
@@ -146,9 +145,6 @@ in your contracts directory to use the default sui private key.`
       newUpgradeCap,
       newVersion
     );
-    // if (savePath !== undefined) {
-    //   generateIdConfig(network, newPackageId, worldId);
-    // }
 
     const migrateTx = new TransactionBlock();
 

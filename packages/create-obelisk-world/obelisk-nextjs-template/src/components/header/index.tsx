@@ -1,12 +1,8 @@
 import Link from "next/link";
-import {useCallback, useState} from "react";
+import {useState} from "react";
 import { Popover } from '@headlessui/react'
 import { AnimatePresence, motion } from 'framer-motion'
-// import {ethos, EthosConnectStatus, TransactionBlock} from "ethos-connect";
-import { OpenBoxState, SellPop_up_boxState, SellState} from "../../jotai";
-import {useAtom} from "jotai";
 import * as React from "react";
-import {Container} from "../Container";
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')

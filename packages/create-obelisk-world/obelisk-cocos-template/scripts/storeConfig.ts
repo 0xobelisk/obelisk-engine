@@ -1,12 +1,12 @@
-import * as fsAsync from 'fs/promises';
-import { mkdirSync, writeFileSync } from 'fs';
-import { exit } from 'process';
-import { obeliskConfig } from '../obelisk.config';
-import { dirname } from 'path';
+import * as fsAsync from "fs/promises";
+import { mkdirSync, writeFileSync } from "fs";
+import { exit } from "process";
+import { obeliskConfig } from "../obelisk.config";
+import { dirname } from "path";
 
 type DeploymentJsonType = {
   projectName: string;
-  network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
+  network: "mainnet" | "testnet" | "devnet" | "localnet";
   packageId: string;
   worldId: string;
   upgradeCap: string;
@@ -15,10 +15,13 @@ type DeploymentJsonType = {
 
 async function getDeploymentJson(projectPath: string, network: string) {
   try {
-    const data = await fsAsync.readFile(`${projectPath}/.history/sui_${network}/latest.json`, 'utf8');
+    const data = await fsAsync.readFile(
+      `${projectPath}/.history/sui_${network}/latest.json`,
+      "utf8"
+    );
     return JSON.parse(data) as DeploymentJsonType;
   } catch {
-    console.log('store config failed.');
+    console.log("store config failed.");
     exit;
   }
 }
@@ -38,10 +41,14 @@ export {
 }
 `;
   const path = process.cwd();
-  writeOutput(code, `${path}/src/chain/config.ts`, 'storeConfig');
+  writeOutput(code, `${path}/src/chain/config.ts`, "storeConfig");
 }
 
-async function writeOutput(output: string, fullOutputPath: string, logPrefix?: string): Promise<void> {
+async function writeOutput(
+  output: string,
+  fullOutputPath: string,
+  logPrefix?: string
+): Promise<void> {
   mkdirSync(dirname(fullOutputPath), { recursive: true });
 
   writeFileSync(fullOutputPath, output);
