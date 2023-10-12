@@ -1,4 +1,4 @@
-import { SchemaMapType, SingletonType } from "../../types";
+import { SchemaMapType } from "../../types";
 import fs from "fs";
 
 export function deleteFolderRecursive(path: string) {
@@ -37,7 +37,7 @@ export function convertToCamelCase(str: string): string {
  */
 export function getUseSchema(
   name: string,
-  values: Record<string, SchemaMapType | SingletonType>
+  values: Record<string, SchemaMapType>
 ): string[] {
   return Object.entries(values).map(
     ([key, _]) => `\tuse ${name}::${key}_schema;`
@@ -49,7 +49,7 @@ export function getUseSchema(
  * @return [ name_schema::register(&mut _obelisk_world, ctx) ,info_schema::register(&mut _obelisk_world, ctx) ]
  */
 export function getRegisterSchema(
-  values: Record<string, SchemaMapType> | Record<string, SingletonType>
+  values: Record<string, SchemaMapType>
 ): string[] {
   return Object.entries(values).map(
     ([key, _]) => `\t\t${key}_schema::register(&mut _obelisk_world, ctx);`
@@ -99,7 +99,7 @@ export function getStructInitValue(values: any): string[] {
  * @return ( bool , u64 , u64)
  */
 // export function getStructTypes(values: SchemaMapType): string {
-export function getStructTypes(values: SchemaMapType | SingletonType): string {
+export function getStructTypes(values: SchemaMapType): string {
   return typeof values === "string"
     ? values
     : `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
@@ -125,7 +125,7 @@ export function getStructAttrsWithType(
  * @return [ data.name, data.age ]
  */
 export function getStructAttrsQuery(
-  values: SchemaMapType | SingletonType,
+  values: SchemaMapType,
   prefixArgs: string
 ): string[] {
   return typeof values === "string"
@@ -243,7 +243,7 @@ export function renderRemoveFunc(structName: string): string {
 
 export function renderSetAttrsFunc(
   structName: string,
-  struct: SchemaMapType | SingletonType,
+  struct: SchemaMapType,
   isSingle: boolean
 ): string {
   return typeof struct === "string"
@@ -273,7 +273,7 @@ export function renderSetAttrsFunc(
 
 export function renderGetAllFunc(
   structName: string,
-  struct: SchemaMapType | SingletonType,
+  struct: SchemaMapType,
   isSingle: boolean
 ): string {
   return `\tpublic fun get(_obelisk_world: &World ,${
@@ -295,7 +295,7 @@ ${getStructAttrsQuery(struct, "\t\t\t").join(",\n")}
 
 export function renderGetAttrsFunc(
   structName: string,
-  struct: SchemaMapType | SingletonType,
+  struct: SchemaMapType,
   isSingle: boolean
 ): string {
   return typeof struct === "string"
