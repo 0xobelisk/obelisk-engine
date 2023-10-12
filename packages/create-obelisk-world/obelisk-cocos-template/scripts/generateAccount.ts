@@ -8,13 +8,13 @@ function generateAccount() {
   const privateKey = Buffer.from(privateKey_u8).toString("hex");
 
   const path = process.cwd();
-  const chainFolderPath = `${path}/src/chain`;
+  const chainFolderPath = `${path}/assets/Scripts/chain`;
   fs.mkdirSync(chainFolderPath, { recursive: true });
 
   fs.writeFileSync(`${path}/.env`, `PRIVATE_KEY=${privateKey}`);
 
   fs.writeFileSync(
-    `${path}/src/chain/key.ts`,
+    `${path}/assets/Scripts/chain/key.ts`,
     `export const PRIVATEKEY = '${privateKey}';
 export const ACCOUNT = '${keypair.toSuiAddress()}';
 `

@@ -34,3 +34,5 @@ contracts/counter/build
 contracts/counter/.history
 
 pnpm-lock.yaml
+
+assets/Scripts/chain/key.ts

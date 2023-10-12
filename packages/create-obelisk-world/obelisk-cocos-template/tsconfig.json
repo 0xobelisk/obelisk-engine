@@ -1,7 +1,11 @@
 {
   /* Base configuration. Do not edit this field. */
   "extends": "./temp/tsconfig.cocos.json",
-
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  },
   /* Add your custom configuration here. */
   "compilerOptions": {
     "strict": false,
