@@ -17,17 +17,28 @@ type DB struct {
 	*gorm.DB
 }
 
-func NewDB(Path string) (*DB, error) {
-	connection, err := gorm.Open(sqlite.Open(Path), &gorm.Config{
-		Logger: logger.New(
+func NewDB(Path string, loggerOn bool) (*DB, error) {
+	gormCfg := &gorm.Config{}
+	if loggerOn {
+		gormCfg.Logger = logger.New(
 			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 			logger.Config{
-				SlowThreshold: time.Second, // 慢 SQL 阈值
-				LogLevel:      logger.Info, // 日志级别
-				Colorful:      true,        // 禁用彩色打印
+				SlowThreshold: time.Second,
+				LogLevel:      logger.Info,
+				Colorful:      true,
 			},
-		),
-	})
+		)
+	} else {
+		gormCfg.Logger = logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+			logger.Config{
+				IgnoreRecordNotFoundError: true,
+				LogLevel:                  logger.Silent,
+			},
+		)
+	}
+
+	connection, err := gorm.Open(sqlite.Open(Path), gormCfg)
 
 	if err != nil {
 		return nil, err

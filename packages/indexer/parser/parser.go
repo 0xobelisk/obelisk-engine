@@ -3,6 +3,7 @@ package parser
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/0xobelisk/obelisk-engine/package/indexer/config"
@@ -42,9 +43,11 @@ func (p *Parser) Start() {
 func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 
 	typ := types.MatchEventType(ev.Type)
+	fmt.Println(" type ", typ)
 	if typ == types.EVENT_UNKNOW {
 		return nil
 	}
+	fmt.Println(" type 2 ", typ)
 
 	e := &models.Event{
 		PackageId: ev.PackageId,
@@ -72,20 +75,16 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 	e.TimestampMs = TimestampMs
 
 	switch typ {
-	case types.EVENT_SCHEMA_SET_FIELD:
-		return p.parseSetEvent(e, ev)
-
+	case types.EVENT_SCHEMA_SET_FIELD, types.EVENT_SCHEMA_SET_EPHEMERAL_FIELD:
+		return p.parseSetOrEphemeralEvent(typ, e, ev)
 	case types.EVENT_SCHEMA_REMOVE_FIELD:
 		return p.parseRemoveEvent(e)
-
-	case types.EVENT_SCHEMA_SET_EPHEMERAL_FIELD:
-		return p.parseSetEphemeralEvent(e)
 	}
 
 	return nil
 }
 
-func (p *Parser) parseSetEvent(e *models.Event, ev *types.SuiEvent) error {
+func (p *Parser) parseSetOrEphemeralEvent(typ types.EventType, e *models.Event, ev *types.SuiEvent) error {
 	data, ok := ev.ParsedJson["data"]
 	if !ok {
 		logger.GetLogger().Error("parse json data fail")
@@ -98,15 +97,14 @@ func (p *Parser) parseSetEvent(e *models.Event, ev *types.SuiEvent) error {
 	}
 	e.Data = string(d)
 
+	if typ == types.EVENT_SCHEMA_SET_EPHEMERAL_FIELD {
+		e.IsEphemeral = true
+	}
+
 	return p.db.UpsertCompEntity(e)
 
 }
 
 func (p *Parser) parseRemoveEvent(e *models.Event) error {
 	return p.db.DeleteCompEntity(e)
-}
-
-// Todo: impl
-func (p *Parser) parseSetEphemeralEvent(e *models.Event) error {
-	return nil
 }

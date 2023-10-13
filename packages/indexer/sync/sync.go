@@ -8,9 +8,10 @@ import (
 	"github.com/0xobelisk/obelisk-engine/package/indexer/config"
 	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
 	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
-
 	"go.uber.org/zap"
 )
+
+const SLEEP_TIME = 2
 
 type Sync struct {
 	config    *config.Config
@@ -27,29 +28,42 @@ func NewSync(config *config.Config, client *client.Client, eventChan chan<- *typ
 }
 
 func (s *Sync) Start(ctx context.Context, sysErr chan error) {
-
 	go func() {
 		timer := time.NewTimer(time.Duration(s.config.SyncInterval) * time.Second)
 		for {
 			select {
 			case <-timer.C:
 				s.Poll()
-				timer.Reset(time.Duration(s.config.SyncInterval) * time.Second)
+				// timer.Reset(time.Duration(s.config.SyncInterval) * time.Second)
 			}
 		}
 	}()
-
 }
 
 func (s *Sync) Poll() {
 	logger.GetLogger().Info("Start Sync")
 
-	cursorTx := ""
-	cursorEventSeq := ""
+	for _, packageInfo := range s.config.Sync.Packages {
+		go s.syncOnePackage(&packageInfo)
+	}
+}
+
+func (s *Sync) syncOnePackage(p *config.PackageInfo) {
+	logger.GetLogger().Info("sync package", zap.String("package", p.Package))
+
+	for _, m := range p.ModuleInfos {
+		go s.syncOneModule(p.Package, &m)
+	}
+}
+
+func (s *Sync) syncOneModule(packageId string, m *config.ModuleInfo) {
+	cursorTx := m.CursorTx
+	cursorEventSeq := m.EventSeq
+
 	for {
 		ctx := context.Background()
-		resp, err := s.client.QueryCompEntities(ctx, s.config.Package, s.config.Module, cursorTx, cursorEventSeq,
-			s.config.SyncNum, false)
+		resp, err := s.client.QueryCompEntities(ctx, packageId, m.Module, cursorTx, cursorEventSeq,
+			s.config.Sync.SyncNum, false)
 
 		if err != nil {
 			logger.GetLogger().Error("QueryCompEntities failed error: ", zap.Error(err))
@@ -74,7 +88,6 @@ func (s *Sync) Poll() {
 				}
 				s.eventChan <- event
 			}
-
 		}
 
 		if resp.NextCursor.TxDigest != "" {
@@ -86,6 +99,7 @@ func (s *Sync) Poll() {
 			continue
 		}
 
-		time.Sleep(2 * time.Second)
+		// Todo: add back off algorithm
+		time.Sleep(SLEEP_TIME * time.Second)
 	}
 }

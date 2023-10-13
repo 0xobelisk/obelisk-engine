@@ -68,6 +68,7 @@ func (q *QueryServer) getCompsFromDB(packageId string, schemaName string, entity
 			PackageId:   event.PackageId,
 			EntityKey:   event.EntityKey,
 			TimestampMs: event.TimestampMs,
+			IsEphemeral: event.IsEphemeral,
 		}
 		var data map[string]interface{}
 		err := json.Unmarshal([]byte(event.Data), &data)

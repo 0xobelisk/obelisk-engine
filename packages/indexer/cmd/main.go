@@ -20,6 +20,8 @@ import (
 )
 
 var (
+	Conf = flag.String("conf", "./indexer.yaml", "config path")
+
 	HttpRpcUrl   = flag.String("http-rpc-url", "", "sui http rpc")
 	Package      = flag.String("package", "", "sui package")
 	Modules      = flag.String("modules", "world", "sui module")
@@ -31,11 +33,22 @@ func main() {
 	flag.Parse()
 	logger.InitLogger()
 
-	cfg, err := config.InitFromFlags(*HttpRpcUrl, *SyncCursorTx, *Package, *Modules, *DbPath)
-	if err != nil {
-		logger.GetLogger().Error("init from flags  err: ", zap.Error(err))
-		return
+	var cfg *config.Config
+	var err error
+	if Conf != nil {
+		cfg, err = config.InitFromFile(*Conf)
+		if err != nil {
+			logger.GetLogger().Error("init from file err: ", zap.Error(err))
+			return
+		}
+	} else {
+		cfg, err = config.InitFromFlags(*HttpRpcUrl, *SyncCursorTx, *Package, *Modules, *DbPath)
+		if err != nil {
+			logger.GetLogger().Error("init from flags  err: ", zap.Error(err))
+			return
+		}
 	}
+
 	logger.GetLogger().Debug(" config content: ", zap.Any("cfg", cfg))
 
 	cli, err := client.NewClient(cfg.HttpRpcUrl)
@@ -53,7 +66,7 @@ func main() {
 	go s.Start(ctx, errChn)
 
 	// db init
-	db, err := db.NewDB(cfg.DbPath)
+	db, err := db.NewDB(cfg.Db.Path, cfg.Db.LoggerOn)
 	if err != nil {
 		logger.GetLogger().Error("db init err: ", zap.Error(err))
 		return

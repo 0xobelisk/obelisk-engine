@@ -15,6 +15,7 @@ type Event struct {
 	PackageId   string `gorm:"index:idx_unique_event"`
 	SchemaName  string `gorm:"index:idx_unique_event"`
 	EntityKey   string `gorm:"index:idx_unique_event"`
+	IsEphemeral bool
 	Data        string
 	TimestampMs uint64
 }
