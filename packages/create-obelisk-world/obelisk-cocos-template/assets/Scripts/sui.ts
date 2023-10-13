@@ -13,7 +13,7 @@ export class sui extends Component {
   async sui_account_create() {
     // @ts-ignore
     const obelisk_sdk = window.obelisk;
-    const decode = JSON.parse(sys.localStorage.getItem("userWalletData")!);
+    const decode = JSON.parse(sys.localStorage.getItem("userWalletData"));
     if (decode == null) {
       const keypair = new obelisk_sdk.Ed25519Keypair();
       const wallet = keypair.export();
@@ -39,7 +39,7 @@ export class sui extends Component {
       });
       const component_name = Object.keys(obeliskConfig.schemas)[0];
       const component_value = await obelisk.getEntity(WORLD_ID, component_name);
-      const counter_node = find("Canvas/Camera/counter")!;
+      const counter_node = find("Canvas/Camera/counter");
       const label = counter_node.getComponent("cc.Label") as LabelComponent;
       label.string = `Counter: ${component_value}`;
     }
@@ -49,7 +49,7 @@ export class sui extends Component {
     // @ts-ignore
     const obelisk_sdk = window.obelisk;
     const fromB64 = obelisk_sdk.fromB64;
-    const decode = JSON.parse(sys.localStorage.getItem("userWalletData")!);
+    const decode = JSON.parse(sys.localStorage.getItem("userWalletData"));
     const decode_private_key = decode.privateKey;
     const base_64_privkey = fromB64(decode_private_key);
     const keypair = obelisk_sdk.Ed25519Keypair.fromSecretKey(base_64_privkey, {
@@ -94,7 +94,7 @@ export class sui extends Component {
       });
       const component_name = Object.keys(obeliskConfig.schemas)[0];
       const component_value = await obelisk.getEntity(WORLD_ID, component_name);
-      const counter_node = find("Canvas/Camera/counter")!;
+      const counter_node = find("Canvas/Camera/counter");
       const label = counter_node.getComponent("cc.Label") as LabelComponent;
       label.string = `Counter: ${component_value}`;
     }, 100);
