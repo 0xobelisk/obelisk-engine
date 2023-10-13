@@ -1,19 +1,19 @@
-import { execSync } from "child_process";
 import { TransactionBlock, UpgradePolicy } from "@mysten/sui.js/transactions";
-import * as fs from "fs";
-
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-
-import chalk from "chalk";
-
-import { ObeliskCliError } from "./errors";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
-import { validatePrivateKey } from "./validatePrivateKey";
+import { execSync } from "child_process";
+import chalk from "chalk";
+import { ObeliskCliError } from "./errors";
 import {
-  generateIdConfig,
-  generateEps,
+  updateVersionInFile,
+  getNetwork,
+  getOldPackageId,
+  getVersion,
+  getWorldId,
+  getUpgradeCap,
   saveContractData,
-} from "@0xobelisk/common";
+  validatePrivateKey,
+} from "./utils";
 
 type ObjectContent = {
   type: string;
@@ -24,9 +24,8 @@ type ObjectContent = {
 
 export async function upgradeHandler(
   name: string,
-  schemaNames: string[],
-  // network: "mainnet" | "testnet" | "devnet" | "localnet",
-  savePath?: string | undefined
+  network: "mainnet" | "testnet" | "devnet" | "localnet",
+  schemaNames: string[]
 ) {
   const path = process.cwd();
   const projectPath = `${path}/contracts/${name}`;
@@ -45,19 +44,18 @@ in your contracts directory to use the default sui private key.`
   const privateKeyRaw = Buffer.from(privateKeyFormat as string, "hex");
   const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
 
-  const network = await getNetwork(projectPath);
+  // const network = await getNetwork(projectPath);
   const client = new SuiClient({
     url: getFullnodeUrl(network),
   });
 
-  let oldVersion = Number(await getVersion(projectPath));
-
-  const oldPackageId = await getOldPackageId(projectPath);
-  const worldId = await getWorldId(projectPath);
-  const upgradeCap = await getUpgradeCap(projectPath);
+  let oldVersion = Number(await getVersion(projectPath, network));
+  const oldPackageId = await getOldPackageId(projectPath, network);
+  const worldId = await getWorldId(projectPath, network);
+  const upgradeCap = await getUpgradeCap(projectPath, network);
 
   const newVersion = oldVersion + 1;
-  generateEps(name, path, newVersion);
+  await updateVersionInFile(projectPath, newVersion.toString());
 
   try {
     console.log(
@@ -73,7 +71,7 @@ in your contracts directory to use the default sui private key.`
     );
     const tx = new TransactionBlock();
 
-    tx.setGasBudget(10000000000);
+    tx.setGasBudget(5000000000);
 
     const ticket = tx.moveCall({
       target: "0x2::package::authorize_upgrade",
@@ -147,13 +145,10 @@ in your contracts directory to use the default sui private key.`
       newUpgradeCap,
       newVersion
     );
-    if (savePath !== undefined) {
-      generateIdConfig(network, newPackageId, worldId, savePath);
-    }
 
     const migrateTx = new TransactionBlock();
 
-    migrateTx.setGasBudget(10000000000);
+    migrateTx.setGasBudget(5000000000);
 
     migrateTx.moveCall({
       target: `${newPackageId}::world::migrate`,
@@ -198,7 +193,7 @@ in your contracts directory to use the default sui private key.`
     }
 
     const uniqueSchema: string[] = schemaNames.filter(
-      (item) => !newObjectContent.fields["schemaNames"].includes(item)
+      (item) => !newObjectContent.fields["schema_names"].includes(item)
     );
 
     console.log("\n----- new schema -----");
@@ -207,7 +202,7 @@ in your contracts directory to use the default sui private key.`
     for (const newSchema of uniqueSchema) {
       const registerTx = new TransactionBlock();
 
-      registerTx.setGasBudget(10000000000);
+      registerTx.setGasBudget(5000000000);
 
       registerTx.moveCall({
         target: `${newPackageId}::${newSchema}_schema::register`,
@@ -245,7 +240,7 @@ in your contracts directory to use the default sui private key.`
 
     console.log(
       chalk.blue(
-        `\n${name} world schemas is ${registerObjectContent.fields["schemaNames"]}`
+        `\n${name} world schemas is ${registerObjectContent.fields["schema_names"]}`
       )
     );
   } catch (error) {
@@ -260,71 +255,9 @@ in your contracts directory to use the default sui private key.`
       upgradeCap,
       newVersion
     );
-    if (savePath !== undefined) {
-      generateIdConfig(network, oldPackageId, worldId, savePath);
-    }
-    generateEps(name, path, oldVersion);
+    // if (savePath !== undefined) {
+    //   generateIdConfig(network, oldPackageId, worldId);
+    // }
+    await updateVersionInFile(projectPath, oldVersion.toString());
   }
-}
-
-function getVersion(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/version`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getNetwork(
-  projectPath: string
-): Promise<"mainnet" | "testnet" | "devnet" | "localnet"> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/network`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data as "mainnet" | "testnet" | "devnet" | "localnet");
-      }
-    });
-  });
-}
-
-function getOldPackageId(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/package_id`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getWorldId(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/world_id`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getUpgradeCap(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/upgrade_cap`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
 }

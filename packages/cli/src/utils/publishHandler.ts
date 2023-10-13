@@ -1,26 +1,21 @@
-import { execSync } from "child_process";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-
-import chalk from "chalk";
-
-import { ObeliskCliError } from "./errors";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
-import { validatePrivateKey } from "./validatePrivateKey";
+import { execSync } from "child_process";
+import chalk from "chalk";
+import { ObeliskCliError } from "./errors";
 import {
-  generateIdConfig,
+  updateVersionInFile,
   saveContractData,
-  generateEps,
-} from "@0xobelisk/common";
-import fs from "fs";
+  validatePrivateKey,
+} from "./utils";
 
 export async function publishHandler(
   name: string,
-  network: "mainnet" | "testnet" | "devnet" | "localnet",
-  savePath?: string | undefined
+  network: "mainnet" | "testnet" | "devnet" | "localnet"
 ) {
   const path = process.cwd();
+  const projectPath = `${path}/contracts/${name}`;
 
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey)
@@ -35,22 +30,18 @@ in your contracts directory to use the default sui private key.`
     throw new ObeliskCliError(`Please check your privateKey.`);
   }
   const privateKeyRaw = Buffer.from(privateKeyFormat as string, "hex");
-  // const keypair = Ed25519Keypair.deriveKeypair(privateKey);
-  // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
-  // const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
   const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
   const client = new SuiClient({
     url: getFullnodeUrl(network),
   });
-  generateEps(name, path, 1);
+
+  // Set version 1
+  await updateVersionInFile(projectPath, "1");
 
   const { modules, dependencies } = JSON.parse(
-    execSync(
-      `sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`,
-      {
-        encoding: "utf-8",
-      }
-    )
+    execSync(`sui move build --dump-bytecode-as-base64 --path ${projectPath}`, {
+      encoding: "utf-8",
+    })
   );
 
   console.log(chalk.blue(`Account: ${keypair.toSuiAddress()}`));
@@ -99,7 +90,4 @@ in your contracts directory to use the default sui private key.`
   });
 
   saveContractData(name, network, packageId, worldId, upgradeCapId, version);
-  if (savePath !== undefined) {
-    generateIdConfig(network, packageId, worldId, savePath);
-  }
 }

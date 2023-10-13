@@ -30,7 +30,7 @@ func NewParser(config *config.Config, eventChan <-chan *types.SuiEvent, db model
 }
 
 func (p *Parser) Start() {
-	for event := range p.eventChan { // 没有事件时，eventchannel会阻塞
+	for event := range p.eventChan { // wait event
 		logger.GetLogger().Debug("paser recv events ", zap.Any("event", event))
 		err := p.parseEvent(event)
 		if err != nil {
@@ -40,7 +40,6 @@ func (p *Parser) Start() {
 }
 
 func (p *Parser) parseEvent(ev *types.SuiEvent) error {
-	//Todo: id的定义
 	typ := types.MatchEventType(ev.Type)
 	if typ == types.EVENT_UNKNOW {
 		return nil
@@ -50,16 +49,16 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 		PackageId: ev.PackageId,
 	}
 
-	compName, ok := ev.ParsedJson["comp"].(string)
+	schemaName, ok := ev.ParsedJson["_obelisk_schema_name"].(string)
 	if !ok {
-		logger.GetLogger().Error("parse json comp_id fail")
+		logger.GetLogger().Error("parse json schema_name fail")
 		return ParseEventErr
 	}
-	e.CompName = compName
+	e.SchemaName = schemaName
 
-	entityKey, ok := ev.ParsedJson["key"].(string)
+	entityKey, ok := ev.ParsedJson["_obelisk_entity_key"].(string)
 	if !ok {
-		logger.GetLogger().Error("parse json key fail")
+		logger.GetLogger().Error("parse json entity_key fail")
 		return ParseEventErr
 	}
 	e.EntityKey = entityKey
@@ -72,11 +71,14 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 	e.TimestampMs = TimestampMs
 
 	switch typ {
-	case types.EVENT_COMP_SET_FIELD:
+	case types.EVENT_SCHEMA_SET_FIELD:
 		return p.parseSetEvent(e, ev)
 
-	case types.EVENT_COMP_REMOVE_FIELD:
+	case types.EVENT_SCHEMA_REMOVE_FIELD:
 		return p.parseRemoveEvent(e)
+
+	case types.EVENT_SCHEMA_SET_EPHEMERAL_FIELD:
+		return p.parseSetEphemeralEvent(e)
 	}
 
 	return nil
@@ -102,3 +104,9 @@ func (p *Parser) parseSetEvent(e *models.Event, ev *types.SuiEvent) error {
 func (p *Parser) parseRemoveEvent(e *models.Event) error {
 	return p.db.DeleteCompEntity(e)
 }
+
+// Todo: impl
+func (p *Parser) parseSetEphemeralEvent(e *models.Event) error {
+	return nil
+}
+
