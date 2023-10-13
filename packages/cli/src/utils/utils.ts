@@ -50,10 +50,10 @@ export async function updateVersionInFile(
   }
 }
 
-async function getDeploymentJson(projectPath: string) {
+async function getDeploymentJson(projectPath: string, network: string) {
   try {
     const data = await fsAsync.readFile(
-      `${projectPath}/.history/deployment.json`,
+      `${projectPath}/.history/sui_${network}/latest.json`,
       "utf8"
     );
     return JSON.parse(data) as DeploymentJsonType;
@@ -62,30 +62,43 @@ async function getDeploymentJson(projectPath: string) {
   }
 }
 
-export async function getVersion(projectPath: string): Promise<number> {
-  const deployment = await getDeploymentJson(projectPath);
+export async function getVersion(
+  projectPath: string,
+  network: string
+): Promise<number> {
+  const deployment = await getDeploymentJson(projectPath, network);
   return deployment.version;
 }
 
 export async function getNetwork(
-  projectPath: string
+  projectPath: string,
+  network: string
 ): Promise<"mainnet" | "testnet" | "devnet" | "localnet"> {
-  const deployment = await getDeploymentJson(projectPath);
+  const deployment = await getDeploymentJson(projectPath, network);
   return deployment.network;
 }
 
-export async function getOldPackageId(projectPath: string): Promise<string> {
-  const deployment = await getDeploymentJson(projectPath);
+export async function getOldPackageId(
+  projectPath: string,
+  network: string
+): Promise<string> {
+  const deployment = await getDeploymentJson(projectPath, network);
   return deployment.packageId;
 }
 
-export async function getWorldId(projectPath: string): Promise<string> {
-  const deployment = await getDeploymentJson(projectPath);
+export async function getWorldId(
+  projectPath: string,
+  network: string
+): Promise<string> {
+  const deployment = await getDeploymentJson(projectPath, network);
   return deployment.worldId;
 }
 
-export async function getUpgradeCap(projectPath: string): Promise<string> {
-  const deployment = await getDeploymentJson(projectPath);
+export async function getUpgradeCap(
+  projectPath: string,
+  network: string
+): Promise<string> {
+  const deployment = await getDeploymentJson(projectPath, network);
   return deployment.upgradeCap;
 }
 
@@ -110,7 +123,7 @@ export function saveContractData(
   const storeDeploymentData = JSON.stringify(DeploymentData, null, 2);
   writeOutput(
     storeDeploymentData,
-    `${path}/contracts/${projectName}/.history/deployment.json`,
+    `${path}/contracts/${projectName}/.history/sui_${network}/latest.json`,
     "Update deploy log"
   );
 }

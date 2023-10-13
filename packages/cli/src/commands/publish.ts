@@ -15,15 +15,15 @@ const commandModule: CommandModule<Options, Options> = {
 
   builder(yargs) {
     return yargs.options({
-      configPath: {
-        type: "string",
-        default: "obelisk.config.ts",
-        decs: "Path to the config file",
-      },
       network: {
         type: "string",
         choices: ["mainnet", "testnet", "devnet", "localnet"],
         desc: "Network of the node (mainnet/testnet/devnet/localnet)",
+      },
+      configPath: {
+        type: "string",
+        default: "obelisk.config.ts",
+        decs: "Path to the config file",
       },
     });
   },
