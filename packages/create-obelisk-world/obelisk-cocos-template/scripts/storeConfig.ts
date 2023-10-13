@@ -41,7 +41,7 @@ export {
 }
 `;
   const path = process.cwd();
-  writeOutput(code, `${path}/src/chain/config.ts`, "storeConfig");
+  writeOutput(code, `${path}/assets/Scripts/chain/config.ts`, "storeConfig");
 }
 
 async function writeOutput(
