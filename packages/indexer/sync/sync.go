@@ -6,6 +6,7 @@ import (
 
 	"github.com/0xobelisk/obelisk-engine/package/indexer/client"
 	"github.com/0xobelisk/obelisk-engine/package/indexer/config"
+	"github.com/0xobelisk/obelisk-engine/package/indexer/db"
 	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
 	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
 	"go.uber.org/zap"
@@ -16,13 +17,15 @@ const SLEEP_TIME = 2
 type Sync struct {
 	config    *config.Config
 	client    *client.Client
+	db        *db.DB
 	eventChan chan<- *types.SuiEvent
 }
 
-func NewSync(config *config.Config, client *client.Client, eventChan chan<- *types.SuiEvent) *Sync {
+func NewSync(config *config.Config, client *client.Client, db *db.DB, eventChan chan<- *types.SuiEvent) *Sync {
 	return &Sync{
 		config:    config,
 		client:    client,
+		db:        db,
 		eventChan: eventChan,
 	}
 }
@@ -57,8 +60,10 @@ func (s *Sync) syncOnePackage(p *config.PackageInfo) {
 }
 
 func (s *Sync) syncOneModule(packageId string, m *config.ModuleInfo) {
-	cursorTx := m.CursorTx
-	cursorEventSeq := m.EventSeq
+	// Todo: if db have cursor record; use db record; else use config info
+	cursorTx, cursorEventSeq := s.retriveCursor(packageId, m.Module, m)
+	logger.GetLogger().Info("syncOneModule packageId ", zap.String("package", packageId),
+		zap.String("module", m.Module))
 
 	for {
 		ctx := context.Background()
@@ -102,4 +107,24 @@ func (s *Sync) syncOneModule(packageId string, m *config.ModuleInfo) {
 		// Todo: add back off algorithm
 		time.Sleep(SLEEP_TIME * time.Second)
 	}
+}
+
+// if db have cursor record; use db record; else use config info
+func (s *Sync) retriveCursor(packageId string, module string, m *config.ModuleInfo) (string, string) {
+	cursorTx, cursorEventSeq, err := s.db.GetCursor(packageId, module)
+	if err == nil {
+		return cursorTx, cursorEventSeq
+	} else {
+		if err != nil && err != types.ErrDbNotFound {
+			logger.GetLogger().Error("get cursor error", zap.Error(err))
+			return "", ""
+		}
+	}
+
+	if cursorTx == "" || cursorEventSeq == "" {
+		cursorTx = m.CursorTx
+		cursorEventSeq = m.EventSeq
+	}
+
+	return cursorTx, cursorEventSeq
 }

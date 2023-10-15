@@ -3,8 +3,8 @@ package parser
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/0xobelisk/obelisk-engine/package/indexer/config"
 	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
@@ -43,11 +43,9 @@ func (p *Parser) Start() {
 func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 
 	typ := types.MatchEventType(ev.Type)
-	fmt.Println(" type ", typ)
 	if typ == types.EVENT_UNKNOW {
 		return nil
 	}
-	fmt.Println(" type 2 ", typ)
 
 	e := &models.Event{
 		PackageId: ev.PackageId,
@@ -67,21 +65,26 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 	}
 	e.EntityKey = entityKey
 
-	TimestampMs, err := strconv.ParseUint(ev.TimestampMs, 10, 64)
+	timestampMs, err := strconv.ParseUint(ev.TimestampMs, 10, 64)
 	if err != nil {
 		logger.GetLogger().Error("parse timestamp_ms fail")
 		return ParseEventErr
 	}
-	e.TimestampMs = TimestampMs
+	e.TimestampMs = timestampMs
 
 	switch typ {
 	case types.EVENT_SCHEMA_SET_FIELD, types.EVENT_SCHEMA_SET_EPHEMERAL_FIELD:
-		return p.parseSetOrEphemeralEvent(typ, e, ev)
+		err = p.parseSetOrEphemeralEvent(typ, e, ev)
 	case types.EVENT_SCHEMA_REMOVE_FIELD:
-		return p.parseRemoveEvent(e)
+		err = p.parseRemoveEvent(e)
 	}
 
-	return nil
+	// update cursor
+	if err == nil {
+		p.recordCursor(ev, timestampMs)
+	}
+
+	return err
 }
 
 func (p *Parser) parseSetOrEphemeralEvent(typ types.EventType, e *models.Event, ev *types.SuiEvent) error {
@@ -107,4 +110,19 @@ func (p *Parser) parseSetOrEphemeralEvent(typ types.EventType, e *models.Event, 
 
 func (p *Parser) parseRemoveEvent(e *models.Event) error {
 	return p.db.DeleteCompEntity(e)
+}
+
+func (p *Parser) recordCursor(ev *types.SuiEvent, timestampMs uint64) error {
+	cursor := &models.Cursor{}
+	cursor.PackageId = ev.PackageId
+	cursor.CursorTx = ev.TxDigest
+	cursor.EventSeq = ev.EventSeq
+	cursor.TimestampMs = timestampMs
+
+	s := strings.Split(ev.Type, "::")
+	if len(s) != 5 {
+		return errors.New("invalid event type")
+	}
+	cursor.Module = s[1]
+	return p.db.UpsertCursor(cursor)
 }

@@ -57,20 +57,20 @@ func main() {
 		return
 	}
 
-	// sync init
-	eventChan := make(chan *types.SuiEvent, 1000)
-	s := sync.NewSync(cfg, cli, eventChan)
-	errChn := make(chan error)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go s.Start(ctx, errChn)
-
 	// db init
 	db, err := db.NewDB(cfg.Db.Path, cfg.Db.LoggerOn)
 	if err != nil {
 		logger.GetLogger().Error("db init err: ", zap.Error(err))
 		return
 	}
+
+	// sync init
+	eventChan := make(chan *types.SuiEvent, 1000)
+	s := sync.NewSync(cfg, cli, db, eventChan)
+	errChn := make(chan error)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go s.Start(ctx, errChn)
 
 	// parser init
 	p := parser.NewParser(cfg, eventChan, db)

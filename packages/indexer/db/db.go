@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/0xobelisk/obelisk-engine/package/indexer/models"
+	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -45,7 +46,7 @@ func NewDB(Path string, loggerOn bool) (*DB, error) {
 	}
 
 	// atuo migrate
-	err = connection.AutoMigrate(&models.Event{})
+	err = connection.AutoMigrate(&models.Event{}, &models.Cursor{})
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +59,7 @@ func NewDB(Path string, loggerOn bool) (*DB, error) {
 	return db, nil
 }
 
-// insert or update event
+// insert or update entity
 func (db *DB) UpsertCompEntity(event *models.Event) error {
 	var existingEvent models.Event
 	err := db.Where("package_id = ? AND schema_name = ? AND entity_key = ?", event.PackageId, event.SchemaName, event.EntityKey).First(&existingEvent).Error
@@ -97,5 +98,30 @@ func (db *DB) QueryCompEntities(packageId string, schemaName string, entityKey s
 	} else {
 		return events, nil
 	}
+}
 
+func (db *DB) GetCursor(pacakgeId string, module string) (string, string, error) {
+	var cursor models.Cursor
+	if err := db.Where("package_id = ? AND module = ? ", pacakgeId, module).First(&cursor).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", "", types.ErrDbNotFound
+		}
+		return "", "", err
+	}
+
+	return cursor.CursorTx, cursor.EventSeq, nil
+}
+
+// insert or update cursor
+func (db *DB) UpsertCursor(cursor *models.Cursor) error {
+	existingCursor := models.Cursor{}
+	err := db.Where("package_id = ? AND module = ? ", cursor.PackageId, cursor.Module).First(&existingCursor).Error
+
+	if err == nil {
+		return db.Save(existingCursor).Error
+	} else if err == gorm.ErrRecordNotFound {
+		return db.Create(cursor).Error
+	}
+
+	return nil
 }
