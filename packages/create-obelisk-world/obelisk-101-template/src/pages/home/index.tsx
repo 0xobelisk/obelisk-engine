@@ -1,5 +1,5 @@
 import {
-  getMetadata,
+  loadMetadata,
   Obelisk,
   TransactionBlock,
 } from '@0xobelisk/client';
@@ -16,7 +16,7 @@ const Home = () => {
   const [value, setValue] = useAtom(Value);
 
   const counter = async () => {
-    const metadata = await getMetadata(NETWORK, PACKAGE_ID);
+    const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
     const obelisk = new Obelisk({
       networkType: NETWORK,
       packageId: PACKAGE_ID,
@@ -29,7 +29,7 @@ const Home = () => {
     const new_tx = (await obelisk.tx.counter_system.inc(tx, params, true)) as TransactionBlock;
     const response = await obelisk.signAndSendTxn(new_tx);
     if (response.effects.status.status == 'success') {
-      const metadata = await getMetadata(NETWORK, PACKAGE_ID);
+      const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
       const obelisk = new Obelisk({
         networkType: NETWORK,
         packageId: PACKAGE_ID,
@@ -44,7 +44,7 @@ const Home = () => {
   useEffect(() => {
     if (router.isReady) {
       const query_counter = async () => {
-        const metadata = await getMetadata(NETWORK, PACKAGE_ID);
+        const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
         const obelisk = new Obelisk({
           networkType: NETWORK,
           packageId: PACKAGE_ID,

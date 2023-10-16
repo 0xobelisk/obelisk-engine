@@ -19,7 +19,7 @@ export class sui extends Component {
       const wallet = keypair.export();
       const code = JSON.stringify(wallet);
       sys.localStorage.setItem("userWalletData", code);
-      const metadata = await obelisk_sdk.getMetadata(NETWORK, PACKAGE_ID);
+      const metadata = await obelisk_sdk.loadMetadata(NETWORK, PACKAGE_ID);
       const obelisk = new obelisk_sdk.Obelisk({
         networkType: NETWORK,
         packageId: PACKAGE_ID,
@@ -31,7 +31,7 @@ export class sui extends Component {
       const component_value = await obelisk.getEntity(WORLD_ID, component_name);
       console.log(component_value);
     } else {
-      const metadata = await obelisk_sdk.getMetadata(NETWORK, PACKAGE_ID);
+      const metadata = await obelisk_sdk.loadMetadata(NETWORK, PACKAGE_ID);
       const obelisk = new obelisk_sdk.Obelisk({
         networkType: NETWORK,
         packageId: PACKAGE_ID,
@@ -66,7 +66,7 @@ export class sui extends Component {
   async gameStart() {
     // @ts-ignore
     const obelisk_sdk = window.obelisk;
-    const metadata = await obelisk_sdk.getMetadata(NETWORK, PACKAGE_ID);
+    const metadata = await obelisk_sdk.loadMetadata(NETWORK, PACKAGE_ID);
     console.log(metadata);
 
     const privateKey = await this.export_wallet();
@@ -86,7 +86,7 @@ export class sui extends Component {
     const result = await obelisk.tx.counter_system.inc(tx, params);
     console.log(result);
     setTimeout(async () => {
-      const metadata = await obelisk_sdk.getMetadata(NETWORK, PACKAGE_ID);
+      const metadata = await obelisk_sdk.loadMetadata(NETWORK, PACKAGE_ID);
       const obelisk = new obelisk_sdk.Obelisk({
         networkType: NETWORK,
         packageId: PACKAGE_ID,
