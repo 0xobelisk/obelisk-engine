@@ -24,9 +24,9 @@
 
   },
   "dependencies": {
-    "@0xobelisk/common": "^0.3.10",
-    "@0xobelisk/client": "^0.3.10",
-    "@0xobelisk/cli": "^0.3.10"
+    "@0xobelisk/common": "^0.4.1",
+    "@0xobelisk/client": "^0.4.1",
+    "@0xobelisk/cli": "^0.4.1"
   },
   "devDependencies": {
     "@types/node": "18.16.16",
