@@ -2719,7 +2719,7 @@ var _exportNames = {
   SuiAccountManager: true,
   SuiContractFactory: true,
   SuiTxBlock: true,
-  getMetadata: true,
+  loadMetadata: true,
   Ed25519Keypair: true
 };
 Object.defineProperty(exports, "Ed25519Keypair", {
@@ -2729,7 +2729,7 @@ Object.defineProperty(exports, "Ed25519Keypair", {
   }
 });
 exports.SuiTxBlock = exports.SuiContractFactory = exports.SuiAccountManager = exports.Obelisk = void 0;
-exports.getMetadata = getMetadata;
+exports.loadMetadata = loadMetadata;
 var _sui = require("@mysten/sui.js");
 Object.keys(_sui).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -2743,22 +2743,11 @@ Object.keys(_sui).forEach(function (key) {
   });
 });
 var _ed = require("@mysten/sui.js/keypairs/ed25519");
-var _bcs = require("@mysten/bcs");
-Object.keys(_bcs).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _bcs[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _bcs[key];
-    }
-  });
-});
 var _bip = require("@scure/bip39");
 var _english = require("@scure/bip39/wordlists/english");
 var _faucet = require("@mysten/sui.js/faucet");
 var _keccak = _interopRequireDefault(require("keccak256"));
+var _bcs = require("@mysten/bcs");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 var __accessCheck = (obj, member, msg) => {
   if (!member.has(obj)) throw TypeError("Cannot " + msg);
@@ -3921,7 +3910,7 @@ _exec = new WeakMap();
 _read = new WeakMap();
 
 // src/metadata/index.ts
-async function getMetadata(networkType, packageId) {
+async function loadMetadata(networkType, packageId) {
   const fullnodeUrls = [getDefaultConnection(networkType).fullnode];
   const suiInteractor = new SuiInteractor(fullnodeUrls);
   if (packageId !== void 0) {
