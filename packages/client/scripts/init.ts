@@ -3,7 +3,7 @@ import * as process from 'process';
 import { NetworkType, SchemaContentType, SuiTxArgument } from '../src/types';
 import { BCS, getSuiMoveConfig, fromHEX, fromB64, fromB58 } from '@mysten/bcs';
 import { DevInspectResults, TransactionBlock, bcs } from '@mysten/sui.js';
-import { getMetadata } from '../src/metadata/index';
+import { loadMetadata } from '../src/metadata/index';
 const keccak256 = require('keccak256');
 import * as crypto from 'crypto';
 
@@ -29,7 +29,7 @@ async function init() {
   const packageId =
     '0x75a13bae99365ace28cf7b4d66d9c31a252bd003e2792a83d325dcfc9d8b518b';
 
-  const metadata = await getMetadata(network as NetworkType, packageId);
+  const metadata = await loadMetadata(network as NetworkType, packageId);
 
   const obelisk = new Obelisk({
     networkType: network as NetworkType,

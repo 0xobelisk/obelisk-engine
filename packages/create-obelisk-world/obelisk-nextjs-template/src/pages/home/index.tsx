@@ -1,4 +1,4 @@
-import {BCS, getMetadata, getSuiMoveConfig, Obelisk, TransactionBlock} from "@0xobelisk/client";
+import {BCS, loadMetadata, getSuiMoveConfig, Obelisk, TransactionBlock} from "@0xobelisk/client";
 import {useWallet} from '@suiet/wallet-kit';
 import {useEffect} from "react";
 import {useAtom} from "jotai";
@@ -22,7 +22,7 @@ const Home = () =>{
     const [value,setValue] = useAtom(Value)
 
     const counter = async (wallet:any) => {
-        const metadata = await getMetadata(NETWORK, PACKAGE_ID);
+        const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
         const obelisk = new Obelisk({
             networkType: NETWORK,
             packageId: PACKAGE_ID,
@@ -43,7 +43,7 @@ const Home = () =>{
             }
         })
         if (response.effects.status.status == 'success') {
-            const metadata = await getMetadata(NETWORK, PACKAGE_ID);
+            const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
             const obelisk = new Obelisk({
                 networkType: NETWORK,
                 packageId: PACKAGE_ID,
@@ -59,7 +59,7 @@ const Home = () =>{
     useEffect(() => {
         if (router.isReady){
             const query_counter = async () => {
-                const metadata = await getMetadata(NETWORK, PACKAGE_ID);
+                const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
                 const obelisk = new Obelisk({
                     networkType: NETWORK,
                     packageId: PACKAGE_ID,
