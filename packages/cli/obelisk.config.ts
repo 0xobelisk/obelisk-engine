@@ -14,7 +14,11 @@ export const obeliskConfig = {
     },
     ephemeral: {
       ephemeral: true,
-      valueSchema: "u64",
+      valueSchema: {
+        caller: "address",
+        value: "u64",
+        flag: "bool",
+      },
     },
     single_value: {
       singleton: true,

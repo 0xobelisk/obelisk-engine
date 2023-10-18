@@ -33,6 +33,8 @@ export type ObeliskConfig = {
 };
 
 export interface RenderSchemaOptions {
+  projectName: string;
+  systems: string[];
   schemaName: string;
   structName: string;
   ephemeral: boolean;

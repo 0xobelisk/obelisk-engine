@@ -55,12 +55,11 @@ module examples::example_system {
         assert!(description == string(b"Examples"), 0);
         assert!(version == 1, 0);
 
-        let names = world::compnames(&world);
+        let names = world::schema_names(&world);
         debug::print(&names);
         assert!(names == vector[
             string(b"single_column"),
             string(b"multi_column"),
-            string(b"ephemeral"),
             string(b"single_value"),
             string(b"single_struct"),
         ], 0);
@@ -76,7 +75,7 @@ module examples::example_system {
 
         let world = test_scenario::take_shared<World>(scenario);
 
-        ephemeral_schema::emit_ephemeral(100);
+        ephemeral_schema::emit_ephemeral(@0x1,100,true);
 
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);
