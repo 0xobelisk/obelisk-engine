@@ -63,7 +63,7 @@ export function generateSchema(config: ObeliskConfig, srcPrefix: string) {
     } else if(option.singleton) {
       code =  renderSingleSchema(option)
     } else {
-      code = rendSchema(option)
+      code = renderSchema(option)
     }
     formatAndWriteMove(
       code,
@@ -114,7 +114,7 @@ ${renderSingleGetAttrsFunc(option.structName, option.resourceData)}
 `
 }
 
-function rendSchema(option: RenderSchemaOptions) {
+function renderSchema(option: RenderSchemaOptions) {
   return `module ${option.projectName}::${option.schemaName}_schema {
     use std::option::some;
     use sui::tx_context::TxContext;
