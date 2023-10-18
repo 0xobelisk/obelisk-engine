@@ -15,7 +15,7 @@ module examples::multi_column_schema {
 
 	// state
 	// last_update_time
-	struct MultiColumnData has copy , drop, store {
+	struct MultiColumnData has copy, drop , store {
 		state: vector<u8>,
 		last_update_time: u64
 	}
@@ -35,9 +35,9 @@ module examples::multi_column_schema {
 		let _obelisk_schema = world::get_mut_schema<Table<address,MultiColumnData>>(_obelisk_world, SCHEMA_ID);
 		let _obelisk_data = new( state, last_update_time);
 		if(table::contains<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key)) {
-    		*table::borrow_mut<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
+			*table::borrow_mut<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
 		} else {
-    		table::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
+			table::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
 		};
 		events::emit_set(SCHEMA_ID, some(_obelisk_entity_key), _obelisk_data)
 	}
@@ -59,8 +59,8 @@ module examples::multi_column_schema {
 	}
 
 	public fun get(_obelisk_world: &World, _obelisk_entity_key: address): (vector<u8>,u64) {
-  		let _obelisk_schema = world::get_schema<Table<address,MultiColumnData>>(_obelisk_world, SCHEMA_ID);
-  		assert!(table::contains<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
+		let _obelisk_schema = world::get_schema<Table<address,MultiColumnData>>(_obelisk_world, SCHEMA_ID);
+		assert!(table::contains<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 		let _obelisk_data = table::borrow<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key);
 		(
 			_obelisk_data.state,
@@ -93,5 +93,4 @@ module examples::multi_column_schema {
 		let _obelisk_schema = world::get_schema<Table<address,MultiColumnData>>(_obelisk_world, SCHEMA_ID);
 		table::contains<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key)
 	}
-
 }

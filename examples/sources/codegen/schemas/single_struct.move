@@ -11,7 +11,7 @@ module examples::single_struct_schema {
 
 	// admin
 	// fee
-	struct SingleStructData has copy , drop, store {
+	struct SingleStructData has copy, drop , store {
 		admin: address,
 		fee: u64
 	}
@@ -48,7 +48,7 @@ module examples::single_struct_schema {
 	}
 
 	public fun get(_obelisk_world: &World): (address,u64) {
-  		let _obelisk_schema = world::get_schema<SingleStructData>(_obelisk_world, SCHEMA_ID);
+		let _obelisk_schema = world::get_schema<SingleStructData>(_obelisk_world, SCHEMA_ID);
 		(
 			_obelisk_schema.admin,
 			_obelisk_schema.fee,
@@ -64,5 +64,4 @@ module examples::single_struct_schema {
 		let _obelisk_schema = world::get_schema<SingleStructData>(_obelisk_world, SCHEMA_ID);
 		_obelisk_schema.fee
 	}
-
 }

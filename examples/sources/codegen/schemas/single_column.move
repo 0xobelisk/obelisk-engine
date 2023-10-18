@@ -14,7 +14,7 @@ module examples::single_column_schema {
 	const SCHEMA_ID: vector<u8> = b"single_column";
 
 	// value
-	struct SingleColumnData has copy , drop, store {
+	struct SingleColumnData has copy, drop , store {
 		value: u64
 	}
 
@@ -32,23 +32,21 @@ module examples::single_column_schema {
 		let _obelisk_schema = world::get_mut_schema<Table<address,SingleColumnData>>(_obelisk_world, SCHEMA_ID);
 		let _obelisk_data = new( value);
 		if(table::contains<address, SingleColumnData>(_obelisk_schema, _obelisk_entity_key)) {
-    		*table::borrow_mut<address, SingleColumnData>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
+			*table::borrow_mut<address, SingleColumnData>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
 		} else {
-    		table::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
+			table::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
 		};
 		events::emit_set(SCHEMA_ID, some(_obelisk_entity_key), _obelisk_data)
 	}
 
-
 	public fun get(_obelisk_world: &World, _obelisk_entity_key: address): u64 {
-  		let _obelisk_schema = world::get_schema<Table<address,SingleColumnData>>(_obelisk_world, SCHEMA_ID);
-  		assert!(table::contains<address, SingleColumnData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
+		let _obelisk_schema = world::get_schema<Table<address,SingleColumnData>>(_obelisk_world, SCHEMA_ID);
+		assert!(table::contains<address, SingleColumnData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 		let _obelisk_data = table::borrow<address, SingleColumnData>(_obelisk_schema, _obelisk_entity_key);
 		(
 			_obelisk_data.value
 		)
 	}
-
 
 	public(friend) fun remove(_obelisk_world: &mut World, _obelisk_entity_key: address) {
 		let _obelisk_schema = world::get_mut_schema<Table<address,SingleColumnData>>(_obelisk_world, SCHEMA_ID);
@@ -61,5 +59,4 @@ module examples::single_column_schema {
 		let _obelisk_schema = world::get_schema<Table<address,SingleColumnData>>(_obelisk_world, SCHEMA_ID);
 		table::contains<address, SingleColumnData>(_obelisk_schema, _obelisk_entity_key)
 	}
-
 }

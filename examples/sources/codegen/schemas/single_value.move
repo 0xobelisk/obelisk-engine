@@ -10,7 +10,7 @@ module examples::single_value_schema {
 	const SCHEMA_ID: vector<u8> = b"single_value";
 
 	// value
-	struct SingleValueData has copy , drop, store {
+	struct SingleValueData has copy, drop , store {
 		value: u64
 	}
 
@@ -31,13 +31,10 @@ module examples::single_value_schema {
 		_obelisk_schema.value = value;
 	}
 
-
 	public fun get(_obelisk_world: &World): u64 {
-  		let _obelisk_schema = world::get_schema<SingleValueData>(_obelisk_world, SCHEMA_ID);
+		let _obelisk_schema = world::get_schema<SingleValueData>(_obelisk_world, SCHEMA_ID);
 		(
 			_obelisk_schema.value
 		)
 	}
-
-
 }

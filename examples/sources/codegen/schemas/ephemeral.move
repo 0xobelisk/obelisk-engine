@@ -7,7 +7,7 @@ module examples::ephemeral_schema {
 	// caller
 	// value
 	// flag
-	struct EphemeralData has copy , drop, store {
+	struct EphemeralData has copy, drop  {
 		caller: address,
 		value: u64,
 		flag: bool

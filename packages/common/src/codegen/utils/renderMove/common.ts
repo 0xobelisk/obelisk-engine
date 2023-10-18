@@ -155,9 +155,10 @@ export function renderKeyName(values: Record<string, string> | string): string {
 
 export function renderStruct(
   structName: string,
-  values: Record<string, string> | string
+  values: Record<string, string> | string,
+  isEphemeral: boolean = false
 ): string {
-  return `\tstruct ${structName} has copy , drop, store {
+  return `\tstruct ${structName} has copy, drop ${isEphemeral ? "" : ", store"} {
 ${getStructAttrsWithType(values, "\t\t").join(",\n")}
 \t}\n`;
 }
@@ -189,9 +190,9 @@ export function renderSetFunc(
 \t\tlet _obelisk_schema = world::get_mut_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
 \t\tlet _obelisk_data = new(${getStructAttrs(values, " ")});
 \t\tif(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key)) {
-    \t\t*table::borrow_mut<address, ${structName}>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
+\t\t\t*table::borrow_mut<address, ${structName}>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
 \t\t} else {
-    \t\ttable::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
+\t\t\ttable::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
 \t\t};
 \t\tevents::emit_set(SCHEMA_ID, some(_obelisk_entity_key), _obelisk_data)
 \t}
@@ -214,7 +215,7 @@ export function renderSetAttrsFunc(
 ): string {
   return typeof struct === "string"
     ? ""
-    : Object.entries(struct)
+    : "\n" + Object.entries(struct)
         .map(
           ([key, type]) =>
             `\tpublic(friend) fun set_${key}(_obelisk_world: &mut World, _obelisk_entity_key: address, ${key}: ${type}) {
@@ -234,8 +235,8 @@ export function renderGetAllFunc(
     struct: BaseType | Record<string, BaseType>,
 ): string {
   return `\tpublic fun get(_obelisk_world: &World, _obelisk_entity_key: address): ${getStructTypes(struct)} {
-  \t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
-  \t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
+\t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 \t\tlet _obelisk_data = table::borrow<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
 \t\t(
 ${getStructAttrsQuery(struct, "\t\t\t").join(",\n")}
@@ -250,7 +251,7 @@ export function renderGetAttrsFunc(
 ): string {
   return typeof struct === "string"
       ? ""
-      : Object.entries(struct)
+      : "\n" + Object.entries(struct)
           .map(
               ([key, type]) => `\tpublic fun get_${key}(_obelisk_world: &World, _obelisk_entity_key: address): ${type} {
 \t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
@@ -267,8 +268,7 @@ export function renderContainFunc(structName: string): string {
   return `\tpublic fun contains(_obelisk_world: &World, _obelisk_entity_key: address): bool {
 \t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
 \t\ttable::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key)
-\t}
-`;
+\t}`;
 }
 
 export function renderRegisterFuncWithInit(
@@ -301,15 +301,14 @@ export function renderSingleSetAttrsFunc(
 ): string {
   return typeof struct === "string"
       ? ""
-      : Object.entries(struct)
+      : "\n" + Object.entries(struct)
           .map(
-              ([key, type]) =>
-                  `\tpublic(friend) fun set_${key}(_obelisk_world: &mut World, ${key}: ${type}) {
+              ([key, type]) => `
+\tpublic(friend) fun set_${key}(_obelisk_world: &mut World, ${key}: ${type}) {
 \t\tlet _obelisk_schema = world::get_mut_schema<${structName}>(_obelisk_world, SCHEMA_ID);
 \t\t_obelisk_schema.${key} = ${key};
 \t\tevents::emit_set(SCHEMA_ID, none(), *_obelisk_schema)
-\t}
-`
+\t}`
           )
           .join("\n");
 }
@@ -319,15 +318,14 @@ export function renderSingleGetAllFunc(
     values: BaseType | Record<string, BaseType>,
 ): string {
   return `\tpublic fun get(_obelisk_world: &World): ${getStructTypes(values)} {
-  \t\tlet _obelisk_schema = world::get_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_schema = world::get_schema<${structName}>(_obelisk_world, SCHEMA_ID);
 \t\t(
 ${typeof values === "string" ?
       `\t\t\t_obelisk_schema.value` :
       Object.entries(values).map(([key, _]) =>
           `\t\t\t_obelisk_schema.${key},`).join("\n")}
 \t\t)
-\t}
-`;
+\t}`;
 }
 
 export function renderSingleGetAttrsFunc(
@@ -336,13 +334,13 @@ export function renderSingleGetAttrsFunc(
 ): string {
   return typeof struct === "string"
       ? ""
-      : Object.entries(struct)
+      : "\n" + Object.entries(struct)
           .map(
-              ([key, type]) => `\tpublic fun get_${key}(_obelisk_world: &World): ${type} {
+              ([key, type]) => `
+\tpublic fun get_${key}(_obelisk_world: &World): ${type} {
 \t\tlet _obelisk_schema = world::get_schema<${structName}>(_obelisk_world, SCHEMA_ID);
 \t\t_obelisk_schema.${key}
-\t}
-`
+\t}`
           )
           .join("\n");
 }

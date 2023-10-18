@@ -81,7 +81,7 @@ function renderEphemeralSchema(option: RenderSchemaOptions): string {
     const SCHEMA_ID: vector<u8> = b"${option.schemaName}";
     
 ${renderKeyName(option.resourceData)}
-${renderStruct(option.structName, option.resourceData)}  
+${renderStruct(option.structName, option.resourceData, option.ephemeral)}  
 \tpublic fun emit_${option.schemaName}(${getStructAttrsWithType(option.resourceData, " ")}) {
 \t\tevents::emit_set(SCHEMA_ID, none(), ${option.structName} { ${getStructAttrs(option.resourceData, " ")} })
 \t}
@@ -105,11 +105,9 @@ ${renderStruct(option.structName, option.resourceData)}
 ${renderNewStructFunc(option.structName, option.resourceData)}
 ${renderRegisterFuncWithInit(option.structName, option.init)}
 
-${renderSingleSetFunc(option.structName, option.resourceData)}
+${renderSingleSetFunc(option.structName, option.resourceData)}${renderSingleSetAttrsFunc(option.structName, option.resourceData)}
 
-${renderSingleSetAttrsFunc(option.structName, option.resourceData)}
-${renderSingleGetAllFunc(option.structName, option.resourceData)}
-${renderSingleGetAttrsFunc(option.structName, option.resourceData)}
+${renderSingleGetAllFunc(option.structName, option.resourceData)}${renderSingleGetAttrsFunc(option.structName, option.resourceData)}
 }
 `
 }
@@ -135,10 +133,8 @@ ${renderStruct(option.structName, option.resourceData)}
 ${renderNewStructFunc(option.structName, option.resourceData)}
 ${renderRegisterFunc(option.structName)}
 
-${renderSetFunc(option.structName, option.resourceData)}
-${renderSetAttrsFunc(option.structName, option.resourceData)}
-${renderGetAllFunc(option.structName, option.resourceData)}
-${renderGetAttrsFunc(option.structName, option.resourceData)}
+${renderSetFunc(option.structName, option.resourceData)}${renderSetAttrsFunc(option.structName, option.resourceData)}
+${renderGetAllFunc(option.structName, option.resourceData)}${renderGetAttrsFunc(option.structName, option.resourceData)}
 ${renderRemoveFunc(option.structName)}
 ${renderContainFunc(option.structName)}
 }
