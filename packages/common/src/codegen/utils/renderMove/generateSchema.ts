@@ -1,4 +1,4 @@
-import { ObeliskConfig } from "../../types";
+import {ObeliskConfig, RenderSchemaOptions} from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
   getFriendSystem,
@@ -13,7 +13,11 @@ import {
   renderRegisterFunc,
   renderGetAllFunc,
   renderGetAttrsFunc,
-  renderEmit,
+  getStructAttrsWithType,
+  getStructAttrs,
+  renderRegisterFuncWithInit,
+  renderSingleSetFunc,
+  renderSingleSetAttrsFunc, renderSingleGetAllFunc, renderSingleGetAttrsFunc,
 } from "./common";
 
 export function getRenderSchemaOptions(config: ObeliskConfig) {
@@ -35,6 +39,8 @@ export function getRenderSchemaOptions(config: ObeliskConfig) {
         schemaData.singleton !== undefined ? schemaData.singleton : false;
     }
     options.push({
+      projectName: config.name,
+      systems: config.systems,
       schemaName: schemaName,
       structName: convertToCamelCase(schemaName),
       ephemeral,
@@ -51,69 +57,86 @@ export function getRenderSchemaOptions(config: ObeliskConfig) {
 export function generateSchema(config: ObeliskConfig, srcPrefix: string) {
   const options = getRenderSchemaOptions(config);
   for (const option of options) {
-    let code = option.ephemeral
-      ? `module ${config.name}::${option.schemaName}_schema {
-    use sui::table::{Self, Table};
-    use std::ascii::{String, string};
-    use sui::tx_context::TxContext;
-    use ${config.name}::events;
-    use ${config.name}::world::{Self, World};
+    let code: string;
+    if (option.ephemeral) {
+      code =  renderEphemeralSchema(option)
+    } else if(option.singleton) {
+      code =  renderSingleSchema(option)
+    } else {
+      code = renderSchema(option)
+    }
+    formatAndWriteMove(
+      code,
+      `${srcPrefix}/contracts/${option.projectName}/sources/codegen/schemas/${option.schemaName}.move`,
+      "formatAndWriteMove"
+    );
+  }
+}
+
+function renderEphemeralSchema(option: RenderSchemaOptions): string {
+  return `module ${option.projectName}::${option.schemaName}_schema {
+    use std::option::none;
+    use ${option.projectName}::events;
     
-    const NAME: vector<u8> = b"${option.schemaName}";
+    const SCHEMA_ID: vector<u8> = b"${option.schemaName}";
     
 ${renderKeyName(option.resourceData)}
-${renderStruct(option.structName, option.resourceData)}  
-\tstruct SchemaMetadata has store {
-\t\tname: String,
-\t\tdata: Table<address, ${option.structName}>
+${renderStruct(option.structName, option.resourceData, option.ephemeral)}  
+\tpublic fun emit_${option.schemaName}(${getStructAttrsWithType(option.resourceData, " ")}) {
+\t\tevents::emit_set(SCHEMA_ID, none(), ${option.structName} { ${getStructAttrs(option.resourceData, " ")} })
 \t}
-
-${renderRegisterFunc(option.structName, false, option.init)}
-
-${renderEmit(option.schemaName, option.structName, option.resourceData)}
 }`
-      : `module ${config.name}::${option.schemaName}_schema {
-    use std::ascii::{String, string};
+}
+
+function renderSingleSchema(option: RenderSchemaOptions): string {
+return `module ${option.projectName}::${option.schemaName}_schema {
+    use std::option::none;
     use sui::tx_context::TxContext;
-    use sui::table::{Self, Table};
-    use ${config.name}::entity_key;
-    use ${config.name}::events;
-    use ${config.name}::world::{Self, World};
+    use ${option.projectName}::events;
+    use ${option.projectName}::world::{Self, World};
   
     // Systems
-${getFriendSystem(config.name, config.systems)}
+${getFriendSystem(option.projectName, option.systems)}
 
-\t/// Entity does not exist
-\tconst EEntityDoesNotExist: u64 = 0;
-
-\tconst NAME: vector<u8> = b"${option.schemaName}";
-
-\tpublic fun id(): address {
-\t\tentity_key::from_bytes(NAME)
-\t}
+\tconst SCHEMA_ID: vector<u8> = b"${option.schemaName}";
 
 ${renderKeyName(option.resourceData)}
 ${renderStruct(option.structName, option.resourceData)}
 ${renderNewStructFunc(option.structName, option.resourceData)}
-\tstruct SchemaMetadata has store {
-\t\tname: String,
-\t\tdata: Table<address, ${option.structName}>
-\t}
+${renderRegisterFuncWithInit(option.structName, option.init)}
 
-${renderRegisterFunc(option.structName, option.singleton, option.init)}
+${renderSingleSetFunc(option.structName, option.resourceData)}${renderSingleSetAttrsFunc(option.structName, option.resourceData)}
 
-${renderSetFunc(option.structName, option.resourceData, option.singleton)}
-${renderSetAttrsFunc(option.structName, option.resourceData, option.singleton)}
-${renderGetAllFunc(option.structName, option.resourceData, option.singleton)}
-${renderGetAttrsFunc(option.structName, option.resourceData, option.singleton)}
-${option.singleton ? "" : renderRemoveFunc(option.structName)}
-${option.singleton ? "" : renderContainFunc(option.structName)}
+${renderSingleGetAllFunc(option.structName, option.resourceData)}${renderSingleGetAttrsFunc(option.structName, option.resourceData)}
 }
-`;
-    formatAndWriteMove(
-      code,
-      `${srcPrefix}/contracts/${config.name}/sources/codegen/schemas/${option.schemaName}.move`,
-      "formatAndWriteMove"
-    );
-  }
+`
+}
+
+function renderSchema(option: RenderSchemaOptions) {
+  return `module ${option.projectName}::${option.schemaName}_schema {
+    use std::option::some;
+    use sui::tx_context::TxContext;
+    use sui::table::{Self, Table};
+    use ${option.projectName}::events;
+    use ${option.projectName}::world::{Self, World};
+
+    // Systems
+${getFriendSystem(option.projectName, option.systems)}
+
+\t/// Entity does not exist
+\tconst EEntityDoesNotExist: u64 = 0;
+
+\tconst SCHEMA_ID: vector<u8> = b"${option.schemaName}";
+
+${renderKeyName(option.resourceData)}
+${renderStruct(option.structName, option.resourceData)}
+${renderNewStructFunc(option.structName, option.resourceData)}
+${renderRegisterFunc(option.structName)}
+
+${renderSetFunc(option.structName, option.resourceData)}${renderSetAttrsFunc(option.structName, option.resourceData)}
+${renderGetAllFunc(option.structName, option.resourceData)}${renderGetAttrsFunc(option.structName, option.resourceData)}
+${renderRemoveFunc(option.structName)}
+${renderContainFunc(option.structName)}
+}
+`
 }
