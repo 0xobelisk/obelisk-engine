@@ -3,36 +3,32 @@ import { ObeliskConfig } from "@0xobelisk/common";
 export const obeliskConfig = {
   name: "examples",
   description: "examples",
-  systems: [
-    "example_system",
-  ],
+  systems: ["example_system"],
   schemas: {
     single_column: "u64",
     multi_column: {
-      valueSchema: {
+      valueType: {
         state: "vector<u8>",
         last_update_time: "u64",
-      }
+      },
     },
     ephemeral: {
       ephemeral: true,
-      valueSchema: "u64",
+      valueType: "u64",
     },
     single_value: {
-      singleton: true,
-      valueSchema: "u64",
-      init: 1000
+      valueType: "u64",
+      defaultValue: 1000,
     },
     single_struct: {
-      singleton: true,
-      valueSchema: {
+      valueType: {
         admin: "address",
         fee: "u64",
       },
-      init: {
+      defaultValue: {
         admin: "@0x1",
         fee: 100,
-      }
+      },
     },
-  }
+  },
 } as ObeliskConfig;
