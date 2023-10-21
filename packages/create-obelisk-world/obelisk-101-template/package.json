@@ -31,9 +31,9 @@
     "generateAccount": "ts-node scripts/generateAccount.ts"
   },
   "dependencies": {
-    "@0xobelisk/common": "^0.4.3",
-    "@0xobelisk/client": "^0.4.3",
-    "@0xobelisk/cli": "^0.4.3",
+    "@0xobelisk/common": "^0.4.5",
+    "@0xobelisk/client": "^0.4.5",
+    "@0xobelisk/cli": "^0.4.5",
     "@mysten/sui.js": "^0.41.0",
     "clsx": "^1.2.1",
     "framer-motion": "^10.12.16",

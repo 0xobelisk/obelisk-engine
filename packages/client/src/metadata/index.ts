@@ -1,7 +1,7 @@
 import { SuiMoveNormalizedModules } from '@mysten/sui.js';
 import { SuiInteractor, getDefaultConnection } from '../libs/suiInteractor';
 
-import { NetworkType } from 'src/types';
+import { NetworkType } from '../types';
 
 export async function loadMetadata(
   networkType: NetworkType,

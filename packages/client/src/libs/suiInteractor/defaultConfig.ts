@@ -5,7 +5,7 @@ import {
   mainnetConnection,
 } from '@mysten/sui.js';
 import type { Connection } from '@mysten/sui.js';
-import type { NetworkType } from 'src/types';
+import type { NetworkType } from '../../types';
 export const defaultGasBudget = 10 ** 8; // 0.1 SUI, should be enough for most of the transactions
 export const defaultGasPrice = 1000; // 1000 MIST
 

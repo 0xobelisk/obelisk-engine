@@ -10,7 +10,7 @@ import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { getDefaultConnection, SuiInteractor } from './libs/suiInteractor';
 
-import { ObeliskObjectData } from 'src/types';
+import { ObeliskObjectData } from './types';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import {
   SuiMoveMoudleFuncType,
