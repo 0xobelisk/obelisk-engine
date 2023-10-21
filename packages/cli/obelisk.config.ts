@@ -74,7 +74,7 @@ export const obeliskConfig = {
         map: "vector<vector<u8>>",
       },
       defaultValue: {
-        admin: "@0x1",
+        admin: "0x1",
         addr_list: [
           "0x1804b821bba181110599b8757008eabe6f89f62774d7fafb5ee666ac742a41f8",
           "0x341ede3aa40e29d6716ce92b2fdb977be5ac1129aa43eb024a8b5a9478204fe2",
