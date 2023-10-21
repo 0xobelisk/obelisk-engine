@@ -21,12 +21,11 @@
     "worldgen": "obelisk schemagen obelisk.config.ts",
     "storeConfig": "ts-node scripts/storeConfig.ts",
     "generateAccount": "ts-node scripts/generateAccount.ts"
-
   },
   "dependencies": {
-    "@0xobelisk/common": "^0.4.2",
-    "@0xobelisk/client": "^0.4.2",
-    "@0xobelisk/cli": "^0.4.2"
+    "@0xobelisk/common": "^0.4.3",
+    "@0xobelisk/client": "^0.4.3",
+    "@0xobelisk/cli": "^0.4.3"
   },
   "devDependencies": {
     "@types/node": "18.16.16",
