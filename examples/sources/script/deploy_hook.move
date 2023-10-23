@@ -7,6 +7,9 @@ module examples::deploy_hook {
 
     public entry fun run(world: &mut World, admin_cap: &AdminCap) {
         assert!( get_admin(world) == object::id(admin_cap), ENotAdmin);
+        
+        // Logic that needs to be automated once the contract is deployed
+        
     }
 
     #[test_only]
