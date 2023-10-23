@@ -1,7 +1,7 @@
 import type { CommandModule } from "yargs";
 import { logError } from "../utils/errors";
 import { upgradeHandler } from "../utils";
-import { ObeliskConfig, loadConfig } from "@0xobelisk/common";
+import {ObeliskConfig, loadConfig, ValueType} from "@0xobelisk/common";
 
 type Options = {
   network: any;
@@ -32,7 +32,7 @@ const commandModule: CommandModule<Options, Options> = {
     try {
       const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
 
-      let schemaNames = Object.keys(obeliskConfig.schemas);
+      let schemaNames = Object.keys(obeliskConfig.schemas).filter(key => !(typeof obeliskConfig.schemas === 'object' && 'ephemeral' in obeliskConfig.schemas && (obeliskConfig.schemas[key] as ValueType).ephemeral));
 
       await upgradeHandler(obeliskConfig.name, network, schemaNames);
     } catch (error: any) {

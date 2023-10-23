@@ -208,7 +208,10 @@ in your contracts directory to use the default sui private key.`
 
       registerTx.moveCall({
         target: `${newPackageId}::${newSchema}_schema::register`,
-        arguments: [registerTx.object(worldId)],
+        arguments: [
+            registerTx.object(worldId),
+            registerTx.object(adminCap)
+        ],
       });
 
       const registerResult = await client.signAndExecuteTransactionBlock({
