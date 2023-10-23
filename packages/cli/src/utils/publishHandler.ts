@@ -68,6 +68,7 @@ in your contracts directory to use the default sui private key.`
   let packageId = "";
   let worldId = "";
   let upgradeCapId = "";
+  let adminCapId = "";
   result.objectChanges!.map((object) => {
     if (object.type === "published") {
       console.log(chalk.green(`${name} PackageId: ${object.packageId}`));
@@ -87,7 +88,48 @@ in your contracts directory to use the default sui private key.`
       console.log(chalk.green(`${name} UpgradeCap: ${object.objectId}`));
       upgradeCapId = object.objectId;
     }
+    if (
+        object.type === "created" &&
+        object.objectType.endsWith("::world::AdminCap")
+    ) {
+      console.log(chalk.green(`${name} AdminCapId: ${object.objectId}`));
+      adminCapId = object.objectId;
+    }
   });
 
-  saveContractData(name, network, packageId, worldId, upgradeCapId, version);
+  saveContractData(name, network, packageId, worldId, upgradeCapId, adminCapId, version);
+
+  const deployHookTx = new TransactionBlock();
+
+  deployHookTx.setGasBudget(5000000000);
+
+  deployHookTx.moveCall({
+    target: `${packageId}::deploy_hook::run`,
+    arguments: [
+      deployHookTx.object(worldId),
+      deployHookTx.object(adminCapId),
+    ],
+  });
+
+  const deployHookResult = await client.signAndExecuteTransactionBlock({
+    signer: keypair,
+    transactionBlock: deployHookTx,
+    options: {
+      showEffects: true,
+    },
+  });
+
+  if (deployHookResult.effects?.status.status === "success") {
+    console.log(
+        chalk.blue(
+            `Successful auto-execution of deployHook, please check the transaction digest: ${deployHookResult.digest}`
+        )
+    );
+  } else {
+    console.log(
+        chalk.yellow(
+            `Failed to execute deployHook, please republish or manually call deploy_hook::run`
+        )
+    );
+  }
 }

@@ -1,17 +1,19 @@
 module examples::multi_column_schema {
-    use std::option::some;
+	use std::option::some;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
     use examples::events;
-    use examples::world::{Self, World};
+    use examples::world::{Self, World, AdminCap};
 
     // Systems
 	friend examples::example_system;
+	friend examples::deploy_hook;
 
 	/// Entity does not exist
 	const EEntityDoesNotExist: u64 = 0;
 
 	const SCHEMA_ID: vector<u8> = b"multi_column";
+	const SCHEMA_TYPE: u8 = 0;
 
 	// state
 	// last_update_time
@@ -27,8 +29,8 @@ module examples::multi_column_schema {
 		}
 	}
 
-	public fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
-		world::add_schema<Table<address,MultiColumnData>>(_obelisk_world, SCHEMA_ID, table::new<address, MultiColumnData>(ctx));
+	public fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, ctx: &mut TxContext) {
+		world::add_schema<Table<address,MultiColumnData>>(_obelisk_world, SCHEMA_ID, table::new<address, MultiColumnData>(ctx), admin_cap);
 	}
 
 	public(friend) fun set(_obelisk_world: &mut World, _obelisk_entity_key: address,  state: vector<u8>, last_update_time: u64) {
@@ -39,7 +41,7 @@ module examples::multi_column_schema {
 		} else {
 			table::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
 		};
-		events::emit_set(SCHEMA_ID, some(_obelisk_entity_key), _obelisk_data)
+		events::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), _obelisk_data)
 	}
 
 	public(friend) fun set_state(_obelisk_world: &mut World, _obelisk_entity_key: address, state: vector<u8>) {
@@ -47,7 +49,7 @@ module examples::multi_column_schema {
 		assert!(table::contains<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 		let _obelisk_data = table::borrow_mut<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key);
 		_obelisk_data.state = state;
-		events::emit_set(SCHEMA_ID, some(_obelisk_entity_key), *_obelisk_data)
+		events::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), *_obelisk_data)
 	}
 
 	public(friend) fun set_last_update_time(_obelisk_world: &mut World, _obelisk_entity_key: address, last_update_time: u64) {
@@ -55,7 +57,7 @@ module examples::multi_column_schema {
 		assert!(table::contains<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 		let _obelisk_data = table::borrow_mut<address, MultiColumnData>(_obelisk_schema, _obelisk_entity_key);
 		_obelisk_data.last_update_time = last_update_time;
-		events::emit_set(SCHEMA_ID, some(_obelisk_entity_key), *_obelisk_data)
+		events::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), *_obelisk_data)
 	}
 
 	public fun get(_obelisk_world: &World, _obelisk_entity_key: address): (vector<u8>,u64) {
