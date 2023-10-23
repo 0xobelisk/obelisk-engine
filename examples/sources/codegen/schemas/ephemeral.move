@@ -3,17 +3,14 @@ module examples::ephemeral_schema {
     use examples::events;
     
     const SCHEMA_ID: vector<u8> = b"ephemeral";
+    const SCHEMA_TYPE: u8 = 2;
     
-	// caller
 	// value
-	// flag
 	struct EphemeralData has copy, drop  {
-		caller: address,
-		value: u64,
-		flag: bool
+		value: u64
 	}
   
-	public fun emit_ephemeral( caller: address, value: u64, flag: bool) {
-		events::emit_set(SCHEMA_ID, none(), EphemeralData {  caller, value, flag })
+	public fun emit_ephemeral( value: u64) {
+		events::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), EphemeralData {  value })
 	}
 }

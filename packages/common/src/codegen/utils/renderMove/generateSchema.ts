@@ -128,6 +128,7 @@ function renderEphemeralSchema(option: RenderSchemaOptions): string {
     use ${option.projectName}::events;
     
     const SCHEMA_ID: vector<u8> = b"${option.schemaName}";
+    const SCHEMA_TYPE: u8 = 2;
     
 ${renderKeyName(option.valueType)}
 ${renderStruct(option.structName, option.valueType, option.ephemeral)}  
@@ -135,7 +136,7 @@ ${renderStruct(option.structName, option.valueType, option.ephemeral)}
     option.valueType,
     " "
   )}) {
-\t\tevents::emit_set(SCHEMA_ID, none(), ${option.structName} { ${getStructAttrs(
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), ${option.structName} { ${getStructAttrs(
     option.valueType,
     " "
   )} })
@@ -150,11 +151,12 @@ ${
 }use std::option::none;
     use sui::tx_context::TxContext;
     use ${option.projectName}::events;
-    use ${option.projectName}::world::{Self, World};
+    use ${option.projectName}::world::{Self, World, AdminCap};
     // Systems
 ${getFriendSystem(option.projectName, option.systems)}
 
 \tconst SCHEMA_ID: vector<u8> = b"${option.schemaName}";
+\tconst SCHEMA_TYPE: u8 = 1;
 
 ${renderKeyName(option.valueType)}
 ${renderStruct(option.structName, option.valueType)}
@@ -186,7 +188,7 @@ ${
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
     use ${option.projectName}::events;
-    use ${option.projectName}::world::{Self, World};
+    use ${option.projectName}::world::{Self, World, AdminCap};
 
     // Systems
 ${getFriendSystem(option.projectName, option.systems)}
@@ -195,6 +197,7 @@ ${getFriendSystem(option.projectName, option.systems)}
 \tconst EEntityDoesNotExist: u64 = 0;
 
 \tconst SCHEMA_ID: vector<u8> = b"${option.schemaName}";
+\tconst SCHEMA_TYPE: u8 = 0;
 
 ${renderKeyName(option.valueType)}
 ${renderStruct(option.structName, option.valueType)}
