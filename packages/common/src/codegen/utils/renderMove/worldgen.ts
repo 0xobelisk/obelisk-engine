@@ -7,6 +7,7 @@ import { generateEntityKey } from "./generateEntityKey";
 import { generateInit } from "./generateInit";
 import { generateEps } from "./generateEps";
 import { generateSchema } from "./generateSchema";
+import {generateScript} from "./generateScript";
 
 export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   let path = "";
@@ -24,6 +25,7 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   }
 
   generateSystem(config, path);
+  generateScript(config, path);
 
   // generate codegen
   generateSchema(config, path);

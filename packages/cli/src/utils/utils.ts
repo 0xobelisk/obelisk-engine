@@ -9,6 +9,7 @@ export type DeploymentJsonType = {
   packageId: string;
   worldId: string;
   upgradeCap: string;
+  adminCap: string;
   version: number;
 };
 
@@ -102,12 +103,21 @@ export async function getUpgradeCap(
   return deployment.upgradeCap;
 }
 
+export async function getAdminCap(
+    projectPath: string,
+    network: string
+): Promise<string> {
+  const deployment = await getDeploymentJson(projectPath, network);
+  return deployment.adminCap;
+}
+
 export function saveContractData(
   projectName: string,
   network: "mainnet" | "testnet" | "devnet" | "localnet",
   packageId: string,
   worldId: string,
   upgradeCap: string,
+  adminCap: string,
   version: number
 ) {
   const DeploymentData: DeploymentJsonType = {
@@ -116,6 +126,7 @@ export function saveContractData(
     packageId,
     worldId,
     upgradeCap,
+    adminCap,
     version,
   };
 

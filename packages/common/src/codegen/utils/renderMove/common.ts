@@ -60,7 +60,7 @@ export function getRegisterSchema(
   Object.entries(values).forEach(([key, value]) => {
     if (typeof value === "object" && value.ephemeral) {
     } else {
-      registers.push(`\t\t${key}_schema::register(&mut _obelisk_world, ctx);`);
+      registers.push(`\t\t${key}_schema::register(&mut _obelisk_world, &admin_cap, ctx);`);
     }
   });
   return registers;
@@ -73,7 +73,7 @@ export function getRegisterSchema(
  * @return [ friend name::name_system, friend name::info_system ]
  */
 export function getFriendSystem(name: string, values: string[]): string {
-  return values.map((key) => `\tfriend ${name}::${key};`).join("\n");
+  return values.map((key) => `\tfriend ${name}::${key};`).join("\n") + `\n\tfriend ${name}::deploy_hook;`;
 }
 
 /**
@@ -282,8 +282,8 @@ ${getStructAttrs(values, "\t\t\t").join(", \n")}
 }
 
 export function renderRegisterFunc(structName: string): string {
-  return `\tpublic fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
-\t\tworld::add_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID, table::new<address, ${structName}>(ctx));
+  return `\tpublic fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, ctx: &mut TxContext) {
+\t\tworld::add_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID, table::new<address, ${structName}>(ctx), admin_cap);
 \t}`;
 }
 
@@ -302,7 +302,7 @@ export function renderSetFunc(
 \t\t} else {
 \t\t\ttable::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
 \t\t};
-\t\tevents::emit_set(SCHEMA_ID, some(_obelisk_entity_key), _obelisk_data)
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), _obelisk_data)
 \t}
 `;
 }
@@ -332,7 +332,7 @@ export function renderSetAttrsFunc(
 \t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 \t\tlet _obelisk_data = table::borrow_mut<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
 \t\t_obelisk_data.${key} = ${key};
-\t\tevents::emit_set(SCHEMA_ID, some(_obelisk_entity_key), *_obelisk_data)
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), *_obelisk_data)
 \t}
 `
           )
@@ -391,10 +391,10 @@ export function renderRegisterFuncWithInit(
   valueType: BaseType | Record<string, BaseType>,
   defaultValue: BaseValueType | Record<string, BaseValueType>
 ): string {
-  return `\tpublic fun register(_obelisk_world: &mut World, _ctx: &mut TxContext) {
+  return `\tpublic fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, _ctx: &mut TxContext) {
 \t\tlet _obelisk_schema = new(${getStructInitValue(valueType, defaultValue)});
-\t\tworld::add_schema<${structName}>(_obelisk_world, SCHEMA_ID, _obelisk_schema);
-\t\tevents::emit_set(SCHEMA_ID, none(), _obelisk_schema);
+\t\tworld::add_schema<${structName}>(_obelisk_world, SCHEMA_ID, _obelisk_schema, admin_cap);
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), _obelisk_schema);
 \t}`;
 }
 
@@ -430,7 +430,7 @@ export function renderSingleSetAttrsFunc(
 \tpublic(friend) fun set_${key}(_obelisk_world: &mut World, ${key}: ${type}) {
 \t\tlet _obelisk_schema = world::get_mut_schema<${structName}>(_obelisk_world, SCHEMA_ID);
 \t\t_obelisk_schema.${key} = ${key};
-\t\tevents::emit_set(SCHEMA_ID, none(), *_obelisk_schema)
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), *_obelisk_schema)
 \t}`
           )
           .join("\n");

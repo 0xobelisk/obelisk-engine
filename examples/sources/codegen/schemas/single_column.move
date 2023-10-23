@@ -1,17 +1,19 @@
 module examples::single_column_schema {
-    use std::option::some;
+	use std::option::some;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
     use examples::events;
-    use examples::world::{Self, World};
+    use examples::world::{Self, World, AdminCap};
 
     // Systems
 	friend examples::example_system;
+	friend examples::deploy_hook;
 
 	/// Entity does not exist
 	const EEntityDoesNotExist: u64 = 0;
 
 	const SCHEMA_ID: vector<u8> = b"single_column";
+	const SCHEMA_TYPE: u8 = 0;
 
 	// value
 	struct SingleColumnData has copy, drop , store {
@@ -24,8 +26,8 @@ module examples::single_column_schema {
 		}
 	}
 
-	public fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
-		world::add_schema<Table<address,SingleColumnData>>(_obelisk_world, SCHEMA_ID, table::new<address, SingleColumnData>(ctx));
+	public fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, ctx: &mut TxContext) {
+		world::add_schema<Table<address,SingleColumnData>>(_obelisk_world, SCHEMA_ID, table::new<address, SingleColumnData>(ctx), admin_cap);
 	}
 
 	public(friend) fun set(_obelisk_world: &mut World, _obelisk_entity_key: address,  value: u64) {
@@ -36,7 +38,7 @@ module examples::single_column_schema {
 		} else {
 			table::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
 		};
-		events::emit_set(SCHEMA_ID, some(_obelisk_entity_key), _obelisk_data)
+		events::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), _obelisk_data)
 	}
 
 	public fun get(_obelisk_world: &World, _obelisk_entity_key: address): u64 {

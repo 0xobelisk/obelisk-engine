@@ -75,7 +75,7 @@ module examples::example_system {
 
         let world = test_scenario::take_shared<World>(scenario);
 
-        ephemeral_schema::emit_ephemeral(@0x1,100,true);
+        ephemeral_schema::emit_ephemeral(100);
 
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);

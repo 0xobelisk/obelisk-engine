@@ -12,7 +12,7 @@ import {
   getWorldId,
   getUpgradeCap,
   saveContractData,
-  validatePrivateKey,
+  validatePrivateKey, getAdminCap,
 } from "./utils";
 
 type ObjectContent = {
@@ -53,6 +53,7 @@ in your contracts directory to use the default sui private key.`
   const oldPackageId = await getOldPackageId(projectPath, network);
   const worldId = await getWorldId(projectPath, network);
   const upgradeCap = await getUpgradeCap(projectPath, network);
+  const adminCap = await getAdminCap(projectPath, network);
 
   const newVersion = oldVersion + 1;
   await updateVersionInFile(projectPath, newVersion.toString());
@@ -143,6 +144,7 @@ in your contracts directory to use the default sui private key.`
       newPackageId,
       worldId,
       newUpgradeCap,
+      adminCap,
       newVersion
     );
 
@@ -154,7 +156,7 @@ in your contracts directory to use the default sui private key.`
       target: `${newPackageId}::world::migrate`,
       arguments: [
         migrateTx.object(worldId),
-        migrateTx.object(objectContent.fields["admin"]),
+        migrateTx.object(adminCap),
       ],
     });
 
@@ -253,6 +255,7 @@ in your contracts directory to use the default sui private key.`
       oldPackageId,
       worldId,
       upgradeCap,
+      adminCap,
       newVersion
     );
     // if (savePath !== undefined) {
