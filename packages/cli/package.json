@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/cli",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "sui",

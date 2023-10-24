@@ -5,7 +5,7 @@
   "author": "team@0xobelisk.com",
   "license": "MIT",
   "scripts": {
-    "dev": "pnpm run start-template",
+    "dev": "obelisk hello && pnpm run start-template",
     "start-template": "pnpm run localnode && sleep 5 && ts-node scripts/generateAccount.ts && obelisk faucet --network localnet && obelisk publish --network localnet && ts-node scripts/storeConfig.ts localnet && next",
     "next": "next",
     "build": "next build",
@@ -31,9 +31,9 @@
     "generateAccount": "ts-node scripts/generateAccount.ts"
   },
   "dependencies": {
-    "@0xobelisk/common": "^0.4.5",
-    "@0xobelisk/client": "^0.4.5",
-    "@0xobelisk/cli": "^0.4.5",
+    "@0xobelisk/common": "^0.4.6",
+    "@0xobelisk/client": "^0.4.6",
+    "@0xobelisk/cli": "^0.4.6",
     "@mysten/sui.js": "^0.41.0",
     "clsx": "^1.2.1",
     "framer-motion": "^10.12.16",
