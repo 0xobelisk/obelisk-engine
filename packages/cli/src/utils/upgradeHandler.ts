@@ -3,7 +3,7 @@ import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
 import { execSync } from "child_process";
 import chalk from "chalk";
-import { ObeliskCliError } from "./errors";
+import { ObeliskCliError, UpgradeError } from "./errors";
 import {
   updateVersionInFile,
   getNetwork,
@@ -13,6 +13,7 @@ import {
   getUpgradeCap,
   saveContractData,
   validatePrivateKey,
+  getAdminCap,
 } from "./utils";
 
 type ObjectContent = {
@@ -53,22 +54,34 @@ in your contracts directory to use the default sui private key.`
   const oldPackageId = await getOldPackageId(projectPath, network);
   const worldId = await getWorldId(projectPath, network);
   const upgradeCap = await getUpgradeCap(projectPath, network);
+  const adminCap = await getAdminCap(projectPath, network);
 
   const newVersion = oldVersion + 1;
   await updateVersionInFile(projectPath, newVersion.toString());
 
   try {
-    console.log(
-      `sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`
-    );
-    const { modules, dependencies, digest } = JSON.parse(
-      execSync(
-        `sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`,
-        {
-          encoding: "utf-8",
-        }
-      )
-    );
+    let modules: any, dependencies: any, digest: any;
+    try {
+      const {
+        modules: extractedModules,
+        dependencies: extractedDependencies,
+        digest: extractedDigest,
+      } = JSON.parse(
+        execSync(
+          `sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`,
+          {
+            encoding: "utf-8",
+          }
+        )
+      );
+
+      modules = extractedModules;
+      dependencies = extractedDependencies;
+      digest = extractedDigest;
+    } catch (error: any) {
+      throw new UpgradeError(error.stdout);
+    }
+
     const tx = new TransactionBlock();
 
     tx.setGasBudget(5000000000);
@@ -143,6 +156,7 @@ in your contracts directory to use the default sui private key.`
       newPackageId,
       worldId,
       newUpgradeCap,
+      adminCap,
       newVersion
     );
 
@@ -152,10 +166,7 @@ in your contracts directory to use the default sui private key.`
 
     migrateTx.moveCall({
       target: `${newPackageId}::world::migrate`,
-      arguments: [
-        migrateTx.object(worldId),
-        migrateTx.object(objectContent.fields["admin"]),
-      ],
+      arguments: [migrateTx.object(worldId), migrateTx.object(adminCap)],
     });
 
     const migrateResult = await client.signAndExecuteTransactionBlock({
@@ -206,7 +217,7 @@ in your contracts directory to use the default sui private key.`
 
       registerTx.moveCall({
         target: `${newPackageId}::${newSchema}_schema::register`,
-        arguments: [registerTx.object(worldId)],
+        arguments: [registerTx.object(worldId), registerTx.object(adminCap)],
       });
 
       const registerResult = await client.signAndExecuteTransactionBlock({
@@ -243,9 +254,9 @@ in your contracts directory to use the default sui private key.`
         `\n${name} world schemas is ${registerObjectContent.fields["schema_names"]}`
       )
     );
-  } catch (error) {
-    console.log("upgrade failed!");
-    console.error(error);
+  } catch (error: any) {
+    console.log(chalk.red("Upgrade failed!"));
+    console.error(error.message);
 
     saveContractData(
       name,
@@ -253,6 +264,7 @@ in your contracts directory to use the default sui private key.`
       oldPackageId,
       worldId,
       upgradeCap,
+      adminCap,
       newVersion
     );
     // if (savePath !== undefined) {

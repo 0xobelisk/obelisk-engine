@@ -24,7 +24,7 @@ import {
   ObjectData,
   ObjectFieldType,
   EntityData,
-} from 'src/types';
+} from '../../types';
 import { SuiOwnedObject, SuiSharedObject } from '../suiModel';
 import { delay } from './util';
 

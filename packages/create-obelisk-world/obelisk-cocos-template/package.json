@@ -5,7 +5,7 @@
     "version": "3.8.0"
   },
   "scripts": {
-    "dev": "pnpm run localnode && sleep 5 && ts-node scripts/generateAccount.ts && obelisk faucet --network localnet && obelisk publish --network localnet --configPath ./assets/Scripts/obelisk.config.ts && ts-node scripts/storeConfig.ts localnet && tail -f localnode.nohup.out",
+    "dev": "obelisk hello && pnpm run localnode && sleep 5 && ts-node scripts/generateAccount.ts && obelisk faucet --network localnet && obelisk publish --network localnet --configPath ./assets/Scripts/obelisk.config.ts && ts-node scripts/storeConfig.ts localnet && tail -f localnode.nohup.out",
     "faucet-localnet": "obelisk faucet --network localnet",
     "faucet-devnet": "obelisk faucet --network devnet",
     "faucet-testnet": "obelisk faucet --network testnet",
@@ -18,15 +18,14 @@
     "world-upgrade-testnet": "obelisk upgrade --network testnet --configPath ./assets/Scripts/obelisk.config.ts && ts-node scripts/storeConfig.ts testnet",
     "world-upgrade-mainnet": "obelisk upgrade --network mainnet --configPath ./assets/Scripts/obelisk.config.ts && ts-node scripts/storeConfig.ts mainnet",
     "localnode": "nohup obelisk localnode > localnode.nohup.out &",
-    "worldgen": "obelisk schemagen obelisk.config.ts",
+    "worldgen": "obelisk schemagen ./assets/Scripts/obelisk.config.ts",
     "storeConfig": "ts-node scripts/storeConfig.ts",
     "generateAccount": "ts-node scripts/generateAccount.ts"
-
   },
   "dependencies": {
-    "@0xobelisk/common": "^0.3.6",
-    "@0xobelisk/client": "^0.3.6",
-    "@0xobelisk/cli": "^0.3.6"
+    "@0xobelisk/common": "^0.4.7",
+    "@0xobelisk/client": "^0.4.7",
+    "@0xobelisk/cli": "^0.4.7"
   },
   "devDependencies": {
     "@types/node": "18.16.16",

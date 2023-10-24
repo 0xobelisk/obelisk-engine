@@ -1,4 +1,4 @@
-import { SchemaMapType } from "../../types";
+import { BaseType, SchemaMapType, BaseValueType, MoveType } from "../../types";
 import fs from "fs";
 
 export function deleteFolderRecursive(path: string) {
@@ -39,9 +39,14 @@ export function getUseSchema(
   name: string,
   values: Record<string, SchemaMapType>
 ): string[] {
-  return Object.entries(values).map(
-    ([key, _]) => `\tuse ${name}::${key}_schema;`
-  );
+  let schema: string[] = [];
+  Object.entries(values).forEach(([key, value]) => {
+    if (typeof value === "object" && value.ephemeral) {
+    } else {
+      schema.push(`\tuse ${name}::${key}_schema;`);
+    }
+  });
+  return schema;
 }
 
 /**
@@ -51,9 +56,14 @@ export function getUseSchema(
 export function getRegisterSchema(
   values: Record<string, SchemaMapType>
 ): string[] {
-  return Object.entries(values).map(
-    ([key, _]) => `\t\t${key}_schema::register(&mut _obelisk_world, ctx);`
-  );
+  let registers: string[] = [];
+  Object.entries(values).forEach(([key, value]) => {
+    if (typeof value === "object" && value.ephemeral) {
+    } else {
+      registers.push(`\t\t${key}_schema::register(&mut _obelisk_world, &admin_cap, ctx);`);
+    }
+  });
+  return registers;
 }
 
 /**
@@ -63,7 +73,7 @@ export function getRegisterSchema(
  * @return [ friend name::name_system, friend name::info_system ]
  */
 export function getFriendSystem(name: string, values: string[]): string {
-  return values.map((key) => `\tfriend ${name}::${key};`).join("\n");
+  return values.map((key) => `\tfriend ${name}::${key};`).join("\n") + `\n\tfriend ${name}::deploy_hook;`;
 }
 
 /**
@@ -81,16 +91,121 @@ export function getStructAttrs(
     : Object.entries(values).map(([key, _]) => `${prefixArgs}${key}`);
 }
 
-export function getStructInitValue(values: any): string[] {
+function isAddress(str: string): boolean {
+  const regex = /^0x[a-fA-F0-9]+$/;
+  return regex.test(str);
+}
+
+export function getStructInitValue(
+  keys: BaseType | Record<string, BaseType>,
+  values: BaseValueType | Record<string, BaseValueType>
+) {
   if (
     typeof values === "string" ||
     typeof values === "boolean" ||
     typeof values === "number"
   ) {
+    if (keys === "string") {
+      return [`string(b"${values}")`];
+    }
+    if (typeof values === "string") {
+      if (isAddress(values)) {
+        return [`@${values}`];
+      }
+    }
     return [`${values}`];
-  } else {
-    return Object.entries(values).map(([_, value]) => `${value}`);
+  } else if (Array.isArray(values)) {
+    // Check the array element type
+    if (values.length > 0) {
+      if (
+        typeof values[0] === "string" ||
+        typeof values[0] === "boolean" ||
+        typeof values[0] === "number"
+      ) {
+        if (keys === "vector<string>") {
+          return [`vector[${values.map((item) => `string(b"${item}")`)}]`];
+        }
+
+        if (typeof values[0] === "string") {
+          if (isAddress(values[0])) {
+            return [`vector[${values.map((item) => `@${item}`)}]`];
+          }
+        }
+        return [`vector[${values.map((item) => `${item}`)}]`];
+      } else if (typeof values === "object") {
+        let res = `vector[${values.map((item: any) => {
+          return `vector[${item.map((data: any) => {
+            return `${data}`;
+          })}]`;
+        })}]`;
+
+        return [res];
+      }
+    }
+  } else if (typeof values === "object") {
+    // It's an object, handle accordingly
+    let res = Object.entries(values).map(([key, value]) => {
+      if (
+        typeof value === "string" ||
+        typeof value === "boolean" ||
+        typeof value === "number"
+      ) {
+        if (typeof keys === "string") {
+          if (keys === "string") {
+            return `string(b"${value}")`;
+          }
+        } else {
+          if (keys[key] === "string") {
+            return `string(b"${value}")`;
+          }
+        }
+
+        if (typeof value === "string") {
+          if (isAddress(value)) {
+            return `@${value}`;
+          }
+        }
+        return `${value}`;
+      } else if (Array.isArray(value)) {
+        // Check the array element type
+        if (value.length > 0) {
+          if (
+            typeof value[0] === "string" ||
+            typeof value[0] === "boolean" ||
+            typeof value[0] === "number"
+          ) {
+            if (typeof keys === "string") {
+              if (keys === "vector<string>") {
+                return `vector[${value.map((item) => `string(b"${item}")`)}]`;
+              }
+            } else {
+              if (keys[key] === "vector<string>") {
+                return `vector[${value.map((item) => `string(b"${item}")`)}]`;
+              }
+            }
+
+            if (typeof value[0] === "string") {
+              if (isAddress(value[0])) {
+                return `vector[${value.map((item) => `@${item}`)}]`;
+              }
+            }
+            return `vector[${value.map((item) => `${item}`)}]`;
+          } else if (typeof value === "object") {
+            let res = `vector[${value.map((item: any) => {
+              return `vector[${item.map((data: any) => {
+                return `${data}`;
+              })}]`;
+            })}]`;
+
+            return res;
+          }
+        }
+      }
+    });
+    return res;
   }
+  // Handle other cases or return an empty array if type not recognized
+  return [];
 }
 
 /**
@@ -99,7 +214,9 @@ export function getStructInitValue(values: any): string[] {
  * @return ( bool , u64 , u64)
  */
 // export function getStructTypes(values: SchemaMapType): string {
-export function getStructTypes(values: SchemaMapType): string {
+export function getStructTypes(
+  values: MoveType | Record<string, MoveType>
+): string {
   return typeof values === "string"
     ? values
     : `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
@@ -125,7 +242,7 @@ export function getStructAttrsWithType(
  * @return [ data.name, data.age ]
  */
 export function getStructAttrsQuery(
-  values: SchemaMapType,
+  values: MoveType | Record<string, MoveType>,
   prefixArgs: string
 ): string[] {
   return typeof values === "string"
@@ -141,9 +258,12 @@ export function renderKeyName(values: Record<string, string> | string): string {
 
 export function renderStruct(
   structName: string,
-  values: Record<string, string> | string
+  values: Record<string, string> | string,
+  isEphemeral: boolean = false
 ): string {
-  return `\tstruct ${structName} has copy , drop, store {
+  return `\tstruct ${structName} has copy, drop ${
+    isEphemeral ? "" : ", store"
+  } {
 ${getStructAttrsWithType(values, "\t\t").join(",\n")}
 \t}\n`;
 }
@@ -161,131 +281,74 @@ ${getStructAttrs(values, "\t\t\t").join(", \n")}
 \t}\n`;
 }
 
-export function renderEmit(
-  schemaName: string,
-  structName: string,
-  resourceData: Record<string, string> | string
-): string {
-  return `\tpublic fun emit_${schemaName}(${getStructAttrsWithType(
-    resourceData,
-    ""
-  ).join(", ")}) {
-\t\tevents::emit_ephemeral(string(NAME), ${structName} { ${getStructAttrs(
-    resourceData,
-    ""
-  ).join(", ")} })
-\t}`;
-}
-
-export function renderRegisterFunc(
-  structName: string,
-  isSingle: boolean,
-  init: Record<string, string> | string
-): string {
-  const init_data =
-    init !== undefined ? `new(${getStructInitValue(init).join(", ")})` : "";
-
-  return !isSingle || init == undefined
-    ? `\tpublic fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
-\t\tworld::add_schema<SchemaMetadata>(_obelisk_world, NAME, SchemaMetadata {
-\t\t\tname: string(NAME),
-\t\t\tdata: table::new<address, ${structName}>(ctx)
-\t\t});
-\t}`
-    : `\tpublic fun register(_obelisk_world: &mut World, ctx: &mut TxContext) {
-\t\tlet _obelisk_schema = SchemaMetadata {
-\t\t\tname: string(NAME),
-\t\t\tdata: table::new<address, ${structName}>(ctx)
-\t\t};
-\t\ttable::add(&mut _obelisk_schema.data, id(), ${init_data});
-\t\tworld::add_schema<SchemaMetadata>(_obelisk_world, NAME, _obelisk_schema);
-\t\tevents::emit_set(string(NAME), id(), ${init_data});
+export function renderRegisterFunc(structName: string): string {
+  return `\tpublic fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, ctx: &mut TxContext) {
+\t\tworld::add_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID, table::new<address, ${structName}>(ctx), admin_cap);
 \t}`;
 }
 
 export function renderSetFunc(
   structName: string,
-  values: Record<string, string> | string,
-  isSingle: boolean
+  values: Record<string, string> | string
 ): string {
-  return `\tpublic(friend) fun set(_obelisk_world: &mut World, ${
-    isSingle ? `` : `_obelisk_entity_key: address,`
-  } ${getStructAttrsWithType(values, "").join(", ")}) {
-\t\tlet _obelisk_schema = world::get_mut_schema<SchemaMetadata>(_obelisk_world, id());
-\t\tlet _obelisk_data = new(${getStructAttrs(values, "").join(", ")});
-\t\tif(table::contains<address, ${structName}>(&_obelisk_schema.data, ${
-    isSingle ? `id()` : `_obelisk_entity_key`
-  })) {
-\t\t\t*table::borrow_mut<address, ${structName}>(&mut _obelisk_schema.data, ${
-    isSingle ? `id()` : `_obelisk_entity_key`
-  }) = _obelisk_data;
+  return `\tpublic(friend) fun set(_obelisk_world: &mut World, _obelisk_entity_key: address, ${getStructAttrsWithType(
+    values,
+    " "
+  )}) {
+\t\tlet _obelisk_schema = world::get_mut_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_data = new(${getStructAttrs(values, " ")});
+\t\tif(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key)) {
+\t\t\t*table::borrow_mut<address, ${structName}>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
 \t\t} else {
-\t\t\ttable::add(&mut _obelisk_schema.data, ${
-    isSingle ? `id()` : `_obelisk_entity_key`
-  }, _obelisk_data);
+\t\t\ttable::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
 \t\t};
-\t\tevents::emit_set(string(NAME), ${
-    isSingle ? `id()` : `_obelisk_entity_key`
-  }, _obelisk_data)
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), _obelisk_data)
 \t}
 `;
 }
 
 export function renderRemoveFunc(structName: string): string {
   return `\tpublic(friend) fun remove(_obelisk_world: &mut World, _obelisk_entity_key: address) {
-\t\tlet _obelisk_schema = world::get_mut_schema<SchemaMetadata>(_obelisk_world, id());
-\t\tassert!(table::contains<address, ${structName}>(&_obelisk_schema.data, _obelisk_entity_key), EEntityDoesNotExist);
-\t\ttable::remove(&mut _obelisk_schema.data, _obelisk_entity_key);
-\t\tevents::emit_remove(string(NAME), _obelisk_entity_key)
+\t\tlet _obelisk_schema = world::get_mut_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
+\t\ttable::remove(_obelisk_schema, _obelisk_entity_key);
+\t\tevents::emit_remove(SCHEMA_ID, _obelisk_entity_key)
 \t}
 `;
 }
 
 export function renderSetAttrsFunc(
   structName: string,
-  struct: SchemaMapType,
-  isSingle: boolean
+  struct: MoveType | Record<string, MoveType>
 ): string {
   return typeof struct === "string"
     ? ""
-    : Object.entries(struct)
-        .map(
-          ([key, type]) =>
-            `\tpublic(friend) fun set_${key}(_obelisk_world: &mut World, ${
-              isSingle ? `` : `_obelisk_entity_key: address,`
-            } ${key}: ${type}) {
-\t\tlet _obelisk_schema = world::get_mut_schema<SchemaMetadata>(_obelisk_world, id());
-\t\tassert!(table::contains<address, ${structName}>(&_obelisk_schema.data, ${
-              isSingle ? `id()` : `_obelisk_entity_key`
-            }), EEntityDoesNotExist);
-\t\tlet _obelisk_data = table::borrow_mut<address, ${structName}>(&mut _obelisk_schema.data, ${
-              isSingle ? `id()` : `_obelisk_entity_key`
-            });
+    : "\n" +
+        Object.entries(struct)
+          .map(
+            ([key, type]) =>
+              `\tpublic(friend) fun set_${key}(_obelisk_world: &mut World, _obelisk_entity_key: address, ${key}: ${type}) {
+\t\tlet _obelisk_schema = world::get_mut_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
+\t\tlet _obelisk_data = table::borrow_mut<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
 \t\t_obelisk_data.${key} = ${key};
-\t\tevents::emit_set(string(NAME), ${
-              isSingle ? `id()` : `_obelisk_entity_key`
-            }, *_obelisk_data)
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), *_obelisk_data)
 \t}
 `
-        )
-        .join("\n");
+          )
+          .join("\n");
 }
 
 export function renderGetAllFunc(
   structName: string,
-  struct: SchemaMapType,
-  isSingle: boolean
+  struct: MoveType | Record<string, MoveType>
 ): string {
-  return `\tpublic fun get(_obelisk_world: &World ,${
-    isSingle ? `` : `_obelisk_entity_key: address`
-  }): ${getStructTypes(struct)} {
-  \t\tlet _obelisk_schema = world::get_schema<SchemaMetadata>(_obelisk_world, id());
-  \t\tassert!(table::contains<address, ${structName}>(&_obelisk_schema.data, ${
-    isSingle ? `id()` : `_obelisk_entity_key`
-  }), EEntityDoesNotExist);
-\t\tlet _obelisk_data = table::borrow<address, ${structName}>(&_obelisk_schema.data, ${
-    isSingle ? `id()` : `_obelisk_entity_key`
-  });
+  return `\tpublic fun get(_obelisk_world: &World, _obelisk_entity_key: address): ${getStructTypes(
+    struct
+  )} {
+\t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
+\t\tlet _obelisk_data = table::borrow<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
 \t\t(
 ${getStructAttrsQuery(struct, "\t\t\t").join(",\n")}
 \t\t)
@@ -295,34 +358,116 @@ ${getStructAttrsQuery(struct, "\t\t\t").join(",\n")}
 
 export function renderGetAttrsFunc(
   structName: string,
-  struct: SchemaMapType,
-  isSingle: boolean
+  struct: MoveType | Record<string, MoveType>
 ): string {
   return typeof struct === "string"
     ? ""
-    : Object.entries(struct)
-        .map(
-          ([key, type]) => `\tpublic fun get_${key}(_obelisk_world: &World, ${
-            isSingle ? `` : `_obelisk_entity_key: address`
-          }): ${type} {
-\t\tlet _obelisk_schema = world::get_schema<SchemaMetadata>(_obelisk_world, id());
-\t\tassert!(table::contains<address, ${structName}>(&_obelisk_schema.data, ${
-            isSingle ? `id()` : `_obelisk_entity_key`
-          }), EEntityDoesNotExist);
-\t\tlet _obelisk_data = table::borrow<address, ${structName}>(&_obelisk_schema.data, ${
-            isSingle ? `id()` : `_obelisk_entity_key`
-          });
+    : "\n" +
+        Object.entries(struct)
+          .map(
+            ([
+              key,
+              type,
+            ]) => `\tpublic fun get_${key}(_obelisk_world: &World, _obelisk_entity_key: address): ${type} {
+\t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
+\t\tlet _obelisk_data = table::borrow<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
 \t\t_obelisk_data.${key}
 \t}
 `
-        )
-        .join("\n");
+          )
+          .join("\n");
 }
 
 export function renderContainFunc(structName: string): string {
   return `\tpublic fun contains(_obelisk_world: &World, _obelisk_entity_key: address): bool {
-\t\tlet _obelisk_schema = world::get_schema<SchemaMetadata>(_obelisk_world, id());
-\t\ttable::contains<address, ${structName}>(&_obelisk_schema.data, _obelisk_entity_key)
-\t}
-`;
+\t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\ttable::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key)
+\t}`;
+}
+
+export function renderRegisterFuncWithInit(
+  structName: string,
+  valueType: BaseType | Record<string, BaseType>,
+  defaultValue: BaseValueType | Record<string, BaseValueType>
+): string {
+  return `\tpublic fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, _ctx: &mut TxContext) {
+\t\tlet _obelisk_schema = new(${getStructInitValue(valueType, defaultValue)});
+\t\tworld::add_schema<${structName}>(_obelisk_world, SCHEMA_ID, _obelisk_schema, admin_cap);
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), _obelisk_schema);
+\t}`;
+}
+
+export function renderSingleSetFunc(
+  structName: string,
+  values: Record<string, string> | string
+): string {
+  return `\tpublic(friend) fun set(_obelisk_world: &mut World, ${getStructAttrsWithType(
+    values,
+    " "
+  )}) {
+\t\tlet _obelisk_schema = world::get_mut_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+${
+  typeof values === "string"
+    ? `\t\t_obelisk_schema.value = value;`
+    : Object.entries(values)
+        .map(([key, _]) => `\t\t_obelisk_schema.${key} = ${key};`)
+        .join("\n")
+}
+\t}`;
+}
+
+export function renderSingleSetAttrsFunc(
+  structName: string,
+  struct: MoveType | Record<string, MoveType>
+): string {
+  return typeof struct === "string"
+    ? ""
+    : "\n" +
+        Object.entries(struct)
+          .map(
+            ([key, type]) => `
+\tpublic(friend) fun set_${key}(_obelisk_world: &mut World, ${key}: ${type}) {
+\t\tlet _obelisk_schema = world::get_mut_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+\t\t_obelisk_schema.${key} = ${key};
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), *_obelisk_schema)
+\t}`
+          )
+          .join("\n");
+}
+
+export function renderSingleGetAllFunc(
+  structName: string,
+  values: MoveType | Record<string, MoveType>
+): string {
+  return `\tpublic fun get(_obelisk_world: &World): ${getStructTypes(values)} {
+\t\tlet _obelisk_schema = world::get_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+\t\t(
+${
+  typeof values === "string"
+    ? `\t\t\t_obelisk_schema.value`
+    : Object.entries(values)
+        .map(([key, _]) => `\t\t\t_obelisk_schema.${key},`)
+        .join("\n")
+}
+\t\t)
+\t}`;
+}
+
+export function renderSingleGetAttrsFunc(
+  structName: string,
+  struct: MoveType | Record<string, MoveType>
+): string {
+  return typeof struct === "string"
+    ? ""
+    : "\n" +
+        Object.entries(struct)
+          .map(
+            ([key, type]) => `
+\tpublic fun get_${key}(_obelisk_world: &World): ${type} {
+\t\tlet _obelisk_schema = world::get_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+\t\t_obelisk_schema.${key}
+\t}`
+          )
+          .join("\n");
 }

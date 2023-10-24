@@ -1,4 +1,10 @@
-import { ObeliskConfig } from "../../types";
+import {
+  ObeliskConfig,
+  BaseValueType,
+  BaseType,
+  RenderSchemaOptions,
+  MoveType,
+} from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
   getFriendSystem,
@@ -13,36 +19,85 @@ import {
   renderRegisterFunc,
   renderGetAllFunc,
   renderGetAttrsFunc,
-  renderEmit,
+  getStructAttrsWithType,
+  getStructAttrs,
+  renderRegisterFuncWithInit,
+  renderSingleSetFunc,
+  renderSingleSetAttrsFunc,
+  renderSingleGetAllFunc,
+  renderSingleGetAttrsFunc,
 } from "./common";
 
 export function getRenderSchemaOptions(config: ObeliskConfig) {
-  const options: any = [];
+  const options: RenderSchemaOptions[] = [];
   for (const schemaName of Object.keys(config.schemas)) {
     const schemaData = config.schemas[schemaName];
-    let resourceData: Record<string, string> | string;
-    let init: any;
+    let valueType: MoveType | Record<string, MoveType>;
+    let realType: BaseType | Record<string, BaseType>;
+    let defaultValue: BaseValueType | Record<string, BaseValueType> | undefined;
     let ephemeral = false;
     let singleton = false;
+    let needImportString = false;
     if (typeof schemaData === "string") {
-      resourceData = schemaData;
+      realType = schemaData;
+
+      if (schemaData === "string") {
+        valueType = "String";
+        needImportString = true;
+      } else if (schemaData === "vector<string>") {
+        valueType = "vector<String>";
+        needImportString = true;
+      } else {
+        valueType = schemaData;
+      }
     } else {
-      resourceData = schemaData.valueSchema;
-      init = schemaData.init;
+      realType = schemaData.valueType;
+
+      if (typeof schemaData.valueType === "string") {
+        if (schemaData.valueType === "string") {
+          valueType = "String";
+          needImportString = true;
+        } else if (schemaData.valueType === "vector<string>") {
+          valueType = "vector<String>";
+          needImportString = true;
+        } else {
+          valueType = schemaData.valueType;
+        }
+      } else {
+        valueType = { ...schemaData.valueType };
+        for (const key in valueType) {
+          if (valueType.hasOwnProperty(key)) {
+            if (valueType[key] === "string") {
+              valueType[key] = "String";
+              needImportString = true;
+            } else if (valueType[key] === "vector<string>") {
+              valueType[key] = "vector<String>";
+              needImportString = true;
+
+              // needImport = "\tuse std::ascii::{String, string};";
+            }
+          }
+        }
+      }
+      defaultValue = schemaData.defaultValue;
       ephemeral =
         schemaData.ephemeral !== undefined ? schemaData.ephemeral : false;
-      singleton =
-        schemaData.singleton !== undefined ? schemaData.singleton : false;
+      singleton = schemaData.defaultValue !== undefined ? true : false;
     }
+
     options.push({
+      projectName: config.name,
+      systems: config.systems,
       schemaName: schemaName,
       structName: convertToCamelCase(schemaName),
       ephemeral,
       singleton,
-      resourceData,
-      structAttrs: renderKeyName(resourceData),
-      structTypes: renderStruct(convertToCamelCase(schemaName), resourceData),
-      init,
+      valueType,
+      realType,
+      // structAttrs: [renderKeyName(valueType)],
+      // structTypes: [renderStruct(convertToCamelCase(schemaName), valueType)],
+      defaultValue,
+      needImportString,
     });
   }
   return options;
@@ -51,69 +106,114 @@ export function getRenderSchemaOptions(config: ObeliskConfig) {
 export function generateSchema(config: ObeliskConfig, srcPrefix: string) {
   const options = getRenderSchemaOptions(config);
   for (const option of options) {
-    let code = option.ephemeral
-      ? `module ${config.name}::${option.schemaName}_schema {
-    use sui::table::{Self, Table};
-    use std::ascii::{String, string};
-    use sui::tx_context::TxContext;
-    use ${config.name}::events;
-    use ${config.name}::world::{Self, World};
+    let code: string;
+    if (option.ephemeral) {
+      code = renderEphemeralSchema(option);
+    } else if (option.defaultValue !== undefined) {
+      code = renderSingleSchema(option);
+    } else {
+      code = renderSchema(option);
+    }
+    formatAndWriteMove(
+      code,
+      `${srcPrefix}/contracts/${option.projectName}/sources/codegen/schemas/${option.schemaName}.move`,
+      "formatAndWriteMove"
+    );
+  }
+}
+
+function renderEphemeralSchema(option: RenderSchemaOptions): string {
+  return `module ${option.projectName}::${option.schemaName}_schema {
+    use std::option::none;
+    use ${option.projectName}::events;
     
-    const NAME: vector<u8> = b"${option.schemaName}";
+    const SCHEMA_ID: vector<u8> = b"${option.schemaName}";
+    const SCHEMA_TYPE: u8 = 2;
     
-${renderKeyName(option.resourceData)}
-${renderStruct(option.structName, option.resourceData)}  
-\tstruct SchemaMetadata has store {
-\t\tname: String,
-\t\tdata: Table<address, ${option.structName}>
+${renderKeyName(option.valueType)}
+${renderStruct(option.structName, option.valueType, option.ephemeral)}  
+\tpublic fun emit_${option.schemaName}(${getStructAttrsWithType(
+    option.valueType,
+    " "
+  )}) {
+\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), ${option.structName} { ${getStructAttrs(
+    option.valueType,
+    " "
+  )} })
 \t}
+}`;
+}
 
-${renderRegisterFunc(option.structName, false, option.init)}
+function renderSingleSchema(option: RenderSchemaOptions): string {
+  return `module ${option.projectName}::${option.schemaName}_schema {
+${
+  option.needImportString ? "\tuse std::ascii::{String,string};\n\t" : "\t"
+}use std::option::none;
+    use sui::tx_context::TxContext;
+    use ${option.projectName}::events;
+    use ${option.projectName}::world::{Self, World, AdminCap};
+    // Systems
+${getFriendSystem(option.projectName, option.systems)}
 
-${renderEmit(option.schemaName, option.structName, option.resourceData)}
-}`
-      : `module ${config.name}::${option.schemaName}_schema {
-    use std::ascii::{String, string};
+\tconst SCHEMA_ID: vector<u8> = b"${option.schemaName}";
+\tconst SCHEMA_TYPE: u8 = 1;
+
+${renderKeyName(option.valueType)}
+${renderStruct(option.structName, option.valueType)}
+${renderNewStructFunc(option.structName, option.valueType)}
+${renderRegisterFuncWithInit(
+  option.structName,
+  option.realType,
+  option.defaultValue!
+)}
+
+${renderSingleSetFunc(
+  option.structName,
+  option.valueType
+)}${renderSingleSetAttrsFunc(option.structName, option.valueType)}
+
+${renderSingleGetAllFunc(
+  option.structName,
+  option.valueType
+)}${renderSingleGetAttrsFunc(option.structName, option.valueType)}
+}
+`;
+}
+
+function renderSchema(option: RenderSchemaOptions) {
+  return `module ${option.projectName}::${option.schemaName}_schema {
+${
+  option.needImportString ? "\tuse std::ascii::String;\n\t" : "\t"
+}use std::option::some;
     use sui::tx_context::TxContext;
     use sui::table::{Self, Table};
-    use ${config.name}::entity_key;
-    use ${config.name}::events;
-    use ${config.name}::world::{Self, World};
-  
+    use ${option.projectName}::events;
+    use ${option.projectName}::world::{Self, World, AdminCap};
+
     // Systems
-${getFriendSystem(config.name, config.systems)}
+${getFriendSystem(option.projectName, option.systems)}
 
 \t/// Entity does not exist
 \tconst EEntityDoesNotExist: u64 = 0;
 
-\tconst NAME: vector<u8> = b"${option.schemaName}";
+\tconst SCHEMA_ID: vector<u8> = b"${option.schemaName}";
+\tconst SCHEMA_TYPE: u8 = 0;
 
-\tpublic fun id(): address {
-\t\tentity_key::from_bytes(NAME)
-\t}
+${renderKeyName(option.valueType)}
+${renderStruct(option.structName, option.valueType)}
+${renderNewStructFunc(option.structName, option.valueType)}
+${renderRegisterFunc(option.structName)}
 
-${renderKeyName(option.resourceData)}
-${renderStruct(option.structName, option.resourceData)}
-${renderNewStructFunc(option.structName, option.resourceData)}
-\tstruct SchemaMetadata has store {
-\t\tname: String,
-\t\tdata: Table<address, ${option.structName}>
-\t}
-
-${renderRegisterFunc(option.structName, option.singleton, option.init)}
-
-${renderSetFunc(option.structName, option.resourceData, option.singleton)}
-${renderSetAttrsFunc(option.structName, option.resourceData, option.singleton)}
-${renderGetAllFunc(option.structName, option.resourceData, option.singleton)}
-${renderGetAttrsFunc(option.structName, option.resourceData, option.singleton)}
-${option.singleton ? "" : renderRemoveFunc(option.structName)}
-${option.singleton ? "" : renderContainFunc(option.structName)}
+${renderSetFunc(option.structName, option.valueType)}${renderSetAttrsFunc(
+    option.structName,
+    option.valueType
+  )}
+${renderGetAllFunc(option.structName, option.valueType)}${renderGetAttrsFunc(
+    option.structName,
+    option.valueType
+  )}
+${renderRemoveFunc(option.structName)}
+${renderContainFunc(option.structName)}
 }
 `;
-    formatAndWriteMove(
-      code,
-      `${srcPrefix}/contracts/${config.name}/sources/codegen/schemas/${option.schemaName}.move`,
-      "formatAndWriteMove"
-    );
-  }
 }

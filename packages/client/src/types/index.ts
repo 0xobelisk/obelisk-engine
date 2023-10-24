@@ -12,10 +12,7 @@ import {
   SuiMoveNormalizedModules,
 } from '@mysten/sui.js';
 
-import {
-  SuiMoveMoudleValueType,
-  SuiMoveMoudleFuncType,
-} from '../libs/suiContractFactory/types';
+import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
 
 export type ObeliskObjectData = {
   objectId: string;
