@@ -1,13 +1,10 @@
 module counter::world {
     use std::ascii::{String, string};
     use std::vector;
-    use sui::tx_context;
-    use sui::transfer;
     use sui::tx_context::TxContext;
     use sui::bag::{Self, Bag};
     use sui::object::{Self, UID, ID};
-    use counter::entity_key;
-
+    
     const VERSION: u64 = 1;
 
     /// Schema does not exist
@@ -21,7 +18,7 @@ module counter::world {
     /// Calling functions from the wrong package version
     const EWrongVersion: u64 = 4;
 
-    struct AdminCap has key {
+    struct AdminCap has key, store {
         id: UID,
     }
 
@@ -41,8 +38,8 @@ module counter::world {
         version: u64
     }
 
-    public fun create(name: String, description: String, ctx: &mut TxContext): World {
-        let admin = AdminCap {
+    public fun create(name: String, description: String, ctx: &mut TxContext): (World, AdminCap) {
+        let admin_cap = AdminCap {
             id: object::new(ctx),
         };
         let _obelisk_world = World {
@@ -51,11 +48,14 @@ module counter::world {
             description,
             schemas: bag::new(ctx),
             schema_names: vector::empty(),
-            admin: object::id(&admin),
+            admin: object::id(&admin_cap),
             version: VERSION
         };
-        transfer::transfer(admin, tx_context::sender(ctx));
-        _obelisk_world
+        (_obelisk_world, admin_cap)
+    }
+    
+    public fun get_admin(_obelisk_world: &World): ID {
+        _obelisk_world.admin
     }
 
     public fun info(_obelisk_world: &World): (String, String, u64) {
@@ -66,31 +66,31 @@ module counter::world {
         _obelisk_world.schema_names
     }
 
-    public fun get_schema<T : store>(_obelisk_world: &World, id: address): &T {
+    public fun get_schema<T : store>(_obelisk_world: &World, _obelisk_schema_id: vector<u8>): &T {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&_obelisk_world.schemas, id), ESchemaDoesNotExist);
-        bag::borrow<address, T>(&_obelisk_world.schemas, id)
+        assert!(bag::contains(&_obelisk_world.schemas, _obelisk_schema_id), ESchemaDoesNotExist);
+        bag::borrow<vector<u8>, T>(&_obelisk_world.schemas, _obelisk_schema_id)
     }
 
-    public fun get_mut_schema<T : store>(_obelisk_world: &mut World, id: address): &mut T {
+    public fun get_mut_schema<T : store>(_obelisk_world: &mut World, _obelisk_schema_id: vector<u8>): &mut T {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        assert!(bag::contains(&_obelisk_world.schemas, id), ESchemaDoesNotExist);
-        bag::borrow_mut<address, T>(&mut _obelisk_world.schemas, id)
+        assert!(bag::contains(&_obelisk_world.schemas, _obelisk_schema_id), ESchemaDoesNotExist);
+        bag::borrow_mut<vector<u8>, T>(&mut _obelisk_world.schemas, _obelisk_schema_id)
     }
 
-    public fun add_schema<T : store>(_obelisk_world: &mut World, schema_name: vector<u8>, schema: T){
+    public fun add_schema<T : store>(_obelisk_world: &mut World, _obelisk_schema_id: vector<u8>, schema: T, admin_cap: &AdminCap){
+        assert!(_obelisk_world.admin == object::id(admin_cap), ENotAdmin);
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        let id = entity_key::from_bytes(schema_name);
-        assert!(!bag::contains(&_obelisk_world.schemas, id), ESchemaAlreadyExists);
-        vector::push_back(&mut _obelisk_world.schema_names, string(schema_name));
-        bag::add<address,T>(&mut _obelisk_world.schemas, id, schema);
+        assert!(!bag::contains(&_obelisk_world.schemas, _obelisk_schema_id), ESchemaAlreadyExists);
+        vector::push_back(&mut _obelisk_world.schema_names, string(_obelisk_schema_id));
+        bag::add<vector<u8>,T>(&mut _obelisk_world.schemas, _obelisk_schema_id, schema);
     }
 
-    public fun contains(_obelisk_world: &mut World, id: address): bool {
+    public fun contains(_obelisk_world: &mut World, _obelisk_schema_id: vector<u8>): bool {
         assert!(_obelisk_world.version == VERSION, EWrongVersion);
-        bag::contains(&mut _obelisk_world.schemas, id)
+        bag::contains(&mut _obelisk_world.schemas, _obelisk_schema_id)
     }
-
+    
     entry fun migrate(_obelisk_world: &mut World, admin_cap: &AdminCap) {
         assert!(_obelisk_world.admin == object::id(admin_cap), ENotAdmin);
         assert!(_obelisk_world.version < VERSION, ENotUpgrade);

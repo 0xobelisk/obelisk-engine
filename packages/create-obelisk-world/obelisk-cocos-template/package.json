@@ -18,7 +18,7 @@
     "world-upgrade-testnet": "obelisk upgrade --network testnet --configPath ./assets/Scripts/obelisk.config.ts && ts-node scripts/storeConfig.ts testnet",
     "world-upgrade-mainnet": "obelisk upgrade --network mainnet --configPath ./assets/Scripts/obelisk.config.ts && ts-node scripts/storeConfig.ts mainnet",
     "localnode": "nohup obelisk localnode > localnode.nohup.out &",
-    "worldgen": "obelisk schemagen obelisk.config.ts",
+    "worldgen": "obelisk schemagen ./assets/Scripts/obelisk.config.ts",
     "storeConfig": "ts-node scripts/storeConfig.ts",
     "generateAccount": "ts-node scripts/generateAccount.ts"
   },
