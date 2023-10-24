@@ -11,6 +11,10 @@ export class ObeliskCliError extends Error {
   name = "ObeliskCliError";
 }
 
+export class UpgradeError extends Error {
+  name = "UpgradeError";
+}
+
 export class FsIibError extends Error {
   name = "FsIibError";
 }
