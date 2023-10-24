@@ -23,9 +23,9 @@
     "generateAccount": "ts-node scripts/generateAccount.ts"
   },
   "dependencies": {
-    "@0xobelisk/common": "^0.4.6",
-    "@0xobelisk/client": "^0.4.6",
-    "@0xobelisk/cli": "^0.4.6"
+    "@0xobelisk/common": "^0.4.7",
+    "@0xobelisk/client": "^0.4.7",
+    "@0xobelisk/cli": "^0.4.7"
   },
   "devDependencies": {
     "@types/node": "18.16.16",

@@ -2720,8 +2720,16 @@ var _exportNames = {
   SuiContractFactory: true,
   SuiTxBlock: true,
   loadMetadata: true,
-  Ed25519Keypair: true
+  Ed25519Keypair: true,
+  BCS: true,
+  getSuiMoveConfig: true
 };
+Object.defineProperty(exports, "BCS", {
+  enumerable: true,
+  get: function () {
+    return _bcs.BCS;
+  }
+});
 Object.defineProperty(exports, "Ed25519Keypair", {
   enumerable: true,
   get: function () {
@@ -2729,6 +2737,12 @@ Object.defineProperty(exports, "Ed25519Keypair", {
   }
 });
 exports.SuiTxBlock = exports.SuiContractFactory = exports.SuiAccountManager = exports.Obelisk = void 0;
+Object.defineProperty(exports, "getSuiMoveConfig", {
+  enumerable: true,
+  get: function () {
+    return _bcs.getSuiMoveConfig;
+  }
+});
 exports.loadMetadata = loadMetadata;
 var _sui = require("@mysten/sui.js");
 Object.keys(_sui).forEach(function (key) {
@@ -2743,11 +2757,11 @@ Object.keys(_sui).forEach(function (key) {
   });
 });
 var _ed = require("@mysten/sui.js/keypairs/ed25519");
+var _bcs = require("@mysten/bcs");
 var _bip = require("@scure/bip39");
 var _english = require("@scure/bip39/wordlists/english");
 var _faucet = require("@mysten/sui.js/faucet");
 var _keccak = _interopRequireDefault(require("keccak256"));
-var _bcs = require("@mysten/bcs");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 var __accessCheck = (obj, member, msg) => {
   if (!member.has(obj)) throw TypeError("Cannot " + msg);
@@ -3811,7 +3825,8 @@ var Obelisk = class {
       for (const res of resultList) {
         const bcs = new _bcs.BCS((0, _bcs.getSuiMoveConfig)());
         const value = Uint8Array.from(res[0]);
-        const data = bcs.de(res[1], value);
+        const bcsType = res[1].replace(/0x1::ascii::String/g, "string");
+        const data = bcs.de(bcsType, value);
         returnValue.push(data);
       }
       return returnValue;
