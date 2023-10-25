@@ -10,7 +10,7 @@ import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { getDefaultConnection, SuiInteractor } from './libs/suiInteractor';
 
-import { ObeliskObjectData } from 'src/types';
+import { ObeliskObjectData } from './types';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import {
   SuiMoveMoudleFuncType,
@@ -475,7 +475,8 @@ export class Obelisk {
       for (const res of resultList) {
         const bcs = new BCS(getSuiMoveConfig());
         const value = Uint8Array.from(res[0]);
-        const data = bcs.de(res[1], value);
+        const bcsType = res[1].replace(/0x1::ascii::String/g, 'string');
+        const data = bcs.de(bcsType, value);
         returnValue.push(data);
       }
       return returnValue;

@@ -1,0 +1,51 @@
+{
+  "name": "create-obelisk-world",
+  "version": "0.4.7",
+  "type": "module",
+  "license": "MIT",
+  "author": "team@obelisk.build",
+  "bin": {
+    "create-obelisk": "index.js"
+  },
+  "files": [
+    "index.js",
+    "obelisk-cocos-template",
+    "obelisk-nextjs-template",
+    "obelisk-101-template",
+    "dist"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "dev": "unbuild && node index.js",
+    "build": "unbuild && npm run cocos-js-build",
+    "publish": "unbuild && npm publish .",
+    "cocos-js-build": "cd cocos-lib-builder && npm i && browserify main.js -p esmify >  ../obelisk-cocos-template/assets/lib/obelisk.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": "^18.16.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xobelisk/create-obelisk-world.git"
+  },
+  "dependencies": {
+    "@0xobelisk/client": "^0.4.7",
+    "@mysten/sui.js": "^0.41.0",
+    "browser-resolve": "^2.0.0",
+    "browser-sync": "^2.29.3"
+  },
+  "devDependencies": {
+    "@types/cross-spawn": "^6.0.2",
+    "@types/minimist": "^1.2.2",
+    "@types/prompts": "^2.4.3",
+    "cross-spawn": "^7.0.3",
+    "kolorist": "^1.7.0",
+    "prompts": "^2.4.2",
+    "tsc": "^2.0.4",
+    "unbuild": "^1.1.2",
+    "esmify": "^2.1.1"
+  }
+}

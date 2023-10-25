@@ -41,7 +41,6 @@ func (p *Parser) Start() {
 }
 
 func (p *Parser) parseEvent(ev *types.SuiEvent) error {
-
 	typ := types.MatchEventType(ev.Type)
 	if typ == types.EVENT_UNKNOW {
 		return nil
@@ -126,3 +125,4 @@ func (p *Parser) recordCursor(ev *types.SuiEvent, timestampMs uint64) error {
 	cursor.Module = s[1]
 	return p.db.UpsertCursor(cursor)
 }
+

@@ -1,26 +1,25 @@
-import { execSync } from "child_process";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
-
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-
-import chalk from "chalk";
-
-import { ObeliskCliError } from "./errors";
-import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
-import { validatePrivateKey } from "./validatePrivateKey";
 import {
-  generateIdConfig,
+  getFullnodeUrl,
+  SuiClient,
+  SuiTransactionBlockResponse,
+} from "@mysten/sui.js/client";
+import { execSync } from "child_process";
+import chalk from "chalk";
+import { ObeliskCliError } from "./errors";
+import {
+  updateVersionInFile,
   saveContractData,
-  generateEps,
-} from "@0xobelisk/common";
-import fs from "fs";
-import * as fsAsync from 'fs/promises';
+  validatePrivateKey,
+} from "./utils";
 
 export async function publishHandler(
-  network: "mainnet" | "testnet" | "devnet" | "localnet",
-  savePath?: string | undefined
+  name: string,
+  network: "mainnet" | "testnet" | "devnet" | "localnet"
 ) {
   const path = process.cwd();
+  const projectPath = `${path}/contracts/${name}`;
 
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey)
@@ -41,17 +40,25 @@ in your contracts directory to use the default sui private key.`
   });
 
   // Set version 1
-  const name = fs.readdirSync(path + "/contracts")[0]
-  await updateVersionInFile(path + `/contracts/${name}/sources/codegen/eps/world.move`, "1");
-
-  const { modules, dependencies } = JSON.parse(
-    execSync(
-      `sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`,
-      {
-        encoding: "utf-8",
-      }
-    )
-  );
+  await updateVersionInFile(projectPath, "1");
+  let modules: any, dependencies: any;
+  try {
+    const { modules: extractedModules, dependencies: extractedDependencies } =
+      JSON.parse(
+        execSync(
+          `sui move build --dump-bytecode-as-base64 --path ${projectPath}`,
+          {
+            encoding: "utf-8",
+          }
+        )
+      );
+    modules = extractedModules;
+    dependencies = extractedDependencies;
+  } catch (error: any) {
+    console.error(chalk.red("Error executing sui move build:"));
+    console.error(error.stdout);
+    process.exit(1); // You might want to exit with a non-zero status code to indicate an error
+  }
 
   console.log(chalk.blue(`Account: ${keypair.toSuiAddress()}`));
 
@@ -64,19 +71,34 @@ in your contracts directory to use the default sui private key.`
     [upgradeCap],
     tx.pure(keypair.getPublicKey().toSuiAddress())
   );
-  const result = await client.signAndExecuteTransactionBlock({
-    signer: keypair,
-    transactionBlock: tx,
-    options: {
-      showObjectChanges: true,
-    },
-  });
+
+  let result: SuiTransactionBlockResponse;
+  try {
+    result = await client.signAndExecuteTransactionBlock({
+      signer: keypair,
+      transactionBlock: tx,
+      options: {
+        showObjectChanges: true,
+      },
+    });
+  } catch (error: any) {
+    console.error(chalk.red(`Failed to execute publish, please republish`));
+    console.error(error.message);
+    process.exit(1);
+  }
+
+  if (result.effects?.status.status === "failure") {
+    console.log(chalk.red(`Failed to execute publish, please republish`));
+    process.exit(1);
+  }
+
   console.log(chalk.blue(`Publish transaction digest: ${result.digest}`));
 
   let version = 1;
   let packageId = "";
   let worldId = "";
   let upgradeCapId = "";
+  let adminCapId = "";
   result.objectChanges!.map((object) => {
     if (object.type === "published") {
       console.log(chalk.green(`${name} PackageId: ${object.packageId}`));
@@ -96,28 +118,64 @@ in your contracts directory to use the default sui private key.`
       console.log(chalk.green(`${name} UpgradeCap: ${object.objectId}`));
       upgradeCapId = object.objectId;
     }
+    if (
+      object.type === "created" &&
+      object.objectType.endsWith("::world::AdminCap")
+    ) {
+      console.log(chalk.green(`${name} AdminCapId: ${object.objectId}`));
+      adminCapId = object.objectId;
+    }
   });
 
-  saveContractData(name, network, packageId, worldId, upgradeCapId, version);
-  if (savePath !== undefined) {
-    generateIdConfig(network, packageId, worldId, savePath);
-  }
-}
+  saveContractData(
+    name,
+    network,
+    packageId,
+    worldId,
+    upgradeCapId,
+    adminCapId,
+    version
+  );
 
-export async function updateVersionInFile(filePath: string, newVersion: string) {
+  const deployHookTx = new TransactionBlock();
+
+  deployHookTx.setGasBudget(5000000000);
+
+  deployHookTx.moveCall({
+    target: `${packageId}::deploy_hook::run`,
+    arguments: [deployHookTx.object(worldId), deployHookTx.object(adminCapId)],
+  });
+
+  let deployHookResult: SuiTransactionBlockResponse;
   try {
-    // 读取文件
-    const data = await fsAsync.readFile(filePath, 'utf8');
+    deployHookResult = await client.signAndExecuteTransactionBlock({
+      signer: keypair,
+      transactionBlock: deployHookTx,
+      options: {
+        showEffects: true,
+      },
+    });
+  } catch (error: any) {
+    console.error(
+      chalk.red(
+        `Failed to execute deployHook, please republish or manually call deploy_hook::run`
+      )
+    );
+    console.error(error.message);
+    process.exit(1);
+  }
 
-    // 更新数据
-    const updatedData = data.replace(/const VERSION: u64 = \d+;/, `const VERSION: u64 = ${newVersion};`);
-
-    // 写入文件
-    await fsAsync.writeFile(filePath, updatedData, 'utf8');
-
-    console.log('Version updated in the file.');
-  } catch (err) {
-    console.error('Error updating the file:', err);
+  if (deployHookResult.effects?.status.status === "success") {
+    console.log(
+      chalk.blue(
+        `Successful auto-execution of deployHook, please check the transaction digest: ${deployHookResult.digest}`
+      )
+    );
+  } else {
+    console.log(
+      chalk.yellow(
+        `Failed to execute deployHook, please republish or manually call deploy_hook::run`
+      )
+    );
   }
 }
-

@@ -1,11 +1,11 @@
 import type { CommandModule } from "yargs";
 import { logError } from "../utils/errors";
 import { upgradeHandler } from "../utils";
-import { ObeliskConfig } from "@0xobelisk/common";
-import { loadConfig } from "@0xobelisk/common";
+import {ObeliskConfig, loadConfig, ValueType} from "@0xobelisk/common";
 
 type Options = {
-  path?: string;
+  network: any;
+  configPath: string;
 };
 
 const commandModule: CommandModule<Options, Options> = {
@@ -15,18 +15,26 @@ const commandModule: CommandModule<Options, Options> = {
 
   builder(yargs) {
     return yargs.options({
-      path: { type: "string", desc: "Path to the save template file" },
+      network: {
+        type: "string",
+        choices: ["mainnet", "testnet", "devnet", "localnet"],
+        desc: "Network of the node (mainnet/testnet/devnet/localnet)",
+      },
+      configPath: {
+        type: "string",
+        default: "obelisk.config.ts",
+        decs: "Path to the config file",
+      },
     });
   },
 
-  async handler({ path }) {
+  async handler({ network, configPath }) {
     try {
+      const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
 
-      const obeliskConfig = (await loadConfig(process.cwd() + "/obelisk.config.ts")) as ObeliskConfig;
+      let schemaNames = Object.keys(obeliskConfig.schemas).filter(key => !(typeof obeliskConfig.schemas === 'object' && 'ephemeral' in obeliskConfig.schemas && (obeliskConfig.schemas[key] as ValueType).ephemeral));
 
-      let schemaNames = Object.keys(obeliskConfig.schemas)
-
-      await upgradeHandler(obeliskConfig.name, schemaNames, path);
+      await upgradeHandler(obeliskConfig.name, network, schemaNames);
     } catch (error: any) {
       logError(error);
       process.exit(1);

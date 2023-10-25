@@ -1,20 +1,20 @@
-import { execSync } from "child_process";
 import { TransactionBlock, UpgradePolicy } from "@mysten/sui.js/transactions";
-import * as fs from "fs";
-
 import { Ed25519Keypair } from "@mysten/sui.js/keypairs/ed25519";
-
-import chalk from "chalk";
-
-import { ObeliskCliError } from "./errors";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui.js/client";
-import { validatePrivateKey } from "./validatePrivateKey";
+import { execSync } from "child_process";
+import chalk from "chalk";
+import { ObeliskCliError, UpgradeError } from "./errors";
 import {
-  generateIdConfig,
-  generateEps,
+  updateVersionInFile,
+  getNetwork,
+  getOldPackageId,
+  getVersion,
+  getWorldId,
+  getUpgradeCap,
   saveContractData,
-} from "@0xobelisk/common";
-import {updateVersionInFile} from "./publishHandler";
+  validatePrivateKey,
+  getAdminCap,
+} from "./utils";
 
 type ObjectContent = {
   type: string;
@@ -25,9 +25,8 @@ type ObjectContent = {
 
 export async function upgradeHandler(
   name: string,
-  schemaNames: string[],
-  // network: "mainnet" | "testnet" | "devnet" | "localnet",
-  savePath?: string | undefined
+  network: "mainnet" | "testnet" | "devnet" | "localnet",
+  schemaNames: string[]
 ) {
   const path = process.cwd();
   const projectPath = `${path}/contracts/${name}`;
@@ -46,32 +45,43 @@ in your contracts directory to use the default sui private key.`
   const privateKeyRaw = Buffer.from(privateKeyFormat as string, "hex");
   const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
 
-  const network = await getNetwork(projectPath);
+  // const network = await getNetwork(projectPath);
   const client = new SuiClient({
     url: getFullnodeUrl(network),
   });
 
-  let oldVersion = Number(await getVersion(projectPath));
-
-  const oldPackageId = await getOldPackageId(projectPath);
-  const worldId = await getWorldId(projectPath);
-  const upgradeCap = await getUpgradeCap(projectPath);
+  let oldVersion = Number(await getVersion(projectPath, network));
+  const oldPackageId = await getOldPackageId(projectPath, network);
+  const worldId = await getWorldId(projectPath, network);
+  const upgradeCap = await getUpgradeCap(projectPath, network);
+  const adminCap = await getAdminCap(projectPath, network);
 
   const newVersion = oldVersion + 1;
-  await updateVersionInFile(`${projectPath}/sources/codegen/eps/world.move`, newVersion.toString());
+  await updateVersionInFile(projectPath, newVersion.toString());
 
   try {
-    console.log(
-      `sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`
-    );
-    const { modules, dependencies, digest } = JSON.parse(
-      execSync(
-        `sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`,
-        {
-          encoding: "utf-8",
-        }
-      )
-    );
+    let modules: any, dependencies: any, digest: any;
+    try {
+      const {
+        modules: extractedModules,
+        dependencies: extractedDependencies,
+        digest: extractedDigest,
+      } = JSON.parse(
+        execSync(
+          `sui move build --dump-bytecode-as-base64 --path ${path}/contracts/${name}`,
+          {
+            encoding: "utf-8",
+          }
+        )
+      );
+
+      modules = extractedModules;
+      dependencies = extractedDependencies;
+      digest = extractedDigest;
+    } catch (error: any) {
+      throw new UpgradeError(error.stdout);
+    }
+
     const tx = new TransactionBlock();
 
     tx.setGasBudget(5000000000);
@@ -146,11 +156,9 @@ in your contracts directory to use the default sui private key.`
       newPackageId,
       worldId,
       newUpgradeCap,
+      adminCap,
       newVersion
     );
-    if (savePath !== undefined) {
-      generateIdConfig(network, newPackageId, worldId, savePath);
-    }
 
     const migrateTx = new TransactionBlock();
 
@@ -158,10 +166,7 @@ in your contracts directory to use the default sui private key.`
 
     migrateTx.moveCall({
       target: `${newPackageId}::world::migrate`,
-      arguments: [
-        migrateTx.object(worldId),
-        migrateTx.object(objectContent.fields["admin"]),
-      ],
+      arguments: [migrateTx.object(worldId), migrateTx.object(adminCap)],
     });
 
     const migrateResult = await client.signAndExecuteTransactionBlock({
@@ -198,7 +203,6 @@ in your contracts directory to use the default sui private key.`
       );
     }
 
-    console.log(newObjectContent.fields)
     const uniqueSchema: string[] = schemaNames.filter(
       (item) => !newObjectContent.fields["schema_names"].includes(item)
     );
@@ -213,7 +217,7 @@ in your contracts directory to use the default sui private key.`
 
       registerTx.moveCall({
         target: `${newPackageId}::${newSchema}_schema::register`,
-        arguments: [registerTx.object(worldId)],
+        arguments: [registerTx.object(worldId), registerTx.object(adminCap)],
       });
 
       const registerResult = await client.signAndExecuteTransactionBlock({
@@ -250,9 +254,9 @@ in your contracts directory to use the default sui private key.`
         `\n${name} world schemas is ${registerObjectContent.fields["schema_names"]}`
       )
     );
-  } catch (error) {
-    console.log("upgrade failed!");
-    console.error(error);
+  } catch (error: any) {
+    console.log(chalk.red("Upgrade failed!"));
+    console.error(error.message);
 
     saveContractData(
       name,
@@ -260,73 +264,12 @@ in your contracts directory to use the default sui private key.`
       oldPackageId,
       worldId,
       upgradeCap,
+      adminCap,
       newVersion
     );
-    if (savePath !== undefined) {
-      generateIdConfig(network, oldPackageId, worldId, savePath);
-    }
-    await updateVersionInFile(`${projectPath}/sources/codegen/eps/world.move`, oldVersion.toString());
+    // if (savePath !== undefined) {
+    //   generateIdConfig(network, oldPackageId, worldId);
+    // }
+    await updateVersionInFile(projectPath, oldVersion.toString());
   }
-}
-
-function getVersion(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/version`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getNetwork(
-  projectPath: string
-): Promise<"mainnet" | "testnet" | "devnet" | "localnet"> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/network`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data as "mainnet" | "testnet" | "devnet" | "localnet");
-      }
-    });
-  });
-}
-
-function getOldPackageId(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/package_id`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getWorldId(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/world_id`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
-
-function getUpgradeCap(projectPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(`${projectPath}/.history/upgrade_cap`, "utf8", (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
 }
