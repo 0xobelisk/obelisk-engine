@@ -10,6 +10,7 @@ import (
 	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
 	"github.com/0xobelisk/obelisk-engine/package/indexer/models"
 	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
+	"github.com/0xobelisk/obelisk-engine/package/indexer/utils"
 
 	"go.uber.org/zap"
 )
@@ -50,19 +51,12 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 		PackageId: ev.PackageId,
 	}
 
-	schemaName, ok := ev.ParsedJson["_obelisk_schema_name"].(string)
+	schemaName, ok := ev.ParsedJson["_obelisk_schema_id"].([]uint)
 	if !ok {
 		logger.GetLogger().Error("parse json schema_name fail")
 		return ParseEventErr
 	}
-	e.SchemaName = schemaName
-
-	entityKey, ok := ev.ParsedJson["_obelisk_entity_key"].(string)
-	if !ok {
-		logger.GetLogger().Error("parse json entity_key fail")
-		return ParseEventErr
-	}
-	e.EntityKey = entityKey
+	e.SchemaName = utils.UIntArrayToString(schemaName)
 
 	timestampMs, err := strconv.ParseUint(ev.TimestampMs, 10, 64)
 	if err != nil {
@@ -71,9 +65,32 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 	}
 	e.TimestampMs = timestampMs
 
+	schemaType, ok := ev.ParsedJson["_obelisk_entity_type"].(uint)
+	if !ok {
+		logger.GetLogger().Error("parse json _obelisk_entity_type fail")
+		return ParseEventErr
+	}
+	if schemaType >= types.SCHEMA_TYPE_NORMAL && schemaType <= types.SCHEMA_TYPE_EPHEMERAL {
+		e.SchemaType = schemaType
+	} else {
+		logger.GetLogger().Error("invalid _obelisk_entity_type")
+		return ParseEventErr
+	}
+
+	entityKey, ok := ev.ParsedJson["_obelisk_entity_key"].(string)
+	if !ok {
+		// single or ephemeral schema; special deal;
+
+		// e.IsSingle = true
+		logger.GetLogger().Error("parse json _obelisk_entity_key fail")
+		return ParseEventErr
+	} else {
+		e.EntityKey = entityKey
+	}
+
 	switch typ {
-	case types.EVENT_SCHEMA_SET_FIELD, types.EVENT_SCHEMA_SET_EPHEMERAL_FIELD:
-		err = p.parseSetOrEphemeralEvent(typ, e, ev)
+	case types.EVENT_SCHEMA_SET_FIELD:
+		err = p.parseSetEvent(typ, e, ev)
 	case types.EVENT_SCHEMA_REMOVE_FIELD:
 		err = p.parseRemoveEvent(e)
 	}
@@ -86,7 +103,7 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 	return err
 }
 
-func (p *Parser) parseSetOrEphemeralEvent(typ types.EventType, e *models.Event, ev *types.SuiEvent) error {
+func (p *Parser) parseSetEvent(typ types.EventType, e *models.Event, ev *types.SuiEvent) error {
 	data, ok := ev.ParsedJson["data"]
 	if !ok {
 		logger.GetLogger().Error("parse json data fail")
@@ -98,13 +115,11 @@ func (p *Parser) parseSetOrEphemeralEvent(typ types.EventType, e *models.Event, 
 		return ParseEventErr
 	}
 	e.Data = string(d)
-
-	if typ == types.EVENT_SCHEMA_SET_EPHEMERAL_FIELD {
-		e.IsEphemeral = true
+	if e.SchemaType != types.SCHEMA_TYPE_NORMAL {
+		e.EntityKey = "s_" + e.SchemaName
 	}
 
 	return p.db.UpsertCompEntity(e)
-
 }
 
 func (p *Parser) parseRemoveEvent(e *models.Event) error {
@@ -125,4 +140,3 @@ func (p *Parser) recordCursor(ev *types.SuiEvent, timestampMs uint64) error {
 	cursor.Module = s[1]
 	return p.db.UpsertCursor(cursor)
 }
-
