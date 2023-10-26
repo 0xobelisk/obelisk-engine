@@ -83,9 +83,6 @@ in your contracts directory to use the default sui private key.`
     }
 
     const tx = new TransactionBlock();
-
-    tx.setGasBudget(5000000000);
-
     const ticket = tx.moveCall({
       target: "0x2::package::authorize_upgrade",
       arguments: [
@@ -162,8 +159,6 @@ in your contracts directory to use the default sui private key.`
 
     const migrateTx = new TransactionBlock();
 
-    migrateTx.setGasBudget(5000000000);
-
     migrateTx.moveCall({
       target: `${newPackageId}::world::migrate`,
       arguments: [migrateTx.object(worldId), migrateTx.object(adminCap)],
@@ -173,7 +168,6 @@ in your contracts directory to use the default sui private key.`
       signer: keypair,
       transactionBlock: migrateTx,
       options: {
-        // showObjectChanges: true,
         showEffects: true,
       },
     });
@@ -191,13 +185,13 @@ in your contracts directory to use the default sui private key.`
 
     if (migrateResult.effects?.status.status === "success") {
       console.log(
-        chalk.blue(
+        chalk.green(
           `${name} migrate world success, new world version is: ${newObjectContent.fields["version"]}, package version is ${newVersion}`
         )
       );
     } else {
       console.log(
-        chalk.yellow(
+        chalk.red(
           `${name} migrate world failed, world version is: ${newObjectContent.fields["version"]}, package version is ${newVersion}`
         )
       );
@@ -213,8 +207,6 @@ in your contracts directory to use the default sui private key.`
     for (const newSchema of uniqueSchema) {
       const registerTx = new TransactionBlock();
 
-      registerTx.setGasBudget(5000000000);
-
       registerTx.moveCall({
         target: `${newPackageId}::${newSchema}_schema::register`,
         arguments: [registerTx.object(worldId), registerTx.object(adminCap)],
@@ -224,7 +216,6 @@ in your contracts directory to use the default sui private key.`
         signer: keypair,
         transactionBlock: registerTx,
         options: {
-          // showObjectChanges: true,
           showEffects: true,
         },
       });
@@ -233,7 +224,7 @@ in your contracts directory to use the default sui private key.`
           chalk.blue(`new schema: ${newSchema}_schema register success.`)
         );
       } else {
-        console.log(chalk.yellow(`${newSchema}_schema register failed.`));
+        console.log(chalk.red(`${newSchema}_schema register failed.`));
       }
     }
 

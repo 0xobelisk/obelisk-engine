@@ -137,9 +137,11 @@ in your contracts directory to use the default sui private key.`
     version
   );
 
-  const deployHookTx = new TransactionBlock();
+  console.log(chalk.blue("Executing the deployHook: "))
+  const delay =  (ms: number) =>  new Promise(resolve => setTimeout(resolve, ms));
+  await delay(5000)
 
-  deployHookTx.setGasBudget(5000000000);
+  const deployHookTx = new TransactionBlock();
 
   deployHookTx.moveCall({
     target: `${packageId}::deploy_hook::run`,
@@ -167,7 +169,7 @@ in your contracts directory to use the default sui private key.`
 
   if (deployHookResult.effects?.status.status === "success") {
     console.log(
-      chalk.blue(
+      chalk.green(
         `Successful auto-execution of deployHook, please check the transaction digest: ${deployHookResult.digest}`
       )
     );
