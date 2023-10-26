@@ -51,12 +51,14 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 		PackageId: ev.PackageId,
 	}
 
-	schemaName, ok := ev.ParsedJson["_obelisk_schema_id"].([]uint)
+	schemaIdSlice := ev.ParsedJson["_obelisk_schema_id"]
+
+	schemaId, ok := schemaIdSlice.([]interface{})
 	if !ok {
-		logger.GetLogger().Error("parse json schema_name fail")
+		logger.GetLogger().Error("parse json _obelisk_schema_id fail")
 		return ParseEventErr
 	}
-	e.SchemaName = utils.UIntArrayToString(schemaName)
+	e.SchemaName = utils.InterfaceArrayToString(schemaId)
 
 	timestampMs, err := strconv.ParseUint(ev.TimestampMs, 10, 64)
 	if err != nil {
@@ -65,15 +67,15 @@ func (p *Parser) parseEvent(ev *types.SuiEvent) error {
 	}
 	e.TimestampMs = timestampMs
 
-	schemaType, ok := ev.ParsedJson["_obelisk_entity_type"].(uint)
+	schemaType, ok := ev.ParsedJson["_obelisk_schema_type"].(float64)
 	if !ok {
-		logger.GetLogger().Error("parse json _obelisk_entity_type fail")
+		logger.GetLogger().Error("parse json _obelisk_schema_type fail")
 		return ParseEventErr
 	}
-	if schemaType >= types.SCHEMA_TYPE_NORMAL && schemaType <= types.SCHEMA_TYPE_EPHEMERAL {
-		e.SchemaType = schemaType
+	if uint(schemaType) >= types.SCHEMA_TYPE_NORMAL && uint(schemaType) <= types.SCHEMA_TYPE_EPHEMERAL {
+		e.SchemaType = uint(schemaType)
 	} else {
-		logger.GetLogger().Error("invalid _obelisk_entity_type")
+		logger.GetLogger().Error("invalid _obelisk_schema_type")
 		return ParseEventErr
 	}
 

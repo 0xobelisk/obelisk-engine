@@ -7,10 +7,9 @@ type EventType string
 // type SchemaType uint
 
 const (
-	EVENT_SCHEMA_SET_FIELD    EventType = "SchemaSetField"
-	EVENT_SCHEMA_REMOVE_FIELD EventType = "SchemaRemoveField"
-	// EVENT_SCHEMA_SET_EPHEMERAL_FIELD EventType = "SchemaSetEphemeralRecord"
-	EVENT_UNKNOW EventType = ""
+	EVENT_SCHEMA_SET_FIELD    EventType = "SchemaSetRecord"
+	EVENT_SCHEMA_REMOVE_FIELD EventType = "SchemaRemoveRecord"
+	EVENT_UNKNOW              EventType = ""
 )
 
 const (

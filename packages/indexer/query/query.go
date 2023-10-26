@@ -64,7 +64,7 @@ func (q *QueryServer) getCompsFromDB(packageId string, schemaName string, entity
 	var comps []types.CompData
 	for _, event := range events {
 		comp := types.CompData{
-			SchemaName:  event.SchemaName,
+			SchemaId:    event.SchemaName,
 			PackageId:   event.PackageId,
 			EntityKey:   event.EntityKey,
 			TimestampMs: event.TimestampMs,
