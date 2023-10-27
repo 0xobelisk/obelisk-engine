@@ -1,6 +1,6 @@
 {
   "name": "create-obelisk-world",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "type": "module",
   "license": "MIT",
   "author": "team@obelisk.build",
@@ -32,7 +32,7 @@
     "url": "git+https://github.com/0xobelisk/create-obelisk-world.git"
   },
   "dependencies": {
-    "@0xobelisk/client": "^0.4.7",
+    "@0xobelisk/client": "^0.4.8",
     "@mysten/sui.js": "^0.41.0",
     "browser-resolve": "^2.0.0",
     "browser-sync": "^2.29.3"
