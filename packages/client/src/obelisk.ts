@@ -587,7 +587,7 @@ export class Obelisk {
     return '0x' + data;
   }
 
-  async entity_key_from_object_with_seed(objectId: string, seed: string) {
+  async entity_key_from_address_with_seed(objectId: string, seed: string) {
     const checkObjectId = normalizeHexAddress(objectId);
     if (checkObjectId !== null) {
       objectId = checkObjectId;
@@ -599,7 +599,7 @@ export class Obelisk {
     }
   }
 
-  async entity_key_from_object_with_u256(objectId: string, x: number) {
+  async entity_key_from_address_with_u256(objectId: string, x: number) {
     const checkObjectId = normalizeHexAddress(objectId);
     if (checkObjectId !== null) {
       objectId = checkObjectId;
