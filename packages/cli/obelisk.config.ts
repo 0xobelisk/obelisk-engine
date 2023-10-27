@@ -42,12 +42,6 @@ export const obeliskConfig = {
         [9, 10, 11, 12],
       ],
     },
-
-    single_value_3: {
-      valueType: "bool",
-      defaultValue: true,
-    },
-
     single_value_4: {
       valueType: "vector<bool>",
       defaultValue: [true],
@@ -62,7 +56,18 @@ export const obeliskConfig = {
       valueType: "vector<address>",
       defaultValue: ["0x1121", "0x125", "0x111"],
     },
-
+    // single_value_7: {
+    //   valueType: "vector<u8>",
+    //   defaultValue: [1, 2, 3, 4, 5],
+    // },
+    // single_value_8: {
+    //   valueType: "vector<u8>",
+    //   defaultValue: [1, 2, 3, 4, 5],
+    // },
+    // single_value_9: {
+    //   valueType: "vector<u8>",
+    //   defaultValue: [1, 2, 3, 4, 5],
+    // },
     single_struct: {
       valueType: {
         admin: "address",

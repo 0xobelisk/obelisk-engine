@@ -25,7 +25,7 @@ export async function publishHandler(
   if (!privateKey)
     throw new ObeliskCliError(
       `Missing PRIVATE_KEY environment variable.
-Run 'echo "PRIVATE_KEY=0xYOUR_PRIVATE_KEY" > .env'
+Run 'echo "PRIVATE_KEY=YOUR_PRIVATE_KEY" > .env'
 in your contracts directory to use the default sui private key.`
     );
 
@@ -92,8 +92,6 @@ in your contracts directory to use the default sui private key.`
     process.exit(1);
   }
 
-  console.log(chalk.blue(`Publish transaction digest: ${result.digest}`));
-
   let version = 1;
   let packageId = "";
   let worldId = "";
@@ -101,31 +99,33 @@ in your contracts directory to use the default sui private key.`
   let adminCapId = "";
   result.objectChanges!.map((object) => {
     if (object.type === "published") {
-      console.log(chalk.green(`${name} PackageId: ${object.packageId}`));
+      console.log(chalk.blue(`${name} PackageId: ${object.packageId}`));
       packageId = object.packageId;
     }
     if (
       object.type === "created" &&
       object.objectType.endsWith("::world::World")
     ) {
-      console.log(chalk.green(`${name} WorldId: ${object.objectId}`));
+      console.log(chalk.blue(`${name} WorldId: ${object.objectId}`));
       worldId = object.objectId;
     }
     if (
       object.type === "created" &&
       object.objectType === "0x2::package::UpgradeCap"
     ) {
-      console.log(chalk.green(`${name} UpgradeCap: ${object.objectId}`));
+      console.log(chalk.blue(`${name} UpgradeCap: ${object.objectId}`));
       upgradeCapId = object.objectId;
     }
     if (
       object.type === "created" &&
       object.objectType.endsWith("::world::AdminCap")
     ) {
-      console.log(chalk.green(`${name} AdminCapId: ${object.objectId}`));
+      console.log(chalk.blue(`${name} AdminCapId: ${object.objectId}`));
       adminCapId = object.objectId;
     }
   });
+
+  console.log(chalk.green(`Publish transaction digest: ${result.digest}`));
 
   saveContractData(
     name,
@@ -137,9 +137,12 @@ in your contracts directory to use the default sui private key.`
     version
   );
 
-  const deployHookTx = new TransactionBlock();
+  console.log("Executing the deployHook: ");
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+  await delay(5000);
 
-  deployHookTx.setGasBudget(5000000000);
+  const deployHookTx = new TransactionBlock();
 
   deployHookTx.moveCall({
     target: `${packageId}::deploy_hook::run`,
@@ -167,7 +170,7 @@ in your contracts directory to use the default sui private key.`
 
   if (deployHookResult.effects?.status.status === "success") {
     console.log(
-      chalk.blue(
+      chalk.green(
         `Successful auto-execution of deployHook, please check the transaction digest: ${deployHookResult.digest}`
       )
     );
