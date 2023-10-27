@@ -588,6 +588,31 @@ export class Obelisk {
     return '0x' + data;
   }
 
+  async entity_key_from_address_with_seed(objectId: string, seed: string) {
+    const checkObjectId = normalizeHexAddress(objectId);
+    if (checkObjectId !== null) {
+      objectId = checkObjectId;
+      const bytes = Buffer.from(objectId.slice(2), 'hex');
+      const newBuffer = Buffer.concat([bytes, Buffer.from(seed, 'utf-8')]);
+      return this.entity_key_from_bytes(newBuffer);
+    } else {
+      return undefined;
+    }
+  }
+
+  async entity_key_from_address_with_u256(objectId: string, x: number) {
+    const checkObjectId = normalizeHexAddress(objectId);
+    if (checkObjectId !== null) {
+      objectId = checkObjectId;
+      const bcs = new BCS(getSuiMoveConfig());
+      const bytes = Buffer.from(objectId.slice(2), 'hex');
+      const numberBytes = bcs.ser('u256', x).toBytes();
+      return this.entity_key_from_bytes(Buffer.concat([bytes, numberBytes]));
+    } else {
+      return undefined;
+    }
+  }
+
   async entity_key_from_u256(x: number) {
     return numberToAddressHex(x);
   }
