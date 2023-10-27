@@ -1,5 +1,6 @@
 import type { CommandModule } from "yargs";
 import { worldgen, loadConfig, ObeliskConfig } from "@0xobelisk/common";
+import chalk from "chalk";
 
 type Options = {
   configPath?: string;
@@ -17,9 +18,14 @@ const commandModule: CommandModule<Options, Options> = {
   },
 
   async handler({ configPath }) {
-    const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
-    worldgen(obeliskConfig);
-    process.exit(0);
+    try {
+      const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
+      worldgen(obeliskConfig);
+      process.exit(0);
+    } catch (error: any) {
+      console.log(chalk.red("Schemagen failed!"));
+      console.error(error.message);
+    }
   },
 };
 

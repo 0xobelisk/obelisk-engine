@@ -6,7 +6,6 @@ import chalk from "chalk";
 import { ObeliskCliError, UpgradeError } from "./errors";
 import {
   updateVersionInFile,
-  getNetwork,
   getOldPackageId,
   getVersion,
   getWorldId,
@@ -34,7 +33,7 @@ export async function upgradeHandler(
   if (!privateKey)
     throw new ObeliskCliError(
       `Missing PRIVATE_KEY environment variable.
-Run 'echo "PRIVATE_KEY=0xYOUR_PRIVATE_KEY" > .env'
+Run 'echo "PRIVATE_KEY=YOUR_PRIVATE_KEY" > .env'
 in your contracts directory to use the default sui private key.`
     );
 
@@ -45,16 +44,15 @@ in your contracts directory to use the default sui private key.`
   const privateKeyRaw = Buffer.from(privateKeyFormat as string, "hex");
   const keypair = Ed25519Keypair.fromSecretKey(privateKeyRaw);
 
-  // const network = await getNetwork(projectPath);
   const client = new SuiClient({
     url: getFullnodeUrl(network),
   });
 
   let oldVersion = Number(await getVersion(projectPath, network));
-  const oldPackageId = await getOldPackageId(projectPath, network);
-  const worldId = await getWorldId(projectPath, network);
-  const upgradeCap = await getUpgradeCap(projectPath, network);
-  const adminCap = await getAdminCap(projectPath, network);
+  let oldPackageId = await getOldPackageId(projectPath, network);
+  let worldId = await getWorldId(projectPath, network);
+  let upgradeCap = await getUpgradeCap(projectPath, network);
+  let adminCap = await getAdminCap(projectPath, network);
 
   const newVersion = oldVersion + 1;
   await updateVersionInFile(projectPath, newVersion.toString());
@@ -117,36 +115,27 @@ in your contracts directory to use the default sui private key.`
       },
     });
 
-    let worldObject = await client.getObject({
-      id: worldId,
-      options: {
-        showContent: true,
-        showDisplay: true,
-        showType: true,
-        showOwner: true,
-      },
-    });
-    let objectContent = worldObject.data!.content as ObjectContent;
-
     console.log("");
-    console.log(chalk.blue(`Transaction Digest: ${result.digest}`));
     console.log(`${name} WorldId: ${worldId}`);
 
     let newPackageId = "";
     let newUpgradeCap = "";
     result.objectChanges!.map((object) => {
       if (object.type === "published") {
-        console.log(chalk.green(`${name} PackageId: ${object.packageId}`));
+        console.log(chalk.blue(`${name} PackageId: ${object.packageId}`));
         newPackageId = object.packageId;
       }
       if (
         object.type === "mutated" &&
         object.objectType === "0x2::package::UpgradeCap"
       ) {
-        console.log(chalk.green(`${name} UpgradeCap: ${object.objectId}`));
+        console.log(chalk.blue(`${name} UpgradeCap: ${object.objectId}`));
         newUpgradeCap = object.objectId;
       }
     });
+
+    console.log(chalk.green(`Upgrade Transaction Digest: ${result.digest}`));
+
     saveContractData(
       name,
       network,
@@ -157,19 +146,19 @@ in your contracts directory to use the default sui private key.`
       newVersion
     );
 
-    const migrateTx = new TransactionBlock();
+    oldPackageId = newPackageId;
+    upgradeCap = newUpgradeCap;
+    oldVersion = newVersion;
 
+    console.log("\nExecuting the migrate: ");
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+    await delay(5000);
+
+    const migrateTx = new TransactionBlock();
     migrateTx.moveCall({
       target: `${newPackageId}::world::migrate`,
       arguments: [migrateTx.object(worldId), migrateTx.object(adminCap)],
-    });
-
-    const migrateResult = await client.signAndExecuteTransactionBlock({
-      signer: keypair,
-      transactionBlock: migrateTx,
-      options: {
-        showEffects: true,
-      },
     });
 
     let newWorldObject = await client.getObject({
@@ -183,10 +172,44 @@ in your contracts directory to use the default sui private key.`
     });
     let newObjectContent = newWorldObject.data!.content as ObjectContent;
 
+    const uniqueSchema: string[] = schemaNames.filter(
+      (item) => !newObjectContent.fields["schema_names"].includes(item)
+    );
+
+    console.log("new schema:", uniqueSchema);
+    let needRegisterSchema = [];
+    for (const newSchema of uniqueSchema) {
+      migrateTx.moveCall({
+        target: `${newPackageId}::${newSchema}_schema::register`,
+        arguments: [migrateTx.object(worldId), migrateTx.object(adminCap)],
+      });
+      needRegisterSchema.push(`${newSchema}_schema`);
+    }
+    const migrateResult = await client.signAndExecuteTransactionBlock({
+      signer: keypair,
+      transactionBlock: migrateTx,
+      options: {
+        showEffects: true,
+      },
+    });
+
     if (migrateResult.effects?.status.status === "success") {
       console.log(
         chalk.green(
           `${name} migrate world success, new world version is: ${newObjectContent.fields["version"]}, package version is ${newVersion}`
+        )
+      );
+      if (needRegisterSchema.length !== 0) {
+        console.log(
+          chalk.green(
+            `new schema: ${needRegisterSchema.toString()} register success.`
+          )
+        );
+      }
+
+      console.log(
+        chalk.blue(
+          `\n${name} world schemas is ${newObjectContent.fields["schema_names"]}`
         )
       );
     } else {
@@ -196,55 +219,6 @@ in your contracts directory to use the default sui private key.`
         )
       );
     }
-
-    const uniqueSchema: string[] = schemaNames.filter(
-      (item) => !newObjectContent.fields["schema_names"].includes(item)
-    );
-
-    console.log("\n----- new schema -----");
-    console.log(uniqueSchema);
-
-    for (const newSchema of uniqueSchema) {
-      const registerTx = new TransactionBlock();
-
-      registerTx.moveCall({
-        target: `${newPackageId}::${newSchema}_schema::register`,
-        arguments: [registerTx.object(worldId), registerTx.object(adminCap)],
-      });
-
-      const registerResult = await client.signAndExecuteTransactionBlock({
-        signer: keypair,
-        transactionBlock: registerTx,
-        options: {
-          showEffects: true,
-        },
-      });
-      if (registerResult.effects?.status.status === "success") {
-        console.log(
-          chalk.blue(`new schema: ${newSchema}_schema register success.`)
-        );
-      } else {
-        console.log(chalk.red(`${newSchema}_schema register failed.`));
-      }
-    }
-
-    let registerWorldObject = await client.getObject({
-      id: worldId,
-      options: {
-        showContent: true,
-        showDisplay: true,
-        showType: true,
-        showOwner: true,
-      },
-    });
-    let registerObjectContent = registerWorldObject.data!
-      .content as ObjectContent;
-
-    console.log(
-      chalk.blue(
-        `\n${name} world schemas is ${registerObjectContent.fields["schema_names"]}`
-      )
-    );
   } catch (error: any) {
     console.log(chalk.red("Upgrade failed!"));
     console.error(error.message);
@@ -256,11 +230,8 @@ in your contracts directory to use the default sui private key.`
       worldId,
       upgradeCap,
       adminCap,
-      newVersion
+      oldVersion
     );
-    // if (savePath !== undefined) {
-    //   generateIdConfig(network, oldPackageId, worldId);
-    // }
     await updateVersionInFile(projectPath, oldVersion.toString());
   }
 }
