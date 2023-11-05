@@ -1,15 +1,15 @@
 {
-  "name": "@0xobelisk/sui-client",
-  "version": "0.4.8",
+  "name": "@0xobelisk/aptos-client",
+  "version": "0.0.2",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
-    "sui",
+    "aptos",
     "obelisk labs",
     "move",
     "blockchain"
   ],
   "author": "team@obelisk.build",
-  "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/package/@0xobelisk/client#readme",
+  "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/packages/aptos-cli#readme",
   "bugs": "https://github.com/0xobelisk/obelisk-engine/issues",
   "repository": {
     "type": "git",
@@ -46,6 +46,8 @@
     "watch": "pnpm run clean & pnpm run watch:types & pnpm run watch:tsup",
     "test": "pnpm test:typecheck && pnpm test:unit",
     "test:typecheck": "tsc -p ./test",
+    "test:unit": "vitest run --test-timeout=60000",
+    "test:watch": "vitest",
     "format:fix": "prettier --ignore-path 'dist/* docs/*' --write '**/*.{ts,json,md}'",
     "lint:fix": "eslint . --ignore-pattern dist --ext .ts --fix",
     "commit": "commit",
@@ -55,8 +57,8 @@
     "prettier-plugin-rust": "^0.1.9"
   },
   "dependencies": {
-    "@mysten/bcs": "^0.7.3",
-    "@mysten/sui.js": "^0.41.0",
+    "@aptos-labs/aptos-client": "^0.0.2",
+    "aptos": "^1.20.0",
     "@scure/bip39": "^1.2.1",
     "assert": "^2.0.0",
     "colorts": "^0.1.63",
@@ -66,9 +68,6 @@
     "superstruct": "^1.0.3",
     "tmp": "^0.2.1",
     "ts-retry-promise": "^0.7.0"
-  },
-  "peerDependencies": {
-    "@mysten/sui.js": "^0.41.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.6.6",
@@ -88,7 +87,8 @@
     "tsconfig-paths": "^4.2.0",
     "tsup": "^7.1.0",
     "typedoc": "^0.24.8",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "vitest": "^0.32.2"
   },
   "lint-staged": {
     "**/*.ts": [

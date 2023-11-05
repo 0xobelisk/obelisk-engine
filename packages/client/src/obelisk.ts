@@ -134,7 +134,7 @@ export class Obelisk {
         const moduleName = data.name;
         Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
           const meta = value as SuiMoveMoudleFuncType;
-          meta.moudleName = moduleName;
+          meta.moduleName = moduleName;
           meta.funcName = funcName;
 
           if (isUndefined(this.#query[moduleName])) {
@@ -179,7 +179,7 @@ export class Obelisk {
     isRaw?: boolean
   ) => {
     tx.moveCall({
-      target: `${this.contractFactory.packageId}::${meta.moudleName}::${meta.funcName}`,
+      target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
       arguments: params,
     });
 
@@ -196,7 +196,7 @@ export class Obelisk {
     isRaw?: boolean
   ) => {
     tx.moveCall({
-      target: `${this.contractFactory.packageId}::${meta.moudleName}::${meta.funcName}`,
+      target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
       arguments: params,
     });
 
@@ -456,14 +456,14 @@ export class Obelisk {
     schemaName: string,
     entityId?: string
   ): Promise<any[] | undefined> {
-    const schemaMoudleName = `${schemaName}_schema`;
+    const schemaModuleName = `${schemaName}_schema`;
     const tx = new TransactionBlock();
     const params = [tx.pure(worldId)] as SuiTxArgument[];
     if (entityId !== undefined) {
       params.push(tx.pure(entityId));
     }
 
-    const getResult = (await this.query[schemaMoudleName].get(
+    const getResult = (await this.query[schemaModuleName].get(
       tx,
       params
     )) as DevInspectResults;
@@ -490,14 +490,14 @@ export class Obelisk {
     schemaName: string,
     entityId?: string
   ): Promise<boolean | undefined> {
-    const schemaMoudleName = `${schemaName}_schema`;
+    const schemaModuleName = `${schemaName}_schema`;
     const tx = new TransactionBlock();
     const params = [tx.pure(worldId)] as SuiTxArgument[];
     if (entityId !== undefined) {
       params.push(tx.pure(entityId));
     }
 
-    const getResult = (await this.query[schemaMoudleName].contains(
+    const getResult = (await this.query[schemaModuleName].contains(
       tx,
       params
     )) as DevInspectResults;
@@ -519,12 +519,12 @@ export class Obelisk {
   //   cursor?: string,
   //   limit?: number
   // ) {
-  //   let schemaMoudleName = `${schemaName}_schema`;
+  //   let schemaModuleName = `${schemaName}_schema`;
 
   //   const tx = new TransactionBlock();
   //   let params = [tx.pure(worldId)] as SuiTxArgument[];
 
-  //   const tableResult = (await this.query[schemaonentMoudleName].entities(
+  //   const tableResult = (await this.query[schemaonentModuleName].entities(
   //     tx,
   //     params
   //   )) as DevInspectResults;
