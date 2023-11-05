@@ -24,6 +24,12 @@ module examples::example_system {
     #[test_only]
     use sui::test_scenario::Scenario;
     use sui::transfer;
+    #[test_only]
+    use sui::sui::SUI;
+    #[test_only]
+    use sui::coin;
+    #[test_only]
+    use sui::coin::Coin;
 
     public entry fun increase(world: &mut World) {
         let old_number = single_value_schema::get(world);
@@ -75,6 +81,21 @@ module examples::example_system {
         test_scenario::return_shared<World>(world);
         test_scenario::end(scenario_val);
     }
+
+    #[test]
+    public fun test_increase_with_type()  {
+        let scenario_val = init_test();
+        let scenario = &mut scenario_val;
+
+        let world = test_scenario::take_shared<World>(scenario);
+
+        let c = coin::mint_for_testing<SUI>(10, test_scenario::ctx(scenario));
+        increase_with_type<Coin<SUI>>(&mut world, c);
+
+        test_scenario::return_shared<World>(world);
+        test_scenario::end(scenario_val);
+    }
+
 
     #[test]
     public fun test_ephemeral()  {
