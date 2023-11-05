@@ -23,11 +23,19 @@ module examples::example_system {
     use sui::test_scenario;
     #[test_only]
     use sui::test_scenario::Scenario;
+    use sui::transfer;
 
     public entry fun increase(world: &mut World) {
         let old_number = single_value_schema::get(world);
         let new_number = old_number + 10;
         single_value_schema::set(world, new_number);
+    }
+
+    public entry fun increase_with_type<T: key + store>(world: &mut World, coin: T) {
+        let old_number = single_value_schema::get(world);
+        let new_number = old_number + 10;
+        single_value_schema::set(world, new_number);
+        transfer::public_transfer(coin, @examples)
     }
 
     #[test_only]
