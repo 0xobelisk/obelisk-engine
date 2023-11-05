@@ -30,8 +30,26 @@ Obelisk-Engine is still in its early stages of development, yet the dedicated co
 - networking & indexing stack
 - Typed SDKs
 
+
+## What we will do in the future ？
+- ZK-login Injected as a plug-in
+- Transaction sponsorship injected as a plugin
+- State Synchronization Client Hook Implementation
+- Customized Runtime Sandbox
+- World Browser
+
 ## 🚀 Quick Start
 See the [start guide](https://obelisk.build/engine/docs/quick-start) in the document website.
+
+## Packages 
+
+Obelisk consists of several libraries. They can be used independently, but are best used together.
+
+| Package                                                                                                          | Version                                                                                                               |
+|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| **[@0xobelisk/cli](/packages/cli)** <br />Command line interface for types, testing, faucet, deployment and more | [![npm version](https://img.shields.io/npm/v/@0xobelisk/cli.svg)](https://www.npmjs.com/package/@0xobelisk/cli)       |
+| **[@0xobelisk/client](/packages/client)** <br />Client-side Typescript implementation for cross-platform interaction with chained Packages                   | [![npm version](https://img.shields.io/npm/v/@0xobelisk/client.svg)](https://www.npmjs.com/package/@0xobelisk/client) |
+| **[@0xobelisk/common](/packages/common)** <br />Core code for CLI and Clinet                                     | [![npm version](https://img.shields.io/npm/v/@0xobelisk/common.svg)](https://www.npmjs.com/package/@0xobelisk/common) |
 
 
 ## 🗒️ Documentation
