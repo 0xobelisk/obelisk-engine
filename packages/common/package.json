@@ -8,6 +8,7 @@
     "move",
     "blockchain"
   ],
+  "type": "module",
   "author": "team@obelisk.build",
   "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/package/@0xobelisk/cli#readme",
   "bugs": "https://github.com/0xobelisk/obelisk-engine/issues",
@@ -66,6 +67,5 @@
     "@types/yargs": "^17.0.10",
     "tsup": "^6.7.0",
     "tsx": "^3.12.6"
-  },
-  "type": "module"
+  }
 }

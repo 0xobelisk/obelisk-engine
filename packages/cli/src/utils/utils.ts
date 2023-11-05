@@ -1,8 +1,8 @@
 import * as fsAsync from "fs/promises";
-import * as fs from "fs";
 import { mkdirSync, writeFileSync } from "fs";
 import { dirname } from "path";
 import { FsIibError } from "./errors";
+
 export type DeploymentJsonType = {
   projectName: string;
   network: "mainnet" | "testnet" | "devnet" | "localnet";
