@@ -2709,6 +2709,7 @@ var obelisk = require('@0xobelisk/client');
 window.obelisk = obelisk;
 
 },{"@0xobelisk/client":7}],7:[function(require,module,exports){
+(function (Buffer){(function (){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3909,6 +3910,29 @@ var Obelisk = class {
     const data = bcs.de("address", value);
     return "0x" + data;
   }
+  async entity_key_from_address_with_seed(objectId, seed) {
+    const checkObjectId = normalizeHexAddress(objectId);
+    if (checkObjectId !== null) {
+      objectId = checkObjectId;
+      const bytes = Buffer.from(objectId.slice(2), "hex");
+      const newBuffer = Buffer.concat([bytes, Buffer.from(seed, "utf-8")]);
+      return this.entity_key_from_bytes(newBuffer);
+    } else {
+      return void 0;
+    }
+  }
+  async entity_key_from_address_with_u256(objectId, x) {
+    const checkObjectId = normalizeHexAddress(objectId);
+    if (checkObjectId !== null) {
+      objectId = checkObjectId;
+      const bcs = new _bcs.BCS((0, _bcs.getSuiMoveConfig)());
+      const bytes = Buffer.from(objectId.slice(2), "hex");
+      const numberBytes = bcs.ser("u256", x).toBytes();
+      return this.entity_key_from_bytes(Buffer.concat([bytes, numberBytes]));
+    } else {
+      return void 0;
+    }
+  }
   async entity_key_from_u256(x) {
     return numberToAddressHex(x);
   }
@@ -3936,7 +3960,8 @@ async function loadMetadata(networkType, packageId) {
   }
 }
 
-},{"@mysten/bcs":8,"@mysten/sui.js":46,"@mysten/sui.js/faucet":17,"@mysten/sui.js/keypairs/ed25519":19,"@scure/bip39":118,"@scure/bip39/wordlists/english":119,"keccak256":148}],8:[function(require,module,exports){
+}).call(this)}).call(this,require("buffer").Buffer)
+},{"@mysten/bcs":8,"@mysten/sui.js":46,"@mysten/sui.js/faucet":17,"@mysten/sui.js/keypairs/ed25519":19,"@scure/bip39":118,"@scure/bip39/wordlists/english":119,"buffer":2,"keccak256":148}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
