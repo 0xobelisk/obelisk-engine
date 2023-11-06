@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "browserify main.js -p esmify >  ../obelisk-cocos-template/assets/lib/obelisk.js"
+    "build": "pnpm run build.sui && pnpm run build.aptos",
+    "build.sui": "browserify sui.js -p esmify >  ../obelisk-cocos-template/assets/lib/obelisk.js",
+    "build.aptos": "browserify aptos.js -p esmify >  ../obelisk-cocos-template/assets/lib/obelisk.js"
   },
   "keywords": [],
   "author": "team@0xobelisk.com",

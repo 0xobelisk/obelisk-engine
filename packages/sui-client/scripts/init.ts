@@ -77,11 +77,11 @@ async function init() {
     ),
   ];
 
-  let typeArgs = ['0x2::coin::Coin<0x2::sui::SUI>'];
+  let typeArguments = ['0x2::coin::Coin<0x2::sui::SUI>'];
   let inc_with_type_res = await obelisk.tx.example_system.increase_with_type(
     txb,
     params,
-    typeArgs
+    typeArguments
   );
   console.log(inc_with_type_res);
 
