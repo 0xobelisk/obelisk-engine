@@ -1,3 +1,3 @@
-# common
+# @0xobelisk/common
 
-docs coming soon
+Core code files being used for [@0xobelisk/cli](../sui-cli/README.md)
