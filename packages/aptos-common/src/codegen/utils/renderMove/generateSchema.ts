@@ -124,7 +124,9 @@ export function generateSchema(config: ObeliskConfig, srcPrefix: string) {
 
 function renderEphemeralSchema(option: RenderSchemaOptions): string {
   return `module ${option.projectName}::${option.schemaName}_schema {
-    use std::option::none;
+${
+      option.needImportString ? "\tuse std::string::String;\n\t" : "\t"
+  }use std::option::none;
     use ${option.projectName}::events;
     
 ${renderKeyName(option.valueType)}
@@ -152,7 +154,7 @@ ${renderNewStructFunc(option.structName, option.valueType)}
 function renderSingleSchema(option: RenderSchemaOptions): string {
   return `module ${option.projectName}::${option.schemaName}_schema {
 ${
-  option.needImportString ? "\tuse std::ascii::{String,string};\n\t" : "\t"
+  option.needImportString ? "\tuse std::string::{Self, String};\n\t" : "\t"
 }use std::option::none;
     use std::signer::address_of;
     use ${option.projectName}::events;
@@ -198,7 +200,7 @@ ${renderSingleGetAllFunc(
 function renderSchema(option: RenderSchemaOptions) {
   return `module ${option.projectName}::${option.schemaName}_schema {
 ${
-  option.needImportString ? "\tuse std::ascii::String;\n\t" : "\t"
+  option.needImportString ? "\tuse std::string::String;\n\t" : "\t"
 }use std::option::some;
     use std::signer::address_of;
     use aptos_std::table::{Self, Table};
@@ -208,27 +210,25 @@ ${
     // Systems
 ${getFriendSystem(option.projectName, option.systems)}
 
-\t/// Entity does not exist
-\tconst EEntityDoesNotExist: u64 = 0;
-
 ${renderKeyName(option.valueType)}
 ${renderStruct(option.structName, option.valueType)}
+${renderNewStructFunc(option.structName, option.valueType)}
 ${renderStructEvent(option.structName, option.valueType)}
 \tstruct SchemaData has key {
 \t\tvalue: Table<address, ${option.structName}>
 \t}
-${renderNewStructFunc(option.structName, option.valueType)}
+
 ${renderRegisterFunc()}
 
 ${renderSetFunc(option.structName, option.valueType)}${renderSetAttrsFunc(
     option.structName,
     option.valueType
   )}
+${renderRemoveFunc(option.structName, option.valueType)}
 ${renderGetAllFunc(option.structName, option.valueType)}${renderGetAttrsFunc(
     option.structName,
     option.valueType
   )}
-${renderRemoveFunc(option.structName, option.valueType)}
 ${renderContainFunc(option.structName)}
 
 \t#[view]
