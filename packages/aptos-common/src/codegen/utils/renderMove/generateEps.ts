@@ -27,20 +27,7 @@ function generateWorld(
     use std::signer;
     
     friend ${config.name}::init;
-    ${getFriendSchema(config.name, config.schemas)}
-    
-    const VERSION: u64 = ${version};
-
-    /// Schema does not exist
-    const ESchemaDoesNotExist: u64 = 0;
-    /// Schema already exists
-    const ESchemaAlreadyExists: u64 = 1;
-    /// Not the right admin for this world
-    const ENotAdmin: u64 = 2;
-    /// Migration is not an upgrade
-    const ENotUpgrade: u64 = 3;
-    /// Calling functions from the wrong package version
-    const EWrongVersion: u64 = 4;
+${getFriendSchema(config.name, config.schemas)}
 
     struct World has key {
         /// Deployer
@@ -55,7 +42,7 @@ function generateWorld(
 
     public(friend) fun create(deployer_signer: &signer, name: String, description: String) {
         let deployer = signer::address_of(deployer_signer);
-        let (_, resource_cap) = account::create_resource_account(deployer_signer, b"Examples");
+        let (_, resource_cap) = account::create_resource_account(deployer_signer, b"${config.name}");
         move_to(deployer_signer, World { deployer, name, description, resource_cap });
     }
 
@@ -79,9 +66,9 @@ function generateWorld(
     }
 
     #[view]
-    public fun info(): (String, String, address) acquires World {
+    public fun info(): (String, String, address, address) acquires World {
         let _obelisk_world = borrow_global_mut<World>(@${config.name});
-        (_obelisk_world.name, _obelisk_world.description, _obelisk_world.deployer)
+        (_obelisk_world.name, _obelisk_world.description, _obelisk_world.deployer, get_signer_capability_address(&_obelisk_world.resource_cap))
     }
 }
 `;
@@ -102,7 +89,7 @@ function generateEvents(projectName: string, srcPrefix: string) {
         _obelisk_schema_id: vector<u8>,
         _obelisk_schema_type: u8,
         _obelisk_entity_key: Option<address>,
-        data: T
+        _obelisk_data: T
     }
 
     #[event]
@@ -111,20 +98,12 @@ function generateEvents(projectName: string, srcPrefix: string) {
         _obelisk_entity_key: address
     }
 
-    public fun new_set_record_event<T: drop + store>(_obelisk_schema_id: vector<u8>, _obelisk_schema_type: u8, _obelisk_entity_key: Option<address>, data: T): SchemaSetRecord<T> {
-        SchemaSetRecord { _obelisk_schema_id, _obelisk_schema_type, _obelisk_entity_key, data }
-    }
-
-    public fun new_remove_record_event(_obelisk_schema_id: vector<u8>, _obelisk_entity_key: address): SchemaRemoveRecord {
-        SchemaRemoveRecord { _obelisk_schema_id, _obelisk_entity_key }
-    }
-
-    public fun emit_set<T: drop + store>(_obelisk_schema_id: vector<u8>, _obelisk_schema_type: u8, _obelisk_entity_key: Option<address>, data: T) {
-        event::emit(new_set_record_event<T>(_obelisk_schema_id, _obelisk_schema_type, _obelisk_entity_key, data));
+    public fun emit_set<T: drop + store>(_obelisk_schema_id: vector<u8>, _obelisk_schema_type: u8, _obelisk_entity_key: Option<address>, _obelisk_data: T) {
+        event::emit(SchemaSetRecord { _obelisk_schema_id, _obelisk_schema_type, _obelisk_entity_key, _obelisk_data });
     }
 
     public fun emit_remove(_obelisk_schema_id: vector<u8>, _obelisk_entity_key: address) {
-        event::emit(new_remove_record_event(_obelisk_schema_id, _obelisk_entity_key));
+        event::emit(SchemaRemoveRecord { _obelisk_schema_id, _obelisk_entity_key });
     }
 }
 `;

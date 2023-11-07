@@ -8,13 +8,16 @@ export const obeliskConfig = {
     single_column: "u64",
     multi_column: {
       valueType: {
-        state: "vector<u8>",
+        state: "string",
         last_update_time: "u64",
       },
     },
     ephemeral: {
       ephemeral: true,
-      valueType: "u64",
+      valueType: {
+        state: "string",
+        level: "u64",
+      },
     },
     single_value: {
       valueType: "u64",
@@ -22,10 +25,12 @@ export const obeliskConfig = {
     },
     single_struct: {
       valueType: {
+        name: "string",
         admin: "address",
         fee: "u64",
       },
       defaultValue: {
+        name: "obelisk",
         admin: "@0x1",
         fee: 100,
       },
