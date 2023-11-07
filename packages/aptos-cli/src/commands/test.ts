@@ -1,8 +1,11 @@
+import { loadConfig, ObeliskConfig } from "@0xobelisk/aptos-common";
 import type { CommandModule } from "yargs";
+import { execSync } from "child_process";
+import chalk from "chalk";
 
 type Options = {
-  packagePath: string
-}
+  configPath: string;
+};
 
 const commandModule: CommandModule<Options, Options> = {
   command: "test",
@@ -11,14 +14,32 @@ const commandModule: CommandModule<Options, Options> = {
 
   builder(yargs) {
     return yargs.options({
-      packagePath: { type: "string", default: ".", description: "Options to pass to forge test" },
+      configPath: {
+        type: "string",
+        default: "obelisk.config.ts",
+        decs: "Path to the config file",
+      },
     });
   },
 
-  async handler(packagePath) {
+  async handler({ configPath }) {
+    const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
+
     // Start an internal anvil process if no world address is provided
-    console.log(`sui move test --path ${packagePath}`)
-    process.exit(0);
+    try {
+      const logs = execSync(
+        `aptos move test --package-dir contracts/${obeliskConfig.name} --named-addresses ${obeliskConfig.name}=0x0`,
+        {
+          encoding: "utf-8",
+        }
+      );
+
+      console.log(logs);
+    } catch (error: any) {
+      console.error(chalk.red("Error executing sui move test:"));
+      console.log(error.stdout);
+      process.exit(0);
+    }
   },
 };
 
