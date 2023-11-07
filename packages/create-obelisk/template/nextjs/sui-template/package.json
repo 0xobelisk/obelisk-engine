@@ -31,9 +31,9 @@
     "generateAccount": "ts-node scripts/generateAccount.ts"
   },
   "dependencies": {
-    "@0xobelisk/common": "^0.4.8",
-    "@0xobelisk/client": "^0.4.8",
-    "@0xobelisk/cli": "^0.4.8",
+    "@0xobelisk/sui-common": "^0.4.8",
+    "@0xobelisk/sui-client": "^0.4.8",
+    "@0xobelisk/sui-cli": "^0.4.8",
     "@mysten/sui.js": "^0.41.0",
     "@suiet/wallet-kit": "^0.2.19",
     "clsx": "^1.2.1",

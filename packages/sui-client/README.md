@@ -16,7 +16,7 @@ We create a Project called Counter and declare sigleton schema called counter, w
 
 
 ```typescript
-import { ObeliskConfig } from '@0xobelisk/common';
+import { ObeliskConfig } from '@0xobelisk/sui-common';
 
 export const obeliskConfig = {
   name: 'counter',
@@ -65,7 +65,7 @@ We'll get the `packageId` and `worldId` on the command line.
 ### Init Obelisk Client
 
 ```typescript
-import { getMetadata, Obelisk, NetworkType } from "@0xobelisk/client";
+import { getMetadata, Obelisk, NetworkType } from "@0xobelisk/sui-client";
 
 const network = "devnet" as NetworkType
 const packageId = "0x804578b9eed47d461bba52c393cf148302819e2ba0a0f558356cc419b3e941ed"
@@ -85,7 +85,7 @@ const obelisk = new Obelisk({
 If you need to call a method in the system, you can do so using the `obelisk.tx.moudleName.funcName()` form.
 
 ```typescript
-import { getMetadata, Obelisk, TransactionBlock } from "@0xobelisk/client";
+import { getMetadata, Obelisk, TransactionBlock } from "@0xobelisk/sui-client";
 
 const metadata = await getMetadata(network, packageId);
 

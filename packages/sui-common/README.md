@@ -1,3 +1,3 @@
-# @0xobelisk/common
+# @0xobelisk/sui-common
 
-Core code files being used for [@0xobelisk/cli](../sui-cli/README.md)
+Core code files being used for [@0xobelisk/sui-cli](../sui-cli/README.md)

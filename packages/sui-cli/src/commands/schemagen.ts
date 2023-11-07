@@ -1,5 +1,5 @@
 import type { CommandModule } from "yargs";
-import { worldgen, loadConfig, ObeliskConfig } from "@0xobelisk/common";
+import { worldgen, loadConfig, ObeliskConfig } from "@0xobelisk/sui-common";
 import chalk from "chalk";
 
 type Options = {

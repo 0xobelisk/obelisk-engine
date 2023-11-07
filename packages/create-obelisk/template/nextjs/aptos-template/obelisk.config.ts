@@ -1,4 +1,4 @@
-import { ObeliskConfig } from '@0xobelisk/common';
+import { ObeliskConfig } from '@0xobelisk/aptos-common';
 
 export const obeliskConfig = {
   name: 'counter',

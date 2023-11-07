@@ -1,8 +1,4 @@
-import {
-  loadMetadata,
-  Obelisk,
-  TransactionBlock,
-} from '@0xobelisk/client';
+import { loadMetadata, Obelisk, TransactionBlock } from '@0xobelisk/sui-client';
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';

@@ -9,7 +9,7 @@
     "blockchain"
   ],
   "author": "team@obelisk.build",
-  "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/package/@0xobelisk/client#readme",
+  "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/packages/sui-client#readme",
   "bugs": "https://github.com/0xobelisk/obelisk-engine/issues",
   "repository": {
     "type": "git",

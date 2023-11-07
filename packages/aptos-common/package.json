@@ -9,7 +9,7 @@
     "blockchain"
   ],
   "author": "team@obelisk.build",
-  "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/package/@0xobelisk/cli#readme",
+  "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/packages/aptos-common#readme",
   "bugs": "https://github.com/0xobelisk/obelisk-engine/issues",
   "repository": {
     "type": "git",
