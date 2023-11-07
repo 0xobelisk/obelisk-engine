@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/aptos-client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "aptos",
@@ -57,7 +57,7 @@
     "prettier-plugin-rust": "^0.1.9"
   },
   "dependencies": {
-    "@aptos-labs/aptos-client": "^0.0.2",
+    "@aptos-labs/aptos-client": "^0.0.3",
     "aptos": "^1.20.0",
     "@scure/bip39": "^1.2.1",
     "assert": "^2.0.0",
