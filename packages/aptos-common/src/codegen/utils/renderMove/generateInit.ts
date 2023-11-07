@@ -13,7 +13,7 @@ export function generateInit(config: ObeliskConfig, srcPrefix: string) {
 ${getUseSchema(config.name, config.schemas).join("\n")}
 
     fun init_module(deployer: &signer) {
-        world::create(deployer, string::utf8(b"Examples"), string::utf8(b"Examples"));
+        world::create(deployer, string::utf8(b"${config.name}"), string::utf8(b"${config.description}"));
         
         // Add Schema
 ${getRegisterSchema(config.schemas).join("\n")}

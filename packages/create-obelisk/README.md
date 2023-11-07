@@ -1,33 +1,9 @@
-# create-eiinu
+# create-obelisk-world
 
-FE project templates for personal use.
+Create a new Obelisk project
 
 ### How to use
 
 ```bash
-pnpm create eiinu
+pnpm create obelisk-world
 ```
-
-### TODO
-- h5
-  - vue
-    - vite
-      - [x] nutui4
-      - [ ] nutui3
-    - vue-cli
-      - [ ] nutui4
-      - [ ] nutui3
-  - react
-    - [x] vite
-    - [ ] cra
-- taro
-  - vue
-    - webpack
-      - [x] nutui4
-      - [ ] nutui3
-  - react
-    - [ ] webpack
-
-
-> Some codes refer to 
-[vitejs/create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite).
