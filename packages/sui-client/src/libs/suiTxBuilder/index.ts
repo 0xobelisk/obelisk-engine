@@ -115,12 +115,12 @@ export class SuiTxBlock {
    * @description Move call
    * @param target `${string}::${string}::${string}`, e.g. `0x3::sui_system::request_add_stake`
    * @param args the arguments of the move call, such as `['0x1', '0x2']`
-   * @param typeArgs the type arguments of the move call, such as `['0x2::sui::SUI']`
+   * @param typeArguments the type arguments of the move call, such as `['0x2::sui::SUI']`
    */
   moveCall(
     target: string,
     args: (SuiTxArg | SuiVecTxArg)[] = [],
-    typeArgs: string[] = []
+    typeArguments: string[] = []
   ) {
     // a regex for pattern `${string}::${string}::${string}`
     const regex =
@@ -135,7 +135,7 @@ export class SuiTxBlock {
     return tx.moveCall({
       target: target as `${string}::${string}::${string}`,
       arguments: convertedArgs,
-      typeArguments: typeArgs,
+      typeArguments,
     });
   }
 

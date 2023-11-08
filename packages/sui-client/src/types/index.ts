@@ -89,7 +89,7 @@ export interface ContractQuery extends MessageMeta {
   (
     tx: TransactionBlock,
     params: SuiTxArgument[],
-    typeArgs?: string[],
+    typeArguments?: string[],
     isRaw?: boolean
   ): Promise<DevInspectResults | TransactionBlock>;
 }
@@ -98,7 +98,7 @@ export interface ContractTx extends MessageMeta {
   (
     tx: TransactionBlock,
     params: SuiTxArgument[],
-    typeArgs?: string[],
+    typeArguments?: string[],
     isRaw?: boolean
   ): SuiTransactionBlockResponse | TransactionBlock;
 }

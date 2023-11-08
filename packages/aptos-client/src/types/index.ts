@@ -47,13 +47,13 @@ export interface MessageMeta {
 }
 
 export interface ContractQuery extends MessageMeta {
-  (typeArguments?: Types.MoveType[], params?: any[]): Promise<
+  (params?: any[], typeArguments?: Types.MoveType[]): Promise<
     Types.MoveValue[]
   >;
 }
 
 export interface ContractTx extends MessageMeta {
-  (typeArguments?: Types.MoveType[], params?: any[], isRaw?: boolean):
+  (params?: any[], typeArguments?: Types.MoveType[], isRaw?: boolean):
     | Types.PendingTransaction
     | Types.EntryFunctionPayload;
 }

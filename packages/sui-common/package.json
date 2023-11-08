@@ -1,6 +1,6 @@
 {
-  "name": "@0xobelisk/common",
-  "version": "0.4.8",
+  "name": "@0xobelisk/sui-common",
+  "version": "0.4.9",
   "description": "Common low level logic shared between packages",
   "keywords": [
     "sui",
@@ -10,7 +10,7 @@
   ],
   "type": "module",
   "author": "team@obelisk.build",
-  "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/package/@0xobelisk/cli#readme",
+  "homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/packages/sui-common#readme",
   "bugs": "https://github.com/0xobelisk/obelisk-engine/issues",
   "repository": {
     "type": "git",

@@ -1,4 +1,4 @@
-import { formatAndWriteMove } from "@0xobelisk/common";
+import { formatAndWriteMove } from "@0xobelisk/sui-common";
 
 type SchemaMapType = Record<string, string>;
 type SchemaValueType = string;

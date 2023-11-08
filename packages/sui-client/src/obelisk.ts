@@ -50,7 +50,7 @@ function createQuery(
   fn: (
     tx: TransactionBlock,
     params: SuiTxArgument[],
-    typeArgs?: string[],
+    typeArguments?: string[],
     isRaw?: boolean
   ) => Promise<DevInspectResults | TransactionBlock>
 ): ContractQuery {
@@ -59,10 +59,10 @@ function createQuery(
     async (
       tx: TransactionBlock,
       params: SuiTxArgument[],
-      typeArgs?: string[],
+      typeArguments?: string[],
       isRaw?: boolean
     ): Promise<DevInspectResults | TransactionBlock> => {
-      const result = await fn(tx, params, typeArgs, isRaw);
+      const result = await fn(tx, params, typeArguments, isRaw);
       return result;
     }
   );
@@ -73,7 +73,7 @@ function createTx(
   fn: (
     tx: TransactionBlock,
     params: SuiTxArgument[],
-    typeArgs?: string[],
+    typeArguments?: string[],
     isRaw?: boolean
   ) => Promise<SuiTransactionBlockResponse | TransactionBlock>
 ): ContractTx {
@@ -82,11 +82,11 @@ function createTx(
     async (
       tx: TransactionBlock,
       params: SuiTxArgument[],
-      typeArgs?: string[],
+      typeArguments?: string[],
       isRaw?: boolean
     ): Promise<SuiTransactionBlockResponse | TransactionBlock> => {
-      // const result = await fn(tx, params, typeArgs, isRaw);
-      return await fn(tx, params, typeArgs, isRaw);
+      // const result = await fn(tx, params, typeArguments, isRaw);
+      return await fn(tx, params, typeArguments, isRaw);
     }
   );
 }
@@ -147,8 +147,8 @@ export class Obelisk {
           if (isUndefined(this.#query[moduleName][funcName])) {
             this.#query[moduleName][funcName] = createQuery(
               meta,
-              (tx, p, typeArgs, isRaw) =>
-                this.#read(meta, tx, p, typeArgs, isRaw)
+              (tx, p, typeArguments, isRaw) =>
+                this.#read(meta, tx, p, typeArguments, isRaw)
             );
           }
 
@@ -158,8 +158,8 @@ export class Obelisk {
           if (isUndefined(this.#tx[moduleName][funcName])) {
             this.#tx[moduleName][funcName] = createTx(
               meta,
-              (tx, p, typeArgs, isRaw) =>
-                this.#exec(meta, tx, p, typeArgs, isRaw)
+              (tx, p, typeArguments, isRaw) =>
+                this.#exec(meta, tx, p, typeArguments, isRaw)
             );
           }
         });
@@ -183,13 +183,13 @@ export class Obelisk {
     meta: SuiMoveMoudleFuncType,
     tx: TransactionBlock,
     params: SuiTxArgument[],
-    typeArgs?: string[],
+    typeArguments?: string[],
     isRaw?: boolean
   ) => {
     tx.moveCall({
       target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
       arguments: params,
-      typeArguments: typeArgs,
+      typeArguments,
     });
 
     if (isRaw === true) {
@@ -202,13 +202,13 @@ export class Obelisk {
     meta: SuiMoveMoudleFuncType,
     tx: TransactionBlock,
     params: SuiTxArgument[],
-    typeArgs?: string[],
+    typeArguments?: string[],
     isRaw?: boolean
   ) => {
     tx.moveCall({
       target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
       arguments: params,
-      typeArguments: typeArgs,
+      typeArguments,
     });
 
     if (isRaw === true) {

@@ -1,7 +1,7 @@
 import type { CommandModule } from "yargs";
 import { logError } from "../utils/errors";
 import { publishHandler } from "../utils";
-import { loadConfig, ObeliskConfig } from "@0xobelisk/common";
+import { loadConfig, ObeliskConfig } from "@0xobelisk/sui-common";
 
 type Options = {
   network: any;
