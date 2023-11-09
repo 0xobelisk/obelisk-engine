@@ -2703,14 +2703,14 @@ function withMeta(meta, creator) {
   return creator;
 }
 function createQuery(meta, fn) {
-  return withMeta(meta, async (typeArguments, params) => {
-    const result = await fn(typeArguments, params);
+  return withMeta(meta, async (params, typeArguments) => {
+    const result = await fn(params, typeArguments);
     return result;
   });
 }
 function createTx(meta, fn) {
-  return withMeta(meta, async (typeArguments, params, isRaw) => {
-    const result = await fn(typeArguments, params, isRaw);
+  return withMeta(meta, async (params, typeArguments, isRaw) => {
+    const result = await fn(params, typeArguments, isRaw);
     return result;
   });
 }
@@ -2738,7 +2738,7 @@ var Obelisk = class {
   } = {}) {
     __privateAdd(this, _query, {});
     __privateAdd(this, _tx, {});
-    __privateAdd(this, _exec, async (meta, typeArguments, params, isRaw) => {
+    __privateAdd(this, _exec, async (meta, params, typeArguments, isRaw) => {
       if (typeArguments === void 0) {
         typeArguments = [];
       }
@@ -2751,7 +2751,7 @@ var Obelisk = class {
       }
       return await this.signAndSendTxnWithPayload(payload);
     });
-    __privateAdd(this, _read, async (meta, typeArguments, params) => {
+    __privateAdd(this, _read, async (meta, params, typeArguments) => {
       if (typeArguments === void 0) {
         typeArguments = [];
       }
@@ -2789,7 +2789,7 @@ var Obelisk = class {
               __privateGet(this, _query)[moduleName] = {};
             }
             if (isUndefined(__privateGet(this, _query)[moduleName][value.name])) {
-              __privateGet(this, _query)[moduleName][value.name] = createQuery(meta, (type_p, p) => __privateGet(this, _read).call(this, meta, type_p, p));
+              __privateGet(this, _query)[moduleName][value.name] = createQuery(meta, (p, type_p) => __privateGet(this, _read).call(this, meta, p, type_p));
             }
           }
           if (value.is_entry) {
@@ -2797,7 +2797,7 @@ var Obelisk = class {
               __privateGet(this, _tx)[moduleName] = {};
             }
             if (isUndefined(__privateGet(this, _tx)[moduleName][value.name])) {
-              __privateGet(this, _tx)[moduleName][value.name] = createTx(meta, (type_p, p, isRaw) => __privateGet(this, _exec).call(this, meta, type_p, p, isRaw));
+              __privateGet(this, _tx)[moduleName][value.name] = createTx(meta, (p, type_p, isRaw) => __privateGet(this, _exec).call(this, meta, p, type_p, isRaw));
             }
           }
         });
@@ -2887,7 +2887,7 @@ var Obelisk = class {
   async generatePayload(target, typeArguments, params) {
     const payload = {
       function: target,
-      // function: `${contractAddress}::${moduleName}::${funcName}`,
+      // `${contractAddress}::${moduleName}::${funcName}`
       type_arguments: typeArguments,
       arguments: params
     };
@@ -2908,201 +2908,6 @@ var Obelisk = class {
     const sender = this.getSigner(derivePathParams);
     return this.aptosInteractor.signAndSubmitTransaction(sender, tx);
   }
-  // /**
-  //  * Transfer the given amount of SUI to the recipient
-  //  * @param recipient
-  //  * @param amount
-  //  * @param derivePathParams
-  //  */
-  // async transferSui(
-  //   recipient: string,
-  //   amount: number,
-  //   derivePathParams?: DerivePathParams
-  // ) {
-  //   const tx = new SuiTxBlock();
-  //   tx.transferSui(recipient, amount);
-  //   return this.signAndSendTxn(tx, derivePathParams);
-  // }
-  // /**
-  //  * Transfer to mutliple recipients
-  //  * @param recipients the recipients addresses
-  //  * @param amounts the amounts of SUI to transfer to each recipient, the length of amounts should be the same as the length of recipients
-  //  * @param derivePathParams
-  //  */
-  // async transferSuiToMany(
-  //   recipients: string[],
-  //   amounts: number[],
-  //   derivePathParams?: DerivePathParams
-  // ) {
-  //   const tx = new SuiTxBlock();
-  //   tx.transferSuiToMany(recipients, amounts);
-  //   return this.signAndSendTxn(tx, derivePathParams);
-  // }
-  // /**
-  //  * Transfer the given amounts of coin to multiple recipients
-  //  * @param recipients the list of recipient address
-  //  * @param amounts the amounts to transfer for each recipient
-  //  * @param coinType any custom coin type but not SUI
-  //  * @param derivePathParams the derive path params for the current signer
-  //  */
-  // async transferCoinToMany(
-  //   recipients: string[],
-  //   amounts: number[],
-  //   coinType: string,
-  //   derivePathParams?: DerivePathParams
-  // ) {
-  //   const tx = new SuiTxBlock();
-  //   const owner = this.accountManager.getAddress(derivePathParams);
-  //   const totalAmount = amounts.reduce((a, b) => a + b, 0);
-  //   const coins = await this.suiInteractor.selectCoins(
-  //     owner,
-  //     totalAmount,
-  //     coinType
-  //   );
-  //   tx.transferCoinToMany(
-  //     coins.map((c) => c.objectId),
-  //     owner,
-  //     recipients,
-  //     amounts
-  //   );
-  //   return this.signAndSendTxn(tx, derivePathParams);
-  // }
-  // async transferCoin(
-  //   recipient: string,
-  //   amount: number,
-  //   coinType: string,
-  //   derivePathParams?: DerivePathParams
-  // ) {
-  //   return this.transferCoinToMany(
-  //     [recipient],
-  //     [amount],
-  //     coinType,
-  //     derivePathParams
-  //   );
-  // }
-  // async transferObjects(
-  //   objects: string[],
-  //   recipient: string,
-  //   derivePathParams?: DerivePathParams
-  // ) {
-  //   const tx = new SuiTxBlock();
-  //   tx.transferObjects(objects, recipient);
-  //   return this.signAndSendTxn(tx, derivePathParams);
-  // }
-  // async moveCall(callParams: {
-  //   target: string;
-  //   arguments?: (SuiTxArg | SuiVecTxArg)[];
-  //   typeArguments?: string[];
-  //   derivePathParams?: DerivePathParams;
-  // }) {
-  //   const {
-  //     target,
-  //     arguments: args = [],
-  //     typeArguments = [],
-  //     derivePathParams,
-  //   } = callParams;
-  //   const tx = new SuiTxBlock();
-  //   tx.moveCall(target, args, typeArguments);
-  //   return this.signAndSendTxn(tx, derivePathParams);
-  // }
-  // /**
-  //  * Select coins with the given amount and coin type, the total amount is greater than or equal to the given amount
-  //  * @param amount
-  //  * @param coinType
-  //  * @param owner
-  //  */
-  // async selectCoinsWithAmount(
-  //   amount: number,
-  //   coinType: string,
-  //   owner?: string
-  // ) {
-  //   owner = owner || this.accountManager.currentAddress;
-  //   const coins = await this.suiInteractor.selectCoins(owner, amount, coinType);
-  //   return coins.map((c) => c.objectId);
-  // }
-  // /**
-  //  * stake the given amount of SUI to the validator
-  //  * @param amount the amount of SUI to stake
-  //  * @param validatorAddr the validator address
-  //  * @param derivePathParams the derive path params for the current signer
-  //  */
-  // async stakeSui(
-  //   amount: number,
-  //   validatorAddr: string,
-  //   derivePathParams?: DerivePathParams
-  // ) {
-  //   const tx = new SuiTxBlock();
-  //   tx.stakeSui(amount, validatorAddr);
-  //   return this.signAndSendTxn(tx, derivePathParams);
-  // }
-  // /**
-  //  * Execute the transaction with on-chain data but without really submitting. Useful for querying the effects of a transaction.
-  //  * Since the transaction is not submitted, its gas cost is not charged.
-  //  * @param tx the transaction to execute
-  //  * @param derivePathParams the derive path params
-  //  * @returns the effects and events of the transaction, such as object changes, gas cost, event emitted.
-  //  */
-  // async inspectTxn(
-  //   tx: Uint8Array | TransactionBlock | SuiTxBlock,
-  //   derivePathParams?: DerivePathParams
-  // ): Promise<DevInspectResults> {
-  //   tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
-  //   return this.suiInteractor.currentProvider.devInspectTransactionBlock({
-  //     transactionBlock: tx,
-  //     sender: this.getAddress(derivePathParams),
-  //   });
-  // }
-  // async getWorld(worldObjectId: string) {
-  //   return this.suiInteractor.getObject(worldObjectId);
-  // }
-  // async getComponents(worldId: string) {
-  //   const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
-  //     .components.fields.id.id;
-  //   return await this.suiInteractor.getDynamicFields(parentId);
-  // }
-  // async getComponentByName(worldId: string, componentName: string) {
-  //   const componentId = keccak256(
-  //     `${capitalizeFirstLetter(componentName)} Component`
-  //   );
-  //   return await this.getComponent(worldId, componentId);
-  // }
-  // async getComponent(worldId: string, componentId: Buffer) {
-  //   const componentIdValue: number[] = Array.from(componentId);
-  //   const parentId = (await this.suiInteractor.getObject(worldId)).objectFields
-  //     .components.fields.id.id;
-  //   const name = {
-  //     type: 'vector<u8>',
-  //     value: componentIdValue,
-  //     // value: [250,208,186,160,39,171,62,206,98,224,138,41,11,217,63,100,248,104,207,64,78,126,43,109,129,68,64,127,236,113,152,132]
-  //   } as DynamicFieldName;
-  //   return await this.suiInteractor.getDynamicFieldObject(parentId, name);
-  // }
-  // async getOwnedEntities(owner: SuiAddress, cursor?: string, limit?: number) {
-  //   const ownedObjects = await this.suiInteractor.getOwnedObjects(
-  //     owner,
-  //     cursor,
-  //     limit
-  //   );
-  //   let ownedEntities: ObeliskObjectData[] = [];
-  //   for (const object of ownedObjects.data) {
-  //     let objectDetail = await this.getObject(object.data!.objectId);
-  //     if (
-  //       objectDetail.objectType.split('::')[0] ===
-  //       this.contractFactory.packageId
-  //     ) {
-  //       ownedEntities.push(objectDetail);
-  //     }
-  //   }
-  //   return ownedEntities;
-  // }
-  // async getWorld(worldObjectId: string) {
-  //   return this.suiInteractor.getObject(worldObjectId);
-  // }
-  // async listSchemaNames(worldId: string) {
-  //   const worldObject = await this.getObject(worldId);
-  //   const newObjectContent = worldObject.objectFields;
-  //   return newObjectContent['schemaNames'];
-  // }
   async getEntity(schemaName, entityId) {
     const schemaModuleName = `${schemaName}_schema`;
     let params = [];
