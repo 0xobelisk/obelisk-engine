@@ -115,7 +115,7 @@ const params = [
 // By isolating the signature from the transactionBlock construction in this way,
 // the front-end wallet plugin can signAndSend() directly to the transactionBlock,
 // facilitating front-end interaction.
-const new_tx = await obelisk.tx.counter_system.inc(tx, params, true) as TransactionBlock;
+const new_tx = await obelisk.tx.counter_system.inc(tx, params, undefined, true) as TransactionBlock;
 
 const response = await obelisk.signAndSendTxn(
     new_tx

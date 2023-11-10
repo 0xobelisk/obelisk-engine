@@ -31,7 +31,7 @@ const Home = () => {
     const tx = new TransactionBlock();
     const world = tx.pure(WORLD_ID);
     const params = [world];
-    const new_tx = (await obelisk.tx.counter_system.inc(tx, params, true)) as TransactionBlock;
+    const new_tx = (await obelisk.tx.counter_system.inc(tx, params, undefined, true)) as TransactionBlock;
     const response = await wallet.signAndExecuteTransactionBlock({
       transactionBlock: new_tx,
       options: {

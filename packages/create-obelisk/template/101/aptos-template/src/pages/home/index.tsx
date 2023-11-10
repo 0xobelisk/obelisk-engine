@@ -19,11 +19,10 @@ const Home = () => {
       metadata: metadata,
       secretKey: PRIVATEKEY,
     });
-    // const new_tx = (await obelisk.tx.counter_system.increase(, true));
 
     const payload = (await obelisk.tx.counter_system.increase(
-      undefined,
-      undefined,
+      undefined, // params
+      undefined, // typeArguments
       true,
     )) as Types.EntryFunctionPayload;
 
