@@ -1,6 +1,6 @@
-import {_decorator, Component, find, LabelComponent, sys} from "cc";
-import {obeliskConfig} from "./obelisk.config";
-import {NETWORK, PACKAGE_ID} from "./chain/config";
+import { _decorator, Component, find, LabelComponent, sys } from "cc";
+import { obeliskConfig } from "./obelisk.config";
+import { NETWORK, PACKAGE_ID } from "./chain/config";
 
 const { ccclass, property } = _decorator;
 
@@ -16,7 +16,7 @@ export class aptos extends Component {
     const decode = JSON.parse(sys.localStorage.getItem("userWalletData"));
     if (decode == null) {
       const keypair = new obelisk_sdk.AptosAccount();
-      const wallet = keypair.toPrivateKeyObject()
+      const wallet = keypair.toPrivateKeyObject();
       const code = JSON.stringify(wallet);
       sys.localStorage.setItem("userWalletData", code);
       const metadata = await obelisk_sdk.loadMetadata(NETWORK, PACKAGE_ID);
@@ -66,10 +66,7 @@ export class aptos extends Component {
       secretKey: privateKey,
     });
 
-    const response = await obelisk.tx.counter_system.increase(
-      undefined,
-      undefined
-    );
+    const response = await obelisk.tx.counter_system.increase();
     console.log(response);
     setTimeout(async () => {
       const metadata = await obelisk_sdk.loadMetadata(NETWORK, PACKAGE_ID);
