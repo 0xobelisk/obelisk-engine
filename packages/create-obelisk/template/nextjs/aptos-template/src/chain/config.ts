@@ -1,12 +1,7 @@
-type NetworkType = 'testnet' | 'mainnet' | 'devnet' | 'localnet';
+import { Network } from '@0xobelisk/aptos-client';
 
-const NETWORK: NetworkType = 'localnet';
+const NETWORK: Network = Network.LOCAL;
 
-const PACKAGE_ID = '0x87855e794931d310a44af01d8f134217e436e734531b3f9478ca79834728624a'
-const WORLD_ID = '0x95587b8c683a0ea6b2a9d993df3657d22edcf904b11be36d4767eb276292cdbd'
+const PACKAGE_ID = '0x51aefb82dd32579137652d75af53e37622730f2ac8490f26424ccd94d225dafb';
 
-export {
-    NETWORK,
-    PACKAGE_ID,
-    WORLD_ID,
-}
+export { NETWORK, PACKAGE_ID };
