@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "obelisk hello && pnpm run start-template",
     "start-template": "pnpm run localnode && sleep 5 && ts-node scripts/generateAccount.ts && obelisk faucet --network localnet && obelisk publish --network localnet && ts-node scripts/storeConfig.ts localnet && next",
+    "dev:docker": "pnpm run localnode:docker && sleep 5 && ts-node scripts/generateAccount.ts && obelisk faucet --network localnet && obelisk publish --network localnet && ts-node scripts/storeConfig.ts localnet && next",
     "next": "next",
     "build": "next build",
     "start": "next start",
@@ -26,6 +27,7 @@
     "world-upgrade-testnet": "obelisk upgrade --network testnet && ts-node scripts/storeConfig.ts testnet",
     "world-upgrade-mainnet": "obelisk upgrade --network mainnet && ts-node scripts/storeConfig.ts mainnet",
     "localnode": "nohup obelisk localnode > localnode.nohup.out &",
+    "localnode:docker": "docker-compose up -d",
     "worldgen": "obelisk schemagen obelisk.config.ts",
     "storeConfig": "ts-node scripts/storeConfig.ts",
     "generateAccount": "ts-node scripts/generateAccount.ts"
