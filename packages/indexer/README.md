@@ -54,8 +54,11 @@ db:
 ```
 curl http://127.0.0.1:8080/get_schema_entities?package_id=<package id>&schema_name=<schema name>
 ```
+- response:
+```
 
-- response: 
+```
+
 
 
 
