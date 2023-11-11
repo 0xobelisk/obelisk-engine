@@ -11,12 +11,12 @@ Indexer is written in the Go programming language. To use Ignite CLI on a local 
 - Ensure the Go environment variables are [set properly](https://golang.org/doc/gopath_code#GOPATH) on your system
 
 ### Setup
-1. Install Binary
+### 1. Install Binary
 ```bash
 go install github.com/0xobelisk/obelisk-engine/package/sui-indexer@latest
 ```
 
-2. Copy indexer.yaml.example to indexer.yaml
+### 2. Copy indexer.yaml.example to indexer.yaml
 ```
 http_rpc_url: https://fullnode.devnet.sui.io:443
 sync: 
@@ -44,21 +44,32 @@ db:
     - path: The path to the sqlite database. It specifies the location where the database files are stored.
     - logger_on: Indicates whether the db logger is turned on or off. It determines if logging functionality is enabled.
 
-3. Run indexer
+### 3. Run indexer
 ```
 ./indexer --conf=<path to config file>
 ```
 
-4. Indexer Http Interface
-- get_schema_entities 
-request:
+#### 4. Indexer Http Method
+##### get_schema_entities
+- description
+    - get entities schema
+- request:
 ```
 curl http://127.0.0.1:8080/get_schema_entities?package_id=<package id>&schema_name=<schema name>
 ```
-response:
-```
+  - package_id: sui package id 
+  - schema_name: sui schema name
 
-```
+- response:
+
+name |	type |	must |	description
+:----: | :----: |:----: |:----:
+package_id |	string | false |	sui package id
+schema_id |	string | false |	schema id 
+entity_key |	string | false |	entity key
+schema_type |	string | false |	schema type
+data |	object | false |	schema data
+timestamp_ms |	string | false |	millisecond timestamp
 
 
 
