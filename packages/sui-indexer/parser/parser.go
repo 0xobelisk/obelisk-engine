@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/0xobelisk/obelisk-engine/package/indexer/config"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/models"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/utils"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/config"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/logger"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/models"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/types"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/utils"
 
 	"go.uber.org/zap"
 )

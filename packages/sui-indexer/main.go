@@ -7,14 +7,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/0xobelisk/obelisk-engine/package/indexer/client"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/config"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/db"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/parser"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/query"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/sync"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/client"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/config"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/db"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/logger"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/parser"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/query"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/sync"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/types"
 
 	"go.uber.org/zap"
 )

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/models"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/logger"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/models"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/types"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

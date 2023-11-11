@@ -13,7 +13,7 @@ Indexer is written in the Go programming language. To use Ignite CLI on a local 
 ### Setup
 1. Install Binary
 ```bash
-go install github.com/0xobelisk/obelisk-engine/package/indexer@latest
+go install github.com/0xobelisk/obelisk-engine/package/sui-indexer@latest
 ```
 
 2. Copy indexer.yaml.example to indexer.yaml
@@ -49,12 +49,13 @@ db:
 ./indexer --conf=<path to config file>
 ```
 
-4. Test Indexer 
-- request:
+4. Indexer Http Interface
+- get_schema_entities 
+request:
 ```
 curl http://127.0.0.1:8080/get_schema_entities?package_id=<package id>&schema_name=<schema name>
 ```
-- response:
+response:
 ```
 
 ```
