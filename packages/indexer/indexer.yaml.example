@@ -1,11 +1,13 @@
-http_rpc_url: http://127.0.0.1:9000
+http_rpc_url: https://fullnode.devnet.sui.io:443
 sync: 
-  sync_num: 100 
+  sync_num: 50
   packages:
-    - package: 0xcb64831f88a74477d784df375f37b5d2f0cb4cbff1f670c5d1dc8a978121b5f7
+    - package: 0x503cecf490a25c8fdc8c0f795fa9efa6459bb1a61003f2a24c62cdddefcecc1c
       module_infos: 
-        - module: event
+        - module: events
           cursor_tx: 
-          seq_no:
+          seq_no: 
 db:
   path: ./suidb
+  logger_on: on
+
