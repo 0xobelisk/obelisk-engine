@@ -1,14 +1,12 @@
-import { BCS, loadMetadata, Obelisk } from '@0xobelisk/aptos-client';
-import { useWallet } from '@suiet/wallet-kit';
+import { loadMetadata, Obelisk,Types } from '@0xobelisk/aptos-client';
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
 import { useRouter } from 'next/router';
-import { NETWORK, PACKAGE_ID, WORLD_ID } from '../../chain/config';
+import { NETWORK, PACKAGE_ID} from '../../chain/config';
 import { obeliskConfig } from '../../../obelisk.config';
-
-import { ConnectButton } from '@suiet/wallet-kit';
-
+import {useWallet} from "@aptos-labs/wallet-adapter-react";
+import {WalletConnector} from "@aptos-labs/wallet-adapter-mui-design";
 type data = {
   type: string;
   fields: Record<string, any>;
@@ -18,7 +16,14 @@ type data = {
 
 const Home = () => {
   const router = useRouter();
-  const wallet = useWallet();
+  const {
+    account,
+    connected,
+    network,
+    wallet,
+    signAndSubmitTransaction
+  } = useWallet();
+  console.log(account,connected,network,wallet)
   const [value, setValue] = useAtom(Value);
 
   const counter = async (wallet: any) => {
@@ -28,29 +33,27 @@ const Home = () => {
       packageId: PACKAGE_ID,
       metadata: metadata,
     });
-    const tx = new TransactionBlock();
-    const world = tx.pure(WORLD_ID);
-    const params = [world];
-    const new_tx = (await obelisk.tx.counter_system.inc(tx, params, undefined, true)) as TransactionBlock;
-    const response = await wallet.signAndExecuteTransactionBlock({
-      transactionBlock: new_tx,
-      options: {
-        showEffects: true,
-        showObjectChanges: true,
-      },
-    });
-    if (response.effects.status.status == 'success') {
-      const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
-      const obelisk = new Obelisk({
-        networkType: NETWORK,
-        packageId: PACKAGE_ID,
-        metadata: metadata,
-      });
 
-      const component_name = Object.keys(obeliskConfig.schemas)[0];
-      const component_value = await obelisk.getEntity(WORLD_ID, component_name);
-      setValue(component_value[0]);
+    const f_payload = (await obelisk.tx.counter_system.increase(
+        undefined,
+        undefined,
+        true,
+    )) as Types.EntryFunctionPayload;
+
+    const payload: Types.TransactionPayload = {
+      type:'entry_function_payload',
+      function:f_payload.function,
+      type_arguments:f_payload.type_arguments,
+      arguments:f_payload.arguments
     }
+
+    await signAndSubmitTransaction(payload);
+    setTimeout(async () => {
+      const component_name = Object.keys(obeliskConfig.schemas)[0];
+      const component_value = await obelisk.getEntity(component_name);
+      setValue(component_value[0]);
+    }, 1000);
+
   };
 
   useEffect(() => {
@@ -62,31 +65,32 @@ const Home = () => {
           packageId: PACKAGE_ID,
           metadata: metadata,
         });
-        // home component name
+        // counter component name
         const component_name = Object.keys(obeliskConfig.schemas)[0];
-        const component_value = await obelisk.getEntity(WORLD_ID, component_name);
+        const component_value = await obelisk.getEntity(component_name);
         setValue(component_value[0]);
       };
       query_counter();
     }
-  }, [router.isReady]);
+  }, [router.isReady, value]);
+
 
   useEffect(() => {
-    if (!wallet.connected) return;
-    console.log('connected wallet name: ', wallet.name);
-    console.log('account address: ', wallet.account?.address);
-    console.log('account publicKey: ', wallet.account?.publicKey);
-  }, [wallet.connected]);
+    if (!connected) return;
+    console.log('connected wallet name: ', wallet?.name);
+    console.log('account address: ', account?.address);
+    console.log('account publicKey: ', account?.publicKey);
+  }, [connected]);
 
   return (
     <div className="flex justify-between items-start">
-      <div className="max-w-7xl mx-auto text-center py-12 px-4 sm:px-6 lg:py-16 lg:px-8 flex-6">
-        {!wallet.connected ? (
-          <ConnectButton />
+      <div className="max-w-7xl mx-auto text-center py-12 px-4 sm:px-6 lg:py-16 lg:px-8 flex-6 ">
+        {!connected ? (
+            <WalletConnector />
         ) : (
           <>
             <div>
-              <ConnectButton />
+              <WalletConnector />
             </div>
             <div className="flex flex-col gap-6 mt-12">
               <div className="flex flex-col gap-4">

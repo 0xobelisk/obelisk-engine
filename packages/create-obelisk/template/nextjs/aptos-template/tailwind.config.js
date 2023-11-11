@@ -1,9 +1,12 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
-
     content: ['./src/**/*.{js,ts,jsx,tsx}'],
     darkMode: 'media', // or 'media' or 'class'
+    //Aptos wallet connect color <by antd>
+    corePlugins: {
+        preflight: false
+    },
     theme: {
         extend: {
             spacing: {
