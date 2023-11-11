@@ -141,6 +141,11 @@ export function getStructInitValue(
 
         return [res];
       }
+    } else {
+      if (keys === "vector<string>") {
+        return 'vector[string(b"")]';
+      }
+      return 'vector[]'
     }
   } else if (typeof values === "object") {
     // It's an object, handle accordingly
