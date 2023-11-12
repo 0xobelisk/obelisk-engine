@@ -46,7 +46,7 @@ db:
 
 ### 3. Run indexer
 ```
-./indexer --conf=<path to config file>
+indexer --conf=<path to config file>
 ```
 
 #### 4. Indexer Http Method
