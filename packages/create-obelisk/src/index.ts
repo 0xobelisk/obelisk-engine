@@ -23,7 +23,7 @@ const init = async () => {
       message: "Pick your platform.",
       choices: [
         { title: "101", description: "Quick start", value: "101" },
-        { title: "Web", description: "Web", value: "web" },
+        { title: "Web", description: "Web template", value: "web" },
         { title: "Cocos", description: "Cocos Creator", value: "cocos" },
       ],
       initial: 0,
@@ -116,7 +116,7 @@ const init = async () => {
   if (platform == "101") {
     console.log(`  ${pkgManager} install`);
     console.log(`  ${pkgManager} run dev`);
-  } else if (platform == "nextjs") {
+  } else if (platform == "web") {
     console.log(`  ${pkgManager} install`);
     console.log(`  ${pkgManager} run dev`);
   } else if (platform == "cocos") {
