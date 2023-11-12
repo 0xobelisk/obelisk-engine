@@ -51,16 +51,22 @@ db:
 
 #### 4. Indexer Http Method
 ##### get_schema_entities
-- description
-    - get entities schema
-- request:
+###### description
+get entities schema
+###### request:
 ```
-curl http://127.0.0.1:8080/get_schema_entities?package_id=<package id>&schema_name=<schema name>
+GET get_schema_entities?package_id=<package id>&schema_name=<schema name>
 ```
-  - package_id: sui package id 
-  - schema_name: sui schema name
+package_id: sui package id 
+schema_name: sui schema name
 
-- response:
+- example: 
+```
+http://127.0.0.1:8080/get_schema_entities?package_id=0x503cecf490a25c8fdc8c0f795fa9efa6459bb1a61003f2a24c62cdddefcecc1c&schema_name=0x706f736974696f6e
+```
+
+
+###### response:
 
 name |	type |	must |	description
 :----: | :----: |:----: |:----:
