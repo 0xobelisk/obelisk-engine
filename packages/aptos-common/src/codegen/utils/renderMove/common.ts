@@ -1,4 +1,10 @@
-import {BaseType, SchemaMapType, BaseValueType, MoveType, ValueType} from "../../types";
+import {
+  BaseType,
+  SchemaMapType,
+  BaseValueType,
+  MoveType,
+  ValueType,
+} from "../../types";
 import fs from "fs";
 
 export function deleteFolderRecursive(path: string) {
@@ -73,12 +79,28 @@ export function getRegisterSchema(
  * @return [ friend name::name_system, friend name::info_system ]
  */
 export function getFriendSystem(name: string, values: string[]): string {
-  return values.map((key) => `\tfriend ${name}::${key};`).join("\n") + `\n\tfriend ${name}::deploy_hook;`;
+  return (
+    values.map((key) => `\tfriend ${name}::${key};`).join("\n") +
+    `\n\tfriend ${name}::deploy_hook;`
+  );
 }
 
-export function getFriendSchema(name: string, schemas: Record<string, SchemaMapType>): string {
-  let schemaNames = Object.keys(schemas).filter(key => !(typeof schemas === 'object' && 'ephemeral' in schemas && (schemas[key] as ValueType).ephemeral));
-  return schemaNames.map((key) => `\tfriend ${name}::${key}_schema;`).join("\n") + `\n\tfriend ${name}::deploy_hook;`;
+export function getFriendSchema(
+  name: string,
+  schemas: Record<string, SchemaMapType>
+): string {
+  let schemaNames = Object.keys(schemas).filter(
+    (key) =>
+      !(
+        typeof schemas === "object" &&
+        "ephemeral" in schemas &&
+        (schemas[key] as ValueType).ephemeral
+      )
+  );
+  return (
+    schemaNames.map((key) => `\tfriend ${name}::${key}_schema;`).join("\n") +
+    `\n\tfriend ${name}::deploy_hook;`
+  );
 }
 
 /**
@@ -97,16 +119,20 @@ export function getStructAttrs(
 }
 
 export function getDestStructAttrs(
-    dest: string,
-    values: Record<string, string> | string,
-    prefixArgs: string,
-    isSingle: boolean
+  dest: string,
+  values: Record<string, string> | string,
+  prefixArgs: string,
+  isSingle: boolean
 ): string[] {
   return typeof values === "string"
-      ? [`${prefixArgs}value`]
-      : Object.entries(values).map(([key, _]) =>
-          key === dest ? `${prefixArgs}${key}` :
-              isSingle ? `${prefixArgs}${key}: _obelisk_schema.${key}`   : `${prefixArgs}${key}: _obelisk_data.${key}`);
+    ? [`${prefixArgs}value`]
+    : Object.entries(values).map(([key, _]) =>
+        key === dest
+          ? `${prefixArgs}${key}`
+          : isSingle
+          ? `${prefixArgs}${key}: _obelisk_schema.${key}`
+          : `${prefixArgs}${key}: _obelisk_data.${key}`
+      );
 }
 
 function isAddress(str: string): boolean {
@@ -141,7 +167,9 @@ export function getStructInitValue(
         typeof values[0] === "number"
       ) {
         if (keys === "vector<string>") {
-          return [`vector[${values.map((item) => `string::utf8(b"${item}")`)}]`];
+          return [
+            `vector[${values.map((item) => `string::utf8(b"${item}")`)}]`,
+          ];
         }
 
         if (typeof values[0] === "string") {
@@ -159,6 +187,11 @@ export function getStructInitValue(
 
         return [res];
       }
+    } else {
+      if (keys === "vector<string>") {
+        return 'vector[string::utf8(b"")]';
+      }
+      return "vector[]";
     }
   } else if (typeof values === "object") {
     // It's an object, handle accordingly
@@ -194,11 +227,15 @@ export function getStructInitValue(
           ) {
             if (typeof keys === "string") {
               if (keys === "vector<string>") {
-                return `vector[${value.map((item) => `string::utf8(b"${item}")`)}]`;
+                return `vector[${value.map(
+                  (item) => `string::utf8(b"${item}")`
+                )}]`;
               }
             } else {
               if (keys[key] === "vector<string>") {
-                return `vector[${value.map((item) => `string::utf8(b"${item}")`)}]`;
+                return `vector[${value.map(
+                  (item) => `string::utf8(b"${item}")`
+                )}]`;
               }
             }
 
@@ -216,6 +253,13 @@ export function getStructInitValue(
             })}]`;
 
             return res;
+          }
+        } else {
+          if (typeof keys !== "string") {
+            if (keys[key] === "vector<string>") {
+              return 'vector[string::utf8(b"")]';
+            }
+            return "vector[]";
           }
         }
       }
@@ -279,16 +323,14 @@ export function renderStruct(
   values: Record<string, string> | string,
   isEphemeral: boolean = false
 ): string {
-  return `\tstruct ${structName} has store ${
-    isEphemeral ? ", drop" : ""
-  } {
+  return `\tstruct ${structName} has store ${isEphemeral ? ", drop" : ""} {
 ${getStructAttrsWithType(values, "\t\t").join(",\n")}
 \t}\n`;
 }
 
 export function renderSingleStruct(
-    structName: string,
-    values: Record<string, string> | string,
+  structName: string,
+  values: Record<string, string> | string
 ): string {
   return `\tstruct ${structName} has key {
 ${getStructAttrsWithType(values, "\t\t").join(",\n")}
@@ -296,8 +338,8 @@ ${getStructAttrsWithType(values, "\t\t").join(",\n")}
 }
 
 export function renderStructEvent(
-    structName: string,
-    values: Record<string, string> | string,
+  structName: string,
+  values: Record<string, string> | string
 ): string {
   return `\tstruct ${structName}Event has drop, store {
 ${getStructAttrsWithType(values, "\t\t").join(",\n")}
@@ -339,31 +381,39 @@ export function renderSetFunc(
 \t\tif(table::contains<address, ${structName}>(&_obelisk_schema.value, _obelisk_entity_key)) {
 \t\t\tlet _obelisk_data = table::borrow_mut<address, ${structName}>(&mut _obelisk_schema.value, _obelisk_entity_key);
 ${
-      typeof values === "string"
-          ? `\t\t\t_obelisk_data.value = value;`
-          : Object.entries(values)
-              .map(([key, _]) => `\t\t\t_obelisk_data.${key} = ${key};`)
-              .join("\n")
-  }
+  typeof values === "string"
+    ? `\t\t\t_obelisk_data.value = value;`
+    : Object.entries(values)
+        .map(([key, _]) => `\t\t\t_obelisk_data.${key} = ${key};`)
+        .join("\n")
+}
 \t\t} else {
-\t\t\ttable::add(&mut _obelisk_schema.value, _obelisk_entity_key, new(${getStructAttrs(values, " ")}));
+\t\t\ttable::add(&mut _obelisk_schema.value, _obelisk_entity_key, new(${getStructAttrs(
+    values,
+    " "
+  )}));
 \t\t};
-\t\tevents::emit_set(schema_id(), schema_type(), some(_obelisk_entity_key), ${structName}Event{ ${getStructAttrs(values, " ") } });
+\t\tevents::emit_set(schema_id(), schema_type(), some(_obelisk_entity_key), ${structName}Event{ ${getStructAttrs(
+    values,
+    " "
+  )} });
 \t}
 `;
 }
 
-export function renderRemoveFunc(structName: string, values: Record<string, string> | string): string {
+export function renderRemoveFunc(
+  structName: string,
+  values: Record<string, string> | string
+): string {
   return `\tpublic(friend) fun remove(_obelisk_entity_key: address) acquires SchemaData {
 \t\tlet _obelisk_resource_address = world::resource_address();
 \t\tlet _obelisk_schema = borrow_global_mut<SchemaData>(_obelisk_resource_address);
 \t\tlet _obelisk_data = table::remove(&mut _obelisk_schema.value, _obelisk_entity_key);
 \t\tevents::emit_remove(schema_id(), _obelisk_entity_key);
 \t\tlet ${structName} { ${
-      typeof values === "string"
-          ? `value: _value`
-          : Object.entries(values)
-              .map(([key, _]) => `${key}: _${key}`)
+    typeof values === "string"
+      ? `value: _value`
+      : Object.entries(values).map(([key, _]) => `${key}: _${key}`)
   } } = _obelisk_data;
 \t}
 `;
@@ -384,7 +434,12 @@ export function renderSetAttrsFunc(
 \t\tlet _obelisk_schema = borrow_global_mut<SchemaData>(_obelisk_resource_address);
 \t\tlet _obelisk_data = table::borrow_mut<address, ${structName}>(&mut _obelisk_schema.value, _obelisk_entity_key);
 \t\t_obelisk_data.${key} = ${key};
-\t\tevents::emit_set(schema_id(), schema_type(), some(_obelisk_entity_key), ${structName}Event{ ${getDestStructAttrs(key, struct, " ", false)} });
+\t\tevents::emit_set(schema_id(), schema_type(), some(_obelisk_entity_key), ${structName}Event{ ${getDestStructAttrs(
+                key,
+                struct,
+                " ",
+                false
+              )} });
 \t}
 `
           )
@@ -418,10 +473,7 @@ export function renderGetAttrsFunc(
     : "\n" +
         Object.entries(struct)
           .map(
-            ([
-              key,
-              type,
-            ]) => `\t#[view]
+            ([key, type]) => `\t#[view]
 \tpublic fun get_${key}(_obelisk_entity_key: address): ${type} acquires SchemaData {
 \t\tlet _obelisk_resource_address = world::resource_address();
 \t\tlet _obelisk_schema = borrow_global<SchemaData>(_obelisk_resource_address);
@@ -472,7 +524,10 @@ ${
         .map(([key, _]) => `\t\t_obelisk_schema.${key} = ${key};`)
         .join("\n")
 }
-\t\tevents::emit_set(schema_id(), schema_type(), none(), ${structName}Event { ${getStructAttrs(values, " ")} });
+\t\tevents::emit_set(schema_id(), schema_type(), none(), ${structName}Event { ${getStructAttrs(
+    values,
+    " "
+  )} });
 \t}`;
 }
 
@@ -490,7 +545,12 @@ export function renderSingleSetAttrsFunc(
 \t\tlet _obelisk_resource_address = world::resource_address();
 \t\tlet _obelisk_schema = borrow_global_mut<${structName}>(_obelisk_resource_address);
 \t\t_obelisk_schema.${key} = ${key};
-\t\tevents::emit_set(schema_id(), schema_type(), none(), ${structName}Event { ${getDestStructAttrs(key, struct, " ", true)} });
+\t\tevents::emit_set(schema_id(), schema_type(), none(), ${structName}Event { ${getDestStructAttrs(
+              key,
+              struct,
+              " ",
+              true
+            )} });
 \t}`
           )
           .join("\n");
