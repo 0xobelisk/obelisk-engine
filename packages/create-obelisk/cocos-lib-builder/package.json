@@ -13,7 +13,7 @@
   "author": "team@0xobelisk.com",
   "license": "ISC",
   "dependencies": {
-    "@0xobelisk/sui-client": "^0.4.10",
+    "@0xobelisk/sui-client": "^0.5.0",
     "@0xobelisk/aptos-client": "^0.0.4",
     "@mysten/sui.js": "^0.41.0",
     "browser-resolve": "^2.0.0",
