@@ -45,12 +45,14 @@ See the [start guide](https://obelisk.build/engine/docs/quick-start) in the docu
 
 Obelisk consists of several libraries. They can be used independently, but are best used together.
 
-| Package                                                                                                          | Version                                                                                                               |
-|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
-| **[@0xobelisk/cli](/packages/cli)** <br />Command line interface for types, testing, faucet, deployment and more | [![npm version](https://img.shields.io/npm/v/@0xobelisk/cli.svg)](https://www.npmjs.com/package/@0xobelisk/cli)       |
-| **[@0xobelisk/client](/packages/client)** <br />Client-side Typescript implementation for cross-platform interaction with chained Packages                   | [![npm version](https://img.shields.io/npm/v/@0xobelisk/client.svg)](https://www.npmjs.com/package/@0xobelisk/client) |
-| **[@0xobelisk/common](/packages/common)** <br />Core code for CLI and Clinet                                     | [![npm version](https://img.shields.io/npm/v/@0xobelisk/common.svg)](https://www.npmjs.com/package/@0xobelisk/common) |
-
+| Package                                                                                                                                                       | Version                                                                                                               |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| **[@0xobelisk/sui-cli](./packages/sui-cli)** <br />Sui Command line interface for types, testing, faucet, deployment and more                                 | [![npm version](https://img.shields.io/npm/v/@0xobelisk/sui-cli.svg)](https://www.npmjs.com/package/@0xobelisk/sui-cli)       |
+| **[@0xobelisk/sui-client](./packages/sui-client)** <br />Sui Client-side Typescript implementation for cross-platform interaction with chained Packages       | [![npm version](https://img.shields.io/npm/v/@0xobelisk/sui-client.svg)](https://www.npmjs.com/package/@0xobelisk/sui-client) |
+| **[@0xobelisk/sui-common](./packages/sui-common)** <br />Sui Core code for CLI and Clinet                                                                     | [![npm version](https://img.shields.io/npm/v/@0xobelisk/sui-common.svg)](https://www.npmjs.com/package/@0xobelisk/sui-common) |
+| **[@0xobelisk/aptos-cli](./packages/aptos-cli)** <br />Aptos Command line interface for types, testing, faucet, deployment and more                           | [![npm version](https://img.shields.io/npm/v/@0xobelisk/aptos-cli.svg)](https://www.npmjs.com/package/@0xobelisk/aptos-cli)       |
+| **[@0xobelisk/aptos-client](./packages/aptos-client)** <br />Aptos Client-side Typescript implementation for cross-platform interaction with chained Packages | [![npm version](https://img.shields.io/npm/v/@0xobelisk/aptos-client.svg)](https://www.npmjs.com/package/@0xobelisk/aptos-client) |
+| **[@0xobelisk/aptos-common](./packages/aptos-common)** <br />Aptos Core code for CLI and Clinet                                                               | [![npm version](https://img.shields.io/npm/v/@0xobelisk/aptos-common.svg)](https://www.npmjs.com/package/@0xobelisk/aptos-common) |
 
 ## 🗒️ Documentation
 
