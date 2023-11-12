@@ -19,6 +19,16 @@ const init = async () => {
     },
     {
       type: "select",
+      name: "chain",
+      message: "Pick your chain.",
+      choices: [
+        { title: "sui", description: "Sui", value: "sui" },
+        { title: "aptos", description: "Aptos", value: "aptos" },
+      ],
+      initial: 0,
+    },
+    {
+      type: "select",
       name: "platform",
       message: "Pick your platform.",
       choices: [
@@ -44,18 +54,8 @@ const init = async () => {
       },
       initial: 0,
     },
-    {
-      type: "select",
-      name: "chain",
-      message: "Pick your chain.",
-      choices: [
-        { title: "sui", description: "Sui", value: "sui" },
-        { title: "aptos", description: "Aptos", value: "aptos" },
-      ],
-      initial: 0,
-    },
   ]);
-  const { projectName, platform, framework, chain } = response;
+  const { projectName, chain, platform, framework } = response;
   let target = "";
 
   if (platform === "101") {
