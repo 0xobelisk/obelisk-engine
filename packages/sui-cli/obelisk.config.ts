@@ -31,30 +31,26 @@ export const obeliskConfig = {
 
     single_value_1: {
       valueType: "vector<u8>",
-      defaultValue: [1, 2, 3, 4, 5],
+      defaultValue: [],
     },
 
     single_value_2: {
       valueType: "vector<vector<u8>>",
-      defaultValue: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
+      defaultValue: [[]],
     },
     single_value_4: {
       valueType: "vector<bool>",
-      defaultValue: [true],
+      defaultValue: [],
     },
 
     single_value_5: {
       valueType: "vector<string>",
-      defaultValue: ["123123", "hi", "hello"],
+      defaultValue: [],
     },
 
     single_value_6: {
       valueType: "vector<address>",
-      defaultValue: ["0x1121", "0x125", "0x111"],
+      defaultValue: [],
     },
     // single_value_7: {
     //   valueType: "vector<u8>",
@@ -88,12 +84,9 @@ export const obeliskConfig = {
         ],
         bool_list: [true, false, true],
         fee: 100,
-        name: "tom",
-        name_list: ["bob", "alice", "tom"],
-        map: [
-          [1, 2, 3, 4, 5],
-          [1, 35, 5, 6, 7, 9],
-        ],
+        name: "",
+        name_list: [],
+        map: [[]],
       },
     },
   },
