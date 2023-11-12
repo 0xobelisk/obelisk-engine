@@ -1,4 +1,4 @@
-module github.com/0xobelisk/obelisk-engine/package/indexer
+module github.com/0xobelisk/obelisk-engine/package/sui-indexer
 
 go 1.20
 
@@ -6,6 +6,7 @@ require (
 	github.com/block-vision/sui-go-sdk v0.0.0-20230922064432-1a1c0e9591f0
 	github.com/gin-gonic/gin v1.9.1
 	go.uber.org/zap v1.26.0
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/sqlite v1.5.3
 	gorm.io/gorm v1.25.4
 )
@@ -38,12 +39,11 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/crypto v0.15.0 // indirect
+	golang.org/x/net v0.18.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

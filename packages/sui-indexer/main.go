@@ -7,19 +7,21 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/0xobelisk/obelisk-engine/package/indexer/client"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/config"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/db"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/parser"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/query"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/sync"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/client"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/config"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/db"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/logger"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/parser"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/query"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/sync"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/types"
 
 	"go.uber.org/zap"
 )
 
 var (
+	Conf = flag.String("conf", "./indexer.yaml", "config path")
+
 	HttpRpcUrl   = flag.String("http-rpc-url", "", "sui http rpc")
 	Package      = flag.String("package", "", "sui package")
 	Modules      = flag.String("modules", "world", "sui module")
@@ -31,11 +33,22 @@ func main() {
 	flag.Parse()
 	logger.InitLogger()
 
-	cfg, err := config.InitFromFlags(*HttpRpcUrl, *SyncCursorTx, *Package, *Modules, *DbPath)
-	if err != nil {
-		logger.GetLogger().Error("init from flags  err: ", zap.Error(err))
-		return
+	var cfg *config.Config
+	var err error
+	if Conf != nil {
+		cfg, err = config.InitFromFile(*Conf)
+		if err != nil {
+			logger.GetLogger().Error("init from file err: ", zap.Error(err))
+			return
+		}
+	} else {
+		cfg, err = config.InitFromFlags(*HttpRpcUrl, *SyncCursorTx, *Package, *Modules, *DbPath)
+		if err != nil {
+			logger.GetLogger().Error("init from flags  err: ", zap.Error(err))
+			return
+		}
 	}
+
 	logger.GetLogger().Debug(" config content: ", zap.Any("cfg", cfg))
 
 	cli, err := client.NewClient(cfg.HttpRpcUrl)
@@ -44,20 +57,20 @@ func main() {
 		return
 	}
 
-	// sync init
-	eventChan := make(chan *types.SuiEvent, 1000)
-	s := sync.NewSync(cfg, cli, eventChan)
-	errChn := make(chan error)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go s.Start(ctx, errChn)
-
 	// db init
-	db, err := db.NewDB(cfg.DbPath)
+	db, err := db.NewDB(cfg.Db.Path, cfg.Db.LoggerOn)
 	if err != nil {
 		logger.GetLogger().Error("db init err: ", zap.Error(err))
 		return
 	}
+
+	// sync init
+	eventChan := make(chan *types.SuiEvent, 1000)
+	s := sync.NewSync(cfg, cli, db, eventChan)
+	errChn := make(chan error)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go s.Start(ctx, errChn)
 
 	// parser init
 	p := parser.NewParser(cfg, eventChan, db)

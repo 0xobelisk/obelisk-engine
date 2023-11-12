@@ -6,7 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/0xobelisk/obelisk-engine/package/indexer/models"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/models"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/types"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -17,24 +18,35 @@ type DB struct {
 	*gorm.DB
 }
 
-func NewDB(Path string) (*DB, error) {
-	connection, err := gorm.Open(sqlite.Open(Path), &gorm.Config{
-		Logger: logger.New(
+func NewDB(Path string, loggerOn bool) (*DB, error) {
+	gormCfg := &gorm.Config{}
+	if loggerOn {
+		gormCfg.Logger = logger.New(
 			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 			logger.Config{
-				SlowThreshold: time.Second, // 慢 SQL 阈值
-				LogLevel:      logger.Info, // 日志级别
-				Colorful:      true,        // 禁用彩色打印
+				SlowThreshold: time.Second,
+				LogLevel:      logger.Info,
+				Colorful:      true,
 			},
-		),
-	})
+		)
+	} else {
+		gormCfg.Logger = logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+			logger.Config{
+				IgnoreRecordNotFoundError: true,
+				LogLevel:                  logger.Silent,
+			},
+		)
+	}
+
+	connection, err := gorm.Open(sqlite.Open(Path), gormCfg)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// atuo migrate
-	err = connection.AutoMigrate(&models.Event{})
+	err = connection.AutoMigrate(&models.Event{}, &models.Cursor{})
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +59,7 @@ func NewDB(Path string) (*DB, error) {
 	return db, nil
 }
 
-// insert or update event
+// insert or update entity
 func (db *DB) UpsertCompEntity(event *models.Event) error {
 	var existingEvent models.Event
 	err := db.Where("package_id = ? AND schema_name = ? AND entity_key = ?", event.PackageId, event.SchemaName, event.EntityKey).First(&existingEvent).Error
@@ -86,5 +98,30 @@ func (db *DB) QueryCompEntities(packageId string, schemaName string, entityKey s
 	} else {
 		return events, nil
 	}
+}
 
+func (db *DB) GetCursor(pacakgeId string, module string) (string, string, error) {
+	var cursor models.Cursor
+	if err := db.Where("package_id = ? AND module = ? ", pacakgeId, module).First(&cursor).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", "", types.ErrDbNotFound
+		}
+		return "", "", err
+	}
+
+	return cursor.CursorTx, cursor.EventSeq, nil
+}
+
+// insert or update cursor
+func (db *DB) UpsertCursor(cursor *models.Cursor) error {
+	existingCursor := models.Cursor{}
+	err := db.Where("package_id = ? AND module = ? ", cursor.PackageId, cursor.Module).First(&existingCursor).Error
+
+	if err == nil {
+		return db.Save(existingCursor).Error
+	} else if err == gorm.ErrRecordNotFound {
+		return db.Create(cursor).Error
+	}
+
+	return nil
 }

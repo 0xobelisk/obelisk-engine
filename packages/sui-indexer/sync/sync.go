@@ -4,52 +4,71 @@ import (
 	"context"
 	"time"
 
-	"github.com/0xobelisk/obelisk-engine/package/indexer/client"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/config"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
-
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/client"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/config"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/db"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/logger"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/types"
 	"go.uber.org/zap"
 )
+
+const SLEEP_TIME = 2
 
 type Sync struct {
 	config    *config.Config
 	client    *client.Client
+	db        *db.DB
 	eventChan chan<- *types.SuiEvent
 }
 
-func NewSync(config *config.Config, client *client.Client, eventChan chan<- *types.SuiEvent) *Sync {
+func NewSync(config *config.Config, client *client.Client, db *db.DB, eventChan chan<- *types.SuiEvent) *Sync {
 	return &Sync{
 		config:    config,
 		client:    client,
+		db:        db,
 		eventChan: eventChan,
 	}
 }
 
 func (s *Sync) Start(ctx context.Context, sysErr chan error) {
-
 	go func() {
 		timer := time.NewTimer(time.Duration(s.config.SyncInterval) * time.Second)
 		for {
 			select {
 			case <-timer.C:
 				s.Poll()
-				timer.Reset(time.Duration(s.config.SyncInterval) * time.Second)
+				// timer.Reset(time.Duration(s.config.SyncInterval) * time.Second)
 			}
 		}
 	}()
-
 }
 
 func (s *Sync) Poll() {
 	logger.GetLogger().Info("Start Sync")
 
-	cursorTx := ""
-	cursorEventSeq := ""
+	for _, packageInfo := range s.config.Sync.Packages {
+		go s.syncOnePackage(&packageInfo)
+	}
+}
+
+func (s *Sync) syncOnePackage(p *config.PackageInfo) {
+	logger.GetLogger().Info("sync package", zap.String("package", p.Package))
+
+	for _, m := range p.ModuleInfos {
+		go s.syncOneModule(p.Package, &m)
+	}
+}
+
+func (s *Sync) syncOneModule(packageId string, m *config.ModuleInfo) {
+	// Todo: if db have cursor record; use db record; else use config info
+	cursorTx, cursorEventSeq := s.retriveCursor(packageId, m.Module, m)
+	logger.GetLogger().Info("syncOneModule packageId ", zap.String("package", packageId),
+		zap.String("module", m.Module))
+
 	for {
 		ctx := context.Background()
-		resp, err := s.client.QueryCompEntities(ctx, s.config.Package, s.config.Module, cursorTx, cursorEventSeq,
-			s.config.SyncNum, false)
+		resp, err := s.client.QueryCompEntities(ctx, packageId, m.Module, cursorTx, cursorEventSeq,
+			s.config.Sync.SyncNum, false)
 
 		if err != nil {
 			logger.GetLogger().Error("QueryCompEntities failed error: ", zap.Error(err))
@@ -74,7 +93,6 @@ func (s *Sync) Poll() {
 				}
 				s.eventChan <- event
 			}
-
 		}
 
 		if resp.NextCursor.TxDigest != "" {
@@ -86,6 +104,27 @@ func (s *Sync) Poll() {
 			continue
 		}
 
-		time.Sleep(2 * time.Second)
+		// Todo: add back off algorithm
+		time.Sleep(SLEEP_TIME * time.Second)
 	}
+}
+
+// if db have cursor record; use db record; else use config info
+func (s *Sync) retriveCursor(packageId string, module string, m *config.ModuleInfo) (string, string) {
+	cursorTx, cursorEventSeq, err := s.db.GetCursor(packageId, module)
+	if err == nil {
+		return cursorTx, cursorEventSeq
+	} else {
+		if err != nil && err != types.ErrDbNotFound {
+			logger.GetLogger().Error("get cursor error", zap.Error(err))
+			return "", ""
+		}
+	}
+
+	if cursorTx == "" || cursorEventSeq == "" {
+		cursorTx = m.CursorTx
+		cursorEventSeq = m.EventSeq
+	}
+
+	return cursorTx, cursorEventSeq
 }

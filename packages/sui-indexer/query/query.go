@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/0xobelisk/obelisk-engine/package/indexer/logger"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/models"
-	"github.com/0xobelisk/obelisk-engine/package/indexer/types"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/logger"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/models"
+	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/types"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -64,10 +64,11 @@ func (q *QueryServer) getCompsFromDB(packageId string, schemaName string, entity
 	var comps []types.CompData
 	for _, event := range events {
 		comp := types.CompData{
-			SchemaName:  event.SchemaName,
+			SchemaId:    event.SchemaName,
 			PackageId:   event.PackageId,
 			EntityKey:   event.EntityKey,
 			TimestampMs: event.TimestampMs,
+			SchemaType:  event.SchemaType,
 		}
 		var data map[string]interface{}
 		err := json.Unmarshal([]byte(event.Data), &data)
