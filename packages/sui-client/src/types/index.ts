@@ -12,6 +12,8 @@ import {
   SuiMoveNormalizedModules,
 } from '@mysten/sui.js';
 
+export type TransactionResult = TransactionArgument & TransactionArgument[];
+
 import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
 
 export type ObeliskObjectData = {
@@ -91,7 +93,7 @@ export interface ContractQuery extends MessageMeta {
     params: SuiTxArgument[],
     typeArguments?: string[],
     isRaw?: boolean
-  ): Promise<DevInspectResults | TransactionBlock>;
+  ): Promise<DevInspectResults | TransactionResult>;
 }
 
 export interface ContractTx extends MessageMeta {
@@ -100,7 +102,7 @@ export interface ContractTx extends MessageMeta {
     params: SuiTxArgument[],
     typeArguments?: string[],
     isRaw?: boolean
-  ): SuiTransactionBlockResponse | TransactionBlock;
+  ): SuiTransactionBlockResponse | TransactionResult;
 }
 
 export type MapMessageTx = Record<string, ContractTx>;

@@ -5,7 +5,6 @@ import {
   SuiMoveNormalizedModules,
   SuiTransactionBlockResponse,
   TransactionBlock,
-  TransactionArgument,
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
@@ -28,12 +27,11 @@ import {
   SuiTxArg,
   SuiTxArgument,
   SuiVecTxArg,
+  TransactionResult,
 } from './types';
 import { normalizeHexAddress, numberToAddressHex } from './utils';
 import keccak256 from 'keccak256';
 import { BCS, getSuiMoveConfig } from '@mysten/bcs';
-
-type TransactionResult = TransactionArgument & TransactionArgument[];
 
 export function isUndefined(value?: unknown): value is undefined {
   return value === undefined;
