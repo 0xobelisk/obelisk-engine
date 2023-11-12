@@ -62,7 +62,7 @@ schema_name: sui schema name
 
 - example: 
 ```
-http://127.0.0.1:8080/get_schema_entities?package_id=0x503cecf490a25c8fdc8c0f795fa9efa6459bb1a61003f2a24c62cdddefcecc1c&schema_name=0x706f736974696f6e
+http://127.0.0.1:8080/get_schema_entities?package_id=0x2b6f9acaaf5a61ae6e1ec3b420bd49f89f582f1edb7b947d7a1dd182ba92ccf8&schema_name=0x706f736974696f6e
 ```
 
 
@@ -76,6 +76,47 @@ entity_key |	string | false |	entity key
 schema_type |	string | false |	schema type
 data |	object | false |	schema data
 timestamp_ms |	string | false |	millisecond timestamp
+
+- example: 
+```
+{
+    "data": [
+        {
+            "package_id": "0x2b6f9acaaf5a61ae6e1ec3b420bd49f89f582f1edb7b947d7a1dd182ba92ccf8",
+            "schema_id": "0x706f736974696f6e",
+            "entity_key": "0x150c4f4f67a804e0de49813806a644938c9133f25a2784f6eba1985c187b24c9",
+            "schema_type": 0,
+            "data": {
+                "x": "6",
+                "y": "0"
+            },
+            "timestamp_ms": 1699777988822
+        },
+        {
+            "package_id": "0x2b6f9acaaf5a61ae6e1ec3b420bd49f89f582f1edb7b947d7a1dd182ba92ccf8",
+            "schema_id": "0x706f736974696f6e",
+            "entity_key": "0x64afe6cb179d0d735b70d5bedfe99f60e3bcdc9f4706c89cc1a73904ae7854f4",
+            "schema_type": 0,
+            "data": {
+                "x": "7",
+                "y": "0"
+            },
+            "timestamp_ms": 1699777988822
+        },
+        {
+            "package_id": "0x2b6f9acaaf5a61ae6e1ec3b420bd49f89f582f1edb7b947d7a1dd182ba92ccf8",
+            "schema_id": "0x706f736974696f6e",
+            "entity_key": "0xdc34eb81d9169fcdd84b10431a6099e8ce64b80a2a409745003cc95b5207f6f4",
+            "schema_type": 0,
+            "data": {
+                "x": "8",
+                "y": "0"
+            },
+            "timestamp_ms": 1699777988822
+        }
+    ]
+}
+```
 
 
 
