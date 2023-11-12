@@ -5,6 +5,7 @@ import {
   SuiMoveNormalizedModules,
   SuiTransactionBlockResponse,
   TransactionBlock,
+  TransactionArgument,
 } from '@mysten/sui.js';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
@@ -32,6 +33,8 @@ import { normalizeHexAddress, numberToAddressHex } from './utils';
 import keccak256 from 'keccak256';
 import { BCS, getSuiMoveConfig } from '@mysten/bcs';
 
+type TransactionResult = TransactionArgument & TransactionArgument[];
+
 export function isUndefined(value?: unknown): value is undefined {
   return value === undefined;
 }
@@ -52,7 +55,7 @@ function createQuery(
     params: SuiTxArgument[],
     typeArguments?: string[],
     isRaw?: boolean
-  ) => Promise<DevInspectResults | TransactionBlock>
+  ) => Promise<DevInspectResults | TransactionResult>
 ): ContractQuery {
   return withMeta(
     meta,
@@ -61,7 +64,7 @@ function createQuery(
       params: SuiTxArgument[],
       typeArguments?: string[],
       isRaw?: boolean
-    ): Promise<DevInspectResults | TransactionBlock> => {
+    ): Promise<DevInspectResults | TransactionResult> => {
       const result = await fn(tx, params, typeArguments, isRaw);
       return result;
     }
@@ -75,7 +78,7 @@ function createTx(
     params: SuiTxArgument[],
     typeArguments?: string[],
     isRaw?: boolean
-  ) => Promise<SuiTransactionBlockResponse | TransactionBlock>
+  ) => Promise<SuiTransactionBlockResponse | TransactionResult>
 ): ContractTx {
   return withMeta(
     meta,
@@ -84,7 +87,7 @@ function createTx(
       params: SuiTxArgument[],
       typeArguments?: string[],
       isRaw?: boolean
-    ): Promise<SuiTransactionBlockResponse | TransactionBlock> => {
+    ): Promise<SuiTransactionBlockResponse | TransactionResult> => {
       // const result = await fn(tx, params, typeArguments, isRaw);
       return await fn(tx, params, typeArguments, isRaw);
     }
@@ -186,15 +189,19 @@ export class Obelisk {
     typeArguments?: string[],
     isRaw?: boolean
   ) => {
+    if (isRaw === true) {
+      return tx.moveCall({
+        target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
+        arguments: params,
+        typeArguments,
+      });
+    }
+
     tx.moveCall({
       target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
       arguments: params,
       typeArguments,
     });
-
-    if (isRaw === true) {
-      return tx;
-    }
     return await this.signAndSendTxn(tx);
   };
 
@@ -205,15 +212,19 @@ export class Obelisk {
     typeArguments?: string[],
     isRaw?: boolean
   ) => {
+    if (isRaw === true) {
+      return tx.moveCall({
+        target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
+        arguments: params,
+        typeArguments,
+      });
+    }
+
     tx.moveCall({
       target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
       arguments: params,
       typeArguments,
     });
-
-    if (isRaw === true) {
-      return tx;
-    }
     return await this.inspectTxn(tx);
   };
   /**
