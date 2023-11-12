@@ -22,9 +22,9 @@ const init = async () => {
       name: "platform",
       message: "Pick your platform.",
       choices: [
-        { title: "101", description: "Quick start", value: "web" },
-        { title: "Web", description: "Web", value: "h5" },
-        { title: "Cocos", description: "Cocos Creator", value: "h5game" },
+        { title: "101", description: "Quick start", value: "101" },
+        { title: "Web", description: "Web", value: "web" },
+        { title: "Cocos", description: "Cocos Creator", value: "cocos" },
       ],
       initial: 0,
     },
@@ -33,11 +33,11 @@ const init = async () => {
       name: "framework",
       message: "Pick your framework.",
       choices: (platform) => {
-        if (platform === "web") {
+        if (platform === "101") {
           return [{ title: "Nextjs", value: "nextjs" }];
-        } else if (platform === "h5") {
+        } else if (platform === "web") {
           return [{ title: "Nextjs", value: "nextjs" }];
-        } else if (platform === "h5game") {
+        } else if (platform === "cocos") {
           return [{ title: "Typescript", value: "ts" }];
         }
         return null;
@@ -56,20 +56,12 @@ const init = async () => {
     },
   ]);
   const { projectName, platform, framework, chain } = response;
-  let tool = "";
   let target = "";
-  if (platform === "web") {
-    tool = "101";
-  } else if (platform === "h5") {
-    tool = "nextjs";
-  } else {
-    tool = "cocos";
-  }
 
-  if (framework === "nextjs") {
-    target = `template/nextjs/${chain}-template`;
-  } else if (framework === "101") {
+  if (platform === "101") {
     target = `template/101/${chain}-template`;
+  } else if (platform === "web") {
+    target = `template/nextjs/${chain}-template`;
   } else {
     target = `template/cocos/${chain}-template`;
   }
@@ -121,13 +113,13 @@ const init = async () => {
       }`
     );
   }
-  if (tool == "101") {
+  if (platform == "101") {
     console.log(`  ${pkgManager} install`);
     console.log(`  ${pkgManager} run dev`);
-  } else if (tool == "nextjs") {
+  } else if (platform == "nextjs") {
     console.log(`  ${pkgManager} install`);
     console.log(`  ${pkgManager} run dev`);
-  } else if (tool == "cocos") {
+  } else if (platform == "cocos") {
     console.log(`  import project by cocos create ide `);
     console.log(`  ${pkgManager} install`);
     console.log(`  ${pkgManager} run dev`);
