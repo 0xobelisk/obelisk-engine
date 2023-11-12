@@ -60,7 +60,9 @@ export function getRegisterSchema(
   Object.entries(values).forEach(([key, value]) => {
     if (typeof value === "object" && value.ephemeral) {
     } else {
-      registers.push(`\t\t${key}_schema::register(&mut _obelisk_world, &admin_cap, ctx);`);
+      registers.push(
+        `\t\t${key}_schema::register(&mut _obelisk_world, &admin_cap, ctx);`
+      );
     }
   });
   return registers;
@@ -73,7 +75,10 @@ export function getRegisterSchema(
  * @return [ friend name::name_system, friend name::info_system ]
  */
 export function getFriendSystem(name: string, values: string[]): string {
-  return values.map((key) => `\tfriend ${name}::${key};`).join("\n") + `\n\tfriend ${name}::deploy_hook;`;
+  return (
+    values.map((key) => `\tfriend ${name}::${key};`).join("\n") +
+    `\n\tfriend ${name}::deploy_hook;`
+  );
 }
 
 /**
@@ -141,6 +146,11 @@ export function getStructInitValue(
 
         return [res];
       }
+    } else {
+      if (keys === "vector<string>") {
+        return 'vector[string(b"")]';
+      }
+      return "vector[]";
     }
   } else if (typeof values === "object") {
     // It's an object, handle accordingly
@@ -198,6 +208,13 @@ export function getStructInitValue(
             })}]`;
 
             return res;
+          }
+        } else {
+          if (typeof keys !== "string") {
+            if (keys[key] === "vector<string>") {
+              return 'vector[string(b"")]';
+            }
+            return "vector[]";
           }
         }
       }
