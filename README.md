@@ -16,10 +16,6 @@
 </a>
 </div>
 
-![Github Actions][gha-badge] 
-
-[gha-badge]: https://img.shields.io/github/actions/workflow/status/dojoengine/dojo/ci.yml?branch=main
-
 **Obelisk-Engine is a community driven open-source, Provable Game Engine, providing a comprehensive toolkit for building verifiable games and autonomous worlds.**
 
 Obelisk-Engine is still in its early stages of development, yet the dedicated contributors are propelling its progress at an impressive pace. The overarching aspiration for Obelisk-Engine is to empower game developers to kick-start their projects, aiming to reduce the initial setup time from days to mere hours. Join the movement!
