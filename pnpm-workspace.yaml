@@ -1,9 +1,3 @@
 packages:
-    - packages/aptos-cli
-    - packages/aptos-client
-    - packages/aptos-common
-    - packages/sui-cli
-    - packages/sui-client
-    - packages/sui-common
-    # - packages/*
+    - packages/*
     # - packages/create-obelisk/* # just for test
