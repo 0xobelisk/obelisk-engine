@@ -16,10 +16,6 @@
 </a>
 </div>
 
-![Github Actions][gha-badge] 
-
-[gha-badge]: https://img.shields.io/github/actions/workflow/status/dojoengine/dojo/ci.yml?branch=main
-
 **Obelisk-Engine is a community driven open-source, Provable Game Engine, providing a comprehensive toolkit for building verifiable games and autonomous worlds.**
 
 Obelisk-Engine is still in its early stages of development, yet the dedicated contributors are propelling its progress at an impressive pace. The overarching aspiration for Obelisk-Engine is to empower game developers to kick-start their projects, aiming to reduce the initial setup time from days to mere hours. Join the movement!
@@ -30,9 +26,29 @@ Obelisk-Engine is still in its early stages of development, yet the dedicated co
 - networking & indexing stack
 - Typed SDKs
 
+
+## What we will do in the future ？
+- ZK-login Injected as a plug-in
+- Transaction sponsorship injected as a plugin
+- State Synchronization Client Hook Implementation
+- Customized Runtime Sandbox
+- World Browser
+
 ## 🚀 Quick Start
 See the [start guide](https://obelisk.build/engine/docs/quick-start) in the document website.
 
+## Packages 
+
+Obelisk consists of several libraries. They can be used independently, but are best used together.
+
+| Package                                                                                                                                                       | Version                                                                                                               |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| **[@0xobelisk/sui-cli](./packages/sui-cli)** <br />Sui Command line interface for types, testing, faucet, deployment and more                                 | [![npm version](https://img.shields.io/npm/v/@0xobelisk/sui-cli.svg)](https://www.npmjs.com/package/@0xobelisk/sui-cli)       |
+| **[@0xobelisk/sui-client](./packages/sui-client)** <br />Sui Client-side Typescript implementation for cross-platform interaction with chained Packages       | [![npm version](https://img.shields.io/npm/v/@0xobelisk/sui-client.svg)](https://www.npmjs.com/package/@0xobelisk/sui-client) |
+| **[@0xobelisk/sui-common](./packages/sui-common)** <br />Sui Core code for CLI and Clinet                                                                     | [![npm version](https://img.shields.io/npm/v/@0xobelisk/sui-common.svg)](https://www.npmjs.com/package/@0xobelisk/sui-common) |
+| **[@0xobelisk/aptos-cli](./packages/aptos-cli)** <br />Aptos Command line interface for types, testing, faucet, deployment and more                           | [![npm version](https://img.shields.io/npm/v/@0xobelisk/aptos-cli.svg)](https://www.npmjs.com/package/@0xobelisk/aptos-cli)       |
+| **[@0xobelisk/aptos-client](./packages/aptos-client)** <br />Aptos Client-side Typescript implementation for cross-platform interaction with chained Packages | [![npm version](https://img.shields.io/npm/v/@0xobelisk/aptos-client.svg)](https://www.npmjs.com/package/@0xobelisk/aptos-client) |
+| **[@0xobelisk/aptos-common](./packages/aptos-common)** <br />Aptos Core code for CLI and Clinet                                                               | [![npm version](https://img.shields.io/npm/v/@0xobelisk/aptos-common.svg)](https://www.npmjs.com/package/@0xobelisk/aptos-common) |
 
 ## 🗒️ Documentation
 
