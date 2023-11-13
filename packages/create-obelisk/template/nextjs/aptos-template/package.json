@@ -31,9 +31,9 @@
     "generateAccount": "ts-node scripts/generateAccount.ts"
   },
   "dependencies": {
-    "@0xobelisk/aptos-cli": "^0.0.4",
-    "@0xobelisk/aptos-client": "^0.0.4",
-    "@0xobelisk/aptos-common": "^0.0.4",
+    "@0xobelisk/aptos-cli": "^0.0.5",
+    "@0xobelisk/aptos-client": "^0.0.5",
+    "@0xobelisk/aptos-common": "^0.0.5",
     "@aptos-labs/wallet-adapter-mui-design": "^1.0.7",
     "@aptos-labs/wallet-adapter-react": "^1.4.0",
     "@suiet/wallet-kit": "^0.2.19",

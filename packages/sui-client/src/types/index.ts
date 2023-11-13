@@ -102,7 +102,7 @@ export interface ContractTx extends MessageMeta {
     params: SuiTxArgument[],
     typeArguments?: string[],
     isRaw?: boolean
-  ): SuiTransactionBlockResponse | TransactionResult;
+  ): Promise<SuiTransactionBlockResponse | TransactionResult>;
 }
 
 export type MapMessageTx = Record<string, ContractTx>;

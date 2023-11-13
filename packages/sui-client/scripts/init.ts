@@ -1,43 +1,52 @@
-import { Obelisk } from '../src/obelisk';
+import {
+  TransactionBlock,
+  Obelisk,
+  NetworkType,
+  MIST_PER_SUI,
+  TransactionResult,
+  loadMetadata,
+} from '../src/index';
 import * as process from 'process';
-import { NetworkType, SchemaContentType, SuiTxArgument } from '../src/types';
-import { DevInspectResults, TransactionBlock, bcs } from '@mysten/sui.js';
-import { loadMetadata } from '../src/metadata/index';
-const keccak256 = require('keccak256');
-import * as crypto from 'crypto';
-
-type DataItem = [number[], string];
-
-type DataType = 'string' | 'bool' | 'u64';
-
-type data = {
-  type: string;
-  fields: Record<string, any>;
-  hasPublicTransfer: boolean;
-  dataType: 'moveObject';
-};
-
-function uint8ArrayToHexString(uint8Array: Uint8Array): string {
-  return Array.from(uint8Array, (byte) => {
-    return ('0' + (byte & 0xff).toString(16)).slice(-2);
-  }).join('');
-}
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0xa0c67881c008ca5281f32666f141b4a911e677c75da698106f327352f00d9afc';
+    '0x81363fac901bc5e2415ad27969b417bd6bced330d0c18273c4f715dcda65e0f6';
 
   const metadata = await loadMetadata(network as NetworkType, packageId);
+
+  const privateKey = process.env.PRIVATE_KEY;
 
   const obelisk = new Obelisk({
     networkType: network as NetworkType,
     packageId: packageId,
     metadata: metadata,
-    secretKey:
-      '0x014e45cbd1ee9238f39282d67e16841adba7f1ef993ee995b99032aa36ef6a7e',
+    secretKey: privateKey,
   });
 
+  console.log(obelisk.getAddress());
+
+  let txb = new TransactionBlock();
+
+  const [coin] = txb.splitCoins(txb.gas, [txb.pure(2n * MIST_PER_SUI)]);
+  const params = [coin];
+
+  let [coins] = (await obelisk.tx.example_system.get_object(
+    txb,
+    params,
+    undefined,
+    true
+  )) as TransactionResult;
+  txb.transferObjects(
+    [coins],
+    txb.pure(
+      '0xd2c36eea220c7deb9d1c7d4b01269eca9d9543050255432896cd13ade6550d90'
+    )
+  );
+  let res = await obelisk.signAndSendTxn(txb);
+  console.log(res);
   // let comsName = await obelisk.listSchemaNames(
   //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
   // );
@@ -50,40 +59,40 @@ async function init() {
   // );
   // console.log(entities);
 
-  let entityData = await obelisk.getEntity(
-    '0xdca3675091c8fdccd4fb46f9f70de0bd65053fbc8104600daf86a959ca9b7120',
-    'single_value'
-  );
-  console.log(entityData);
+  // let entityData = await obelisk.getEntity(
+  //   '0xdca3675091c8fdccd4fb46f9f70de0bd65053fbc8104600daf86a959ca9b7120',
+  //   'single_value'
+  // );
+  // console.log(entityData);
 
-  // let tx = new TransactionBlock();
+  // // let tx = new TransactionBlock();
+
+  // // let params = [
+  // //   tx.pure(
+  // //     '0xdca3675091c8fdccd4fb46f9f70de0bd65053fbc8104600daf86a959ca9b7120'
+  // //   ),
+  // // ];
+  // // let inc_res = await obelisk.tx.example_system.increase(tx, params);
+  // // console.log(inc_res);
+
+  // let txb = new TransactionBlock();
 
   // let params = [
-  //   tx.pure(
+  //   txb.pure(
   //     '0xdca3675091c8fdccd4fb46f9f70de0bd65053fbc8104600daf86a959ca9b7120'
   //   ),
+  //   txb.pure(
+  //     '0x6761ca73d8793006a3d0ac74ed2ad541487d4010c706f7c6d0d41d96eff9e4cf'
+  //   ),
   // ];
-  // let inc_res = await obelisk.tx.example_system.increase(tx, params);
-  // console.log(inc_res);
 
-  let txb = new TransactionBlock();
-
-  let params = [
-    txb.pure(
-      '0xdca3675091c8fdccd4fb46f9f70de0bd65053fbc8104600daf86a959ca9b7120'
-    ),
-    txb.pure(
-      '0x6761ca73d8793006a3d0ac74ed2ad541487d4010c706f7c6d0d41d96eff9e4cf'
-    ),
-  ];
-
-  let typeArguments = ['0x2::coin::Coin<0x2::sui::SUI>'];
-  let inc_with_type_res = await obelisk.tx.example_system.increase_with_type(
-    txb,
-    params,
-    typeArguments
-  );
-  console.log(inc_with_type_res);
+  // let typeArguments = ['0x2::coin::Coin<0x2::sui::SUI>'];
+  // let inc_with_type_res = await obelisk.tx.example_system.increase_with_type(
+  //   txb,
+  //   params,
+  //   typeArguments
+  // );
+  // console.log(inc_with_type_res);
 
   // let containData = await obelisk.containEntity(
   //   '0x9f2b0bd5153799eb97c8d604472f0993a10586ce6725cdeb175b02dedc2dd10a',

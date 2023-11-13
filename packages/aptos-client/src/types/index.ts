@@ -53,9 +53,9 @@ export interface ContractQuery extends MessageMeta {
 }
 
 export interface ContractTx extends MessageMeta {
-  (params?: any[], typeArguments?: Types.MoveType[], isRaw?: boolean):
-    | Types.PendingTransaction
-    | Types.EntryFunctionPayload;
+  (params?: any[], typeArguments?: Types.MoveType[], isRaw?: boolean): Promise<
+    Types.PendingTransaction | Types.EntryFunctionPayload
+  >;
 }
 
 export type MapMessageTx = Record<string, ContractTx>;

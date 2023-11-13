@@ -1,6 +1,8 @@
 import { Types, Network } from 'aptos';
 import { Obelisk } from '../src/obelisk';
 import { loadMetadata } from '../src/metadata/index';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -10,13 +12,13 @@ async function init() {
   const packageId =
     '0xafa14f6a40838a5891788dd441d49531bd94b0d1da0ec79d3153d921d8611464';
   const metadata = await loadMetadata(network, packageId);
+  const privateKey = process.env.PRIVATE_KEY;
 
   const obelisk = new Obelisk({
     // networkType: network as Network,
     // packageId: packageId,
     // metadata: metadata,
-    // secretKey:
-    // '0xf74d5761583efae65ce0fa53b5327edd4ed05470aaa58357802acf1e366370ab',
+    // secretKey: privateKey,
   });
   let faucetRes = await obelisk.requestFaucet(
     network,
