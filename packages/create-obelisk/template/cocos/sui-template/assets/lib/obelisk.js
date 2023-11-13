@@ -3574,25 +3574,33 @@ var Obelisk = class {
     __privateAdd(this, _query, {});
     __privateAdd(this, _tx, {});
     __privateAdd(this, _exec, async (meta, tx, params, typeArguments, isRaw) => {
+      if (isRaw === true) {
+        return tx.moveCall({
+          target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
+          arguments: params,
+          typeArguments
+        });
+      }
       tx.moveCall({
         target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
         arguments: params,
         typeArguments
       });
-      if (isRaw === true) {
-        return tx;
-      }
       return await this.signAndSendTxn(tx);
     });
     __privateAdd(this, _read, async (meta, tx, params, typeArguments, isRaw) => {
+      if (isRaw === true) {
+        return tx.moveCall({
+          target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
+          arguments: params,
+          typeArguments
+        });
+      }
       tx.moveCall({
         target: `${this.contractFactory.packageId}::${meta.moduleName}::${meta.funcName}`,
         arguments: params,
         typeArguments
       });
-      if (isRaw === true) {
-        return tx;
-      }
       return await this.inspectTxn(tx);
     });
     this.accountManager = new SuiAccountManager({
