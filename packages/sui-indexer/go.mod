@@ -1,4 +1,4 @@
-module github.com/0xobelisk/obelisk-engine/package/sui-indexer
+module github.com/0xobelisk/obelisk-engine/packages/sui-indexer
 
 go 1.20
 
