@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/models"
-	"github.com/0xobelisk/obelisk-engine/package/sui-indexer/types"
+	"github.com/0xobelisk/obelisk-engine/packages/sui-indexer/models"
+	"github.com/0xobelisk/obelisk-engine/packages/sui-indexer/types"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
