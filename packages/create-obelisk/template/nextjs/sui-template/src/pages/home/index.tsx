@@ -1,4 +1,11 @@
-import { BCS, loadMetadata, getSuiMoveConfig, Obelisk, TransactionBlock } from '@0xobelisk/sui-client';
+import {
+  BCS,
+  loadMetadata,
+  getSuiMoveConfig,
+  Obelisk,
+  TransactionBlock,
+  TransactionResult,
+} from '@0xobelisk/sui-client';
 import { useWallet } from '@suiet/wallet-kit';
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
@@ -31,9 +38,9 @@ const Home = () => {
     const tx = new TransactionBlock();
     const world = tx.pure(WORLD_ID);
     const params = [world];
-    const new_tx = (await obelisk.tx.counter_system.inc(tx, params, undefined, true)) as TransactionBlock;
+    (await obelisk.tx.counter_system.inc(tx, params, undefined, true)) as TransactionResult;
     const response = await wallet.signAndExecuteTransactionBlock({
-      transactionBlock: new_tx,
+      transactionBlock: tx,
       options: {
         showEffects: true,
         showObjectChanges: true,
