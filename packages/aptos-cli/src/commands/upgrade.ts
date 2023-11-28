@@ -1,6 +1,6 @@
 import type { CommandModule } from "yargs";
 import { logError } from "../utils/errors";
-import { publishHandler } from "../utils";
+import { upgradeHandler } from "../utils";
 import { loadConfig, ObeliskConfig } from "@0xobelisk/aptos-common";
 
 type Options = {
@@ -9,9 +9,9 @@ type Options = {
 };
 
 const commandModule: CommandModule<Options, Options> = {
-  command: "publish",
+  command: "upgrade",
 
-  describe: "Publish obelisk move contracts",
+  describe: "Upgrade obelisk move contracts",
 
   builder(yargs) {
     return yargs.options({
@@ -31,7 +31,7 @@ const commandModule: CommandModule<Options, Options> = {
   async handler({ network, configPath }) {
     try {
       const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
-      await publishHandler(obeliskConfig.name, network);
+      await upgradeHandler(obeliskConfig.name, network);
     } catch (error: any) {
       logError(error);
       process.exit(1);
