@@ -17,7 +17,7 @@ const commandModule: CommandModule<Options, Options> = {
     return yargs.options({
       network: {
         type: "string",
-        choices: ["mainnet", "testnet", "devnet", "localnet"],
+        choices: ["mainnet", "testnet", "devnet", "local"],
         desc: "Network of the node (mainnet/testnet/devnet/local)",
       },
       configPath: {

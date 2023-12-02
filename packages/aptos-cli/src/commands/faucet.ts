@@ -26,7 +26,7 @@ const commandModule: CommandModule<Options, Options> = {
       network: {
         type: "string",
         desc: "URL of the Obelisk faucet",
-        choices: ["testnet", "devnet", "localnet"],
+        choices: ["testnet", "devnet", "local"],
         default: "devnet",
       },
       recipient: {

@@ -43,7 +43,7 @@ type Module = TxnBuilderTypes.Module;
 
 export async function publishHandler(
   projectName: string,
-  network: "mainnet" | "testnet" | "devnet" | "localnet"
+  network: "mainnet" | "testnet" | "devnet" | "local"
 ) {
   const privateKey = process.env.PRIVATE_KEY;
   if (!privateKey)
