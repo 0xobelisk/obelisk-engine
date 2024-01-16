@@ -3,6 +3,7 @@ import type {
   TransactionBlock,
   TransactionObjectArgument,
   TransactionArgument,
+  TransactionResult,
 } from '@mysten/sui.js/transactions';
 import type {
   SuiObjectRef,
@@ -10,10 +11,11 @@ import type {
   DevInspectResults,
   SuiTransactionBlockResponse,
   DisplayFieldsResponse,
+  MoveStruct,
 } from '@mysten/sui.js/client';
 import type { SharedObjectRef, ObjectArg } from '@mysten/sui.js/bcs';
 import type { SerializedBcs } from '@mysten/bcs';
-export type TransactionResult = TransactionArgument & TransactionArgument[];
+// export type TransactionResult = TransactionArgument & TransactionArgument[];
 
 import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
 
@@ -23,6 +25,13 @@ export type ObeliskObjectData = {
   objectVersion: number;
   objectDisplay: DisplayFieldsResponse;
   objectFields: ObjectContentFields;
+};
+
+export type ObeliskObjectContent = {
+  dataType: 'moveObject';
+  fields: MoveStruct;
+  hasPublicTransfer: boolean;
+  type: string;
 };
 
 export type ObeliskParams = {

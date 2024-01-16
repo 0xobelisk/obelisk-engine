@@ -1,21 +1,23 @@
 // import { RawSigner, SuiAddress } from '@mysten/sui.js';
 
-import { getFullnodeUrl } from '@mysten/sui.js/client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { getFullnodeUrl, SuiParsedData } from '@mysten/sui.js/client';
+import {
+  TransactionBlock,
+  TransactionResult,
+} from '@mysten/sui.js/transactions';
 
 import type {
   SuiTransactionBlockResponse,
   DevInspectResults,
-  SuiObjectDataOptions,
-  DryRunTransactionBlockResponse,
   SuiMoveNormalizedModules,
+  SuiObjectData,
 } from '@mysten/sui.js/client';
 
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiInteractor } from './libs/suiInteractor';
 
-import { ObeliskObjectData } from './types';
+import { ObeliskObjectContent } from './types';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import {
   SuiMoveMoudleFuncType,
@@ -32,7 +34,6 @@ import {
   SuiTxArg,
   SuiTxArgument,
   SuiVecTxArg,
-  TransactionResult,
 } from './types';
 import { normalizeHexAddress, numberToAddressHex } from './utils';
 import keccak256 from 'keccak256';
@@ -477,9 +478,14 @@ export class Obelisk {
 
   async listSchemaNames(worldId: string) {
     const worldObject = await this.getObject(worldId);
-    // const newObjectContent = worldObject.objectFields;
-    const newObjectContent = worldObject.display;
-    return newObjectContent['schemaNames'];
+    const newObjectContent = worldObject.content;
+    if (newObjectContent != null) {
+      const objectContent = newObjectContent as ObeliskObjectContent;
+      const objectFields = objectContent.fields as Record<string, any>;
+      return objectFields['schema_names'];
+    } else {
+      return [];
+    }
   }
 
   async getEntity(
@@ -584,14 +590,12 @@ export class Obelisk {
       cursor,
       limit
     );
-    const ownedObjectsRes: ObeliskObjectData[] = [];
+    const ownedObjectsRes: SuiObjectData[] = [];
 
     for (const object of ownedObjects.data) {
       const objectDetail = await this.getObject(object.data!.objectId);
-
       if (
-        objectDetail.objectType.split('::')[0] ===
-        this.contractFactory.packageId
+        objectDetail.type!.split('::')[0] === this.contractFactory.packageId
       ) {
         ownedObjectsRes.push(objectDetail);
       }
