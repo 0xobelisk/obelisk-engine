@@ -1,14 +1,19 @@
-import {
-  DevInspectResults,
-  RawSigner,
-  SuiAddress,
-  SuiMoveNormalizedModules,
+// import { RawSigner, SuiAddress } from '@mysten/sui.js';
+
+import { getFullnodeUrl } from '@mysten/sui.js/client';
+import { TransactionBlock } from '@mysten/sui.js/transactions';
+
+import type {
   SuiTransactionBlockResponse,
-  TransactionBlock,
-} from '@mysten/sui.js';
+  DevInspectResults,
+  SuiObjectDataOptions,
+  DryRunTransactionBlockResponse,
+  SuiMoveNormalizedModules,
+} from '@mysten/sui.js/client';
+
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
-import { getDefaultConnection, SuiInteractor } from './libs/suiInteractor';
+import { SuiInteractor } from './libs/suiInteractor';
 
 import { ObeliskObjectData } from './types';
 import { SuiContractFactory } from './libs/suiContractFactory';
@@ -128,7 +133,7 @@ export class Obelisk {
     // Init the account manager
     this.accountManager = new SuiAccountManager({ mnemonics, secretKey });
     // Init the rpc provider
-    fullnodeUrls = fullnodeUrls || [getDefaultConnection(networkType).fullnode];
+    fullnodeUrls = fullnodeUrls || [getFullnodeUrl(networkType ?? 'mainnet')];
     this.suiInteractor = new SuiInteractor(fullnodeUrls, networkType);
 
     this.packageId = packageId;
@@ -225,15 +230,15 @@ export class Obelisk {
     });
     return await this.inspectTxn(tx);
   };
+
   /**
-   * if derivePathParams is not provided or mnemonics is empty, it will return the currentSigner.
+   * if derivePathParams is not provided or mnemonics is empty, it will return the keypair.
    * else:
    * it will generate signer from the mnemonic with the given derivePathParams.
    * @param derivePathParams, such as { accountIndex: 2, isExternal: false, addressIndex: 10 }, comply with the BIP44 standard
    */
-  getSigner(derivePathParams?: DerivePathParams) {
-    const keyPair = this.accountManager.getKeyPair(derivePathParams);
-    return new RawSigner(keyPair, this.suiInteractor.currentProvider);
+  getKeypair(derivePathParams?: DerivePathParams) {
+    return this.accountManager.getKeyPair(derivePathParams);
   }
 
   /**
@@ -251,12 +256,9 @@ export class Obelisk {
   getAddress(derivePathParams?: DerivePathParams) {
     return this.accountManager.getAddress(derivePathParams);
   }
+
   currentAddress() {
     return this.accountManager.currentAddress;
-  }
-
-  provider() {
-    return this.suiInteractor.currentProvider;
   }
 
   getPackageId() {
@@ -270,14 +272,18 @@ export class Obelisk {
    * Request some SUI from faucet
    * @Returns {Promise<boolean>}, true if the request is successful, false otherwise.
    */
-  async requestFaucet(address: SuiAddress, network: FaucetNetworkType) {
+  async requestFaucet(address: string, network: FaucetNetworkType) {
     // const addr = this.accountManager.getAddress(derivePathParams);
     return this.suiInteractor.requestFaucet(address, network);
   }
 
   async getBalance(coinType?: string, derivePathParams?: DerivePathParams) {
     const owner = this.accountManager.getAddress(derivePathParams);
-    return this.suiInteractor.currentProvider.getBalance({ owner, coinType });
+    return this.suiInteractor.currentClient.getBalance({ owner, coinType });
+  }
+
+  client() {
+    return this.suiInteractor.currentClient;
   }
 
   async getObject(objectId: string) {
@@ -292,20 +298,24 @@ export class Obelisk {
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
   ) {
-    tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
-    const signer = this.getSigner(derivePathParams);
-    return signer.signTransactionBlock({ transactionBlock: tx });
+    if (tx instanceof SuiTxBlock) {
+      tx.setSender(this.getAddress(derivePathParams));
+    }
+    const txBlock = tx instanceof SuiTxBlock ? tx.txBlock : tx;
+    const txBytes =
+      txBlock instanceof TransactionBlock
+        ? await txBlock.build({ client: this.client() })
+        : txBlock;
+    const keyPair = this.getKeypair(derivePathParams);
+    return await keyPair.signTransactionBlock(txBytes);
   }
 
   async signAndSendTxn(
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
   ): Promise<SuiTransactionBlockResponse> {
-    const { transactionBlockBytes, signature } = await this.signTxn(
-      tx,
-      derivePathParams
-    );
-    return this.suiInteractor.sendTx(transactionBlockBytes, signature);
+    const { bytes, signature } = await this.signTxn(tx, derivePathParams);
+    return this.suiInteractor.sendTx(bytes, signature);
   }
 
   /**
@@ -454,9 +464,9 @@ export class Obelisk {
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
   ): Promise<DevInspectResults> {
-    tx = tx instanceof SuiTxBlock ? tx.txBlock : tx;
-    return this.suiInteractor.currentProvider.devInspectTransactionBlock({
-      transactionBlock: tx,
+    const txBlock = tx instanceof SuiTxBlock ? tx.txBlock : tx;
+    return this.suiInteractor.currentClient.devInspectTransactionBlock({
+      transactionBlock: txBlock,
       sender: this.getAddress(derivePathParams),
     });
   }
@@ -467,7 +477,8 @@ export class Obelisk {
 
   async listSchemaNames(worldId: string) {
     const worldObject = await this.getObject(worldId);
-    const newObjectContent = worldObject.objectFields;
+    // const newObjectContent = worldObject.objectFields;
+    const newObjectContent = worldObject.display;
     return newObjectContent['schemaNames'];
   }
 
@@ -567,7 +578,7 @@ export class Obelisk {
   //   };
   // }
 
-  async getOwnedObjects(owner: SuiAddress, cursor?: string, limit?: number) {
+  async getOwnedObjects(owner: string, cursor?: string, limit?: number) {
     const ownedObjects = await this.suiInteractor.getOwnedObjects(
       owner,
       cursor,

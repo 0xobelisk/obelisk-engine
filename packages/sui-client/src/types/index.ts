@@ -1,17 +1,18 @@
-import { Infer } from 'superstruct';
-import {
-  DisplayFieldsResponse,
-  ObjectCallArg,
-  ObjectContentFields,
-  SharedObjectRef,
-  SuiObjectRef,
-  TransactionArgument,
+import { ObjectContentFields } from '@mysten/sui.js/src/types';
+import type {
   TransactionBlock,
-  SuiTransactionBlockResponse,
-  DevInspectResults,
+  TransactionObjectArgument,
+  TransactionArgument,
+} from '@mysten/sui.js/transactions';
+import type {
+  SuiObjectRef,
   SuiMoveNormalizedModules,
-} from '@mysten/sui.js';
-
+  DevInspectResults,
+  SuiTransactionBlockResponse,
+  DisplayFieldsResponse,
+} from '@mysten/sui.js/client';
+import type { SharedObjectRef, ObjectArg } from '@mysten/sui.js/bcs';
+import type { SerializedBcs } from '@mysten/bcs';
 export type TransactionResult = TransactionArgument & TransactionArgument[];
 
 import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
@@ -145,6 +146,24 @@ export type ObjectData = {
   objectDisplay: DisplayFieldsResponse;
   objectFields: ObjectContentFields;
 };
+type TransactionBlockType = InstanceType<typeof TransactionBlock>;
+
+export type PureCallArg = {
+  Pure: number[];
+};
+export type ObjectCallArg = {
+  Object: ObjectArg;
+};
+
+export type TransactionType = Parameters<TransactionBlockType['add']>;
+
+export type TransactionPureArgument = Extract<
+  TransactionArgument,
+  {
+    kind: 'Input';
+    type: 'pure';
+  }
+>;
 
 export type ObjectFieldType = {
   id: {
@@ -160,20 +179,20 @@ export type EntityData = {
   key: string;
 };
 
-export type SuiTxArg =
-  | Infer<typeof TransactionArgument>
-  | Infer<typeof ObjectCallArg>
+export type SuiAddressArg =
+  | TransactionArgument
+  | SerializedBcs<any>
   | string
-  | number
-  | bigint
-  | boolean;
+  | PureCallArg;
+
+export type SuiTxArg = SuiAddressArg | number | bigint | boolean;
 
 export type SuiObjectArg =
-  | SharedObjectRef
-  | Infer<typeof SuiObjectRef>
+  | TransactionObjectArgument
   | string
-  | Infer<typeof ObjectCallArg>
-  | Infer<typeof TransactionArgument>;
+  | SharedObjectRef
+  | SuiObjectRef
+  | ObjectCallArg;
 
 export type SuiVecTxArg =
   | { value: SuiTxArg[]; vecType: SuiInputTypes }
@@ -190,7 +209,8 @@ export type SuiBasicTypes =
   | 'u32'
   | 'u64'
   | 'u128'
-  | 'u256';
+  | 'u256'
+  | 'signer';
 
 export type SuiInputTypes = 'object' | SuiBasicTypes;
 
