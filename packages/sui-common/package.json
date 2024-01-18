@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/sui-common",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Common low level logic shared between packages",
   "keywords": [
     "sui",
@@ -43,7 +43,7 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@mysten/sui.js": "^0.44.0",
+    "@mysten/sui.js": "^0.45.1",
     "chalk": "^5.0.1",
     "dotenv": "^16.0.3",
     "ejs": "^3.1.8",

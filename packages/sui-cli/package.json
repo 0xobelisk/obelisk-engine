@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/sui-cli",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "sui",
@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@0xobelisk/sui-common": "workspace:*",
-    "@mysten/sui.js": "^0.44.0",
+    "@mysten/sui.js": "^0.45.1",
     "chalk": "^5.0.1",
     "child_process": "^1.0.2",
     "dotenv": "^16.0.3",
