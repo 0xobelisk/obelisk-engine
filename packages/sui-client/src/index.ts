@@ -1,3 +1,4 @@
+export * from '@mysten/sui.js/client';
 export * from '@mysten/sui.js/utils';
 export * from '@mysten/sui.js/transactions';
 export { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
