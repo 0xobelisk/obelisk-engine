@@ -26,8 +26,8 @@
   },
   "dependencies": {
     "@0xobelisk/sui-common": "^0.5.5",
-    "@0xobelisk/sui-client": "^0.5.5",
-    "@0xobelisk/sui-cli": "^0.5.5",
+    "@0xobelisk/sui-client": "^0.5.8",
+    "@0xobelisk/sui-cli": "^0.5.5"
   },
   "devDependencies": {
     "@types/node": "18.16.16",

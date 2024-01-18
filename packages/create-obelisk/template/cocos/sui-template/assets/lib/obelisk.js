@@ -2741,6 +2741,18 @@ Object.defineProperty(exports, "getSuiMoveConfig", {
   }
 });
 exports.loadMetadata = loadMetadata;
+var _client = require("@mysten/sui.js/client");
+Object.keys(_client).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _client[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _client[key];
+    }
+  });
+});
 var _utils = require("@mysten/sui.js/utils");
 Object.keys(_utils).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -2767,7 +2779,6 @@ Object.keys(_transactions).forEach(function (key) {
 });
 var _ed = require("@mysten/sui.js/keypairs/ed25519");
 var _bcs = require("@mysten/bcs");
-var _client = require("@mysten/sui.js/client");
 var _bip = require("@scure/bip39");
 var _english = require("@scure/bip39/wordlists/english");
 var _bcs2 = require("@mysten/sui.js/bcs");
