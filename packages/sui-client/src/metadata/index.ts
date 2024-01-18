@@ -1,5 +1,7 @@
-import { SuiMoveNormalizedModules } from '@mysten/sui.js';
-import { SuiInteractor, getDefaultConnection } from '../libs/suiInteractor';
+import { SuiMoveNormalizedModules } from '@mysten/sui.js/client';
+import { getFullnodeUrl } from '@mysten/sui.js/client';
+
+import { SuiInteractor } from '../libs/suiInteractor';
 
 import { NetworkType } from '../types';
 
@@ -8,7 +10,7 @@ export async function loadMetadata(
   packageId: string
 ) {
   // Init the rpc provider
-  const fullnodeUrls = [getDefaultConnection(networkType).fullnode];
+  const fullnodeUrls = [getFullnodeUrl(networkType)];
   const suiInteractor = new SuiInteractor(fullnodeUrls);
   if (packageId !== undefined) {
     const jsonData = await suiInteractor.getNormalizedMoveModulesByPackage(
