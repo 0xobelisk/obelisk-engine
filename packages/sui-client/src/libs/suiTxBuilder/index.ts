@@ -15,7 +15,7 @@ import type {
   SuiAddressArg,
   SuiObjectArg,
   SuiVecTxArg,
-} from 'src/types';
+} from '../../types';
 
 export class SuiTxBlock {
   public txBlock: TransactionBlock;
