@@ -1,8 +1,9 @@
 import { ObjectContentFields } from '@mysten/sui.js/src/types';
+import type { SerializedBcs } from '@mysten/bcs';
+import type { TransactionArgument } from '@mysten/sui.js/transactions';
 import type {
   TransactionBlock,
   TransactionObjectArgument,
-  TransactionArgument,
   TransactionResult,
 } from '@mysten/sui.js/transactions';
 import type {
@@ -14,7 +15,6 @@ import type {
   MoveStruct,
 } from '@mysten/sui.js/client';
 import type { SharedObjectRef, ObjectArg } from '@mysten/sui.js/bcs';
-import type { SerializedBcs } from '@mysten/bcs';
 // export type TransactionResult = TransactionArgument & TransactionArgument[];
 
 import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
@@ -67,25 +67,26 @@ export type SchemaValueType = {
   };
 };
 
-export type SuiTxArgument =
-  | {
-      kind: 'Input';
-      index: number;
-      type?: 'object' | 'pure' | undefined;
-      value?: any;
-    }
-  | {
-      kind: 'GasCoin';
-    }
-  | {
-      kind: 'Result';
-      index: number;
-    }
-  | {
-      kind: 'NestedResult';
-      index: number;
-      resultIndex: number;
-    };
+// export type SuiTxArgument =
+//   | {
+//       kind: 'Input';
+//       index: number;
+//       type?: 'object' | 'pure' | undefined;
+//       value?: any;
+//     }
+//   | {
+//       kind: 'GasCoin';
+//     }
+//   | {
+//       kind: 'Result';
+//       index: number;
+//     }
+//   | {
+//       kind: 'NestedResult';
+//       index: number;
+//       resultIndex: number;
+//     };
+
 export type SchemaContentType = {
   type: string;
   fields: SchemaValueType;
@@ -100,7 +101,7 @@ export interface MessageMeta {
 export interface ContractQuery extends MessageMeta {
   (
     tx: TransactionBlock,
-    params: SuiTxArgument[],
+    params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
   ): Promise<DevInspectResults | TransactionResult>;
@@ -109,7 +110,7 @@ export interface ContractQuery extends MessageMeta {
 export interface ContractTx extends MessageMeta {
   (
     tx: TransactionBlock,
-    params: SuiTxArgument[],
+    params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
   ): Promise<SuiTransactionBlockResponse | TransactionResult>;

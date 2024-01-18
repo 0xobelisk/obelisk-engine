@@ -1,18 +1,18 @@
 // import { RawSigner, SuiAddress } from '@mysten/sui.js';
 
-import { getFullnodeUrl, SuiParsedData } from '@mysten/sui.js/client';
+import { getFullnodeUrl } from '@mysten/sui.js/client';
 import {
   TransactionBlock,
   TransactionResult,
 } from '@mysten/sui.js/transactions';
-
+import type { SerializedBcs } from '@mysten/bcs';
+import type { TransactionArgument } from '@mysten/sui.js/transactions';
 import type {
   SuiTransactionBlockResponse,
   DevInspectResults,
   SuiMoveNormalizedModules,
   SuiObjectData,
 } from '@mysten/sui.js/client';
-
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTxBlock } from './libs/suiTxBuilder';
 import { SuiInteractor } from './libs/suiInteractor';
@@ -32,7 +32,7 @@ import {
   MapMoudleFuncTx,
   ObeliskParams,
   SuiTxArg,
-  SuiTxArgument,
+  // SuiTxArgument,
   SuiVecTxArg,
 } from './types';
 import { normalizeHexAddress, numberToAddressHex } from './utils';
@@ -56,7 +56,7 @@ function createQuery(
   meta: SuiMoveMoudleFuncType,
   fn: (
     tx: TransactionBlock,
-    params: SuiTxArgument[],
+    params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
   ) => Promise<DevInspectResults | TransactionResult>
@@ -65,7 +65,7 @@ function createQuery(
     meta,
     async (
       tx: TransactionBlock,
-      params: SuiTxArgument[],
+      params: (TransactionArgument | SerializedBcs<any>)[],
       typeArguments?: string[],
       isRaw?: boolean
     ): Promise<DevInspectResults | TransactionResult> => {
@@ -79,7 +79,7 @@ function createTx(
   meta: SuiMoveMoudleFuncType,
   fn: (
     tx: TransactionBlock,
-    params: SuiTxArgument[],
+    params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
   ) => Promise<SuiTransactionBlockResponse | TransactionResult>
@@ -88,7 +88,7 @@ function createTx(
     meta,
     async (
       tx: TransactionBlock,
-      params: SuiTxArgument[],
+      params: (TransactionArgument | SerializedBcs<any>)[],
       typeArguments?: string[],
       isRaw?: boolean
     ): Promise<SuiTransactionBlockResponse | TransactionResult> => {
@@ -189,7 +189,7 @@ export class Obelisk {
   #exec = async (
     meta: SuiMoveMoudleFuncType,
     tx: TransactionBlock,
-    params: SuiTxArgument[],
+    params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
   ) => {
@@ -212,7 +212,7 @@ export class Obelisk {
   #read = async (
     meta: SuiMoveMoudleFuncType,
     tx: TransactionBlock,
-    params: SuiTxArgument[],
+    params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
   ) => {
@@ -495,7 +495,8 @@ export class Obelisk {
   ): Promise<any[] | undefined> {
     const schemaModuleName = `${schemaName}_schema`;
     const tx = new TransactionBlock();
-    const params = [tx.pure(worldId)] as SuiTxArgument[];
+    const params = [tx.pure(worldId)] as TransactionArgument[];
+
     if (entityId !== undefined) {
       params.push(tx.pure(entityId));
     }
@@ -529,7 +530,8 @@ export class Obelisk {
   ): Promise<boolean | undefined> {
     const schemaModuleName = `${schemaName}_schema`;
     const tx = new TransactionBlock();
-    const params = [tx.pure(worldId)] as SuiTxArgument[];
+    const params = [tx.pure(worldId)] as TransactionArgument[];
+
     if (entityId !== undefined) {
       params.push(tx.pure(entityId));
     }
