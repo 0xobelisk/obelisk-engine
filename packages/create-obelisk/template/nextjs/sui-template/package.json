@@ -36,7 +36,7 @@
     "@0xobelisk/sui-common": "^0.5.0",
     "@0xobelisk/sui-client": "^0.5.3",
     "@0xobelisk/sui-cli": "^0.5.0",
-    "@mysten/sui.js": "^0.41.0",
+    "@mysten/sui.js": "^0.44.0",
     "@suiet/wallet-kit": "^0.2.19",
     "clsx": "^1.2.1",
     "ethos-connect": "^0.0.189",
