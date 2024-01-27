@@ -299,7 +299,7 @@ export class Obelisk {
     tx: Uint8Array | TransactionBlock | SuiTxBlock,
     derivePathParams?: DerivePathParams
   ) {
-    if (tx instanceof SuiTxBlock && tx instanceof TransactionBlock) {
+    if (tx instanceof SuiTxBlock || tx instanceof TransactionBlock) {
       tx.setSender(this.getAddress(derivePathParams));
     }
     const txBlock = tx instanceof SuiTxBlock ? tx.txBlock : tx;
