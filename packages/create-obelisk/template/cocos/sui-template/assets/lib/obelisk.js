@@ -3752,7 +3752,7 @@ var Obelisk = class {
     return this.suiInteractor.getObjects(objectIds);
   }
   async signTxn(tx, derivePathParams) {
-    if (tx instanceof SuiTxBlock) {
+    if (tx instanceof SuiTxBlock || tx instanceof _transactions.TransactionBlock) {
       tx.setSender(this.getAddress(derivePathParams));
     }
     const txBlock = tx instanceof SuiTxBlock ? tx.txBlock : tx;
