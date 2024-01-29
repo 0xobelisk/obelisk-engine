@@ -1,5 +1,4 @@
 import { BCS, loadMetadata, getSuiMoveConfig, Obelisk, TransactionBlock } from '@0xobelisk/sui-client';
-import { useWallet } from '@suiet/wallet-kit';
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
@@ -17,10 +16,29 @@ type data = {
 
 const Home = () => {
   const router = useRouter();
-  const currentAccount = useCurrentAccount();
   const { mutate: signAndExecuteTransactionBlock } = useSignAndExecuteTransactionBlock();
   const { currentWallet, connectionStatus } = useCurrentWallet();
   const [value, setValue] = useAtom(Value);
+
+  const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+  const query_counter = async () => {
+    await delay(500);
+    const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
+    const obelisk = new Obelisk({
+      networkType: NETWORK,
+      packageId: PACKAGE_ID,
+      metadata: metadata,
+    });
+    // home component name
+    const component_name = Object.keys(obeliskConfig.schemas)[0];
+    const component_value = await obelisk.getEntity(WORLD_ID, component_name);
+    setValue(component_value[0]);
+    console.log("component_value",component_value[0])
+    console.log("value",value)
+  };
+
+
 
   const counter = async () => {
     const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
@@ -32,8 +50,7 @@ const Home = () => {
     const tx = new TransactionBlock();
     const world = tx.pure(WORLD_ID);
     const params = [world];
-    const new_tx = (await obelisk.tx.counter_system.inc(tx, params, undefined, true));
-    console.log(new_tx)
+    (await obelisk.tx.counter_system.inc(tx, params, undefined, true));
     signAndExecuteTransactionBlock({
       transactionBlock: tx,
     },{
@@ -44,32 +61,22 @@ const Home = () => {
           packageId: PACKAGE_ID,
           metadata: metadata,
         });
-
+        // home component name
         const component_name = Object.keys(obeliskConfig.schemas)[0];
         const component_value = await obelisk.getEntity(WORLD_ID, component_name);
         setValue(component_value[0]);
+        console.log("component_value", component_value[0])
+        console.log("value", value)
       },
     },);
 
   };
 
   useEffect(() => {
-    if (router.isReady) {
-      const query_counter = async () => {
-        const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
-        const obelisk = new Obelisk({
-          networkType: NETWORK,
-          packageId: PACKAGE_ID,
-          metadata: metadata,
-        });
-        // home component name
-        const component_name = Object.keys(obeliskConfig.schemas)[0];
-        const component_value = await obelisk.getEntity(WORLD_ID, component_name);
-        setValue(component_value[0]);
-      };
+    if (router.isReady){
       query_counter();
     }
-  }, [router.isReady]);
+  },[router.isReady]);
 
 
   return (
