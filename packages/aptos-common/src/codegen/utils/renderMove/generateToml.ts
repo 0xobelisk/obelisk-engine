@@ -5,6 +5,7 @@ export function generateToml(config: ObeliskConfig, srcPrefix: string) {
   let code = `[package]
 name = "${config.name}"
 version = "1.0.0"
+upgrade_policy = "compatible"
 authors = []
 
 [addresses]

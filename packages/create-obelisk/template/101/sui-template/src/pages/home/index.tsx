@@ -1,4 +1,4 @@
-import { loadMetadata, Obelisk, TransactionBlock } from '@0xobelisk/sui-client';
+import { loadMetadata, Obelisk, TransactionBlock, TransactionResult } from '@0xobelisk/sui-client';
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
@@ -22,8 +22,8 @@ const Home = () => {
     const tx = new TransactionBlock();
     const world = tx.pure(WORLD_ID);
     const params = [world];
-    const new_tx = (await obelisk.tx.counter_system.inc(tx, params, undefined, true)) as TransactionBlock;
-    const response = await obelisk.signAndSendTxn(new_tx);
+    (await obelisk.tx.counter_system.inc(tx, params, undefined, true)) as TransactionResult;
+    const response = await obelisk.signAndSendTxn(tx);
     if (response.effects.status.status == 'success') {
       const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
       const obelisk = new Obelisk({

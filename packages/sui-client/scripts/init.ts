@@ -1,8 +1,6 @@
 import {
-  TransactionBlock,
   Obelisk,
   NetworkType,
-  MIST_PER_SUI,
   TransactionResult,
   loadMetadata,
 } from '../src/index';
@@ -13,7 +11,7 @@ dotenv.config();
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0x81363fac901bc5e2415ad27969b417bd6bced330d0c18273c4f715dcda65e0f6';
+    '0xdd1a5cabd1b187dfef39a7c04b2e112ad999ec46f521a408db89297b7973b6c6';
 
   const metadata = await loadMetadata(network as NetworkType, packageId);
 
@@ -28,30 +26,30 @@ async function init() {
 
   console.log(obelisk.getAddress());
 
-  let txb = new TransactionBlock();
+  // let txb = new TransactionBlock();
 
-  const [coin] = txb.splitCoins(txb.gas, [txb.pure(2n * MIST_PER_SUI)]);
-  const params = [coin];
+  // const [coin] = txb.splitCoins(txb.gas, [txb.pure(2n * MIST_PER_SUI)]);
+  // const params = [coin];
 
-  let [coins] = (await obelisk.tx.example_system.get_object(
-    txb,
-    params,
-    undefined,
-    true
-  )) as TransactionResult;
-  txb.transferObjects(
-    [coins],
-    txb.pure(
-      '0xd2c36eea220c7deb9d1c7d4b01269eca9d9543050255432896cd13ade6550d90'
-    )
-  );
-  let res = await obelisk.signAndSendTxn(txb);
-  console.log(res);
-  // let comsName = await obelisk.listSchemaNames(
-  //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
+  // let [coins] = (await obelisk.tx.example_system.get_object(
+  //   txb,
+  //   params,
+  //   undefined,
+  //   true
+  // )) as TransactionResult;
+  // txb.transferObjects(
+  //   [coins],
+  //   txb.pure(
+  //     '0xd2c36eea220c7deb9d1c7d4b01269eca9d9543050255432896cd13ade6550d90'
+  //   )
   // );
+  // let res = await obelisk.signAndSendTxn(txb);
+  // console.log(res);
+  let comsName = await obelisk.listSchemaNames(
+    '0xacfec03b65c34a4afff82e0913e00759e5c799fbcbbd4bdf6299de4749766304'
+  );
 
-  // console.log(comsName);
+  console.log(comsName);
 
   // let entities = await obelisk.getEntities(
   //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0',

@@ -41,7 +41,7 @@ type Module = TxnBuilderTypes.Module;
 //   worldId: string
 // }
 
-export async function publishHandler(
+export async function upgradeHandler(
   projectName: string,
   network: "mainnet" | "testnet" | "devnet" | "local"
 ) {
@@ -111,54 +111,16 @@ export async function publishHandler(
       new HexString(packageMetadata.toString("hex")).toUint8Array(),
       modulesData as Seq<Module>
     );
-    await client.waitForTransaction(txnHash, { checkSuccess: true }); // <:!:publish
+    await client.waitForTransaction(txnHash, { checkSuccess: true });
 
     packageId = keypair.address().toString();
     version = 1;
 
     console.log(chalk.blue(`${projectName} PackageId: ${packageId}`));
     saveContractData(projectName, network, packageId, version);
-    console.log(chalk.green(`Publish Transaction Digest: ${txnHash}`));
+    console.log(chalk.green(`Upgrade Transaction Digest: ${txnHash}`));
   } catch (error: any) {
-    console.error(chalk.red(`Failed to execute publish, please republish`));
-    console.error(error.message);
-    process.exit(1);
-  }
-
-  console.log("Executing the deployHook: ");
-  const delay = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
-  await delay(5000);
-
-  const payload: Types.EntryFunctionPayload = {
-    function: `${packageId}::deploy_hook::run`,
-    type_arguments: [],
-    arguments: [],
-  };
-
-  const deployHookRawTxn = await client.generateTransaction(
-    keypair.address(),
-    payload
-  );
-  const deployHookBcsTxn = AptosClient.generateBCSTransaction(
-    keypair,
-    deployHookRawTxn
-  );
-  try {
-    const deployTxnHash = await client.submitSignedBCSTransaction(
-      deployHookBcsTxn
-    );
-    console.log(
-      chalk.green(
-        `Successful auto-execution of deployHook, please check the transaction digest: ${deployTxnHash.hash}`
-      )
-    );
-  } catch (error: any) {
-    console.error(
-      chalk.red(
-        `Failed to execute deployHook, please republish or manually call deploy_hook::run`
-      )
-    );
+    console.error(chalk.red(`Failed to execute upgrade`));
     console.error(error.message);
     process.exit(1);
   }

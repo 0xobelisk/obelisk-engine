@@ -3036,8 +3036,13 @@ function bool(b) {
         throw new Error(`Expected boolean, not ${b}`);
 }
 exports.bool = bool;
+// copied from utils
+function isBytes(a) {
+    return (a instanceof Uint8Array ||
+        (a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array'));
+}
 function bytes(b, ...lengths) {
-    if (!(b instanceof Uint8Array))
+    if (!isBytes(b))
         throw new Error('Expected Uint8Array');
     if (lengths.length > 0 && !lengths.includes(b.length))
         throw new Error(`Expected Uint8Array of length ${lengths}, not of length=${b.length}`);
@@ -3833,14 +3838,16 @@ exports.randomBytes = exports.wrapXOFConstructorWithOpts = exports.wrapConstruct
 // For node.js, package.json#exports field mapping rewrites import
 // from `crypto` to `cryptoNode`, which imports native module.
 // Makes the utils un-importable in browsers without a bundler.
-// Once node.js 18 is deprecated, we can just drop the import.
+// Once node.js 18 is deprecated (2025-04-30), we can just drop the import.
 const crypto_1 = require("@noble/hashes/crypto");
-const u8a = a => a instanceof Uint8Array;
 // Cast array to different type
 const u8 = arr => new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
 exports.u8 = u8;
 const u32 = arr => new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));
 exports.u32 = u32;
+function isBytes(a) {
+  return a instanceof Uint8Array || a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array';
+}
 // Cast array to view
 const createView = arr => new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
 exports.createView = createView;
@@ -3849,8 +3856,11 @@ const rotr = (word, shift) => word << 32 - shift | word >>> shift;
 exports.rotr = rotr;
 // big-endian hardware is rare. Just in case someone still decides to run hashes:
 // early-throw an error because we don't support BE yet.
+// Other libraries would silently corrupt the data instead of throwing an error,
+// when they don't support it.
 exports.isLE = new Uint8Array(new Uint32Array([0x11223344]).buffer)[0] === 0x44;
 if (!exports.isLE) throw new Error('Non little-endian hardware is not supported');
+// Array where index 0xf0 (240) is mapped to string 'f0'
 const hexes = /* @__PURE__ */Array.from({
   length: 256
 }, (_, i) => i.toString(16).padStart(2, '0'));
@@ -3858,7 +3868,7 @@ const hexes = /* @__PURE__ */Array.from({
  * @example bytesToHex(Uint8Array.from([0xca, 0xfe, 0x01, 0x23])) // 'cafe0123'
  */
 function bytesToHex(bytes) {
-  if (!u8a(bytes)) throw new Error('Uint8Array expected');
+  if (!isBytes(bytes)) throw new Error('Uint8Array expected');
   // pre-caching improves the speed 6x
   let hex = '';
   for (let i = 0; i < bytes.length; i++) {
@@ -3867,20 +3877,38 @@ function bytesToHex(bytes) {
   return hex;
 }
 exports.bytesToHex = bytesToHex;
+// We use optimized technique to convert hex string to byte array
+const asciis = {
+  _0: 48,
+  _9: 57,
+  _A: 65,
+  _F: 70,
+  _a: 97,
+  _f: 102
+};
+function asciiToBase16(char) {
+  if (char >= asciis._0 && char <= asciis._9) return char - asciis._0;
+  if (char >= asciis._A && char <= asciis._F) return char - (asciis._A - 10);
+  if (char >= asciis._a && char <= asciis._f) return char - (asciis._a - 10);
+  return;
+}
 /**
  * @example hexToBytes('cafe0123') // Uint8Array.from([0xca, 0xfe, 0x01, 0x23])
  */
 function hexToBytes(hex) {
   if (typeof hex !== 'string') throw new Error('hex string expected, got ' + typeof hex);
-  const len = hex.length;
-  if (len % 2) throw new Error('padded hex string expected, got unpadded hex of length ' + len);
-  const array = new Uint8Array(len / 2);
-  for (let i = 0; i < array.length; i++) {
-    const j = i * 2;
-    const hexByte = hex.slice(j, j + 2);
-    const byte = Number.parseInt(hexByte, 16);
-    if (Number.isNaN(byte) || byte < 0) throw new Error('Invalid byte sequence');
-    array[i] = byte;
+  const hl = hex.length;
+  const al = hl / 2;
+  if (hl % 2) throw new Error('padded hex string expected, got unpadded hex of length ' + hl);
+  const array = new Uint8Array(al);
+  for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
+    const n1 = asciiToBase16(hex.charCodeAt(hi));
+    const n2 = asciiToBase16(hex.charCodeAt(hi + 1));
+    if (n1 === undefined || n2 === undefined) {
+      const char = hex[hi] + hex[hi + 1];
+      throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
+    }
+    array[ai] = n1 * 16 + n2;
   }
   return array;
 }
@@ -3919,7 +3947,7 @@ exports.utf8ToBytes = utf8ToBytes;
  */
 function toBytes(data) {
   if (typeof data === 'string') data = utf8ToBytes(data);
-  if (!u8a(data)) throw new Error(`expected Uint8Array, got ${typeof data}`);
+  if (!isBytes(data)) throw new Error(`expected Uint8Array, got ${typeof data}`);
   return data;
 }
 exports.toBytes = toBytes;
@@ -3927,14 +3955,19 @@ exports.toBytes = toBytes;
  * Copies several Uint8Arrays into one.
  */
 function concatBytes(...arrays) {
-  const r = new Uint8Array(arrays.reduce((sum, a) => sum + a.length, 0));
-  let pad = 0; // walk through each item, ensure they have proper type
-  arrays.forEach(a => {
-    if (!u8a(a)) throw new Error('Uint8Array expected');
-    r.set(a, pad);
+  let sum = 0;
+  for (let i = 0; i < arrays.length; i++) {
+    const a = arrays[i];
+    if (!isBytes(a)) throw new Error('Uint8Array expected');
+    sum += a.length;
+  }
+  const res = new Uint8Array(sum);
+  for (let i = 0, pad = 0; i < arrays.length; i++) {
+    const a = arrays[i];
+    res.set(a, pad);
     pad += a.length;
-  });
-  return r;
+  }
+  return res;
 }
 exports.concatBytes = concatBytes;
 // For runtime check if class implements interface
@@ -3997,7 +4030,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.assertNumber = assertNumber;
-exports.utils = exports.utf8 = exports.stringToBytes = exports.str = exports.hex = exports.bytesToString = exports.bytes = exports.bech32m = exports.bech32 = exports.base64urlnopad = exports.base64url = exports.base64 = exports.base58xrp = exports.base58xmr = exports.base58flickr = exports.base58check = exports.base58 = exports.base32hex = exports.base32crockford = exports.base32 = exports.base16 = void 0;
+exports.utils = exports.utf8 = exports.stringToBytes = exports.str = exports.hex = exports.createBase58check = exports.bytesToString = exports.bytes = exports.bech32m = exports.bech32 = exports.base64urlnopad = exports.base64url = exports.base64 = exports.base58xrp = exports.base58xmr = exports.base58flickr = exports.base58check = exports.base58 = exports.base32hex = exports.base32crockford = exports.base32 = exports.base16 = void 0;
 /*! scure-base - MIT License (c) 2022 Paul Miller (paulmillr.com) */
 // Utilities
 /**
@@ -4006,16 +4039,20 @@ exports.utils = exports.utf8 = exports.stringToBytes = exports.str = exports.hex
 function assertNumber(n) {
   if (!Number.isSafeInteger(n)) throw new Error(`Wrong integer: ${n}`);
 }
+function isBytes(a) {
+  return a instanceof Uint8Array || a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array';
+}
 /**
  * @__NO_SIDE_EFFECTS__
  */
 function chain(...args) {
+  const id = a => a;
   // Wrap call in closure so JIT can inline calls
   const wrap = (a, b) => c => a(b(c));
   // Construct chain of args[-1].encode(args[-2].encode([...]))
-  const encode = Array.from(args).reverse().reduce((acc, i) => acc ? wrap(acc, i.encode) : i.encode, undefined);
+  const encode = args.map(x => x.encode).reduceRight(wrap, id);
   // Construct chain of args[0].decode(args[1].decode(...))
-  const decode = args.reduce((acc, i) => acc ? wrap(acc, i.decode) : i.decode, undefined);
+  const decode = args.map(x => x.decode).reduce(wrap, id);
   return {
     encode,
     decode
@@ -4177,11 +4214,11 @@ function radix(num) {
   assertNumber(num);
   return {
     encode: bytes => {
-      if (!(bytes instanceof Uint8Array)) throw new Error('radix.encode input should be Uint8Array');
+      if (!isBytes(bytes)) throw new Error('radix.encode input should be Uint8Array');
       return convertRadix(Array.from(bytes), 2 ** 8, num);
     },
     decode: digits => {
-      if (!Array.isArray(digits) || digits.length && typeof digits[0] !== 'number') throw new Error('radix.decode input should be array of strings');
+      if (!Array.isArray(digits) || digits.length && typeof digits[0] !== 'number') throw new Error('radix.decode input should be array of numbers');
       return Uint8Array.from(convertRadix(digits, num, 2 ** 8));
     }
   };
@@ -4197,11 +4234,11 @@ function radix2(bits, revPadding = false) {
   if (radix2carry(8, bits) > 32 || radix2carry(bits, 8) > 32) throw new Error('radix2: carry overflow');
   return {
     encode: bytes => {
-      if (!(bytes instanceof Uint8Array)) throw new Error('radix2.encode input should be Uint8Array');
+      if (!isBytes(bytes)) throw new Error('radix2.encode input should be Uint8Array');
       return convertRadix2(Array.from(bytes), 8, bits, !revPadding);
     },
     decode: digits => {
-      if (!Array.isArray(digits) || digits.length && typeof digits[0] !== 'number') throw new Error('radix2.decode input should be array of strings');
+      if (!Array.isArray(digits) || digits.length && typeof digits[0] !== 'number') throw new Error('radix2.decode input should be array of numbers');
       return Uint8Array.from(convertRadix2(digits, bits, 8, revPadding));
     }
   };
@@ -4225,7 +4262,7 @@ function checksum(len, fn) {
   if (typeof fn !== 'function') throw new Error('checksum fn should be function');
   return {
     encode(data) {
-      if (!(data instanceof Uint8Array)) throw new Error('checksum.encode: input should be Uint8Array');
+      if (!isBytes(data)) throw new Error('checksum.encode: input should be Uint8Array');
       const checksum = fn(data).slice(0, len);
       const res = new Uint8Array(data.length + len);
       res.set(data);
@@ -4233,7 +4270,7 @@ function checksum(len, fn) {
       return res;
     },
     decode(data) {
-      if (!(data instanceof Uint8Array)) throw new Error('checksum.decode: input should be Uint8Array');
+      if (!isBytes(data)) throw new Error('checksum.decode: input should be Uint8Array');
       const payload = data.slice(0, -len);
       const newChecksum = fn(payload).slice(0, len);
       const oldChecksum = data.slice(-len);
@@ -4242,10 +4279,13 @@ function checksum(len, fn) {
     }
   };
 }
+// prettier-ignore
 const utils = exports.utils = {
   alphabet,
   chain,
   checksum,
+  convertRadix,
+  convertRadix2,
   radix,
   radix2,
   join,
@@ -4293,8 +4333,10 @@ const base58xmr = exports.base58xmr = {
     return Uint8Array.from(res);
   }
 };
-const base58check = /* @__PURE__ */sha256 => chain(checksum(4, data => sha256(sha256(data))), base58);
-exports.base58check = base58check;
+const createBase58check = /* @__PURE__ */sha256 => chain(checksum(4, data => sha256(sha256(data))), base58);
+// legacy export, bad name
+exports.createBase58check = createBase58check;
+const base58check = exports.base58check = createBase58check;
 const BECH_ALPHABET = /* @__PURE__ */chain(alphabet('qpzry9x8gf2tvdw0s3jn54khce6mua7l'), join(''));
 const POLYMOD_GENERATORS = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
 /**
@@ -4410,7 +4452,7 @@ const CODERS = {
 const coderTypeError = 'Invalid encoding type. Available types: utf8, hex, base16, base32, base64, base64url, base58, base58xmr';
 const bytesToString = (type, bytes) => {
   if (typeof type !== 'string' || !CODERS.hasOwnProperty(type)) throw new TypeError(coderTypeError);
-  if (!(bytes instanceof Uint8Array)) throw new TypeError('bytesToString() expects Uint8Array');
+  if (!isBytes(bytes)) throw new TypeError('bytesToString() expects Uint8Array');
   return CODERS[type].encode(bytes);
 };
 exports.bytesToString = bytesToString;
