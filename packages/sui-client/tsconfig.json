@@ -24,7 +24,7 @@
     "allowJs": true,
     "noEmit": false,
     "emitDeclarationOnly": true,
-    "incremental": true,
+    "incremental": false,
     "typeRoots": ["./src/types", "./node_modules/@types"]
   },
   "include": ["./src/**/*"],
