@@ -4063,53 +4063,28 @@ async function loadMetadata(networkType, packageId) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"@mysten/bcs":7,"@mysten/sui.js/bcs":8,"@mysten/sui.js/client":23,"@mysten/sui.js/faucet":39,"@mysten/sui.js/keypairs/ed25519":42,"@mysten/sui.js/multisig":47,"@mysten/sui.js/transactions":15,"@mysten/sui.js/utils":57,"@scure/bip39":98,"@scure/bip39/wordlists/english":99,"buffer":2,"keccak256":128}],7:[function(require,module,exports){
+},{"@mysten/bcs":12,"@mysten/sui.js/bcs":18,"@mysten/sui.js/client":34,"@mysten/sui.js/faucet":51,"@mysten/sui.js/keypairs/ed25519":53,"@mysten/sui.js/multisig":58,"@mysten/sui.js/transactions":25,"@mysten/sui.js/utils":65,"@scure/bip39":101,"@scure/bip39/wordlists/english":102,"buffer":2,"keccak256":129}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.bcs = exports.SerializedBcs = exports.BcsWriter = exports.BcsType = exports.BcsReader = exports.BCS = void 0;
-exports.decodeStr = decodeStr;
-exports.encodeStr = encodeStr;
-exports.fromB58 = void 0;
-exports.fromB64 = fromB64;
-exports.fromHEX = fromHEX;
-exports.getRustConfig = getRustConfig;
-exports.getSuiMoveConfig = getSuiMoveConfig;
-exports.isSerializedBcs = isSerializedBcs;
-exports.registerPrimitives = registerPrimitives;
-exports.splitGenericParameters = splitGenericParameters;
-exports.toB58 = void 0;
-exports.toB64 = toB64;
-exports.toHEX = toHEX;
+exports.toB58 = exports.fromB58 = void 0;
 var _bs = _interopRequireDefault(require("bs58"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj)) throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj)) throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-
-// src/b58.ts
-
-var toB58 = buffer => _bs.default.encode(buffer);
+const toB58 = buffer => _bs.default.encode(buffer);
 exports.toB58 = toB58;
-var fromB58 = str => _bs.default.decode(str);
-
-// src/b64.ts
+const fromB58 = str => _bs.default.decode(str);
 exports.fromB58 = fromB58;
+
+},{"bs58":106}],8:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.fromB64 = fromB64;
+exports.toB64 = toB64;
 function b64ToUint6(nChr) {
   return nChr > 64 && nChr < 91 ? nChr - 65 : nChr > 96 && nChr < 123 ? nChr - 71 : nChr > 47 && nChr < 58 ? nChr + 4 : nChr === 43 ? 62 : nChr === 47 ? 63 : 0;
 }
@@ -4147,376 +4122,44 @@ function toB64(aBytes) {
   return sB64Enc.slice(0, sB64Enc.length - 2 + nMod3) + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
 }
 
-// src/hex.ts
-function fromHEX(hexStr) {
-  const normalized = hexStr.startsWith("0x") ? hexStr.slice(2) : hexStr;
-  const padded = normalized.length % 2 === 0 ? normalized : `0${normalized}}`;
-  const intArr = padded.match(/.{2}/g)?.map(byte => parseInt(byte, 16)) ?? [];
-  return Uint8Array.from(intArr);
-}
-function toHEX(bytes) {
-  return bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
-}
+},{}],9:[function(require,module,exports){
+"use strict";
 
-// src/uleb.ts
-function ulebEncode(num) {
-  let arr = [];
-  let len = 0;
-  if (num === 0) {
-    return [0];
-  }
-  while (num > 0) {
-    arr[len] = num & 127;
-    if (num >>= 7) {
-      arr[len] |= 128;
-    }
-    len += 1;
-  }
-  return arr;
-}
-function ulebDecode(arr) {
-  let total = 0;
-  let shift = 0;
-  let len = 0;
-  while (true) {
-    let byte = arr[len];
-    len += 1;
-    total |= (byte & 127) << shift;
-    if ((byte & 128) === 0) {
-      break;
-    }
-    shift += 7;
-  }
-  return {
-    value: total,
-    length: len
-  };
-}
-
-// src/reader.ts
-var BcsReader = class {
-  /**
-   * @param {Uint8Array} data Data to use as a buffer.
-   */
-  constructor(data) {
-    this.bytePosition = 0;
-    this.dataView = new DataView(data.buffer);
-  }
-  /**
-   * Shift current cursor position by `bytes`.
-   *
-   * @param {Number} bytes Number of bytes to
-   * @returns {this} Self for possible chaining.
-   */
-  shift(bytes) {
-    this.bytePosition += bytes;
-    return this;
-  }
-  /**
-   * Read U8 value from the buffer and shift cursor by 1.
-   * @returns
-   */
-  read8() {
-    let value = this.dataView.getUint8(this.bytePosition);
-    this.shift(1);
-    return value;
-  }
-  /**
-   * Read U16 value from the buffer and shift cursor by 2.
-   * @returns
-   */
-  read16() {
-    let value = this.dataView.getUint16(this.bytePosition, true);
-    this.shift(2);
-    return value;
-  }
-  /**
-   * Read U32 value from the buffer and shift cursor by 4.
-   * @returns
-   */
-  read32() {
-    let value = this.dataView.getUint32(this.bytePosition, true);
-    this.shift(4);
-    return value;
-  }
-  /**
-   * Read U64 value from the buffer and shift cursor by 8.
-   * @returns
-   */
-  read64() {
-    let value1 = this.read32();
-    let value2 = this.read32();
-    let result = value2.toString(16) + value1.toString(16).padStart(8, "0");
-    return BigInt("0x" + result).toString(10);
-  }
-  /**
-   * Read U128 value from the buffer and shift cursor by 16.
-   */
-  read128() {
-    let value1 = BigInt(this.read64());
-    let value2 = BigInt(this.read64());
-    let result = value2.toString(16) + value1.toString(16).padStart(16, "0");
-    return BigInt("0x" + result).toString(10);
-  }
-  /**
-   * Read U128 value from the buffer and shift cursor by 32.
-   * @returns
-   */
-  read256() {
-    let value1 = BigInt(this.read128());
-    let value2 = BigInt(this.read128());
-    let result = value2.toString(16) + value1.toString(16).padStart(32, "0");
-    return BigInt("0x" + result).toString(10);
-  }
-  /**
-   * Read `num` number of bytes from the buffer and shift cursor by `num`.
-   * @param num Number of bytes to read.
-   */
-  readBytes(num) {
-    let start = this.bytePosition + this.dataView.byteOffset;
-    let value = new Uint8Array(this.dataView.buffer, start, num);
-    this.shift(num);
-    return value;
-  }
-  /**
-   * Read ULEB value - an integer of varying size. Used for enum indexes and
-   * vector lengths.
-   * @returns {Number} The ULEB value.
-   */
-  readULEB() {
-    let start = this.bytePosition + this.dataView.byteOffset;
-    let buffer = new Uint8Array(this.dataView.buffer, start);
-    let {
-      value,
-      length
-    } = ulebDecode(buffer);
-    this.shift(length);
-    return value;
-  }
-  /**
-   * Read a BCS vector: read a length and then apply function `cb` X times
-   * where X is the length of the vector, defined as ULEB in BCS bytes.
-   * @param cb Callback to process elements of vector.
-   * @returns {Array<Any>} Array of the resulting values, returned by callback.
-   */
-  readVec(cb) {
-    let length = this.readULEB();
-    let result = [];
-    for (let i = 0; i < length; i++) {
-      result.push(cb(this, i, length));
-    }
-    return result;
-  }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SerializedBcs = exports.BcsType = void 0;
+exports.bigUIntBcsType = bigUIntBcsType;
+exports.dynamicSizeBcsType = dynamicSizeBcsType;
+exports.fixedSizeBcsType = fixedSizeBcsType;
+exports.isSerializedBcs = isSerializedBcs;
+exports.lazyBcsType = lazyBcsType;
+exports.stringLikeBcsType = stringLikeBcsType;
+exports.uIntBcsType = uIntBcsType;
+var _b = require("./b58.js");
+var _b2 = require("./b64.js");
+var _hex = require("./hex.js");
+var _reader = require("./reader.js");
+var _uleb = require("./uleb.js");
+var _writer = require("./writer.js");
+var __accessCheck = (obj, member, msg) => {
+  if (!member.has(obj)) throw TypeError("Cannot " + msg);
 };
-
-// src/utils.ts
-exports.BcsReader = BcsReader;
-function encodeStr(data, encoding) {
-  switch (encoding) {
-    case "base58":
-      return toB58(data);
-    case "base64":
-      return toB64(data);
-    case "hex":
-      return toHEX(data);
-    default:
-      throw new Error("Unsupported encoding, supported values are: base64, hex");
-  }
-}
-function decodeStr(data, encoding) {
-  switch (encoding) {
-    case "base58":
-      return fromB58(data);
-    case "base64":
-      return fromB64(data);
-    case "hex":
-      return fromHEX(data);
-    default:
-      throw new Error("Unsupported encoding, supported values are: base64, hex");
-  }
-}
-function splitGenericParameters(str, genericSeparators = ["<", ">"]) {
-  const [left, right] = genericSeparators;
-  const tok = [];
-  let word = "";
-  let nestedAngleBrackets = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i];
-    if (char === left) {
-      nestedAngleBrackets++;
-    }
-    if (char === right) {
-      nestedAngleBrackets--;
-    }
-    if (nestedAngleBrackets === 0 && char === ",") {
-      tok.push(word.trim());
-      word = "";
-      continue;
-    }
-    word += char;
-  }
-  tok.push(word.trim());
-  return tok;
-}
-
-// src/writer.ts
-var BcsWriter = class {
-  constructor({
-    size = 1024,
-    maxSize,
-    allocateSize = 1024
-  } = {}) {
-    this.bytePosition = 0;
-    this.size = size;
-    this.maxSize = maxSize || size;
-    this.allocateSize = allocateSize;
-    this.dataView = new DataView(new ArrayBuffer(size));
-  }
-  ensureSizeOrGrow(bytes) {
-    const requiredSize = this.bytePosition + bytes;
-    if (requiredSize > this.size) {
-      const nextSize = Math.min(this.maxSize, this.size + this.allocateSize);
-      if (requiredSize > nextSize) {
-        throw new Error(`Attempting to serialize to BCS, but buffer does not have enough size. Allocated size: ${this.size}, Max size: ${this.maxSize}, Required size: ${requiredSize}`);
-      }
-      this.size = nextSize;
-      const nextBuffer = new ArrayBuffer(this.size);
-      new Uint8Array(nextBuffer).set(new Uint8Array(this.dataView.buffer));
-      this.dataView = new DataView(nextBuffer);
-    }
-  }
-  /**
-   * Shift current cursor position by `bytes`.
-   *
-   * @param {Number} bytes Number of bytes to
-   * @returns {this} Self for possible chaining.
-   */
-  shift(bytes) {
-    this.bytePosition += bytes;
-    return this;
-  }
-  /**
-   * Write a U8 value into a buffer and shift cursor position by 1.
-   * @param {Number} value Value to write.
-   * @returns {this}
-   */
-  write8(value) {
-    this.ensureSizeOrGrow(1);
-    this.dataView.setUint8(this.bytePosition, Number(value));
-    return this.shift(1);
-  }
-  /**
-   * Write a U16 value into a buffer and shift cursor position by 2.
-   * @param {Number} value Value to write.
-   * @returns {this}
-   */
-  write16(value) {
-    this.ensureSizeOrGrow(2);
-    this.dataView.setUint16(this.bytePosition, Number(value), true);
-    return this.shift(2);
-  }
-  /**
-   * Write a U32 value into a buffer and shift cursor position by 4.
-   * @param {Number} value Value to write.
-   * @returns {this}
-   */
-  write32(value) {
-    this.ensureSizeOrGrow(4);
-    this.dataView.setUint32(this.bytePosition, Number(value), true);
-    return this.shift(4);
-  }
-  /**
-   * Write a U64 value into a buffer and shift cursor position by 8.
-   * @param {bigint} value Value to write.
-   * @returns {this}
-   */
-  write64(value) {
-    toLittleEndian(BigInt(value), 8).forEach(el => this.write8(el));
-    return this;
-  }
-  /**
-   * Write a U128 value into a buffer and shift cursor position by 16.
-   *
-   * @param {bigint} value Value to write.
-   * @returns {this}
-   */
-  write128(value) {
-    toLittleEndian(BigInt(value), 16).forEach(el => this.write8(el));
-    return this;
-  }
-  /**
-   * Write a U256 value into a buffer and shift cursor position by 16.
-   *
-   * @param {bigint} value Value to write.
-   * @returns {this}
-   */
-  write256(value) {
-    toLittleEndian(BigInt(value), 32).forEach(el => this.write8(el));
-    return this;
-  }
-  /**
-   * Write a ULEB value into a buffer and shift cursor position by number of bytes
-   * written.
-   * @param {Number} value Value to write.
-   * @returns {this}
-   */
-  writeULEB(value) {
-    ulebEncode(value).forEach(el => this.write8(el));
-    return this;
-  }
-  /**
-   * Write a vector into a buffer by first writing the vector length and then calling
-   * a callback on each passed value.
-   *
-   * @param {Array<Any>} vector Array of elements to write.
-   * @param {WriteVecCb} cb Callback to call on each element of the vector.
-   * @returns {this}
-   */
-  writeVec(vector, cb) {
-    this.writeULEB(vector.length);
-    Array.from(vector).forEach((el, i) => cb(this, el, i, vector.length));
-    return this;
-  }
-  /**
-   * Adds support for iterations over the object.
-   * @returns {Uint8Array}
-   */
-  *[Symbol.iterator]() {
-    for (let i = 0; i < this.bytePosition; i++) {
-      yield this.dataView.getUint8(i);
-    }
-    return this.toBytes();
-  }
-  /**
-   * Get underlying buffer taking only value bytes (in case initial buffer size was bigger).
-   * @returns {Uint8Array} Resulting bcs.
-   */
-  toBytes() {
-    return new Uint8Array(this.dataView.buffer.slice(0, this.bytePosition));
-  }
-  /**
-   * Represent data as 'hex' or 'base64'
-   * @param encoding Encoding to use: 'base64' or 'hex'
-   */
-  toString(encoding) {
-    return encodeStr(this.toBytes(), encoding);
-  }
+var __privateGet = (obj, member, getter) => {
+  __accessCheck(obj, member, "read from private field");
+  return getter ? getter.call(obj) : member.get(obj);
 };
-exports.BcsWriter = BcsWriter;
-function toLittleEndian(bigint, size) {
-  let result = new Uint8Array(size);
-  let i = 0;
-  while (bigint > 0) {
-    result[i] = Number(bigint % BigInt(256));
-    bigint = bigint / BigInt(256);
-    i += 1;
-  }
-  return result;
-}
-
-// src/bcs-type.ts
-var _write, _serialize;
-var _BcsType = class _BcsType {
+var __privateAdd = (obj, member, value) => {
+  if (member.has(obj)) throw TypeError("Cannot add the same private member more than once");
+  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+};
+var __privateSet = (obj, member, value, setter) => {
+  __accessCheck(obj, member, "write to private field");
+  setter ? setter.call(obj, value) : member.set(obj, value);
+  return value;
+};
+var _write, _serialize, _schema, _bytes;
+const _BcsType = class {
   constructor(options) {
     __privateAdd(this, _write, void 0);
     __privateAdd(this, _serialize, void 0);
@@ -4525,7 +4168,7 @@ var _BcsType = class _BcsType {
     this.serializedSize = options.serializedSize ?? (() => null);
     __privateSet(this, _write, options.write);
     __privateSet(this, _serialize, options.serialize ?? ((value, options2) => {
-      const writer = new BcsWriter({
+      const writer = new _writer.BcsWriter({
         size: this.serializedSize(value) ?? void 0,
         ...options2
       });
@@ -4543,7 +4186,7 @@ var _BcsType = class _BcsType {
     return new SerializedBcs(this, __privateGet(this, _serialize).call(this, value, options));
   }
   parse(bytes) {
-    const reader = new BcsReader(bytes);
+    const reader = new _reader.BcsReader(bytes);
     return this.read(reader);
   }
   transform({
@@ -4561,15 +4204,14 @@ var _BcsType = class _BcsType {
     });
   }
 };
+let BcsType = exports.BcsType = _BcsType;
 _write = new WeakMap();
 _serialize = new WeakMap();
-var BcsType = exports.BcsType = _BcsType;
-var SERIALIZED_BCS_BRAND = Symbol.for("@mysten/serialized-bcs");
+const SERIALIZED_BCS_BRAND = Symbol.for("@mysten/serialized-bcs");
 function isSerializedBcs(obj) {
   return !!obj && typeof obj === "object" && obj[SERIALIZED_BCS_BRAND] === true;
 }
-var _schema, _bytes;
-var SerializedBcs = class {
+class SerializedBcs {
   constructor(type, schema) {
     __privateAdd(this, _schema, void 0);
     __privateAdd(this, _bytes, void 0);
@@ -4585,18 +4227,18 @@ var SerializedBcs = class {
     return __privateGet(this, _bytes);
   }
   toHex() {
-    return toHEX(__privateGet(this, _bytes));
+    return (0, _hex.toHEX)(__privateGet(this, _bytes));
   }
   toBase64() {
-    return toB64(__privateGet(this, _bytes));
+    return (0, _b2.toB64)(__privateGet(this, _bytes));
   }
   toBase58() {
-    return toB58(__privateGet(this, _bytes));
+    return (0, _b.toB58)(__privateGet(this, _bytes));
   }
   parse() {
     return __privateGet(this, _schema).parse(__privateGet(this, _bytes));
   }
-};
+}
 exports.SerializedBcs = SerializedBcs;
 _schema = new WeakMap();
 _bytes = new WeakMap();
@@ -4680,7 +4322,7 @@ function stringLikeBcsType({
     },
     serialize: value => {
       const bytes = toBytes(value);
-      const size = ulebEncode(bytes.length);
+      const size = (0, _uleb.ulebEncode)(bytes.length);
       const result = new Uint8Array(size.length + bytes.length);
       result.set(size, 0);
       result.set(bytes, size.length);
@@ -4711,15 +4353,23 @@ function lazyBcsType(cb) {
   });
 }
 
-// src/bcs.ts
-var bcs = exports.bcs = {
+},{"./b58.js":7,"./b64.js":8,"./hex.js":11,"./reader.js":14,"./uleb.js":15,"./writer.js":17}],10:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.bcs = void 0;
+var _bcsType = require("./bcs-type.js");
+var _uleb = require("./uleb.js");
+const bcs = exports.bcs = {
   /**
    * Creates a BcsType that can be used to read and write an 8-bit unsigned integer.
    * @example
    * bcs.u8().serialize(255).toBytes() // Uint8Array [ 255 ]
    */
   u8(options) {
-    return uIntBcsType({
+    return (0, _bcsType.uIntBcsType)({
       name: "u8",
       readMethod: "read8",
       writeMethod: "write8",
@@ -4734,7 +4384,7 @@ var bcs = exports.bcs = {
    * bcs.u16().serialize(65535).toBytes() // Uint8Array [ 255, 255 ]
    */
   u16(options) {
-    return uIntBcsType({
+    return (0, _bcsType.uIntBcsType)({
       name: "u16",
       readMethod: "read16",
       writeMethod: "write16",
@@ -4749,7 +4399,7 @@ var bcs = exports.bcs = {
    * bcs.u32().serialize(4294967295).toBytes() // Uint8Array [ 255, 255, 255, 255 ]
    */
   u32(options) {
-    return uIntBcsType({
+    return (0, _bcsType.uIntBcsType)({
       name: "u32",
       readMethod: "read32",
       writeMethod: "write32",
@@ -4764,7 +4414,7 @@ var bcs = exports.bcs = {
    * bcs.u64().serialize(1).toBytes() // Uint8Array [ 1, 0, 0, 0, 0, 0, 0, 0 ]
    */
   u64(options) {
-    return bigUIntBcsType({
+    return (0, _bcsType.bigUIntBcsType)({
       name: "u64",
       readMethod: "read64",
       writeMethod: "write64",
@@ -4779,7 +4429,7 @@ var bcs = exports.bcs = {
    * bcs.u128().serialize(1).toBytes() // Uint8Array [ 1, ..., 0 ]
    */
   u128(options) {
-    return bigUIntBcsType({
+    return (0, _bcsType.bigUIntBcsType)({
       name: "u128",
       readMethod: "read128",
       writeMethod: "write128",
@@ -4794,7 +4444,7 @@ var bcs = exports.bcs = {
    * bcs.u256().serialize(1).toBytes() // Uint8Array [ 1, ..., 0 ]
    */
   u256(options) {
-    return bigUIntBcsType({
+    return (0, _bcsType.bigUIntBcsType)({
       name: "u256",
       readMethod: "read256",
       writeMethod: "write256",
@@ -4809,7 +4459,7 @@ var bcs = exports.bcs = {
    * bcs.bool().serialize(true).toBytes() // Uint8Array [ 1 ]
    */
   bool(options) {
-    return fixedSizeBcsType({
+    return (0, _bcsType.fixedSizeBcsType)({
       name: "bool",
       size: 1,
       read: reader => reader.read8() === 1,
@@ -4829,11 +4479,11 @@ var bcs = exports.bcs = {
    *
    */
   uleb128(options) {
-    return dynamicSizeBcsType({
+    return (0, _bcsType.dynamicSizeBcsType)({
       name: "uleb128",
       read: reader => reader.readULEB(),
       serialize: value => {
-        return Uint8Array.from(ulebEncode(value));
+        return Uint8Array.from((0, _uleb.ulebEncode)(value));
       },
       ...options
     });
@@ -4845,7 +4495,7 @@ var bcs = exports.bcs = {
    * bcs.bytes(3).serialize(new Uint8Array([1, 2, 3])).toBytes() // Uint8Array [1, 2, 3]
    */
   bytes(size, options) {
-    return fixedSizeBcsType({
+    return (0, _bcsType.fixedSizeBcsType)({
       name: `bytes[${size}]`,
       size,
       read: reader => reader.readBytes(size),
@@ -4872,7 +4522,7 @@ var bcs = exports.bcs = {
    * bcs.string().serialize('a').toBytes() // Uint8Array [ 1, 97 ]
    */
   string(options) {
-    return stringLikeBcsType({
+    return (0, _bcsType.stringLikeBcsType)({
       name: "string",
       toBytes: value => new TextEncoder().encode(value),
       fromBytes: bytes => new TextDecoder().decode(bytes),
@@ -4887,7 +4537,7 @@ var bcs = exports.bcs = {
    * bcs.fixedArray(3, bcs.u8()).serialize([1, 2, 3]).toBytes() // Uint8Array [ 1, 2, 3 ]
    */
   fixedArray(size, type, options) {
-    return new BcsType({
+    return new _bcsType.BcsType({
       name: `${type.name}[${size}]`,
       read: reader => {
         const result = new Array(size);
@@ -4951,7 +4601,7 @@ var bcs = exports.bcs = {
    * bcs.vector(bcs.u8()).toBytes([1, 2, 3]) // Uint8Array [ 3, 1, 2, 3 ]
    */
   vector(type, options) {
-    return new BcsType({
+    return new _bcsType.BcsType({
       name: `vector<${type.name}>`,
       read: reader => {
         const length = reader.readULEB();
@@ -4985,7 +4635,7 @@ var bcs = exports.bcs = {
    * tuple.serialize([1, 'a', true]).toBytes() // Uint8Array [ 1, 1, 97, 1 ]
    */
   tuple(types, options) {
-    return new BcsType({
+    return new _bcsType.BcsType({
       name: `(${types.map(t => t.name).join(", ")})`,
       serializedSize: values => {
         let total = 0;
@@ -5036,7 +4686,7 @@ var bcs = exports.bcs = {
    */
   struct(name, fields, options) {
     const canonicalOrder = Object.entries(fields);
-    return new BcsType({
+    return new _bcsType.BcsType({
       name,
       serializedSize: values => {
         let total = 0;
@@ -5088,7 +4738,7 @@ var bcs = exports.bcs = {
    */
   enum(name, values, options) {
     const canonicalOrder = Object.entries(values);
-    return new BcsType({
+    return new _bcsType.BcsType({
       name,
       read: reader => {
         const index = reader.readULEB();
@@ -5149,16 +4799,20 @@ var bcs = exports.bcs = {
     });
   },
   /**
-   * Creates a helper function representing a generic type. This method returns
-   * a function that can be used to create concrete version of the generic type.
-   * @param names The names of the generic parameters
-   * @param cb A callback that returns the generic type
-   * @example
-   * const MyStruct = bcs.generic(['T'], (T) => bcs.struct('MyStruct', { inner: T }))
-   * MyStruct(bcs.u8()).serialize({ inner: 1 }).toBytes() // Uint8Array [ 1 ]
-   * MyStruct(bcs.string()).serialize({ inner: 'a' }).toBytes() // Uint8Array [ 1, 97 ]
+   * @deprecated
+   *
+   * Generics should be implemented as generic typescript functions instead:
+   *
+   * ```ts
+   * function VecMap<K, V>, (K: BcsType<K>, V: BcsType<V>) {
+   *   return bcs.struct('VecMap<K, V>', {
+   *     keys: bcs.vector(K),
+   *     values: bcs.vector(V),
+   *   })
+   * }
+   * ```
    */
-  generic(names, cb) {
+  generic(_names, cb) {
     return (...types) => {
       return cb(...types).transform({
         name: `${cb.name}<${types.map(t => t.name).join(", ")}>`,
@@ -5172,13 +4826,181 @@ var bcs = exports.bcs = {
    * @param cb A callback that returns the BcsType
    */
   lazy(cb) {
-    return lazyBcsType(cb);
+    return (0, _bcsType.lazyBcsType)(cb);
   }
 };
 
-// src/legacy-registry.ts
-var SUI_ADDRESS_LENGTH = 32;
-var _BCS = class _BCS {
+},{"./bcs-type.js":9,"./uleb.js":15}],11:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.fromHEX = fromHEX;
+exports.toHEX = toHEX;
+function fromHEX(hexStr) {
+  const normalized = hexStr.startsWith("0x") ? hexStr.slice(2) : hexStr;
+  const padded = normalized.length % 2 === 0 ? normalized : `0${normalized}}`;
+  const intArr = padded.match(/.{2}/g)?.map(byte => parseInt(byte, 16)) ?? [];
+  return Uint8Array.from(intArr);
+}
+function toHEX(bytes) {
+  return bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
+}
+
+},{}],12:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  fromB58: true,
+  toB58: true,
+  fromB64: true,
+  toB64: true,
+  BcsType: true,
+  isSerializedBcs: true,
+  SerializedBcs: true,
+  bcs: true,
+  fromHEX: true,
+  toHEX: true,
+  BcsReader: true,
+  decodeStr: true,
+  encodeStr: true,
+  splitGenericParameters: true,
+  BcsWriter: true
+};
+Object.defineProperty(exports, "BcsReader", {
+  enumerable: true,
+  get: function () {
+    return _reader.BcsReader;
+  }
+});
+Object.defineProperty(exports, "BcsType", {
+  enumerable: true,
+  get: function () {
+    return _bcsType.BcsType;
+  }
+});
+Object.defineProperty(exports, "BcsWriter", {
+  enumerable: true,
+  get: function () {
+    return _writer.BcsWriter;
+  }
+});
+Object.defineProperty(exports, "SerializedBcs", {
+  enumerable: true,
+  get: function () {
+    return _bcsType.SerializedBcs;
+  }
+});
+Object.defineProperty(exports, "bcs", {
+  enumerable: true,
+  get: function () {
+    return _bcs.bcs;
+  }
+});
+Object.defineProperty(exports, "decodeStr", {
+  enumerable: true,
+  get: function () {
+    return _utils.decodeStr;
+  }
+});
+Object.defineProperty(exports, "encodeStr", {
+  enumerable: true,
+  get: function () {
+    return _utils.encodeStr;
+  }
+});
+Object.defineProperty(exports, "fromB58", {
+  enumerable: true,
+  get: function () {
+    return _b.fromB58;
+  }
+});
+Object.defineProperty(exports, "fromB64", {
+  enumerable: true,
+  get: function () {
+    return _b2.fromB64;
+  }
+});
+Object.defineProperty(exports, "fromHEX", {
+  enumerable: true,
+  get: function () {
+    return _hex.fromHEX;
+  }
+});
+Object.defineProperty(exports, "isSerializedBcs", {
+  enumerable: true,
+  get: function () {
+    return _bcsType.isSerializedBcs;
+  }
+});
+Object.defineProperty(exports, "splitGenericParameters", {
+  enumerable: true,
+  get: function () {
+    return _utils.splitGenericParameters;
+  }
+});
+Object.defineProperty(exports, "toB58", {
+  enumerable: true,
+  get: function () {
+    return _b.toB58;
+  }
+});
+Object.defineProperty(exports, "toB64", {
+  enumerable: true,
+  get: function () {
+    return _b2.toB64;
+  }
+});
+Object.defineProperty(exports, "toHEX", {
+  enumerable: true,
+  get: function () {
+    return _hex.toHEX;
+  }
+});
+var _b = require("./b58.js");
+var _b2 = require("./b64.js");
+var _bcsType = require("./bcs-type.js");
+var _bcs = require("./bcs.js");
+var _hex = require("./hex.js");
+var _reader = require("./reader.js");
+var _utils = require("./utils.js");
+var _writer = require("./writer.js");
+var _legacyRegistry = require("./legacy-registry.js");
+Object.keys(_legacyRegistry).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _legacyRegistry[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _legacyRegistry[key];
+    }
+  });
+});
+
+},{"./b58.js":7,"./b64.js":8,"./bcs-type.js":9,"./bcs.js":10,"./hex.js":11,"./legacy-registry.js":13,"./reader.js":14,"./utils.js":16,"./writer.js":17}],13:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BCS = void 0;
+exports.getRustConfig = getRustConfig;
+exports.getSuiMoveConfig = getSuiMoveConfig;
+exports.registerPrimitives = registerPrimitives;
+var _b = require("./b58.js");
+var _b2 = require("./b64.js");
+var _bcsType = require("./bcs-type.js");
+var _hex = require("./hex.js");
+var _reader = require("./reader.js");
+var _utils = require("./utils.js");
+var _writer2 = require("./writer.js");
+const SUI_ADDRESS_LENGTH = 32;
+const _BCS = class {
   /**
    * Construct a BCS instance with a prepared schema.
    *
@@ -5281,7 +5103,7 @@ ${JSON.stringify(type)}`);
   de(type, data, encoding) {
     if (typeof data === "string") {
       if (encoding) {
-        data = decodeStr(data, encoding);
+        data = (0, _utils.decodeStr)(data, encoding);
       } else {
         throw new Error("To pass a string to `bcs.de`, specify encoding");
       }
@@ -5361,7 +5183,7 @@ ${JSON.stringify(type)}`);
             [value]: typeParams[index]
           });
         }, {});
-        return this._encodeRaw.call(self, new BcsWriter(options), data, typeParams, typeMap);
+        return this._encodeRaw.call(self, new _writer2.BcsWriter(options), data, typeParams, typeMap);
       },
       decode(self, data, typeParams) {
         const typeMap = generics.reduce((acc, value, index) => {
@@ -5369,7 +5191,7 @@ ${JSON.stringify(type)}`);
             [value]: typeParams[index]
           });
         }, {});
-        return this._decodeRaw.call(self, new BcsReader(data), typeParams, typeMap);
+        return this._decodeRaw.call(self, new _reader.BcsReader(data), typeParams, typeMap);
       },
       // these methods should always be used with caution as they require pre-defined
       // reader and writer and mainly exist to allow multi-field (de)serialization;
@@ -5408,7 +5230,7 @@ ${JSON.stringify(type)}`);
   	 */
   registerBcsType(typeName, createType) {
     this.registerType(typeName, (writer, data, typeParams) => {
-      const generics = typeParams.map(param => new BcsType({
+      const generics = typeParams.map(param => new _bcsType.BcsType({
         name: String(param),
         write: (data2, writer2) => {
           const {
@@ -5430,9 +5252,9 @@ ${JSON.stringify(type)}`);
       createType(...generics).write(data, writer);
       return writer;
     }, (reader, typeParams) => {
-      const generics = typeParams.map(param => new BcsType({
+      const generics = typeParams.map(param => new _bcsType.BcsType({
         name: String(param),
-        write: (data, writer) => {
+        write: (_data, _writer) => {
           throw new Error("Not implemented");
         },
         read: reader2 => {
@@ -5468,15 +5290,15 @@ ${JSON.stringify(type)}`);
     switch (encoding) {
       case "base64":
         return this.registerType(name, function encodeAddress(writer, data) {
-          return fromB64(data).reduce((writer2, el) => writer2.write8(el), writer);
+          return (0, _b2.fromB64)(data).reduce((writer2, el) => writer2.write8(el), writer);
         }, function decodeAddress(reader) {
-          return toB64(reader.readBytes(length));
+          return (0, _b2.toB64)(reader.readBytes(length));
         });
       case "hex":
         return this.registerType(name, function encodeAddress(writer, data) {
-          return fromHEX(data).reduce((writer2, el) => writer2.write8(el), writer);
+          return (0, _hex.fromHEX)(data).reduce((writer2, el) => writer2.write8(el), writer);
         }, function decodeAddress(reader) {
-          return toHEX(reader.readBytes(length));
+          return (0, _hex.toHEX)(reader.readBytes(length));
         });
       default:
         throw new Error("Unsupported encoding! Use either hex or base64");
@@ -5832,86 +5654,86 @@ Received: "${JSON.stringify(data)}"`);
       throw new Error(`Unclosed generic in name '${name}'`);
     }
     let typeName = name.slice(0, l_bound);
-    let params = splitGenericParameters(name.slice(l_bound + 1, name.length - r_bound - 1), this.schema.genericSeparators);
+    let params = (0, _utils.splitGenericParameters)(name.slice(l_bound + 1, name.length - r_bound - 1), this.schema.genericSeparators);
     return {
       name: typeName,
       params
     };
   }
 };
+let BCS = exports.BCS = _BCS;
 // Predefined types constants
-_BCS.U8 = "u8";
-_BCS.U16 = "u16";
-_BCS.U32 = "u32";
-_BCS.U64 = "u64";
-_BCS.U128 = "u128";
-_BCS.U256 = "u256";
-_BCS.BOOL = "bool";
-_BCS.VECTOR = "vector";
-_BCS.ADDRESS = "address";
-_BCS.STRING = "string";
-_BCS.HEX = "hex-string";
-_BCS.BASE58 = "base58-string";
-_BCS.BASE64 = "base64-string";
-var BCS = exports.BCS = _BCS;
-function registerPrimitives(bcs2) {
-  bcs2.registerType(BCS.U8, function (writer, data) {
+BCS.U8 = "u8";
+BCS.U16 = "u16";
+BCS.U32 = "u32";
+BCS.U64 = "u64";
+BCS.U128 = "u128";
+BCS.U256 = "u256";
+BCS.BOOL = "bool";
+BCS.VECTOR = "vector";
+BCS.ADDRESS = "address";
+BCS.STRING = "string";
+BCS.HEX = "hex-string";
+BCS.BASE58 = "base58-string";
+BCS.BASE64 = "base64-string";
+function registerPrimitives(bcs) {
+  bcs.registerType(BCS.U8, function (writer, data) {
     return writer.write8(data);
   }, function (reader) {
     return reader.read8();
   }, u8 => u8 < 256);
-  bcs2.registerType(BCS.U16, function (writer, data) {
+  bcs.registerType(BCS.U16, function (writer, data) {
     return writer.write16(data);
   }, function (reader) {
     return reader.read16();
   }, u16 => u16 < 65536);
-  bcs2.registerType(BCS.U32, function (writer, data) {
+  bcs.registerType(BCS.U32, function (writer, data) {
     return writer.write32(data);
   }, function (reader) {
     return reader.read32();
   }, u32 => u32 <= 4294967296n);
-  bcs2.registerType(BCS.U64, function (writer, data) {
+  bcs.registerType(BCS.U64, function (writer, data) {
     return writer.write64(data);
   }, function (reader) {
     return reader.read64();
   });
-  bcs2.registerType(BCS.U128, function (writer, data) {
+  bcs.registerType(BCS.U128, function (writer, data) {
     return writer.write128(data);
   }, function (reader) {
     return reader.read128();
   });
-  bcs2.registerType(BCS.U256, function (writer, data) {
+  bcs.registerType(BCS.U256, function (writer, data) {
     return writer.write256(data);
   }, function (reader) {
     return reader.read256();
   });
-  bcs2.registerType(BCS.BOOL, function (writer, data) {
+  bcs.registerType(BCS.BOOL, function (writer, data) {
     return writer.write8(data);
   }, function (reader) {
     return reader.read8().toString(10) === "1";
   });
-  bcs2.registerType(BCS.STRING, function (writer, data) {
+  bcs.registerType(BCS.STRING, function (writer, data) {
     return writer.writeVec(Array.from(data), (writer2, el) => writer2.write8(el.charCodeAt(0)));
   }, function (reader) {
     return reader.readVec(reader2 => reader2.read8()).map(el => String.fromCharCode(Number(el))).join("");
   }, _str => true);
-  bcs2.registerType(BCS.HEX, function (writer, data) {
-    return writer.writeVec(Array.from(fromHEX(data)), (writer2, el) => writer2.write8(el));
+  bcs.registerType(BCS.HEX, function (writer, data) {
+    return writer.writeVec(Array.from((0, _hex.fromHEX)(data)), (writer2, el) => writer2.write8(el));
   }, function (reader) {
     let bytes = reader.readVec(reader2 => reader2.read8());
-    return toHEX(new Uint8Array(bytes));
+    return (0, _hex.toHEX)(new Uint8Array(bytes));
   });
-  bcs2.registerType(BCS.BASE58, function (writer, data) {
-    return writer.writeVec(Array.from(fromB58(data)), (writer2, el) => writer2.write8(el));
+  bcs.registerType(BCS.BASE58, function (writer, data) {
+    return writer.writeVec(Array.from((0, _b.fromB58)(data)), (writer2, el) => writer2.write8(el));
   }, function (reader) {
     let bytes = reader.readVec(reader2 => reader2.read8());
-    return toB58(new Uint8Array(bytes));
+    return (0, _b.toB58)(new Uint8Array(bytes));
   });
-  bcs2.registerType(BCS.BASE64, function (writer, data) {
-    return writer.writeVec(Array.from(fromB64(data)), (writer2, el) => writer2.write8(el));
+  bcs.registerType(BCS.BASE64, function (writer, data) {
+    return writer.writeVec(Array.from((0, _b2.fromB64)(data)), (writer2, el) => writer2.write8(el));
   }, function (reader) {
     let bytes = reader.readVec(reader2 => reader2.read8());
-    return toB64(new Uint8Array(bytes));
+    return (0, _b2.toB64)(new Uint8Array(bytes));
   });
 }
 function getRustConfig() {
@@ -5931,7 +5753,396 @@ function getSuiMoveConfig() {
   };
 }
 
-},{"bs58":103}],8:[function(require,module,exports){
+},{"./b58.js":7,"./b64.js":8,"./bcs-type.js":9,"./hex.js":11,"./reader.js":14,"./utils.js":16,"./writer.js":17}],14:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BcsReader = void 0;
+var _uleb = require("./uleb.js");
+class BcsReader {
+  /**
+   * @param {Uint8Array} data Data to use as a buffer.
+   */
+  constructor(data) {
+    this.bytePosition = 0;
+    this.dataView = new DataView(data.buffer);
+  }
+  /**
+   * Shift current cursor position by `bytes`.
+   *
+   * @param {Number} bytes Number of bytes to
+   * @returns {this} Self for possible chaining.
+   */
+  shift(bytes) {
+    this.bytePosition += bytes;
+    return this;
+  }
+  /**
+   * Read U8 value from the buffer and shift cursor by 1.
+   * @returns
+   */
+  read8() {
+    let value = this.dataView.getUint8(this.bytePosition);
+    this.shift(1);
+    return value;
+  }
+  /**
+   * Read U16 value from the buffer and shift cursor by 2.
+   * @returns
+   */
+  read16() {
+    let value = this.dataView.getUint16(this.bytePosition, true);
+    this.shift(2);
+    return value;
+  }
+  /**
+   * Read U32 value from the buffer and shift cursor by 4.
+   * @returns
+   */
+  read32() {
+    let value = this.dataView.getUint32(this.bytePosition, true);
+    this.shift(4);
+    return value;
+  }
+  /**
+   * Read U64 value from the buffer and shift cursor by 8.
+   * @returns
+   */
+  read64() {
+    let value1 = this.read32();
+    let value2 = this.read32();
+    let result = value2.toString(16) + value1.toString(16).padStart(8, "0");
+    return BigInt("0x" + result).toString(10);
+  }
+  /**
+   * Read U128 value from the buffer and shift cursor by 16.
+   */
+  read128() {
+    let value1 = BigInt(this.read64());
+    let value2 = BigInt(this.read64());
+    let result = value2.toString(16) + value1.toString(16).padStart(16, "0");
+    return BigInt("0x" + result).toString(10);
+  }
+  /**
+   * Read U128 value from the buffer and shift cursor by 32.
+   * @returns
+   */
+  read256() {
+    let value1 = BigInt(this.read128());
+    let value2 = BigInt(this.read128());
+    let result = value2.toString(16) + value1.toString(16).padStart(32, "0");
+    return BigInt("0x" + result).toString(10);
+  }
+  /**
+   * Read `num` number of bytes from the buffer and shift cursor by `num`.
+   * @param num Number of bytes to read.
+   */
+  readBytes(num) {
+    let start = this.bytePosition + this.dataView.byteOffset;
+    let value = new Uint8Array(this.dataView.buffer, start, num);
+    this.shift(num);
+    return value;
+  }
+  /**
+   * Read ULEB value - an integer of varying size. Used for enum indexes and
+   * vector lengths.
+   * @returns {Number} The ULEB value.
+   */
+  readULEB() {
+    let start = this.bytePosition + this.dataView.byteOffset;
+    let buffer = new Uint8Array(this.dataView.buffer, start);
+    let {
+      value,
+      length
+    } = (0, _uleb.ulebDecode)(buffer);
+    this.shift(length);
+    return value;
+  }
+  /**
+   * Read a BCS vector: read a length and then apply function `cb` X times
+   * where X is the length of the vector, defined as ULEB in BCS bytes.
+   * @param cb Callback to process elements of vector.
+   * @returns {Array<Any>} Array of the resulting values, returned by callback.
+   */
+  readVec(cb) {
+    let length = this.readULEB();
+    let result = [];
+    for (let i = 0; i < length; i++) {
+      result.push(cb(this, i, length));
+    }
+    return result;
+  }
+}
+exports.BcsReader = BcsReader;
+
+},{"./uleb.js":15}],15:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ulebDecode = ulebDecode;
+exports.ulebEncode = ulebEncode;
+function ulebEncode(num) {
+  let arr = [];
+  let len = 0;
+  if (num === 0) {
+    return [0];
+  }
+  while (num > 0) {
+    arr[len] = num & 127;
+    if (num >>= 7) {
+      arr[len] |= 128;
+    }
+    len += 1;
+  }
+  return arr;
+}
+function ulebDecode(arr) {
+  let total = 0;
+  let shift = 0;
+  let len = 0;
+  while (true) {
+    let byte = arr[len];
+    len += 1;
+    total |= (byte & 127) << shift;
+    if ((byte & 128) === 0) {
+      break;
+    }
+    shift += 7;
+  }
+  return {
+    value: total,
+    length: len
+  };
+}
+
+},{}],16:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.decodeStr = decodeStr;
+exports.encodeStr = encodeStr;
+exports.splitGenericParameters = splitGenericParameters;
+var _b = require("./b58.js");
+var _b2 = require("./b64.js");
+var _hex = require("./hex.js");
+function encodeStr(data, encoding) {
+  switch (encoding) {
+    case "base58":
+      return (0, _b.toB58)(data);
+    case "base64":
+      return (0, _b2.toB64)(data);
+    case "hex":
+      return (0, _hex.toHEX)(data);
+    default:
+      throw new Error("Unsupported encoding, supported values are: base64, hex");
+  }
+}
+function decodeStr(data, encoding) {
+  switch (encoding) {
+    case "base58":
+      return (0, _b.fromB58)(data);
+    case "base64":
+      return (0, _b2.fromB64)(data);
+    case "hex":
+      return (0, _hex.fromHEX)(data);
+    default:
+      throw new Error("Unsupported encoding, supported values are: base64, hex");
+  }
+}
+function splitGenericParameters(str, genericSeparators = ["<", ">"]) {
+  const [left, right] = genericSeparators;
+  const tok = [];
+  let word = "";
+  let nestedAngleBrackets = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === left) {
+      nestedAngleBrackets++;
+    }
+    if (char === right) {
+      nestedAngleBrackets--;
+    }
+    if (nestedAngleBrackets === 0 && char === ",") {
+      tok.push(word.trim());
+      word = "";
+      continue;
+    }
+    word += char;
+  }
+  tok.push(word.trim());
+  return tok;
+}
+
+},{"./b58.js":7,"./b64.js":8,"./hex.js":11}],17:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BcsWriter = void 0;
+var _uleb = require("./uleb.js");
+var _utils = require("./utils.js");
+class BcsWriter {
+  constructor({
+    size = 1024,
+    maxSize,
+    allocateSize = 1024
+  } = {}) {
+    this.bytePosition = 0;
+    this.size = size;
+    this.maxSize = maxSize || size;
+    this.allocateSize = allocateSize;
+    this.dataView = new DataView(new ArrayBuffer(size));
+  }
+  ensureSizeOrGrow(bytes) {
+    const requiredSize = this.bytePosition + bytes;
+    if (requiredSize > this.size) {
+      const nextSize = Math.min(this.maxSize, this.size + this.allocateSize);
+      if (requiredSize > nextSize) {
+        throw new Error(`Attempting to serialize to BCS, but buffer does not have enough size. Allocated size: ${this.size}, Max size: ${this.maxSize}, Required size: ${requiredSize}`);
+      }
+      this.size = nextSize;
+      const nextBuffer = new ArrayBuffer(this.size);
+      new Uint8Array(nextBuffer).set(new Uint8Array(this.dataView.buffer));
+      this.dataView = new DataView(nextBuffer);
+    }
+  }
+  /**
+   * Shift current cursor position by `bytes`.
+   *
+   * @param {Number} bytes Number of bytes to
+   * @returns {this} Self for possible chaining.
+   */
+  shift(bytes) {
+    this.bytePosition += bytes;
+    return this;
+  }
+  /**
+   * Write a U8 value into a buffer and shift cursor position by 1.
+   * @param {Number} value Value to write.
+   * @returns {this}
+   */
+  write8(value) {
+    this.ensureSizeOrGrow(1);
+    this.dataView.setUint8(this.bytePosition, Number(value));
+    return this.shift(1);
+  }
+  /**
+   * Write a U16 value into a buffer and shift cursor position by 2.
+   * @param {Number} value Value to write.
+   * @returns {this}
+   */
+  write16(value) {
+    this.ensureSizeOrGrow(2);
+    this.dataView.setUint16(this.bytePosition, Number(value), true);
+    return this.shift(2);
+  }
+  /**
+   * Write a U32 value into a buffer and shift cursor position by 4.
+   * @param {Number} value Value to write.
+   * @returns {this}
+   */
+  write32(value) {
+    this.ensureSizeOrGrow(4);
+    this.dataView.setUint32(this.bytePosition, Number(value), true);
+    return this.shift(4);
+  }
+  /**
+   * Write a U64 value into a buffer and shift cursor position by 8.
+   * @param {bigint} value Value to write.
+   * @returns {this}
+   */
+  write64(value) {
+    toLittleEndian(BigInt(value), 8).forEach(el => this.write8(el));
+    return this;
+  }
+  /**
+   * Write a U128 value into a buffer and shift cursor position by 16.
+   *
+   * @param {bigint} value Value to write.
+   * @returns {this}
+   */
+  write128(value) {
+    toLittleEndian(BigInt(value), 16).forEach(el => this.write8(el));
+    return this;
+  }
+  /**
+   * Write a U256 value into a buffer and shift cursor position by 16.
+   *
+   * @param {bigint} value Value to write.
+   * @returns {this}
+   */
+  write256(value) {
+    toLittleEndian(BigInt(value), 32).forEach(el => this.write8(el));
+    return this;
+  }
+  /**
+   * Write a ULEB value into a buffer and shift cursor position by number of bytes
+   * written.
+   * @param {Number} value Value to write.
+   * @returns {this}
+   */
+  writeULEB(value) {
+    (0, _uleb.ulebEncode)(value).forEach(el => this.write8(el));
+    return this;
+  }
+  /**
+   * Write a vector into a buffer by first writing the vector length and then calling
+   * a callback on each passed value.
+   *
+   * @param {Array<Any>} vector Array of elements to write.
+   * @param {WriteVecCb} cb Callback to call on each element of the vector.
+   * @returns {this}
+   */
+  writeVec(vector, cb) {
+    this.writeULEB(vector.length);
+    Array.from(vector).forEach((el, i) => cb(this, el, i, vector.length));
+    return this;
+  }
+  /**
+   * Adds support for iterations over the object.
+   * @returns {Uint8Array}
+   */
+  *[Symbol.iterator]() {
+    for (let i = 0; i < this.bytePosition; i++) {
+      yield this.dataView.getUint8(i);
+    }
+    return this.toBytes();
+  }
+  /**
+   * Get underlying buffer taking only value bytes (in case initial buffer size was bigger).
+   * @returns {Uint8Array} Resulting bcs.
+   */
+  toBytes() {
+    return new Uint8Array(this.dataView.buffer.slice(0, this.bytePosition));
+  }
+  /**
+   * Represent data as 'hex' or 'base64'
+   * @param encoding Encoding to use: 'base64' or 'hex'
+   */
+  toString(encoding) {
+    return (0, _utils.encodeStr)(this.toBytes(), encoding);
+  }
+}
+exports.BcsWriter = BcsWriter;
+function toLittleEndian(bigint, size) {
+  let result = new Uint8Array(size);
+  let i = 0;
+  while (bigint > 0) {
+    result[i] = Number(bigint % BigInt(256));
+    bigint = bigint / BigInt(256);
+    i += 1;
+  }
+  return result;
+}
+
+},{"./uleb.js":15,"./utils.js":16}],18:[function(require,module,exports){
 "use strict";
 
 var __defProp = Object.defineProperty;
@@ -6186,12 +6397,14 @@ const SenderSignedData = import_bcs.bcs.struct("SenderSignedData", {
 const CompressedSignature = import_bcs.bcs.enum("CompressedSignature", {
   ED25519: import_bcs.bcs.fixedArray(64, import_bcs.bcs.u8()),
   Secp256k1: import_bcs.bcs.fixedArray(64, import_bcs.bcs.u8()),
-  Secp256r1: import_bcs.bcs.fixedArray(64, import_bcs.bcs.u8())
+  Secp256r1: import_bcs.bcs.fixedArray(64, import_bcs.bcs.u8()),
+  ZkLogin: import_bcs.bcs.vector(import_bcs.bcs.u8())
 });
 const PublicKey = import_bcs.bcs.enum("PublicKey", {
   ED25519: import_bcs.bcs.fixedArray(32, import_bcs.bcs.u8()),
   Secp256k1: import_bcs.bcs.fixedArray(33, import_bcs.bcs.u8()),
-  Secp256r1: import_bcs.bcs.fixedArray(33, import_bcs.bcs.u8())
+  Secp256r1: import_bcs.bcs.fixedArray(33, import_bcs.bcs.u8()),
+  ZkLogin: import_bcs.bcs.vector(import_bcs.bcs.u8())
 });
 const MultiSigPkMap = import_bcs.bcs.struct("MultiSigPkMap", {
   pubKey: PublicKey,
@@ -6263,7 +6476,7 @@ bcsRegistry.registerBcsType("enumKind", T => enumKind(T));
   bcsRegistry.registerBcsType(type.name, () => type);
 });
 
-},{"../utils/sui-types.js":58,"./type-tag-serializer.js":9,"@mysten/bcs":7}],9:[function(require,module,exports){
+},{"../utils/sui-types.js":66,"./type-tag-serializer.js":19,"@mysten/bcs":12}],19:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -6378,7 +6591,7 @@ class TypeTagSerializer {
 }
 
 
-},{"../utils/sui-types.js":58,"@mysten/bcs":7}],10:[function(require,module,exports){
+},{"../utils/sui-types.js":66,"@mysten/bcs":12}],20:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -6497,7 +6710,7 @@ function isMutableSharedObjectInput(arg) {
 }
 
 
-},{"../bcs/index.js":8,"../types/index.js":52,"../utils/sui-types.js":58,"@mysten/bcs":7,"superstruct":131}],11:[function(require,module,exports){
+},{"../bcs/index.js":18,"../types/index.js":61,"../utils/sui-types.js":66,"@mysten/bcs":12,"superstruct":132}],21:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -6547,15 +6760,15 @@ module.exports = __toCommonJS(TransactionBlock_exports);
 var import_bcs = require("@mysten/bcs");
 var import_superstruct = require("superstruct");
 var import_bcs2 = require("../bcs/index.js");
-var import_framework = require("../framework/framework.js");
 var import_types = require("../types/index.js");
+var import_utils = require("../utils/index.js");
 var import_sui_types = require("../utils/sui-types.js");
 var import_Inputs = require("./Inputs.js");
 var import_pure = require("./pure.js");
 var import_serializer = require("./serializer.js");
 var import_TransactionBlockData = require("./TransactionBlockData.js");
 var import_Transactions = require("./Transactions.js");
-var import_utils = require("./utils.js");
+var import_utils2 = require("./utils.js");
 var _blockData, _input, input_fn, _normalizeTransactionArgument, normalizeTransactionArgument_fn, _getConfig, getConfig_fn, _validate, validate_fn, _prepareGasPayment, prepareGasPayment_fn, _prepareGasPrice, prepareGasPrice_fn, _prepareTransactions, prepareTransactions_fn, _prepare, prepare_fn;
 const DefaultOfflineLimits = {
   maxPureArgumentSize: 16 * 1024,
@@ -6753,6 +6966,9 @@ const _TransactionBlock = class {
    * Add a new object input to the transaction.
    */
   object(value) {
+    if (typeof value === "object" && "kind" in value) {
+      return value;
+    }
     const id = (0, import_Inputs.getIdFromCallArg)(value);
     const inserted = __privateGet(this, _blockData).inputs.find(
       (i) => i.type === "object" && id === (0, import_Inputs.getIdFromCallArg)(i.value)
@@ -6899,7 +7115,7 @@ _blockData = new WeakMap();
 _input = new WeakSet();
 input_fn = function(type, value) {
   const index = __privateGet(this, _blockData).inputs.length;
-  const input = (0, import_utils.create)(
+  const input = (0, import_utils2.create)(
     {
       kind: "Input",
       // bigints can't be serialized to JSON, so just string-convert them here:
@@ -6964,7 +7180,7 @@ prepareGasPayment_fn = async function(options) {
   const gasOwner = __privateGet(this, _blockData).gasConfig.owner ?? __privateGet(this, _blockData).sender;
   const coins = await expectClient(options).getCoins({
     owner: gasOwner,
-    coinType: import_framework.SUI_TYPE_ARG
+    coinType: import_utils.SUI_TYPE_ARG
   });
   const paymentCoins = coins.data.filter((coin) => {
     const matchingInput = __privateGet(this, _blockData).inputs.find((input) => {
@@ -7111,7 +7327,8 @@ prepareTransactions_fn = async function(options) {
       const owner = object.data?.owner;
       const initialSharedVersion = owner && typeof owner === "object" && "Shared" in owner ? owner.Shared.initial_shared_version : void 0;
       if (initialSharedVersion) {
-        const mutable = (0, import_Inputs.isMutableSharedObjectInput)(input.value) || normalizedType != null && (0, import_types.extractMutableReference)(normalizedType) != null;
+        const isByValue = normalizedType != null && (0, import_types.extractMutableReference)(normalizedType) == null && (0, import_types.extractReference)(normalizedType) == null;
+        const mutable = (0, import_Inputs.isMutableSharedObjectInput)(input.value) || isByValue || normalizedType != null && (0, import_types.extractMutableReference)(normalizedType) != null;
         input.value = import_Inputs.Inputs.SharedObjectRef({
           objectId: id,
           initialSharedVersion,
@@ -7166,7 +7383,7 @@ prepare_fn = async function(options) {
 };
 
 
-},{"../bcs/index.js":8,"../framework/framework.js":40,"../types/index.js":52,"../utils/sui-types.js":58,"./Inputs.js":10,"./TransactionBlockData.js":12,"./Transactions.js":13,"./pure.js":18,"./serializer.js":19,"./utils.js":20,"@mysten/bcs":7,"superstruct":131}],12:[function(require,module,exports){
+},{"../bcs/index.js":18,"../types/index.js":61,"../utils/index.js":65,"../utils/sui-types.js":66,"./Inputs.js":20,"./TransactionBlockData.js":22,"./Transactions.js":23,"./pure.js":28,"./serializer.js":29,"./utils.js":30,"@mysten/bcs":12,"superstruct":132}],22:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7379,7 +7596,7 @@ class TransactionBlockDataBuilder {
 }
 
 
-},{"../bcs/index.js":8,"../types/index.js":52,"../utils/sui-types.js":58,"./Inputs.js":10,"./Transactions.js":13,"./hash.js":16,"./utils.js":20,"@mysten/bcs":7,"superstruct":131}],13:[function(require,module,exports){
+},{"../bcs/index.js":18,"../types/index.js":61,"../utils/sui-types.js":66,"./Inputs.js":20,"./Transactions.js":23,"./hash.js":26,"./utils.js":30,"@mysten/bcs":12,"superstruct":132}],23:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7595,7 +7812,7 @@ const Transactions = {
 };
 
 
-},{"../bcs/index.js":8,"../bcs/type-tag-serializer.js":9,"../utils/sui-types.js":58,"./Inputs.js":10,"./utils.js":20,"@mysten/bcs":7,"superstruct":131}],14:[function(require,module,exports){
+},{"../bcs/index.js":18,"../bcs/type-tag-serializer.js":19,"../utils/sui-types.js":66,"./Inputs.js":20,"./utils.js":30,"@mysten/bcs":12,"superstruct":132}],24:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7656,7 +7873,7 @@ const ARGUMENT = ARGUMENT_INNER;
 const PROGRAMMABLE_CALL = "ProgrammableMoveCall";
 
 
-},{}],15:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 
 var __defProp = Object.defineProperty;
@@ -7696,7 +7913,7 @@ var import_Inputs = require("./Inputs.js");
 var import_Transactions = require("./Transactions.js");
 var import_TransactionBlock = require("./TransactionBlock.js");
 
-},{"./Inputs.js":10,"./TransactionBlock.js":11,"./Transactions.js":13,"./serializer.js":19}],16:[function(require,module,exports){
+},{"./Inputs.js":20,"./TransactionBlock.js":21,"./Transactions.js":23,"./serializer.js":29}],26:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7730,7 +7947,7 @@ function hashTypedData(typeTag, data) {
 }
 
 
-},{"@noble/hashes/blake2b":78}],17:[function(require,module,exports){
+},{"@noble/hashes/blake2b":93}],27:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7755,7 +7972,7 @@ __reExport(builder_exports, require("./serializer.js"), module.exports);
 __reExport(builder_exports, require("./bcs.js"), module.exports);
 
 
-},{"./Inputs.js":10,"./TransactionBlock.js":11,"./Transactions.js":13,"./bcs.js":14,"./serializer.js":19}],18:[function(require,module,exports){
+},{"./Inputs.js":20,"./TransactionBlock.js":21,"./Transactions.js":23,"./bcs.js":24,"./serializer.js":29}],28:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7793,11 +8010,12 @@ function createPure(makePure) {
   pure.bool = (value) => makePure(import_bcs.bcs.Bool.serialize(value));
   pure.string = (value) => makePure(import_bcs.bcs.String.serialize(value));
   pure.address = (value) => makePure(import_bcs.bcs.Address.serialize(value));
+  pure.id = pure.address;
   return pure;
 }
 
 
-},{"../bcs/index.js":8}],19:[function(require,module,exports){
+},{"../bcs/index.js":18}],29:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7822,9 +8040,11 @@ __export(serializer_exports, {
   isTxContext: () => isTxContext
 });
 module.exports = __toCommonJS(serializer_exports);
-var import_framework = require("../framework/framework.js");
 var import_types = require("../types/index.js");
+var import_utils = require("../utils/index.js");
 var import_sui_types = require("../utils/sui-types.js");
+const OBJECT_MODULE_NAME = "object";
+const ID_STRUCT_NAME = "ID";
 const STD_ASCII_MODULE_NAME = "ascii";
 const STD_ASCII_STRUCT_NAME = "String";
 const STD_UTF8_MODULE_NAME = "string";
@@ -7832,22 +8052,22 @@ const STD_UTF8_STRUCT_NAME = "String";
 const STD_OPTION_MODULE_NAME = "option";
 const STD_OPTION_STRUCT_NAME = "Option";
 const RESOLVED_SUI_ID = {
-  address: import_framework.SUI_FRAMEWORK_ADDRESS,
-  module: import_framework.OBJECT_MODULE_NAME,
-  name: import_framework.ID_STRUCT_NAME
+  address: import_utils.SUI_FRAMEWORK_ADDRESS,
+  module: OBJECT_MODULE_NAME,
+  name: ID_STRUCT_NAME
 };
 const RESOLVED_ASCII_STR = {
-  address: import_framework.MOVE_STDLIB_ADDRESS,
+  address: import_utils.MOVE_STDLIB_ADDRESS,
   module: STD_ASCII_MODULE_NAME,
   name: STD_ASCII_STRUCT_NAME
 };
 const RESOLVED_UTF8_STR = {
-  address: import_framework.MOVE_STDLIB_ADDRESS,
+  address: import_utils.MOVE_STDLIB_ADDRESS,
   module: STD_UTF8_MODULE_NAME,
   name: STD_UTF8_STRUCT_NAME
 };
 const RESOLVED_STD_OPTION = {
-  address: import_framework.MOVE_STDLIB_ADDRESS,
+  address: import_utils.MOVE_STDLIB_ADDRESS,
   module: STD_OPTION_MODULE_NAME,
   name: STD_OPTION_STRUCT_NAME
 };
@@ -7916,7 +8136,7 @@ function getPureSerializationType(normalizedType, argVal) {
 }
 
 
-},{"../framework/framework.js":40,"../types/index.js":52,"../utils/sui-types.js":58}],20:[function(require,module,exports){
+},{"../types/index.js":61,"../utils/index.js":65,"../utils/sui-types.js":66}],30:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7946,7 +8166,7 @@ function create(value, struct) {
 }
 
 
-},{"superstruct":131}],21:[function(require,module,exports){
+},{"superstruct":132}],31:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8233,7 +8453,7 @@ class SuiClient {
     if (transactionBlock instanceof Uint8Array) {
       transactionBytes = transactionBlock;
     } else {
-      transactionBlock.setSenderIfNotSet(await signer.getPublicKey().toSuiAddress());
+      transactionBlock.setSenderIfNotSet(signer.toSuiAddress());
       transactionBytes = await transactionBlock.build({ client: this });
     }
     const { signature, bytes } = await signer.signTransactionBlock(transactionBytes);
@@ -8349,7 +8569,7 @@ class SuiClient {
     }
     return await this.transport.request({
       method: "sui_devInspectTransactionBlock",
-      params: [input.sender, devInspectTxBytes, input.gasPrice, input.epoch]
+      params: [input.sender, devInspectTxBytes, input.gasPrice?.toString(), input.epoch]
     });
   }
   /**
@@ -8423,6 +8643,12 @@ class SuiClient {
   }
   async getAddressMetrics() {
     return await this.transport.request({ method: "suix_getLatestAddressMetrics", params: [] });
+  }
+  async getEpochMetrics(input) {
+    return await this.transport.request({
+      method: "suix_getEpochMetrics",
+      params: [input?.cursor, input?.limit, input?.descendingOrder]
+    });
   }
   async getAllEpochAddressMetrics(input) {
     return await this.transport.request({
@@ -8516,7 +8742,7 @@ class SuiClient {
 }
 
 
-},{"../builder/index.js":17,"../utils/sui-types.js":58,"./http-transport.js":22,"@mysten/bcs":7}],22:[function(require,module,exports){
+},{"../builder/index.js":27,"../utils/sui-types.js":66,"./http-transport.js":33,"@mysten/bcs":12}],32:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8535,43 +8761,39 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var http_transport_exports = {};
-__export(http_transport_exports, {
-  SuiHTTPTransport: () => SuiHTTPTransport
+var errors_exports = {};
+__export(errors_exports, {
+  JsonRpcError: () => JsonRpcError,
+  SuiHTTPStatusError: () => SuiHTTPStatusError,
+  SuiHTTPTransportError: () => SuiHTTPTransportError
 });
-module.exports = __toCommonJS(http_transport_exports);
-var import_client_js = require("@open-rpc/client-js");
-var import_websocket_client = require("../rpc/websocket-client.js");
-var import_version = require("../version.js");
-class SuiHTTPTransport {
-  constructor({
-    url,
-    websocket: { url: websocketUrl, ...websocketOptions } = {},
-    rpc
-  }) {
-    const transport = new import_client_js.HTTPTransport(rpc?.url ?? url, {
-      headers: {
-        "Content-Type": "application/json",
-        "Client-Sdk-Type": "typescript",
-        "Client-Sdk-Version": import_version.PACKAGE_VERSION,
-        "Client-Target-Api-Version": import_version.TARGETED_RPC_VERSION,
-        ...rpc?.headers
-      }
-    });
-    this.rpcClient = new import_client_js.Client(new import_client_js.RequestManager([transport]));
-    this.websocketClient = new import_websocket_client.WebsocketClient(websocketUrl ?? url, websocketOptions);
+module.exports = __toCommonJS(errors_exports);
+const CODE_TO_ERROR_TYPE = {
+  "-32700": "ParseError",
+  "-32600": "InvalidRequest",
+  "-32601": "MethodNotFound",
+  "-32602": "InvalidParams",
+  "-32603": "InternalError"
+};
+class SuiHTTPTransportError extends Error {
+}
+class JsonRpcError extends SuiHTTPTransportError {
+  constructor(message, code) {
+    super(message);
+    this.code = code;
+    this.type = CODE_TO_ERROR_TYPE[code] ?? "ServerError";
   }
-  async request(input) {
-    return await this.rpcClient.request(input);
-  }
-  async subscribe(input) {
-    const unsubscribe = await this.websocketClient.request(input);
-    return async () => !!await unsubscribe();
+}
+class SuiHTTPStatusError extends SuiHTTPTransportError {
+  constructor(message, status, statusText) {
+    super(message);
+    this.status = status;
+    this.statusText = statusText;
   }
 }
 
 
-},{"../rpc/websocket-client.js":50,"../version.js":60,"@open-rpc/client-js":89}],23:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8581,6 +8803,129 @@ var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __accessCheck = (obj, member, msg) => {
+  if (!member.has(obj))
+    throw TypeError("Cannot " + msg);
+};
+var __privateGet = (obj, member, getter) => {
+  __accessCheck(obj, member, "read from private field");
+  return getter ? getter.call(obj) : member.get(obj);
+};
+var __privateAdd = (obj, member, value) => {
+  if (member.has(obj))
+    throw TypeError("Cannot add the same private member more than once");
+  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+};
+var __privateSet = (obj, member, value, setter) => {
+  __accessCheck(obj, member, "write to private field");
+  setter ? setter.call(obj, value) : member.set(obj, value);
+  return value;
+};
+var __privateMethod = (obj, member, method) => {
+  __accessCheck(obj, member, "access private method");
+  return method;
+};
+var http_transport_exports = {};
+__export(http_transport_exports, {
+  SuiHTTPTransport: () => SuiHTTPTransport
+});
+module.exports = __toCommonJS(http_transport_exports);
+var import_version = require("../version.js");
+var import_errors = require("./errors.js");
+var import_rpc_websocket_client = require("./rpc-websocket-client.js");
+var _requestId, _options, _websocketClient, _getWebsocketClient, getWebsocketClient_fn;
+class SuiHTTPTransport {
+  constructor(options) {
+    __privateAdd(this, _getWebsocketClient);
+    __privateAdd(this, _requestId, 0);
+    __privateAdd(this, _options, void 0);
+    __privateAdd(this, _websocketClient, void 0);
+    __privateSet(this, _options, options);
+  }
+  fetch(input, init) {
+    const fetch = __privateGet(this, _options).fetch ?? globalThis.fetch;
+    if (!this.fetch) {
+      throw new Error(
+        "The current environment does not support fetch, you can provide a fetch implementation in the options for SuiHTTPTransport."
+      );
+    }
+    return fetch(input, init);
+  }
+  async request(input) {
+    __privateSet(this, _requestId, __privateGet(this, _requestId) + 1);
+    const res = await this.fetch(__privateGet(this, _options).rpc?.url ?? __privateGet(this, _options).url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Client-Sdk-Type": "typescript",
+        "Client-Sdk-Version": import_version.PACKAGE_VERSION,
+        "Client-Target-Api-Version": import_version.TARGETED_RPC_VERSION,
+        ...__privateGet(this, _options).rpc?.headers
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: __privateGet(this, _requestId),
+        method: input.method,
+        params: input.params
+      })
+    });
+    if (!res.ok) {
+      throw new import_errors.SuiHTTPStatusError(
+        `Unexpected status code: ${res.status}`,
+        res.status,
+        res.statusText
+      );
+    }
+    const data = await res.json();
+    if ("error" in data && data.error != null) {
+      throw new import_errors.JsonRpcError(data.error.message, data.error.code);
+    }
+    return data.result;
+  }
+  async subscribe(input) {
+    const unsubscribe = await __privateMethod(this, _getWebsocketClient, getWebsocketClient_fn).call(this).subscribe(input);
+    return async () => !!await unsubscribe();
+  }
+}
+_requestId = new WeakMap();
+_options = new WeakMap();
+_websocketClient = new WeakMap();
+_getWebsocketClient = new WeakSet();
+getWebsocketClient_fn = function() {
+  if (!__privateGet(this, _websocketClient)) {
+    const WebSocketConstructor = __privateGet(this, _options).WebSocketConstructor ?? globalThis.WebSocket;
+    if (!WebSocketConstructor) {
+      throw new Error(
+        "The current environment does not support WebSocket, you can provide a WebSocketConstructor in the options for SuiHTTPTransport."
+      );
+    }
+    __privateSet(this, _websocketClient, new import_rpc_websocket_client.WebsocketClient(
+      __privateGet(this, _options).websocket?.url ?? __privateGet(this, _options).url,
+      {
+        WebSocketConstructor: __privateGet(this, _options).WebSocketConstructor,
+        ...__privateGet(this, _options).websocket
+      }
+    ));
+  }
+  return __privateGet(this, _websocketClient);
+};
+
+
+},{"../version.js":68,"./errors.js":32,"./rpc-websocket-client.js":36}],34:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -8592,18 +8937,15 @@ var __copyProps = (to, from, except, desc) => {
 var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var client_exports = {};
-__export(client_exports, {
-  RPCValidationError: () => import_errors.RPCValidationError
-});
 module.exports = __toCommonJS(client_exports);
-var import_errors = require("../rpc/errors.js");
 __reExport(client_exports, require("./http-transport.js"), module.exports);
 __reExport(client_exports, require("./network.js"), module.exports);
 __reExport(client_exports, require("./types/index.js"), module.exports);
 __reExport(client_exports, require("./client.js"), module.exports);
+__reExport(client_exports, require("./errors.js"), module.exports);
 
 
-},{"../rpc/errors.js":49,"./client.js":21,"./http-transport.js":22,"./network.js":24,"./types/index.js":30}],24:[function(require,module,exports){
+},{"./client.js":31,"./errors.js":32,"./http-transport.js":33,"./network.js":35,"./types/index.js":42}],35:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8643,7 +8985,215 @@ function getFullnodeUrl(network) {
 }
 
 
-},{}],25:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __accessCheck = (obj, member, msg) => {
+  if (!member.has(obj))
+    throw TypeError("Cannot " + msg);
+};
+var __privateGet = (obj, member, getter) => {
+  __accessCheck(obj, member, "read from private field");
+  return getter ? getter.call(obj) : member.get(obj);
+};
+var __privateAdd = (obj, member, value) => {
+  if (member.has(obj))
+    throw TypeError("Cannot add the same private member more than once");
+  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+};
+var __privateSet = (obj, member, value, setter) => {
+  __accessCheck(obj, member, "write to private field");
+  setter ? setter.call(obj, value) : member.set(obj, value);
+  return value;
+};
+var __privateWrapper = (obj, member, setter, getter) => ({
+  set _(value) {
+    __privateSet(obj, member, value, setter);
+  },
+  get _() {
+    return __privateGet(obj, member, getter);
+  }
+});
+var __privateMethod = (obj, member, method) => {
+  __accessCheck(obj, member, "access private method");
+  return method;
+};
+var rpc_websocket_client_exports = {};
+__export(rpc_websocket_client_exports, {
+  DEFAULT_CLIENT_OPTIONS: () => DEFAULT_CLIENT_OPTIONS,
+  WebsocketClient: () => WebsocketClient
+});
+module.exports = __toCommonJS(rpc_websocket_client_exports);
+var import_errors = require("./errors.js");
+var _requestId, _disconnects, _webSocket, _connectionPromise, _subscriptions, _pendingRequests, _setupWebSocket, setupWebSocket_fn, _reconnect, reconnect_fn;
+function getWebsocketUrl(httpUrl) {
+  const url = new URL(httpUrl);
+  url.protocol = url.protocol.replace("http", "ws");
+  return url.toString();
+}
+const DEFAULT_CLIENT_OPTIONS = {
+  // We fudge the typing because we also check for undefined in the constructor:
+  WebSocketConstructor: typeof WebSocket !== "undefined" ? WebSocket : void 0,
+  callTimeout: 3e4,
+  reconnectTimeout: 3e3,
+  maxReconnects: 5
+};
+class WebsocketClient {
+  constructor(endpoint, options = {}) {
+    __privateAdd(this, _setupWebSocket);
+    __privateAdd(this, _reconnect);
+    __privateAdd(this, _requestId, 0);
+    __privateAdd(this, _disconnects, 0);
+    __privateAdd(this, _webSocket, null);
+    __privateAdd(this, _connectionPromise, null);
+    __privateAdd(this, _subscriptions, /* @__PURE__ */ new Set());
+    __privateAdd(this, _pendingRequests, /* @__PURE__ */ new Map());
+    this.endpoint = endpoint;
+    this.options = { ...DEFAULT_CLIENT_OPTIONS, ...options };
+    if (!this.options.WebSocketConstructor) {
+      throw new Error("Missing WebSocket constructor");
+    }
+    if (this.endpoint.startsWith("http")) {
+      this.endpoint = getWebsocketUrl(this.endpoint);
+    }
+  }
+  async makeRequest(method, params) {
+    const webSocket = await __privateMethod(this, _setupWebSocket, setupWebSocket_fn).call(this);
+    return new Promise((resolve, reject) => {
+      __privateSet(this, _requestId, __privateGet(this, _requestId) + 1);
+      __privateGet(this, _pendingRequests).set(__privateGet(this, _requestId), {
+        resolve,
+        reject,
+        timeout: setTimeout(() => {
+          __privateGet(this, _pendingRequests).delete(__privateGet(this, _requestId));
+          reject(new Error(`Request timeout: ${method}`));
+        }, this.options.callTimeout)
+      });
+      webSocket.send(JSON.stringify({ jsonrpc: "2.0", id: __privateGet(this, _requestId), method, params }));
+    }).then(({ error, result }) => {
+      if (error) {
+        throw new import_errors.JsonRpcError(error.message, error.code);
+      }
+      return result;
+    });
+  }
+  async subscribe(input) {
+    const subscription = new RpcSubscription(input);
+    __privateGet(this, _subscriptions).add(subscription);
+    await subscription.subscribe(this);
+    return () => subscription.unsubscribe(this);
+  }
+}
+_requestId = new WeakMap();
+_disconnects = new WeakMap();
+_webSocket = new WeakMap();
+_connectionPromise = new WeakMap();
+_subscriptions = new WeakMap();
+_pendingRequests = new WeakMap();
+_setupWebSocket = new WeakSet();
+setupWebSocket_fn = function() {
+  if (__privateGet(this, _connectionPromise)) {
+    return __privateGet(this, _connectionPromise);
+  }
+  __privateSet(this, _connectionPromise, new Promise((resolve) => {
+    __privateGet(this, _webSocket)?.close();
+    __privateSet(this, _webSocket, new this.options.WebSocketConstructor(this.endpoint));
+    __privateGet(this, _webSocket).addEventListener("open", () => {
+      __privateSet(this, _disconnects, 0);
+      resolve(__privateGet(this, _webSocket));
+    });
+    __privateGet(this, _webSocket).addEventListener("close", () => {
+      __privateWrapper(this, _disconnects)._++;
+      if (__privateGet(this, _disconnects) <= this.options.maxReconnects) {
+        setTimeout(() => {
+          __privateMethod(this, _reconnect, reconnect_fn).call(this);
+        }, this.options.reconnectTimeout);
+      }
+    });
+    __privateGet(this, _webSocket).addEventListener("message", ({ data }) => {
+      let json;
+      try {
+        json = JSON.parse(data);
+      } catch (error) {
+        console.error(new Error(`Failed to parse RPC message: ${data}`, { cause: error }));
+        return;
+      }
+      if ("id" in json && json.id != null && __privateGet(this, _pendingRequests).has(json.id)) {
+        const { resolve: resolve2, timeout } = __privateGet(this, _pendingRequests).get(json.id);
+        clearTimeout(timeout);
+        resolve2(json);
+      } else if ("params" in json) {
+        const { params } = json;
+        __privateGet(this, _subscriptions).forEach((subscription) => {
+          if (subscription.subscriptionId === params.subscription) {
+            if (params.subscription === subscription.subscriptionId) {
+              subscription.onMessage(params.result);
+            }
+          }
+        });
+      }
+    });
+  }));
+  return __privateGet(this, _connectionPromise);
+};
+_reconnect = new WeakSet();
+reconnect_fn = async function() {
+  __privateGet(this, _webSocket)?.close();
+  __privateSet(this, _connectionPromise, null);
+  return Promise.allSettled(
+    [...__privateGet(this, _subscriptions)].map((subscription) => subscription.subscribe(this))
+  );
+};
+class RpcSubscription {
+  constructor(input) {
+    this.subscriptionId = null;
+    this.subscribed = false;
+    this.input = input;
+  }
+  onMessage(message) {
+    if (this.subscribed) {
+      this.input.onMessage(message);
+    }
+  }
+  async unsubscribe(client) {
+    const { subscriptionId } = this;
+    this.subscribed = false;
+    if (subscriptionId == null)
+      return false;
+    this.subscriptionId = null;
+    return client.makeRequest(this.input.unsubscribe, [subscriptionId]);
+  }
+  async subscribe(client) {
+    this.subscriptionId = null;
+    this.subscribed = true;
+    const newSubscriptionId = await client.makeRequest(
+      this.input.method,
+      this.input.params
+    );
+    if (this.subscribed) {
+      this.subscriptionId = newSubscriptionId;
+    }
+  }
+}
+
+
+},{"./errors.js":32}],37:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8662,7 +9212,7 @@ var chain_exports = {};
 module.exports = __toCommonJS(chain_exports);
 
 
-},{}],26:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8681,7 +9231,7 @@ var changes_exports = {};
 module.exports = __toCommonJS(changes_exports);
 
 
-},{}],27:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8700,7 +9250,7 @@ var coins_exports = {};
 module.exports = __toCommonJS(coins_exports);
 
 
-},{}],28:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8719,7 +9269,7 @@ var common_exports = {};
 module.exports = __toCommonJS(common_exports);
 
 
-},{}],29:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8738,7 +9288,7 @@ var generated_exports = {};
 module.exports = __toCommonJS(generated_exports);
 
 
-},{}],30:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8764,7 +9314,7 @@ __reExport(types_exports, require("./generated.js"), module.exports);
 __reExport(types_exports, require("./params.js"), module.exports);
 
 
-},{"./chain.js":25,"./changes.js":26,"./coins.js":27,"./common.js":28,"./generated.js":29,"./params.js":31}],31:[function(require,module,exports){
+},{"./chain.js":37,"./changes.js":38,"./coins.js":39,"./common.js":40,"./generated.js":41,"./params.js":43}],43:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8783,7 +9333,7 @@ var params_exports = {};
 module.exports = __toCommonJS(params_exports);
 
 
-},{}],32:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8818,7 +9368,7 @@ var import_publickey = require("./publickey.js");
 var import_keypair = require("./keypair.js");
 
 
-},{"./intent.js":33,"./keypair.js":34,"./mnemonics.js":35,"./publickey.js":36,"./signature-scheme.js":37,"./signature.js":38}],33:[function(require,module,exports){
+},{"./intent.js":45,"./keypair.js":46,"./mnemonics.js":47,"./publickey.js":48,"./signature-scheme.js":49,"./signature.js":50}],45:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8872,7 +9422,7 @@ function messageWithIntent(scope, message) {
 }
 
 
-},{}],34:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8947,7 +9497,7 @@ class Keypair extends BaseSigner {
 }
 
 
-},{"../bcs/index.js":8,"./intent.js":33,"./signature.js":38,"@mysten/bcs":7,"@noble/hashes/blake2b":78}],35:[function(require,module,exports){
+},{"../bcs/index.js":18,"./intent.js":45,"./signature.js":50,"@mysten/bcs":12,"@noble/hashes/blake2b":93}],47:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8996,7 +9546,7 @@ function mnemonicToSeedHex(mnemonics) {
 }
 
 
-},{"@mysten/bcs":7,"@scure/bip39":98}],36:[function(require,module,exports){
+},{"@mysten/bcs":12,"@scure/bip39":101}],48:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9110,7 +9660,7 @@ class PublicKey {
 }
 
 
-},{"../bcs/index.js":8,"../utils/sui-types.js":58,"./intent.js":33,"@mysten/bcs":7,"@noble/hashes/blake2b":78,"@noble/hashes/utils":84}],37:[function(require,module,exports){
+},{"../bcs/index.js":18,"../utils/sui-types.js":66,"./intent.js":45,"@mysten/bcs":12,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],49:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9157,7 +9707,7 @@ const SIGNATURE_FLAG_TO_SCHEME = {
 };
 
 
-},{}],38:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9206,51 +9756,54 @@ function toSerializedSignature({
 function parseSerializedSignature(serializedSignature) {
   const bytes = (0, import_bcs.fromB64)(serializedSignature);
   const signatureScheme = import_signature_scheme.SIGNATURE_FLAG_TO_SCHEME[bytes[0]];
-  if (signatureScheme === "MultiSig") {
-    const multisig = import_bcs2.bcs.MultiSig.parse(bytes.slice(1));
-    return {
-      serializedSignature,
-      signatureScheme,
-      multisig,
-      bytes
-    };
+  switch (signatureScheme) {
+    case "MultiSig":
+      const multisig = import_bcs2.bcs.MultiSig.parse(bytes.slice(1));
+      return {
+        serializedSignature,
+        signatureScheme,
+        multisig,
+        bytes
+      };
+    case "ZkLogin":
+      const signatureBytes = bytes.slice(1);
+      const { inputs, maxEpoch, userSignature } = (0, import_signature.parseZkLoginSignature)(signatureBytes);
+      const { issBase64Details, addressSeed } = inputs;
+      const iss = (0, import_jwt_utils.extractClaimValue)(issBase64Details, "iss");
+      const address = (0, import_address.computeZkLoginAddressFromSeed)(BigInt(addressSeed), iss);
+      return {
+        serializedSignature,
+        signatureScheme,
+        zkLogin: {
+          inputs,
+          maxEpoch,
+          userSignature,
+          iss,
+          address,
+          addressSeed: BigInt(addressSeed)
+        },
+        signature: bytes
+      };
+    case "ED25519":
+    case "Secp256k1":
+    case "Secp256r1":
+      const size = import_signature_scheme.SIGNATURE_SCHEME_TO_SIZE[signatureScheme];
+      const signature = bytes.slice(1, bytes.length - size);
+      const publicKey = bytes.slice(1 + signature.length);
+      return {
+        serializedSignature,
+        signatureScheme,
+        signature,
+        publicKey,
+        bytes
+      };
+    default:
+      throw new Error("Unsupported signature scheme");
   }
-  if (signatureScheme === "ZkLogin") {
-    const signatureBytes = bytes.slice(1);
-    const { inputs, maxEpoch, userSignature } = (0, import_signature.parseZkLoginSignature)(signatureBytes);
-    const { issBase64Details, addressSeed } = inputs;
-    const iss = (0, import_jwt_utils.extractClaimValue)(issBase64Details, "iss");
-    const address = (0, import_address.computeZkLoginAddressFromSeed)(BigInt(addressSeed), iss);
-    return {
-      serializedSignature,
-      signatureScheme,
-      zkLogin: {
-        inputs,
-        maxEpoch,
-        userSignature,
-        iss,
-        address
-      },
-      bytes
-    };
-  }
-  if (!(signatureScheme in import_signature_scheme.SIGNATURE_SCHEME_TO_SIZE)) {
-    throw new Error("Unsupported signature scheme");
-  }
-  const size = import_signature_scheme.SIGNATURE_SCHEME_TO_SIZE[signatureScheme];
-  const signature = bytes.slice(1, bytes.length - size);
-  const publicKey = bytes.slice(1 + signature.length);
-  return {
-    serializedSignature,
-    signatureScheme,
-    signature,
-    publicKey,
-    bytes
-  };
 }
 
 
-},{"../bcs/index.js":8,"../zklogin/address.js":61,"../zklogin/jwt-utils.js":63,"../zklogin/signature.js":64,"./signature-scheme.js":37,"@mysten/bcs":7}],39:[function(require,module,exports){
+},{"../bcs/index.js":18,"../zklogin/address.js":69,"../zklogin/jwt-utils.js":71,"../zklogin/signature.js":73,"./signature-scheme.js":49,"@mysten/bcs":12}],51:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9355,172 +9908,7 @@ function getFaucetHost(network) {
 }
 
 
-},{}],40:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var framework_exports = {};
-__export(framework_exports, {
-  COIN_TYPE_ARG_REGEX: () => COIN_TYPE_ARG_REGEX,
-  Coin: () => Coin,
-  CoinMetadataStruct: () => CoinMetadataStruct,
-  Delegation: () => Delegation,
-  ID_STRUCT_NAME: () => ID_STRUCT_NAME,
-  MOVE_STDLIB_ADDRESS: () => MOVE_STDLIB_ADDRESS,
-  OBJECT_MODULE_NAME: () => OBJECT_MODULE_NAME,
-  PAY_JOIN_COIN_FUNC_NAME: () => PAY_JOIN_COIN_FUNC_NAME,
-  PAY_MODULE_NAME: () => PAY_MODULE_NAME,
-  PAY_SPLIT_COIN_VEC_FUNC_NAME: () => PAY_SPLIT_COIN_VEC_FUNC_NAME,
-  SUI_CLOCK_OBJECT_ID: () => SUI_CLOCK_OBJECT_ID,
-  SUI_FRAMEWORK_ADDRESS: () => SUI_FRAMEWORK_ADDRESS,
-  SUI_SYSTEM_ADDRESS: () => SUI_SYSTEM_ADDRESS,
-  SUI_TYPE_ARG: () => SUI_TYPE_ARG,
-  UID_STRUCT_NAME: () => UID_STRUCT_NAME,
-  VALIDATORS_EVENTS_QUERY: () => VALIDATORS_EVENTS_QUERY,
-  isObjectDataFull: () => isObjectDataFull
-});
-module.exports = __toCommonJS(framework_exports);
-var import_superstruct = require("superstruct");
-var import_objects = require("../types/objects.js");
-var import_option = require("../types/option.js");
-var import_sui_types = require("../utils/sui-types.js");
-const SUI_SYSTEM_ADDRESS = "0x3";
-const SUI_FRAMEWORK_ADDRESS = "0x2";
-const MOVE_STDLIB_ADDRESS = "0x1";
-const OBJECT_MODULE_NAME = "object";
-const UID_STRUCT_NAME = "UID";
-const ID_STRUCT_NAME = "ID";
-const SUI_TYPE_ARG = `${SUI_FRAMEWORK_ADDRESS}::sui::SUI`;
-const VALIDATORS_EVENTS_QUERY = "0x3::validator_set::ValidatorEpochInfoEventV2";
-const SUI_CLOCK_OBJECT_ID = (0, import_sui_types.normalizeSuiObjectId)("0x6");
-const PAY_MODULE_NAME = "pay";
-const PAY_SPLIT_COIN_VEC_FUNC_NAME = "split_vec";
-const PAY_JOIN_COIN_FUNC_NAME = "join";
-const COIN_TYPE_ARG_REGEX = /^0x2::coin::Coin<(.+)>$/;
-function isObjectDataFull(resp) {
-  return !!resp.data || !!resp.type;
-}
-const CoinMetadataStruct = (0, import_superstruct.object)({
-  decimals: (0, import_superstruct.number)(),
-  name: (0, import_superstruct.string)(),
-  symbol: (0, import_superstruct.string)(),
-  description: (0, import_superstruct.string)(),
-  iconUrl: (0, import_superstruct.nullable)((0, import_superstruct.string)()),
-  id: (0, import_superstruct.nullable)((0, import_superstruct.string)())
-});
-class Coin {
-  static isCoin(data) {
-    return Coin.getType(data)?.match(COIN_TYPE_ARG_REGEX) != null;
-  }
-  static getCoinType(type) {
-    const [, res] = type.match(COIN_TYPE_ARG_REGEX) ?? [];
-    return res || null;
-  }
-  static getCoinTypeArg(obj) {
-    const type = Coin.getType(obj);
-    return type ? Coin.getCoinType(type) : null;
-  }
-  static isSUI(obj) {
-    const arg = Coin.getCoinTypeArg(obj);
-    return arg ? Coin.getCoinSymbol(arg) === "SUI" : false;
-  }
-  static getCoinSymbol(coinTypeArg) {
-    return coinTypeArg.substring(coinTypeArg.lastIndexOf(":") + 1);
-  }
-  static getCoinStructTag(coinTypeArg) {
-    return {
-      address: (0, import_sui_types.normalizeSuiObjectId)(coinTypeArg.split("::")[0]),
-      module: coinTypeArg.split("::")[1],
-      name: coinTypeArg.split("::")[2],
-      typeParams: []
-    };
-  }
-  static getID(obj) {
-    if ("fields" in obj) {
-      return obj.fields.id.id;
-    }
-    return (0, import_objects.getObjectId)(obj);
-  }
-  static totalBalance(coins) {
-    return coins.reduce(
-      (partialSum, c) => partialSum + Coin.getBalanceFromCoinStruct(c),
-      BigInt(0)
-    );
-  }
-  /**
-   * Sort coin by balance in an ascending order
-   */
-  static sortByBalance(coins) {
-    return [...coins].sort(
-      (a, b) => Coin.getBalanceFromCoinStruct(a) < Coin.getBalanceFromCoinStruct(b) ? -1 : Coin.getBalanceFromCoinStruct(a) > Coin.getBalanceFromCoinStruct(b) ? 1 : 0
-    );
-  }
-  static getBalanceFromCoinStruct(coin) {
-    return BigInt(coin.balance);
-  }
-  static getBalance(data) {
-    if (!Coin.isCoin(data)) {
-      return void 0;
-    }
-    const balance = (0, import_objects.getObjectFields)(data)?.balance;
-    return BigInt(balance);
-  }
-  static getType(data) {
-    if (isObjectDataFull(data)) {
-      return (0, import_objects.getObjectType)(data);
-    }
-    return data.type;
-  }
-}
-const _Delegation = class {
-  static isDelegationSuiObject(obj) {
-    return "type" in obj && obj.type === _Delegation.SUI_OBJECT_TYPE;
-  }
-  constructor(obj) {
-    this.suiObject = obj;
-  }
-  nextRewardUnclaimedEpoch() {
-    return this.suiObject.data.fields.next_reward_unclaimed_epoch;
-  }
-  activeDelegation() {
-    return BigInt((0, import_option.getOption)(this.suiObject.data.fields.active_delegation) || 0);
-  }
-  delegateAmount() {
-    return this.suiObject.data.fields.delegate_amount;
-  }
-  endingEpoch() {
-    return (0, import_option.getOption)(this.suiObject.data.fields.ending_epoch);
-  }
-  validatorAddress() {
-    return this.suiObject.data.fields.validator_address;
-  }
-  isActive() {
-    return this.activeDelegation() > 0 && !this.endingEpoch();
-  }
-  hasUnclaimedRewards(epoch) {
-    return this.nextRewardUnclaimedEpoch() <= epoch && (this.isActive() || (this.endingEpoch() || 0) > epoch);
-  }
-};
-let Delegation = _Delegation;
-Delegation.SUI_OBJECT_TYPE = "0x2::delegation::Delegation";
-
-
-},{"../types/objects.js":54,"../types/option.js":55,"../utils/sui-types.js":58,"superstruct":131}],41:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -9623,7 +10011,7 @@ const derivePath = (path, seed, offset = HARDENED_OFFSET) => {
 };
 
 
-},{"@mysten/bcs":7,"@noble/hashes/hmac":80,"@noble/hashes/sha512":83,"tweetnacl":132}],42:[function(require,module,exports){
+},{"@mysten/bcs":12,"@noble/hashes/hmac":95,"@noble/hashes/sha512":98,"tweetnacl":133}],53:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9645,7 +10033,7 @@ __reExport(ed25519_exports, require("./keypair.js"), module.exports);
 __reExport(ed25519_exports, require("./publickey.js"), module.exports);
 
 
-},{"./keypair.js":43,"./publickey.js":44}],43:[function(require,module,exports){
+},{"./keypair.js":54,"./publickey.js":55}],54:[function(require,module,exports){
 "use strict";
 
 var __create = Object.create;
@@ -9822,7 +10210,7 @@ class Ed25519Keypair extends import_keypair.Keypair {
   }
 }
 
-},{"../../cryptography/keypair.js":34,"../../cryptography/mnemonics.js":35,"./ed25519-hd-key.js":41,"./publickey.js":44,"@mysten/bcs":7,"tweetnacl":132}],44:[function(require,module,exports){
+},{"../../cryptography/keypair.js":46,"../../cryptography/mnemonics.js":47,"./ed25519-hd-key.js":52,"./publickey.js":55,"@mysten/bcs":12,"tweetnacl":133}],55:[function(require,module,exports){
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -9923,7 +10311,7 @@ class Ed25519PublicKey extends import_publickey.PublicKey {
 Ed25519PublicKey.SIZE = PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":36,"../../cryptography/signature-scheme.js":37,"../../cryptography/signature.js":38,"@mysten/bcs":7,"tweetnacl":132}],45:[function(require,module,exports){
+},{"../../cryptography/publickey.js":48,"../../cryptography/signature-scheme.js":49,"../../cryptography/signature.js":50,"@mysten/bcs":12,"tweetnacl":133}],56:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10019,7 +10407,7 @@ class Secp256k1PublicKey extends import_publickey.PublicKey {
 Secp256k1PublicKey.SIZE = SECP256K1_PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":36,"../../cryptography/signature-scheme.js":37,"../../cryptography/signature.js":38,"@mysten/bcs":7,"@noble/curves/secp256k1":73,"@noble/hashes/sha256":82}],46:[function(require,module,exports){
+},{"../../cryptography/publickey.js":48,"../../cryptography/signature-scheme.js":49,"../../cryptography/signature.js":50,"@mysten/bcs":12,"@noble/curves/secp256k1":88,"@noble/hashes/sha256":97}],57:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10115,7 +10503,7 @@ class Secp256r1PublicKey extends import_publickey.PublicKey {
 Secp256r1PublicKey.SIZE = SECP256R1_PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":36,"../../cryptography/signature-scheme.js":37,"../../cryptography/signature.js":38,"@mysten/bcs":7,"@noble/curves/p256":72,"@noble/hashes/sha256":82}],47:[function(require,module,exports){
+},{"../../cryptography/publickey.js":48,"../../cryptography/signature-scheme.js":49,"../../cryptography/signature.js":50,"@mysten/bcs":12,"@noble/curves/p256":87,"@noble/hashes/sha256":97}],58:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10154,7 +10542,7 @@ function publicKeyFromSuiBytes(publicKey) {
 }
 
 
-},{"../cryptography/index.js":32,"../verify/index.js":59,"./publickey.js":48,"@mysten/bcs":7}],48:[function(require,module,exports){
+},{"../cryptography/index.js":44,"../verify/index.js":67,"./publickey.js":59,"@mysten/bcs":12}],59:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10190,6 +10578,7 @@ var import_signature_scheme = require("../cryptography/signature-scheme.js");
 var import_signature = require("../cryptography/signature.js");
 var import_sui_types = require("../utils/sui-types.js");
 var import_verify = require("../verify/index.js");
+var import_publickey2 = require("../zklogin/publickey.js");
 const MAX_SIGNER_IN_MULTISIG = 10;
 const MIN_SIGNER_IN_MULTISIG = 1;
 class MultiSigPublicKey extends import_publickey.PublicKey {
@@ -10332,15 +10721,21 @@ class MultiSigPublicKey extends import_publickey.PublicKey {
       if (parsed.signatureScheme === "MultiSig") {
         throw new Error("MultiSig is not supported inside MultiSig");
       }
+      let publicKey;
       if (parsed.signatureScheme === "ZkLogin") {
-        throw new Error("ZkLogin is not supported inside MultiSig");
+        publicKey = (0, import_publickey2.toZkLoginPublicIdentifier)(
+          parsed.zkLogin?.addressSeed,
+          parsed.zkLogin?.iss
+        ).toRawBytes();
+      } else {
+        publicKey = parsed.publicKey;
       }
       compressedSignatures[i] = {
         [parsed.signatureScheme]: Array.from(parsed.signature.map((x) => Number(x)))
       };
       let publicKeyIndex;
       for (let j = 0; j < this.publicKeys.length; j++) {
-        if ((0, import_publickey.bytesEqual)(parsed.publicKey, this.publicKeys[j].publicKey.toRawBytes())) {
+        if ((0, import_publickey.bytesEqual)(publicKey, this.publicKeys[j].publicKey.toRawBytes())) {
           if (bitmap & 1 << j) {
             throw new Error("Received multiple signatures from the same public key");
           }
@@ -10358,7 +10753,7 @@ class MultiSigPublicKey extends import_publickey.PublicKey {
       bitmap,
       multisig_pk: this.multisigPublicKey
     };
-    const bytes = import_bcs2.bcs.MultiSig.serialize(multisig).toBytes();
+    const bytes = import_bcs2.bcs.MultiSig.serialize(multisig, { maxSize: 8192 }).toBytes();
     let tmp = new Uint8Array(bytes.length + 1);
     tmp.set([import_signature_scheme.SIGNATURE_SCHEME_TO_FLAG["MultiSig"]]);
     tmp.set(bytes, 1);
@@ -10399,209 +10794,7 @@ function asIndices(bitmap) {
 }
 
 
-},{"../bcs/index.js":8,"../cryptography/publickey.js":36,"../cryptography/signature-scheme.js":37,"../cryptography/signature.js":38,"../utils/sui-types.js":58,"../verify/index.js":59,"@mysten/bcs":7,"@noble/hashes/blake2b":78,"@noble/hashes/utils":84}],49:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var errors_exports = {};
-__export(errors_exports, {
-  RPCValidationError: () => RPCValidationError
-});
-module.exports = __toCommonJS(errors_exports);
-class RPCValidationError extends Error {
-  constructor(options) {
-    super(
-      "RPC Validation Error: The response returned from RPC server does not match the TypeScript definition. This is likely because the SDK version is not compatible with the RPC server.",
-      { cause: options.cause }
-    );
-    this.req = options.req;
-    this.result = options.result;
-    this.message = this.toString();
-  }
-  toString() {
-    let str = super.toString();
-    if (this.cause) {
-      str += `
-Cause: ${this.cause}`;
-    }
-    if (this.result) {
-      str += `
-Reponse Received: ${JSON.stringify(this.result, null, 2)}`;
-    }
-    return str;
-  }
-}
-
-
-},{}],50:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-var __privateWrapper = (obj, member, setter, getter) => ({
-  set _(value) {
-    __privateSet(obj, member, value, setter);
-  },
-  get _() {
-    return __privateGet(obj, member, getter);
-  }
-});
-var __privateMethod = (obj, member, method) => {
-  __accessCheck(obj, member, "access private method");
-  return method;
-};
-var websocket_client_exports = {};
-__export(websocket_client_exports, {
-  DEFAULT_CLIENT_OPTIONS: () => DEFAULT_CLIENT_OPTIONS,
-  WebsocketClient: () => WebsocketClient,
-  getWebsocketUrl: () => getWebsocketUrl
-});
-module.exports = __toCommonJS(websocket_client_exports);
-var import_client_js = require("@open-rpc/client-js");
-var _client, _subscriptions, _disconnects, _setupClient, setupClient_fn, _reconnect, reconnect_fn;
-const getWebsocketUrl = (httpUrl, port) => {
-  const url = new URL(httpUrl);
-  url.protocol = url.protocol.replace("http", "ws");
-  if (port) {
-    url.port = port.toString();
-  }
-  return url.toString();
-};
-const DEFAULT_CLIENT_OPTIONS = {
-  callTimeout: 3e4,
-  reconnectTimeout: 3e3,
-  maxReconnects: 5
-};
-class WebsocketClient {
-  constructor(endpoint, options = {}) {
-    __privateAdd(this, _setupClient);
-    __privateAdd(this, _reconnect);
-    __privateAdd(this, _client, void 0);
-    __privateAdd(this, _subscriptions, void 0);
-    __privateAdd(this, _disconnects, void 0);
-    this.endpoint = endpoint;
-    this.options = { ...DEFAULT_CLIENT_OPTIONS, ...options };
-    if (this.endpoint.startsWith("http")) {
-      this.endpoint = getWebsocketUrl(this.endpoint);
-    }
-    __privateSet(this, _client, null);
-    __privateSet(this, _subscriptions, /* @__PURE__ */ new Map());
-    __privateSet(this, _disconnects, 0);
-  }
-  async request(input) {
-    const client = __privateMethod(this, _setupClient, setupClient_fn).call(this);
-    const id = await client.request(
-      { method: input.method, params: input.params },
-      this.options.callTimeout
-    );
-    const initialId = input.initialId || id;
-    __privateGet(this, _subscriptions).set(initialId, {
-      ...input,
-      // Always set the latest actual subscription ID:
-      id,
-      initialId
-    });
-    return async () => {
-      const client2 = __privateMethod(this, _setupClient, setupClient_fn).call(this);
-      const subscription = __privateGet(this, _subscriptions).get(initialId);
-      if (!subscription)
-        return false;
-      __privateGet(this, _subscriptions).delete(initialId);
-      return client2.request(
-        { method: input.unsubscribe, params: [subscription.id] },
-        this.options.callTimeout
-      );
-    };
-  }
-}
-_client = new WeakMap();
-_subscriptions = new WeakMap();
-_disconnects = new WeakMap();
-_setupClient = new WeakSet();
-setupClient_fn = function() {
-  if (__privateGet(this, _client)) {
-    return __privateGet(this, _client);
-  }
-  const transport = new import_client_js.WebSocketTransport(this.endpoint);
-  const requestManager = new import_client_js.RequestManager([transport]);
-  __privateSet(this, _client, new import_client_js.Client(requestManager));
-  transport.connection.addEventListener("open", () => {
-    __privateSet(this, _disconnects, 0);
-  });
-  transport.connection.addEventListener("close", () => {
-    __privateWrapper(this, _disconnects)._++;
-    if (__privateGet(this, _disconnects) <= this.options.maxReconnects) {
-      setTimeout(() => {
-        __privateMethod(this, _reconnect, reconnect_fn).call(this);
-      }, this.options.reconnectTimeout);
-    }
-  });
-  __privateGet(this, _client).onNotification((data) => {
-    const params = data.params;
-    __privateGet(this, _subscriptions).forEach((subscription) => {
-      if (subscription.method === data.method && params.subscription === subscription.id) {
-        subscription.onMessage(params.result);
-      }
-    });
-  });
-  return __privateGet(this, _client);
-};
-_reconnect = new WeakSet();
-reconnect_fn = function() {
-  __privateGet(this, _client)?.close();
-  __privateSet(this, _client, null);
-  __privateGet(this, _subscriptions).forEach((subscription) => this.request(subscription));
-};
-
-
-},{"@open-rpc/client-js":89}],51:[function(require,module,exports){
+},{"../bcs/index.js":18,"../cryptography/publickey.js":48,"../cryptography/signature-scheme.js":49,"../cryptography/signature.js":50,"../utils/sui-types.js":66,"../verify/index.js":67,"../zklogin/publickey.js":72,"@mysten/bcs":12,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],60:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10657,7 +10850,7 @@ const ProtocolConfig = (0, import_superstruct.object)({
 });
 
 
-},{"superstruct":131}],52:[function(require,module,exports){
+},{"superstruct":132}],61:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10745,7 +10938,7 @@ var import_objects = require("./objects.js");
 var import_normalized = require("./normalized.js");
 
 
-},{"./normalized.js":53,"./objects.js":54}],53:[function(require,module,exports){
+},{"./normalized.js":62,"./objects.js":63}],62:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10905,7 +11098,7 @@ function extractStructTag(normalizedType) {
 }
 
 
-},{"superstruct":131}],54:[function(require,module,exports){
+},{"superstruct":132}],63:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11286,39 +11479,7 @@ const ObjectRead = (0, import_superstruct.union)([
 ]);
 
 
-},{"./common.js":51,"superstruct":131}],55:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var option_exports = {};
-__export(option_exports, {
-  getOption: () => getOption
-});
-module.exports = __toCommonJS(option_exports);
-function getOption(option) {
-  if (typeof option === "object" && option !== null && "type" in option && option.type.startsWith("0x1::option::Option<")) {
-    return void 0;
-  }
-  return option;
-}
-
-
-},{}],56:[function(require,module,exports){
+},{"./common.js":60,"superstruct":132}],64:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11356,7 +11517,7 @@ function formatDigest(digest) {
 }
 
 
-},{}],57:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11419,7 +11580,7 @@ const SUI_TYPE_ARG = `${SUI_FRAMEWORK_ADDRESS}::sui::SUI`;
 const SUI_SYSTEM_STATE_OBJECT_ID = (0, import_sui_types.normalizeSuiObjectId)("0x5");
 
 
-},{"./format.js":56,"./sui-types.js":58,"@mysten/bcs":7,"superstruct":131}],58:[function(require,module,exports){
+},{"./format.js":64,"./sui-types.js":66,"@mysten/bcs":12,"superstruct":132}],66:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11511,7 +11672,7 @@ function getHexByteLength(value) {
 }
 
 
-},{"@mysten/bcs":7}],59:[function(require,module,exports){
+},{"@mysten/bcs":12}],67:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11543,6 +11704,7 @@ var import_publickey = require("../keypairs/ed25519/publickey.js");
 var import_publickey2 = require("../keypairs/secp256k1/publickey.js");
 var import_publickey3 = require("../keypairs/secp256r1/publickey.js");
 var import_publickey4 = require("../multisig/publickey.js");
+var import_publickey5 = require("../zklogin/publickey.js");
 async function verifySignature(bytes, signature) {
   const parsedSignature = parseSignature(signature);
   if (!await parsedSignature.publicKey.verify(bytes, parsedSignature.serializedSignature)) {
@@ -11600,13 +11762,15 @@ function publicKeyFromRawBytes(signatureScheme, bytes) {
       return new import_publickey3.Secp256r1PublicKey(bytes);
     case "MultiSig":
       return new import_publickey4.MultiSigPublicKey(bytes);
+    case "ZkLogin":
+      return new import_publickey5.ZkLoginPublicIdentifier(bytes);
     default:
       throw new Error(`Unsupported signature scheme ${signatureScheme}`);
   }
 }
 
 
-},{"../cryptography/index.js":32,"../keypairs/ed25519/publickey.js":44,"../keypairs/secp256k1/publickey.js":45,"../keypairs/secp256r1/publickey.js":46,"../multisig/publickey.js":48}],60:[function(require,module,exports){
+},{"../cryptography/index.js":44,"../keypairs/ed25519/publickey.js":55,"../keypairs/secp256k1/publickey.js":56,"../keypairs/secp256r1/publickey.js":57,"../multisig/publickey.js":59,"../zklogin/publickey.js":72}],68:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11631,11 +11795,11 @@ __export(version_exports, {
   TARGETED_RPC_VERSION: () => TARGETED_RPC_VERSION
 });
 module.exports = __toCommonJS(version_exports);
-const PACKAGE_VERSION = "0.45.1";
-const TARGETED_RPC_VERSION = "1.14.0";
+const PACKAGE_VERSION = "0.49.1";
+const TARGETED_RPC_VERSION = "1.17.0";
 
 
-},{}],61:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11666,6 +11830,9 @@ var import_utils2 = require("../utils/index.js");
 var import_utils3 = require("./utils.js");
 function computeZkLoginAddressFromSeed(addressSeed, iss) {
   const addressSeedBytesBigEndian = (0, import_utils3.toBigEndianBytes)(addressSeed, 32);
+  if (iss === "accounts.google.com") {
+    iss = "https://accounts.google.com";
+  }
   const addressParamBytes = new TextEncoder().encode(iss);
   const tmp = new Uint8Array(2 + addressSeedBytesBigEndian.length + addressParamBytes.length);
   tmp.set([import_signature_scheme.SIGNATURE_SCHEME_TO_FLAG.ZkLogin]);
@@ -11678,7 +11845,7 @@ function computeZkLoginAddressFromSeed(addressSeed, iss) {
 }
 
 
-},{"../cryptography/signature-scheme.js":37,"../utils/index.js":57,"./utils.js":65,"@noble/hashes/blake2b":78,"@noble/hashes/utils":84}],62:[function(require,module,exports){
+},{"../cryptography/signature-scheme.js":49,"../utils/index.js":65,"./utils.js":74,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],70:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11722,7 +11889,7 @@ const zkLoginSignature = import_bcs.bcs.struct("ZkLoginSignature", {
 });
 
 
-},{"@mysten/bcs":7}],63:[function(require,module,exports){
+},{"@mysten/bcs":12}],71:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11826,7 +11993,87 @@ function extractClaimValue(claim, claimName) {
 }
 
 
-},{}],64:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var publickey_exports = {};
+__export(publickey_exports, {
+  ZkLoginPublicIdentifier: () => ZkLoginPublicIdentifier,
+  toZkLoginPublicIdentifier: () => toZkLoginPublicIdentifier
+});
+module.exports = __toCommonJS(publickey_exports);
+var import_bcs = require("@mysten/bcs");
+var import_publickey = require("../cryptography/publickey.js");
+var import_signature_scheme = require("../cryptography/signature-scheme.js");
+var import_utils = require("./utils.js");
+class ZkLoginPublicIdentifier extends import_publickey.PublicKey {
+  /**
+   * Create a new ZkLoginPublicIdentifier object
+   * @param value zkLogin public identifier as buffer or base-64 encoded string
+   */
+  constructor(value) {
+    super();
+    if (typeof value === "string") {
+      this.data = (0, import_bcs.fromB64)(value);
+    } else if (value instanceof Uint8Array) {
+      this.data = value;
+    } else {
+      this.data = Uint8Array.from(value);
+    }
+  }
+  /**
+   * Checks if two zkLogin public identifiers are equal
+   */
+  equals(publicKey) {
+    return super.equals(publicKey);
+  }
+  /**
+   * Return the byte array representation of the zkLogin public identifier
+   */
+  toRawBytes() {
+    return this.data;
+  }
+  /**
+   * Return the Sui address associated with this ZkLogin public identifier
+   */
+  flag() {
+    return import_signature_scheme.SIGNATURE_SCHEME_TO_FLAG["ZkLogin"];
+  }
+  /**
+   * Verifies that the signature is valid for for the provided message
+   */
+  async verify(_message, _signature) {
+    throw Error("does not support");
+  }
+}
+function toZkLoginPublicIdentifier(addressSeed, iss) {
+  const addressSeedBytesBigEndian = (0, import_utils.toPaddedBigEndianBytes)(addressSeed, 32);
+  const issBytes = new TextEncoder().encode(iss);
+  const tmp = new Uint8Array(1 + issBytes.length + addressSeedBytesBigEndian.length);
+  tmp.set([issBytes.length], 0);
+  tmp.set(issBytes, 1);
+  tmp.set(addressSeedBytesBigEndian, 1 + issBytes.length);
+  return new ZkLoginPublicIdentifier(tmp);
+}
+
+
+},{"../cryptography/publickey.js":48,"../cryptography/signature-scheme.js":49,"./utils.js":74,"@mysten/bcs":12}],73:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11876,7 +12123,7 @@ function parseZkLoginSignature(signature) {
 }
 
 
-},{"../cryptography/signature-scheme.js":37,"./bcs.js":62,"@mysten/bcs":7}],65:[function(require,module,exports){
+},{"../cryptography/signature-scheme.js":49,"./bcs.js":70,"@mysten/bcs":12}],74:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11897,7 +12144,8 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var utils_exports = {};
 __export(utils_exports, {
-  toBigEndianBytes: () => toBigEndianBytes
+  toBigEndianBytes: () => toBigEndianBytes,
+  toPaddedBigEndianBytes: () => toPaddedBigEndianBytes
 });
 module.exports = __toCommonJS(utils_exports);
 var import_utils = require("@noble/hashes/utils");
@@ -11909,9 +12157,12 @@ function findFirstNonZeroIndex(bytes) {
   }
   return -1;
 }
-function toBigEndianBytes(num, width) {
+function toPaddedBigEndianBytes(num, width) {
   const hex = num.toString(16);
-  const bytes = (0, import_utils.hexToBytes)(hex.padStart(width * 2, "0").slice(-width * 2));
+  return (0, import_utils.hexToBytes)(hex.padStart(width * 2, "0").slice(-width * 2));
+}
+function toBigEndianBytes(num, width) {
+  const bytes = toPaddedBigEndianBytes(num, width);
   const firstNonZeroIndex = findFirstNonZeroIndex(bytes);
   if (firstNonZeroIndex === -1) {
     return new Uint8Array([0]);
@@ -11920,7 +12171,7 @@ function toBigEndianBytes(num, width) {
 }
 
 
-},{"@noble/hashes/utils":84}],66:[function(require,module,exports){
+},{"@noble/hashes/utils":99}],75:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createCurve = exports.getHash = void 0;
@@ -11943,7 +12194,7 @@ function createCurve(curveDef, defHash) {
 }
 exports.createCurve = createCurve;
 
-},{"./abstract/weierstrass.js":71,"@noble/hashes/hmac":80,"@noble/hashes/utils":84}],67:[function(require,module,exports){
+},{"./abstract/weierstrass.js":80,"@noble/hashes/hmac":84,"@noble/hashes/utils":86}],76:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateBasic = exports.wNAF = void 0;
@@ -12105,19 +12356,12 @@ function validateBasic(curve) {
 }
 exports.validateBasic = validateBasic;
 
-},{"./modular.js":69,"./utils.js":70}],68:[function(require,module,exports){
+},{"./modular.js":78,"./utils.js":79}],77:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createHasher = exports.isogenyMap = exports.hash_to_field = exports.expand_message_xof = exports.expand_message_xmd = void 0;
 const modular_js_1 = require("./modular.js");
 const utils_js_1 = require("./utils.js");
-function validateDST(dst) {
-    if ((0, utils_js_1.isBytes)(dst))
-        return dst;
-    if (typeof dst === 'string')
-        return (0, utils_js_1.utf8ToBytes)(dst);
-    throw new Error('DST must be Uint8Array or string');
-}
 // Octet Stream to Integer. "spec" implementation of os2ip is 2.5x slower vs bytesToNumberBE.
 const os2ip = utils_js_1.bytesToNumberBE;
 // Integer to Octet Stream (numberToBytesBE)
@@ -12139,20 +12383,16 @@ function strxor(a, b) {
     }
     return arr;
 }
-function abytes(item) {
-    if (!(0, utils_js_1.isBytes)(item))
-        throw new Error('Uint8Array expected');
-}
-function isNum(item) {
+function anum(item) {
     if (!Number.isSafeInteger(item))
         throw new Error('number expected');
 }
 // Produces a uniformly random byte string using a cryptographic hash function H that outputs b bits
 // https://www.rfc-editor.org/rfc/rfc9380#section-5.3.1
 function expand_message_xmd(msg, DST, lenInBytes, H) {
-    abytes(msg);
-    abytes(DST);
-    isNum(lenInBytes);
+    (0, utils_js_1.abytes)(msg);
+    (0, utils_js_1.abytes)(DST);
+    anum(lenInBytes);
     // https://www.rfc-editor.org/rfc/rfc9380#section-5.3.3
     if (DST.length > 255)
         DST = H((0, utils_js_1.concatBytes)((0, utils_js_1.utf8ToBytes)('H2C-OVERSIZE-DST-'), DST));
@@ -12180,9 +12420,9 @@ exports.expand_message_xmd = expand_message_xmd;
 //    a random oracle under a reasonable cryptographic assumption.
 // https://www.rfc-editor.org/rfc/rfc9380#section-5.3.2
 function expand_message_xof(msg, DST, lenInBytes, k, H) {
-    abytes(msg);
-    abytes(DST);
-    isNum(lenInBytes);
+    (0, utils_js_1.abytes)(msg);
+    (0, utils_js_1.abytes)(DST);
+    anum(lenInBytes);
     // https://www.rfc-editor.org/rfc/rfc9380#section-5.3.3
     // DST = H('H2C-OVERSIZE-DST-' || a_very_long_DST, Math.ceil((lenInBytes * k) / 8));
     if (DST.length > 255) {
@@ -12217,9 +12457,9 @@ function hash_to_field(msg, count, options) {
         hash: 'hash',
     });
     const { p, k, m, hash, expand, DST: _DST } = options;
-    abytes(msg);
-    isNum(count);
-    const DST = validateDST(_DST);
+    (0, utils_js_1.abytes)(msg);
+    anum(count);
+    const DST = typeof _DST === 'string' ? (0, utils_js_1.utf8ToBytes)(_DST) : _DST;
     const log2p = p.toString(2).length;
     const L = Math.ceil((log2p + k) / 8); // section 5.1 of ietf draft link above
     const len_in_bytes = count * m * L;
@@ -12287,7 +12527,7 @@ function createHasher(Point, mapToCurve, def) {
 }
 exports.createHasher = createHasher;
 
-},{"./modular.js":69,"./utils.js":70}],69:[function(require,module,exports){
+},{"./modular.js":78,"./utils.js":79}],78:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mapHashToField = exports.getMinHashLength = exports.getFieldBytesLength = exports.hashToPrivateScalar = exports.FpSqrtEven = exports.FpSqrtOdd = exports.Field = exports.nLength = exports.FpIsSquare = exports.FpDiv = exports.FpInvertBatch = exports.FpPow = exports.validateField = exports.isNegativeLE = exports.FpSqrt = exports.tonelliShanks = exports.invert = exports.pow2 = exports.pow = exports.mod = void 0;
@@ -12727,10 +12967,10 @@ function mapHashToField(key, fieldOrder, isLE = false) {
 }
 exports.mapHashToField = mapHashToField;
 
-},{"./utils.js":70}],70:[function(require,module,exports){
+},{"./utils.js":79}],79:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateObject = exports.createHmacDrbg = exports.bitMask = exports.bitSet = exports.bitGet = exports.bitLen = exports.utf8ToBytes = exports.equalBytes = exports.concatBytes = exports.ensureBytes = exports.numberToVarBytesBE = exports.numberToBytesLE = exports.numberToBytesBE = exports.bytesToNumberLE = exports.bytesToNumberBE = exports.hexToBytes = exports.hexToNumber = exports.numberToHexUnpadded = exports.bytesToHex = exports.isBytes = void 0;
+exports.validateObject = exports.createHmacDrbg = exports.bitMask = exports.bitSet = exports.bitGet = exports.bitLen = exports.utf8ToBytes = exports.equalBytes = exports.concatBytes = exports.ensureBytes = exports.numberToVarBytesBE = exports.numberToBytesLE = exports.numberToBytesBE = exports.bytesToNumberLE = exports.bytesToNumberBE = exports.hexToBytes = exports.hexToNumber = exports.numberToHexUnpadded = exports.bytesToHex = exports.abytes = exports.isBytes = void 0;
 /*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
 // 100 lines of code in the file are duplicated from noble-hashes (utils).
 // This is OK: `abstract` directory does not use noble-hashes.
@@ -12744,14 +12984,18 @@ function isBytes(a) {
         (a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array'));
 }
 exports.isBytes = isBytes;
+function abytes(item) {
+    if (!isBytes(item))
+        throw new Error('Uint8Array expected');
+}
+exports.abytes = abytes;
 // Array where index 0xf0 (240) is mapped to string 'f0'
 const hexes = /* @__PURE__ */ Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, '0'));
 /**
  * @example bytesToHex(Uint8Array.from([0xca, 0xfe, 0x01, 0x23])) // 'cafe0123'
  */
 function bytesToHex(bytes) {
-    if (!isBytes(bytes))
-        throw new Error('Uint8Array expected');
+    abytes(bytes);
     // pre-caching improves the speed 6x
     let hex = '';
     for (let i = 0; i < bytes.length; i++) {
@@ -12812,8 +13056,7 @@ function bytesToNumberBE(bytes) {
 }
 exports.bytesToNumberBE = bytesToNumberBE;
 function bytesToNumberLE(bytes) {
-    if (!isBytes(bytes))
-        throw new Error('Uint8Array expected');
+    abytes(bytes);
     return hexToNumber(bytesToHex(Uint8Array.from(bytes).reverse()));
 }
 exports.bytesToNumberLE = bytesToNumberLE;
@@ -12870,13 +13113,11 @@ function concatBytes(...arrays) {
     let sum = 0;
     for (let i = 0; i < arrays.length; i++) {
         const a = arrays[i];
-        if (!isBytes(a))
-            throw new Error('Uint8Array expected');
+        abytes(a);
         sum += a.length;
     }
-    let res = new Uint8Array(sum);
-    let pad = 0;
-    for (let i = 0; i < arrays.length; i++) {
+    const res = new Uint8Array(sum);
+    for (let i = 0, pad = 0; i < arrays.length; i++) {
         const a = arrays[i];
         res.set(a, pad);
         pad += a.length;
@@ -12927,9 +13168,9 @@ exports.bitGet = bitGet;
 /**
  * Sets single bit at position.
  */
-const bitSet = (n, pos, value) => {
+function bitSet(n, pos, value) {
     return n | ((value ? _1n : _0n) << BigInt(pos));
-};
+}
 exports.bitSet = bitSet;
 /**
  * Calculate mask for N bits. Not using ** operator with bigints because of old engines.
@@ -13040,7 +13281,7 @@ exports.validateObject = validateObject;
 // const z3 = validateObject(o, { test: 'boolean', z: 'bug' });
 // const z4 = validateObject(o, { a: 'boolean', z: 'bug' });
 
-},{}],71:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mapToCurveSimpleSWU = exports.SWUFpSqrtRatio = exports.weierstrass = exports.weierstrassPoints = exports.DER = void 0;
@@ -13108,8 +13349,7 @@ exports.DER = {
         // parse DER signature
         const { Err: E } = exports.DER;
         const data = typeof hex === 'string' ? h2b(hex) : hex;
-        if (!ut.isBytes(data))
-            throw new Error('ui8a expected');
+        ut.abytes(data);
         let l = data.length;
         if (l < 2 || data[0] != 0x30)
             throw new E('Invalid signature tag');
@@ -13618,7 +13858,14 @@ function weierstrass(curveDef) {
                 if (!isValidFieldElement(x))
                     throw new Error('Point is not on curve');
                 const y2 = weierstrassEquation(x); // y² = x³ + ax + b
-                let y = Fp.sqrt(y2); // y = y² ^ (p+1)/4
+                let y;
+                try {
+                    y = Fp.sqrt(y2); // y = y² ^ (p+1)/4
+                }
+                catch (sqrtError) {
+                    const suffix = sqrtError instanceof Error ? ': ' + sqrtError.message : '';
+                    throw new Error('Point is not on curve' + suffix);
+                }
                 const isYOdd = (y & _1n) === _1n;
                 // ECDSA
                 const isHeadOdd = (head & 1) === 1;
@@ -13845,7 +14092,7 @@ function weierstrass(curveDef) {
         const d = normPrivateKeyToScalar(privateKey); // validate private key, convert to bigint
         const seedArgs = [int2octets(d), int2octets(h1int)];
         // extraEntropy. RFC6979 3.6: additional k' (optional).
-        if (ent != null) {
+        if (ent != null && ent !== false) {
             // K = HMAC_K(V || 0x00 || int2octets(x) || bits2octets(h1) || k')
             const e = ent === true ? randomBytes(Fp.BYTES) : ent; // generate random bytes OR pass as-is
             seedArgs.push((0, utils_js_1.ensureBytes)('extraEntropy', e)); // check for being bytes
@@ -14104,7 +14351,616 @@ function mapToCurveSimpleSWU(Fp, opts) {
 }
 exports.mapToCurveSimpleSWU = mapToCurveSimpleSWU;
 
-},{"./curve.js":67,"./modular.js":69,"./utils.js":70}],72:[function(require,module,exports){
+},{"./curve.js":76,"./modular.js":78,"./utils.js":79}],81:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.output = exports.exists = exports.hash = exports.bytes = exports.bool = exports.number = exports.isBytes = void 0;
+function number(n) {
+    if (!Number.isSafeInteger(n) || n < 0)
+        throw new Error(`positive integer expected, not ${n}`);
+}
+exports.number = number;
+function bool(b) {
+    if (typeof b !== 'boolean')
+        throw new Error(`boolean expected, not ${b}`);
+}
+exports.bool = bool;
+// copied from utils
+function isBytes(a) {
+    return (a instanceof Uint8Array ||
+        (a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array'));
+}
+exports.isBytes = isBytes;
+function bytes(b, ...lengths) {
+    if (!isBytes(b))
+        throw new Error('Uint8Array expected');
+    if (lengths.length > 0 && !lengths.includes(b.length))
+        throw new Error(`Uint8Array expected of length ${lengths}, not of length=${b.length}`);
+}
+exports.bytes = bytes;
+function hash(h) {
+    if (typeof h !== 'function' || typeof h.create !== 'function')
+        throw new Error('Hash should be wrapped by utils.wrapConstructor');
+    number(h.outputLen);
+    number(h.blockLen);
+}
+exports.hash = hash;
+function exists(instance, checkFinished = true) {
+    if (instance.destroyed)
+        throw new Error('Hash instance has been destroyed');
+    if (checkFinished && instance.finished)
+        throw new Error('Hash#digest() has already been called');
+}
+exports.exists = exists;
+function output(out, instance) {
+    bytes(out);
+    const min = instance.outputLen;
+    if (out.length < min) {
+        throw new Error(`digestInto() expects output buffer of length at least ${min}`);
+    }
+}
+exports.output = output;
+const assert = { number, bool, bytes, hash, exists, output };
+exports.default = assert;
+
+},{}],82:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.HashMD = exports.Maj = exports.Chi = void 0;
+const _assert_js_1 = require("./_assert.js");
+const utils_js_1 = require("./utils.js");
+// Polyfill for Safari 14
+function setBigUint64(view, byteOffset, value, isLE) {
+    if (typeof view.setBigUint64 === 'function')
+        return view.setBigUint64(byteOffset, value, isLE);
+    const _32n = BigInt(32);
+    const _u32_max = BigInt(0xffffffff);
+    const wh = Number((value >> _32n) & _u32_max);
+    const wl = Number(value & _u32_max);
+    const h = isLE ? 4 : 0;
+    const l = isLE ? 0 : 4;
+    view.setUint32(byteOffset + h, wh, isLE);
+    view.setUint32(byteOffset + l, wl, isLE);
+}
+// Choice: a ? b : c
+const Chi = (a, b, c) => (a & b) ^ (~a & c);
+exports.Chi = Chi;
+// Majority function, true if any two inpust is true
+const Maj = (a, b, c) => (a & b) ^ (a & c) ^ (b & c);
+exports.Maj = Maj;
+/**
+ * Merkle-Damgard hash construction base class.
+ * Could be used to create MD5, RIPEMD, SHA1, SHA2.
+ */
+class HashMD extends utils_js_1.Hash {
+    constructor(blockLen, outputLen, padOffset, isLE) {
+        super();
+        this.blockLen = blockLen;
+        this.outputLen = outputLen;
+        this.padOffset = padOffset;
+        this.isLE = isLE;
+        this.finished = false;
+        this.length = 0;
+        this.pos = 0;
+        this.destroyed = false;
+        this.buffer = new Uint8Array(blockLen);
+        this.view = (0, utils_js_1.createView)(this.buffer);
+    }
+    update(data) {
+        (0, _assert_js_1.exists)(this);
+        const { view, buffer, blockLen } = this;
+        data = (0, utils_js_1.toBytes)(data);
+        const len = data.length;
+        for (let pos = 0; pos < len;) {
+            const take = Math.min(blockLen - this.pos, len - pos);
+            // Fast path: we have at least one block in input, cast it to view and process
+            if (take === blockLen) {
+                const dataView = (0, utils_js_1.createView)(data);
+                for (; blockLen <= len - pos; pos += blockLen)
+                    this.process(dataView, pos);
+                continue;
+            }
+            buffer.set(data.subarray(pos, pos + take), this.pos);
+            this.pos += take;
+            pos += take;
+            if (this.pos === blockLen) {
+                this.process(view, 0);
+                this.pos = 0;
+            }
+        }
+        this.length += data.length;
+        this.roundClean();
+        return this;
+    }
+    digestInto(out) {
+        (0, _assert_js_1.exists)(this);
+        (0, _assert_js_1.output)(out, this);
+        this.finished = true;
+        // Padding
+        // We can avoid allocation of buffer for padding completely if it
+        // was previously not allocated here. But it won't change performance.
+        const { buffer, view, blockLen, isLE } = this;
+        let { pos } = this;
+        // append the bit '1' to the message
+        buffer[pos++] = 0b10000000;
+        this.buffer.subarray(pos).fill(0);
+        // we have less than padOffset left in buffer, so we cannot put length in
+        // current block, need process it and pad again
+        if (this.padOffset > blockLen - pos) {
+            this.process(view, 0);
+            pos = 0;
+        }
+        // Pad until full block byte with zeros
+        for (let i = pos; i < blockLen; i++)
+            buffer[i] = 0;
+        // Note: sha512 requires length to be 128bit integer, but length in JS will overflow before that
+        // You need to write around 2 exabytes (u64_max / 8 / (1024**6)) for this to happen.
+        // So we just write lowest 64 bits of that value.
+        setBigUint64(view, blockLen - 8, BigInt(this.length * 8), isLE);
+        this.process(view, 0);
+        const oview = (0, utils_js_1.createView)(out);
+        const len = this.outputLen;
+        // NOTE: we do division by 4 later, which should be fused in single op with modulo by JIT
+        if (len % 4)
+            throw new Error('_sha2: outputLen should be aligned to 32bit');
+        const outLen = len / 4;
+        const state = this.get();
+        if (outLen > state.length)
+            throw new Error('_sha2: outputLen bigger than state');
+        for (let i = 0; i < outLen; i++)
+            oview.setUint32(4 * i, state[i], isLE);
+    }
+    digest() {
+        const { buffer, outputLen } = this;
+        this.digestInto(buffer);
+        const res = buffer.slice(0, outputLen);
+        this.destroy();
+        return res;
+    }
+    _cloneInto(to) {
+        to || (to = new this.constructor());
+        to.set(...this.get());
+        const { blockLen, buffer, length, finished, destroyed, pos } = this;
+        to.length = length;
+        to.pos = pos;
+        to.finished = finished;
+        to.destroyed = destroyed;
+        if (length % blockLen)
+            to.buffer.set(buffer);
+        return to;
+    }
+}
+exports.HashMD = HashMD;
+
+},{"./_assert.js":81,"./utils.js":86}],83:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.crypto = void 0;
+exports.crypto = typeof globalThis === 'object' && 'crypto' in globalThis ? globalThis.crypto : undefined;
+
+},{}],84:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.hmac = exports.HMAC = void 0;
+const _assert_js_1 = require("./_assert.js");
+const utils_js_1 = require("./utils.js");
+// HMAC (RFC 2104)
+class HMAC extends utils_js_1.Hash {
+    constructor(hash, _key) {
+        super();
+        this.finished = false;
+        this.destroyed = false;
+        (0, _assert_js_1.hash)(hash);
+        const key = (0, utils_js_1.toBytes)(_key);
+        this.iHash = hash.create();
+        if (typeof this.iHash.update !== 'function')
+            throw new Error('Expected instance of class which extends utils.Hash');
+        this.blockLen = this.iHash.blockLen;
+        this.outputLen = this.iHash.outputLen;
+        const blockLen = this.blockLen;
+        const pad = new Uint8Array(blockLen);
+        // blockLen can be bigger than outputLen
+        pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
+        for (let i = 0; i < pad.length; i++)
+            pad[i] ^= 0x36;
+        this.iHash.update(pad);
+        // By doing update (processing of first block) of outer hash here we can re-use it between multiple calls via clone
+        this.oHash = hash.create();
+        // Undo internal XOR && apply outer XOR
+        for (let i = 0; i < pad.length; i++)
+            pad[i] ^= 0x36 ^ 0x5c;
+        this.oHash.update(pad);
+        pad.fill(0);
+    }
+    update(buf) {
+        (0, _assert_js_1.exists)(this);
+        this.iHash.update(buf);
+        return this;
+    }
+    digestInto(out) {
+        (0, _assert_js_1.exists)(this);
+        (0, _assert_js_1.bytes)(out, this.outputLen);
+        this.finished = true;
+        this.iHash.digestInto(out);
+        this.oHash.update(out);
+        this.oHash.digestInto(out);
+        this.destroy();
+    }
+    digest() {
+        const out = new Uint8Array(this.oHash.outputLen);
+        this.digestInto(out);
+        return out;
+    }
+    _cloneInto(to) {
+        // Create new instance without calling constructor since key already in state and we don't know it.
+        to || (to = Object.create(Object.getPrototypeOf(this), {}));
+        const { oHash, iHash, finished, destroyed, blockLen, outputLen } = this;
+        to = to;
+        to.finished = finished;
+        to.destroyed = destroyed;
+        to.blockLen = blockLen;
+        to.outputLen = outputLen;
+        to.oHash = oHash._cloneInto(to.oHash);
+        to.iHash = iHash._cloneInto(to.iHash);
+        return to;
+    }
+    destroy() {
+        this.destroyed = true;
+        this.oHash.destroy();
+        this.iHash.destroy();
+    }
+}
+exports.HMAC = HMAC;
+/**
+ * HMAC: RFC2104 message authentication code.
+ * @param hash - function that would be used e.g. sha256
+ * @param key - message key
+ * @param message - message data
+ */
+const hmac = (hash, key, message) => new HMAC(hash, key).update(message).digest();
+exports.hmac = hmac;
+exports.hmac.create = (hash, key) => new HMAC(hash, key);
+
+},{"./_assert.js":81,"./utils.js":86}],85:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sha224 = exports.sha256 = void 0;
+const _md_js_1 = require("./_md.js");
+const utils_js_1 = require("./utils.js");
+// SHA2-256 need to try 2^128 hashes to execute birthday attack.
+// BTC network is doing 2^67 hashes/sec as per early 2023.
+// Round constants:
+// first 32 bits of the fractional parts of the cube roots of the first 64 primes 2..311)
+// prettier-ignore
+const SHA256_K = /* @__PURE__ */ new Uint32Array([
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+]);
+// Initial state:
+// first 32 bits of the fractional parts of the square roots of the first 8 primes 2..19
+// prettier-ignore
+const SHA256_IV = /* @__PURE__ */ new Uint32Array([
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+]);
+// Temporary buffer, not used to store anything between runs
+// Named this way because it matches specification.
+const SHA256_W = /* @__PURE__ */ new Uint32Array(64);
+class SHA256 extends _md_js_1.HashMD {
+    constructor() {
+        super(64, 32, 8, false);
+        // We cannot use array here since array allows indexing by variable
+        // which means optimizer/compiler cannot use registers.
+        this.A = SHA256_IV[0] | 0;
+        this.B = SHA256_IV[1] | 0;
+        this.C = SHA256_IV[2] | 0;
+        this.D = SHA256_IV[3] | 0;
+        this.E = SHA256_IV[4] | 0;
+        this.F = SHA256_IV[5] | 0;
+        this.G = SHA256_IV[6] | 0;
+        this.H = SHA256_IV[7] | 0;
+    }
+    get() {
+        const { A, B, C, D, E, F, G, H } = this;
+        return [A, B, C, D, E, F, G, H];
+    }
+    // prettier-ignore
+    set(A, B, C, D, E, F, G, H) {
+        this.A = A | 0;
+        this.B = B | 0;
+        this.C = C | 0;
+        this.D = D | 0;
+        this.E = E | 0;
+        this.F = F | 0;
+        this.G = G | 0;
+        this.H = H | 0;
+    }
+    process(view, offset) {
+        // Extend the first 16 words into the remaining 48 words w[16..63] of the message schedule array
+        for (let i = 0; i < 16; i++, offset += 4)
+            SHA256_W[i] = view.getUint32(offset, false);
+        for (let i = 16; i < 64; i++) {
+            const W15 = SHA256_W[i - 15];
+            const W2 = SHA256_W[i - 2];
+            const s0 = (0, utils_js_1.rotr)(W15, 7) ^ (0, utils_js_1.rotr)(W15, 18) ^ (W15 >>> 3);
+            const s1 = (0, utils_js_1.rotr)(W2, 17) ^ (0, utils_js_1.rotr)(W2, 19) ^ (W2 >>> 10);
+            SHA256_W[i] = (s1 + SHA256_W[i - 7] + s0 + SHA256_W[i - 16]) | 0;
+        }
+        // Compression function main loop, 64 rounds
+        let { A, B, C, D, E, F, G, H } = this;
+        for (let i = 0; i < 64; i++) {
+            const sigma1 = (0, utils_js_1.rotr)(E, 6) ^ (0, utils_js_1.rotr)(E, 11) ^ (0, utils_js_1.rotr)(E, 25);
+            const T1 = (H + sigma1 + (0, _md_js_1.Chi)(E, F, G) + SHA256_K[i] + SHA256_W[i]) | 0;
+            const sigma0 = (0, utils_js_1.rotr)(A, 2) ^ (0, utils_js_1.rotr)(A, 13) ^ (0, utils_js_1.rotr)(A, 22);
+            const T2 = (sigma0 + (0, _md_js_1.Maj)(A, B, C)) | 0;
+            H = G;
+            G = F;
+            F = E;
+            E = (D + T1) | 0;
+            D = C;
+            C = B;
+            B = A;
+            A = (T1 + T2) | 0;
+        }
+        // Add the compressed chunk to the current hash value
+        A = (A + this.A) | 0;
+        B = (B + this.B) | 0;
+        C = (C + this.C) | 0;
+        D = (D + this.D) | 0;
+        E = (E + this.E) | 0;
+        F = (F + this.F) | 0;
+        G = (G + this.G) | 0;
+        H = (H + this.H) | 0;
+        this.set(A, B, C, D, E, F, G, H);
+    }
+    roundClean() {
+        SHA256_W.fill(0);
+    }
+    destroy() {
+        this.set(0, 0, 0, 0, 0, 0, 0, 0);
+        this.buffer.fill(0);
+    }
+}
+// Constants from https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+class SHA224 extends SHA256 {
+    constructor() {
+        super();
+        this.A = 0xc1059ed8 | 0;
+        this.B = 0x367cd507 | 0;
+        this.C = 0x3070dd17 | 0;
+        this.D = 0xf70e5939 | 0;
+        this.E = 0xffc00b31 | 0;
+        this.F = 0x68581511 | 0;
+        this.G = 0x64f98fa7 | 0;
+        this.H = 0xbefa4fa4 | 0;
+        this.outputLen = 28;
+    }
+}
+/**
+ * SHA2-256 hash function
+ * @param message - data that would be hashed
+ */
+exports.sha256 = (0, utils_js_1.wrapConstructor)(() => new SHA256());
+exports.sha224 = (0, utils_js_1.wrapConstructor)(() => new SHA224());
+
+},{"./_md.js":82,"./utils.js":86}],86:[function(require,module,exports){
+"use strict";
+
+/*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.randomBytes = exports.wrapXOFConstructorWithOpts = exports.wrapConstructorWithOpts = exports.wrapConstructor = exports.checkOpts = exports.Hash = exports.concatBytes = exports.toBytes = exports.utf8ToBytes = exports.asyncLoop = exports.nextTick = exports.hexToBytes = exports.bytesToHex = exports.byteSwap32 = exports.byteSwapIfBE = exports.byteSwap = exports.isLE = exports.rotl = exports.rotr = exports.createView = exports.u32 = exports.u8 = exports.isBytes = void 0;
+// We use WebCrypto aka globalThis.crypto, which exists in browsers and node.js 16+.
+// node.js versions earlier than v19 don't declare it in global scope.
+// For node.js, package.json#exports field mapping rewrites import
+// from `crypto` to `cryptoNode`, which imports native module.
+// Makes the utils un-importable in browsers without a bundler.
+// Once node.js 18 is deprecated (2025-04-30), we can just drop the import.
+const crypto_1 = require("@noble/hashes/crypto");
+const _assert_js_1 = require("./_assert.js");
+// export { isBytes } from './_assert.js';
+// We can't reuse isBytes from _assert, because somehow this causes huge perf issues
+function isBytes(a) {
+  return a instanceof Uint8Array || a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array';
+}
+exports.isBytes = isBytes;
+// Cast array to different type
+const u8 = arr => new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
+exports.u8 = u8;
+const u32 = arr => new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));
+exports.u32 = u32;
+// Cast array to view
+const createView = arr => new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
+exports.createView = createView;
+// The rotate right (circular right shift) operation for uint32
+const rotr = (word, shift) => word << 32 - shift | word >>> shift;
+exports.rotr = rotr;
+// The rotate left (circular left shift) operation for uint32
+const rotl = (word, shift) => word << shift | word >>> 32 - shift >>> 0;
+exports.rotl = rotl;
+exports.isLE = new Uint8Array(new Uint32Array([0x11223344]).buffer)[0] === 0x44;
+// The byte swap operation for uint32
+const byteSwap = word => word << 24 & 0xff000000 | word << 8 & 0xff0000 | word >>> 8 & 0xff00 | word >>> 24 & 0xff;
+exports.byteSwap = byteSwap;
+// Conditionally byte swap if on a big-endian platform
+exports.byteSwapIfBE = exports.isLE ? n => n : n => (0, exports.byteSwap)(n);
+// In place byte swap for Uint32Array
+function byteSwap32(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = (0, exports.byteSwap)(arr[i]);
+  }
+}
+exports.byteSwap32 = byteSwap32;
+// Array where index 0xf0 (240) is mapped to string 'f0'
+const hexes = /* @__PURE__ */Array.from({
+  length: 256
+}, (_, i) => i.toString(16).padStart(2, '0'));
+/**
+ * @example bytesToHex(Uint8Array.from([0xca, 0xfe, 0x01, 0x23])) // 'cafe0123'
+ */
+function bytesToHex(bytes) {
+  (0, _assert_js_1.bytes)(bytes);
+  // pre-caching improves the speed 6x
+  let hex = '';
+  for (let i = 0; i < bytes.length; i++) {
+    hex += hexes[bytes[i]];
+  }
+  return hex;
+}
+exports.bytesToHex = bytesToHex;
+// We use optimized technique to convert hex string to byte array
+const asciis = {
+  _0: 48,
+  _9: 57,
+  _A: 65,
+  _F: 70,
+  _a: 97,
+  _f: 102
+};
+function asciiToBase16(char) {
+  if (char >= asciis._0 && char <= asciis._9) return char - asciis._0;
+  if (char >= asciis._A && char <= asciis._F) return char - (asciis._A - 10);
+  if (char >= asciis._a && char <= asciis._f) return char - (asciis._a - 10);
+  return;
+}
+/**
+ * @example hexToBytes('cafe0123') // Uint8Array.from([0xca, 0xfe, 0x01, 0x23])
+ */
+function hexToBytes(hex) {
+  if (typeof hex !== 'string') throw new Error('hex string expected, got ' + typeof hex);
+  const hl = hex.length;
+  const al = hl / 2;
+  if (hl % 2) throw new Error('padded hex string expected, got unpadded hex of length ' + hl);
+  const array = new Uint8Array(al);
+  for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
+    const n1 = asciiToBase16(hex.charCodeAt(hi));
+    const n2 = asciiToBase16(hex.charCodeAt(hi + 1));
+    if (n1 === undefined || n2 === undefined) {
+      const char = hex[hi] + hex[hi + 1];
+      throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
+    }
+    array[ai] = n1 * 16 + n2;
+  }
+  return array;
+}
+exports.hexToBytes = hexToBytes;
+// There is no setImmediate in browser and setTimeout is slow.
+// call of async fn will return Promise, which will be fullfiled only on
+// next scheduler queue processing step and this is exactly what we need.
+const nextTick = async () => {};
+exports.nextTick = nextTick;
+// Returns control to thread each 'tick' ms to avoid blocking
+async function asyncLoop(iters, tick, cb) {
+  let ts = Date.now();
+  for (let i = 0; i < iters; i++) {
+    cb(i);
+    // Date.now() is not monotonic, so in case if clock goes backwards we return return control too
+    const diff = Date.now() - ts;
+    if (diff >= 0 && diff < tick) continue;
+    await (0, exports.nextTick)();
+    ts += diff;
+  }
+}
+exports.asyncLoop = asyncLoop;
+/**
+ * @example utf8ToBytes('abc') // new Uint8Array([97, 98, 99])
+ */
+function utf8ToBytes(str) {
+  if (typeof str !== 'string') throw new Error(`utf8ToBytes expected string, got ${typeof str}`);
+  return new Uint8Array(new TextEncoder().encode(str)); // https://bugzil.la/1681809
+}
+
+exports.utf8ToBytes = utf8ToBytes;
+/**
+ * Normalizes (non-hex) string or Uint8Array to Uint8Array.
+ * Warning: when Uint8Array is passed, it would NOT get copied.
+ * Keep in mind for future mutable operations.
+ */
+function toBytes(data) {
+  if (typeof data === 'string') data = utf8ToBytes(data);
+  (0, _assert_js_1.bytes)(data);
+  return data;
+}
+exports.toBytes = toBytes;
+/**
+ * Copies several Uint8Arrays into one.
+ */
+function concatBytes(...arrays) {
+  let sum = 0;
+  for (let i = 0; i < arrays.length; i++) {
+    const a = arrays[i];
+    (0, _assert_js_1.bytes)(a);
+    sum += a.length;
+  }
+  const res = new Uint8Array(sum);
+  for (let i = 0, pad = 0; i < arrays.length; i++) {
+    const a = arrays[i];
+    res.set(a, pad);
+    pad += a.length;
+  }
+  return res;
+}
+exports.concatBytes = concatBytes;
+// For runtime check if class implements interface
+class Hash {
+  // Safe version that clones internal state
+  clone() {
+    return this._cloneInto();
+  }
+}
+exports.Hash = Hash;
+const toStr = {}.toString;
+function checkOpts(defaults, opts) {
+  if (opts !== undefined && toStr.call(opts) !== '[object Object]') throw new Error('Options should be object or undefined');
+  const merged = Object.assign(defaults, opts);
+  return merged;
+}
+exports.checkOpts = checkOpts;
+function wrapConstructor(hashCons) {
+  const hashC = msg => hashCons().update(toBytes(msg)).digest();
+  const tmp = hashCons();
+  hashC.outputLen = tmp.outputLen;
+  hashC.blockLen = tmp.blockLen;
+  hashC.create = () => hashCons();
+  return hashC;
+}
+exports.wrapConstructor = wrapConstructor;
+function wrapConstructorWithOpts(hashCons) {
+  const hashC = (msg, opts) => hashCons(opts).update(toBytes(msg)).digest();
+  const tmp = hashCons({});
+  hashC.outputLen = tmp.outputLen;
+  hashC.blockLen = tmp.blockLen;
+  hashC.create = opts => hashCons(opts);
+  return hashC;
+}
+exports.wrapConstructorWithOpts = wrapConstructorWithOpts;
+function wrapXOFConstructorWithOpts(hashCons) {
+  const hashC = (msg, opts) => hashCons(opts).update(toBytes(msg)).digest();
+  const tmp = hashCons({});
+  hashC.outputLen = tmp.outputLen;
+  hashC.blockLen = tmp.blockLen;
+  hashC.create = opts => hashCons(opts);
+  return hashC;
+}
+exports.wrapXOFConstructorWithOpts = wrapXOFConstructorWithOpts;
+/**
+ * Secure PRNG. Uses `crypto.getRandomValues`, which defers to OS.
+ */
+function randomBytes(bytesLength = 32) {
+  if (crypto_1.crypto && typeof crypto_1.crypto.getRandomValues === 'function') {
+    return crypto_1.crypto.getRandomValues(new Uint8Array(bytesLength));
+  }
+  throw new Error('crypto.getRandomValues must be defined');
+}
+exports.randomBytes = randomBytes;
+
+},{"./_assert.js":81,"@noble/hashes/crypto":83}],87:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.encodeToCurve = exports.hashToCurve = exports.secp256r1 = exports.p256 = void 0;
@@ -14150,7 +15006,7 @@ const htf = /* @__PURE__ */ (() => (0, hash_to_curve_js_1.createHasher)(exports.
 exports.hashToCurve = (() => htf.hashToCurve)();
 exports.encodeToCurve = (() => htf.encodeToCurve)();
 
-},{"./_shortw_utils.js":66,"./abstract/hash-to-curve.js":68,"./abstract/modular.js":69,"./abstract/weierstrass.js":71,"@noble/hashes/sha256":82}],73:[function(require,module,exports){
+},{"./_shortw_utils.js":75,"./abstract/hash-to-curve.js":77,"./abstract/modular.js":78,"./abstract/weierstrass.js":80,"@noble/hashes/sha256":85}],88:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.encodeToCurve = exports.hashToCurve = exports.schnorr = exports.secp256k1 = void 0;
@@ -14408,7 +15264,7 @@ const htf = /* @__PURE__ */ (() => (0, hash_to_curve_js_1.createHasher)(exports.
 exports.hashToCurve = (() => htf.hashToCurve)();
 exports.encodeToCurve = (() => htf.encodeToCurve)();
 
-},{"./_shortw_utils.js":66,"./abstract/hash-to-curve.js":68,"./abstract/modular.js":69,"./abstract/utils.js":70,"./abstract/weierstrass.js":71,"@noble/hashes/sha256":82,"@noble/hashes/utils":84}],74:[function(require,module,exports){
+},{"./_shortw_utils.js":75,"./abstract/hash-to-curve.js":77,"./abstract/modular.js":78,"./abstract/utils.js":79,"./abstract/weierstrass.js":80,"@noble/hashes/sha256":85,"@noble/hashes/utils":86}],89:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.output = exports.exists = exports.hash = exports.bytes = exports.bool = exports.number = void 0;
@@ -14459,7 +15315,7 @@ exports.output = output;
 const assert = { number, bool, bytes, hash, exists, output };
 exports.default = assert;
 
-},{}],75:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BLAKE2 = exports.SIGMA = void 0;
@@ -14572,7 +15428,7 @@ class BLAKE2 extends utils_js_1.Hash {
 }
 exports.BLAKE2 = BLAKE2;
 
-},{"./_assert.js":74,"./utils.js":84}],76:[function(require,module,exports){
+},{"./_assert.js":89,"./utils.js":99}],91:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SHA2 = void 0;
@@ -14691,7 +15547,7 @@ class SHA2 extends utils_js_1.Hash {
 }
 exports.SHA2 = SHA2;
 
-},{"./_assert.js":74,"./utils.js":84}],77:[function(require,module,exports){
+},{"./_assert.js":89,"./utils.js":99}],92:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.add5L = exports.add5H = exports.add4H = exports.add4L = exports.add3H = exports.add3L = exports.add = exports.rotlBL = exports.rotlBH = exports.rotlSL = exports.rotlSH = exports.rotr32L = exports.rotr32H = exports.rotrBL = exports.rotrBH = exports.rotrSL = exports.rotrSH = exports.shrSL = exports.shrSH = exports.toBig = exports.split = exports.fromBig = void 0;
@@ -14777,7 +15633,7 @@ const u64 = {
 };
 exports.default = u64;
 
-},{}],78:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.blake2b = void 0;
@@ -14970,96 +15826,11 @@ class BLAKE2b extends _blake2_js_1.BLAKE2 {
  */
 exports.blake2b = (0, utils_js_1.wrapConstructorWithOpts)((opts) => new BLAKE2b(opts));
 
-},{"./_blake2.js":75,"./_u64.js":77,"./utils.js":84}],79:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.crypto = void 0;
-exports.crypto = typeof globalThis === 'object' && 'crypto' in globalThis ? globalThis.crypto : undefined;
-
-},{}],80:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.hmac = exports.HMAC = void 0;
-const _assert_js_1 = require("./_assert.js");
-const utils_js_1 = require("./utils.js");
-// HMAC (RFC 2104)
-class HMAC extends utils_js_1.Hash {
-    constructor(hash, _key) {
-        super();
-        this.finished = false;
-        this.destroyed = false;
-        (0, _assert_js_1.hash)(hash);
-        const key = (0, utils_js_1.toBytes)(_key);
-        this.iHash = hash.create();
-        if (typeof this.iHash.update !== 'function')
-            throw new Error('Expected instance of class which extends utils.Hash');
-        this.blockLen = this.iHash.blockLen;
-        this.outputLen = this.iHash.outputLen;
-        const blockLen = this.blockLen;
-        const pad = new Uint8Array(blockLen);
-        // blockLen can be bigger than outputLen
-        pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
-        for (let i = 0; i < pad.length; i++)
-            pad[i] ^= 0x36;
-        this.iHash.update(pad);
-        // By doing update (processing of first block) of outer hash here we can re-use it between multiple calls via clone
-        this.oHash = hash.create();
-        // Undo internal XOR && apply outer XOR
-        for (let i = 0; i < pad.length; i++)
-            pad[i] ^= 0x36 ^ 0x5c;
-        this.oHash.update(pad);
-        pad.fill(0);
-    }
-    update(buf) {
-        (0, _assert_js_1.exists)(this);
-        this.iHash.update(buf);
-        return this;
-    }
-    digestInto(out) {
-        (0, _assert_js_1.exists)(this);
-        (0, _assert_js_1.bytes)(out, this.outputLen);
-        this.finished = true;
-        this.iHash.digestInto(out);
-        this.oHash.update(out);
-        this.oHash.digestInto(out);
-        this.destroy();
-    }
-    digest() {
-        const out = new Uint8Array(this.oHash.outputLen);
-        this.digestInto(out);
-        return out;
-    }
-    _cloneInto(to) {
-        // Create new instance without calling constructor since key already in state and we don't know it.
-        to || (to = Object.create(Object.getPrototypeOf(this), {}));
-        const { oHash, iHash, finished, destroyed, blockLen, outputLen } = this;
-        to = to;
-        to.finished = finished;
-        to.destroyed = destroyed;
-        to.blockLen = blockLen;
-        to.outputLen = outputLen;
-        to.oHash = oHash._cloneInto(to.oHash);
-        to.iHash = iHash._cloneInto(to.iHash);
-        return to;
-    }
-    destroy() {
-        this.destroyed = true;
-        this.oHash.destroy();
-        this.iHash.destroy();
-    }
-}
-exports.HMAC = HMAC;
-/**
- * HMAC: RFC2104 message authentication code.
- * @param hash - function that would be used e.g. sha256
- * @param key - message key
- * @param message - message data
- */
-const hmac = (hash, key, message) => new HMAC(hash, key).update(message).digest();
-exports.hmac = hmac;
-exports.hmac.create = (hash, key) => new HMAC(hash, key);
-
-},{"./_assert.js":74,"./utils.js":84}],81:[function(require,module,exports){
+},{"./_blake2.js":90,"./_u64.js":92,"./utils.js":99}],94:[function(require,module,exports){
+arguments[4][83][0].apply(exports,arguments)
+},{"dup":83}],95:[function(require,module,exports){
+arguments[4][84][0].apply(exports,arguments)
+},{"./_assert.js":89,"./utils.js":99,"dup":84}],96:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.pbkdf2Async = exports.pbkdf2 = void 0;
@@ -15151,7 +15922,7 @@ async function pbkdf2Async(hash, password, salt, opts) {
 }
 exports.pbkdf2Async = pbkdf2Async;
 
-},{"./_assert.js":74,"./hmac.js":80,"./utils.js":84}],82:[function(require,module,exports){
+},{"./_assert.js":89,"./hmac.js":95,"./utils.js":99}],97:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sha224 = exports.sha256 = void 0;
@@ -15281,7 +16052,7 @@ class SHA224 extends SHA256 {
 exports.sha256 = (0, utils_js_1.wrapConstructor)(() => new SHA256());
 exports.sha224 = (0, utils_js_1.wrapConstructor)(() => new SHA224());
 
-},{"./_sha2.js":76,"./utils.js":84}],83:[function(require,module,exports){
+},{"./_sha2.js":91,"./utils.js":99}],98:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sha384 = exports.sha512_256 = exports.sha512_224 = exports.sha512 = exports.SHA512 = void 0;
@@ -15517,7 +16288,7 @@ exports.sha512_224 = (0, utils_js_1.wrapConstructor)(() => new SHA512_224());
 exports.sha512_256 = (0, utils_js_1.wrapConstructor)(() => new SHA512_256());
 exports.sha384 = (0, utils_js_1.wrapConstructor)(() => new SHA384());
 
-},{"./_sha2.js":76,"./_u64.js":77,"./utils.js":84}],84:[function(require,module,exports){
+},{"./_sha2.js":91,"./_u64.js":92,"./utils.js":99}],99:[function(require,module,exports){
 "use strict";
 
 /*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) */
@@ -15715,1227 +16486,14 @@ function randomBytes(bytesLength = 32) {
 }
 exports.randomBytes = randomBytes;
 
-},{"@noble/hashes/crypto":79}],85:[function(require,module,exports){
-"use strict";
-
-var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
-  function adopt(value) {
-    return value instanceof P ? value : new P(function (resolve) {
-      resolve(value);
-    });
-  }
-  return new (P || (P = Promise))(function (resolve, reject) {
-    function fulfilled(value) {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function rejected(value) {
-      try {
-        step(generator["throw"](value));
-      } catch (e) {
-        reject(e);
-      }
-    }
-    function step(result) {
-      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-    }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
-var __generator = void 0 && (void 0).__generator || function (thisArg, body) {
-  var _ = {
-      label: 0,
-      sent: function () {
-        if (t[0] & 1) throw t[1];
-        return t[1];
-      },
-      trys: [],
-      ops: []
-    },
-    f,
-    y,
-    t,
-    g;
-  return g = {
-    next: verb(0),
-    "throw": verb(1),
-    "return": verb(2)
-  }, typeof Symbol === "function" && (g[Symbol.iterator] = function () {
-    return this;
-  }), g;
-  function verb(n) {
-    return function (v) {
-      return step([n, v]);
-    };
-  }
-  function step(op) {
-    if (f) throw new TypeError("Generator is already executing.");
-    while (_) try {
-      if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-      if (y = 0, t) op = [op[0] & 2, t.value];
-      switch (op[0]) {
-        case 0:
-        case 1:
-          t = op;
-          break;
-        case 4:
-          _.label++;
-          return {
-            value: op[1],
-            done: false
-          };
-        case 5:
-          _.label++;
-          y = op[1];
-          op = [0];
-          continue;
-        case 7:
-          op = _.ops.pop();
-          _.trys.pop();
-          continue;
-        default:
-          if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) {
-            _ = 0;
-            continue;
-          }
-          if (op[0] === 3 && (!t || op[1] > t[0] && op[1] < t[3])) {
-            _.label = op[1];
-            break;
-          }
-          if (op[0] === 6 && _.label < t[1]) {
-            _.label = t[1];
-            t = op;
-            break;
-          }
-          if (t && _.label < t[2]) {
-            _.label = t[2];
-            _.ops.push(op);
-            break;
-          }
-          if (t[2]) _.ops.pop();
-          _.trys.pop();
-          continue;
-      }
-      op = body.call(thisArg, _);
-    } catch (e) {
-      op = [6, e];
-      y = 0;
-    } finally {
-      f = t = 0;
-    }
-    if (op[0] & 5) throw op[1];
-    return {
-      value: op[0] ? op[1] : void 0,
-      done: true
-    };
-  }
-};
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-/**
- * OpenRPC Client JS is a browser-compatible JSON-RPC client with multiple transports and
- * multiple request managers to enable features like round-robin or fallback-by-position.
- *
- * @example
- * ```typescript
- * import { RequestManager, HTTPTransport, Client } from '@open-rpc/client-js';
- * const transport = new HTTPTransport('http://localhost:3333');
- * const client = new Client(new RequestManager([transport]));
- * const result = await client.request({method: 'addition', params: [2, 2]});
- * // => { jsonrpc: '2.0', id: 1, result: 4 }
- * ```
- *
- */
-var Client = /** @class */function () {
-  function Client(requestManager) {
-    this.requestManager = requestManager;
-  }
-  /**
-   * Initiates [[RequestManager.startBatch]] in order to build a batch call.
-   *
-   * Subsequent calls to [[Client.request]] will be added to the batch. Once [[Client.stopBatch]] is called, the
-   * promises for the [[Client.request]] will then be resolved.  If the [[RequestManager]] already has a batch in
-   * progress, this method is a noop.
-   *
-   * @example
-   * myClient.startBatch();
-   * myClient.request({method: "foo", params: ["bar"]}).then(() => console.log('foobar'));
-   * myClient.request({method: "foo", params: ["baz"]}).then(() => console.log('foobaz'));
-   * myClient.stopBatch();
-   */
-  Client.prototype.startBatch = function () {
-    return this.requestManager.startBatch();
-  };
-  /**
-   * Initiates [[RequestManager.stopBatch]] in order to finalize and send the batch to the underlying transport.
-   *
-   * [[Client.stopBatch]] will send the [[Client.request]] calls made since the last [[Client.startBatch]] call. For
-   * that reason, [[Client.startBatch]] MUST be called before [[Client.stopBatch]].
-   *
-   * @example
-   * myClient.startBatch();
-   * myClient.request({method: "foo", params: ["bar"]}).then(() => console.log('foobar'));
-   * myClient.request({method: "foo", params: ["baz"]}).then(() => console.log('foobaz'));
-   * myClient.stopBatch();
-   */
-  Client.prototype.stopBatch = function () {
-    return this.requestManager.stopBatch();
-  };
-  /**
-   * A JSON-RPC call is represented by sending a Request object to a Server.
-   *
-   * @param requestObject.method A String containing the name of the method to be invoked. Method names that begin with the word rpc
-   * followed by a period character (U+002E or ASCII 46) are reserved for rpc-internal methods and extensions and
-   * MUST NOT be used for anything else.
-   * @param requestObject.params A Structured value that holds the parameter values to be used during the invocation of the method.
-   *
-   * @example
-   * myClient.request({method: "foo", params: ["bar"]}).then(() => console.log('foobar'));
-   */
-  Client.prototype.request = function (requestObject, timeout) {
-    return __awaiter(this, void 0, void 0, function () {
-      return __generator(this, function (_a) {
-        switch (_a.label) {
-          case 0:
-            if (!this.requestManager.connectPromise) return [3 /*break*/, 2];
-            return [4 /*yield*/, this.requestManager.connectPromise];
-          case 1:
-            _a.sent();
-            _a.label = 2;
-          case 2:
-            return [2 /*return*/, this.requestManager.request(requestObject, false, timeout)];
-        }
-      });
-    });
-  };
-  Client.prototype.notify = function (requestObject) {
-    return __awaiter(this, void 0, void 0, function () {
-      return __generator(this, function (_a) {
-        switch (_a.label) {
-          case 0:
-            if (!this.requestManager.connectPromise) return [3 /*break*/, 2];
-            return [4 /*yield*/, this.requestManager.connectPromise];
-          case 1:
-            _a.sent();
-            _a.label = 2;
-          case 2:
-            return [2 /*return*/, this.requestManager.request(requestObject, true, null)];
-        }
-      });
-    });
-  };
-  Client.prototype.onNotification = function (callback) {
-    this.requestManager.requestChannel.addListener("notification", callback);
-  };
-  Client.prototype.onError = function (callback) {
-    this.requestManager.requestChannel.addListener("error", callback);
-  };
-  /**
-   * Close connection
-   */
-  Client.prototype.close = function () {
-    this.requestManager.close();
-  };
-  return Client;
-}();
-exports.default = Client;
-
-},{}],86:[function(require,module,exports){
-"use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertJSONToRPCError = exports.JSONRPCError = exports.ERR_UNKNOWN = exports.ERR_MISSIING_ID = exports.ERR_TIMEOUT = void 0;
-exports.ERR_TIMEOUT = 7777;
-exports.ERR_MISSIING_ID = 7878;
-exports.ERR_UNKNOWN = 7979;
-var JSONRPCError = /** @class */ (function (_super) {
-    __extends(JSONRPCError, _super);
-    function JSONRPCError(message, code, data) {
-        var _newTarget = this.constructor;
-        var _this = _super.call(this, message) || this;
-        _this.message = message;
-        _this.code = code;
-        _this.data = data;
-        Object.setPrototypeOf(_this, _newTarget.prototype); // restore prototype chain: see https://github.com/open-rpc/client-js/issues/209
-        return _this;
-    }
-    return JSONRPCError;
-}(Error));
-exports.JSONRPCError = JSONRPCError;
-exports.convertJSONToRPCError = function (payload) {
-    if (payload.error) {
-        var _a = payload.error, message = _a.message, code = _a.code, data = _a.data;
-        return new JSONRPCError(message, code, data);
-    }
-    return new JSONRPCError("Unknown error", exports.ERR_UNKNOWN, payload);
-};
-
-},{}],87:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getNotifications = exports.getBatchRequests = exports.isNotification = void 0;
-exports.isNotification = function (data) {
-    return (data.request.id === undefined || data.request.id === null);
-};
-exports.getBatchRequests = function (data) {
-    if (data instanceof Array) {
-        return data.filter(function (datum) {
-            var id = datum.request.request.id;
-            return id !== null && id !== undefined;
-        }).map(function (batchRequest) {
-            return batchRequest.request;
-        });
-    }
-    return [];
-};
-exports.getNotifications = function (data) {
-    if (data instanceof Array) {
-        return data.filter(function (datum) {
-            return exports.isNotification(datum.request);
-        }).map(function (batchRequest) {
-            return batchRequest.request;
-        });
-    }
-    if (exports.isNotification(data)) {
-        return [data];
-    }
-    return [];
-};
-
-},{}],88:[function(require,module,exports){
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.defaultNextRequest = void 0;
-var events_1 = require("events");
-exports.defaultNextRequest = function () {
-    var lastId = -1;
-    return function () { return ++lastId; };
-};
-/*
-** Naive Request Manager, only use 1st transport.
- * A more complex request manager could try each transport.
- * If a transport fails, or times out, move on to the next.
- */
-var RequestManager = /** @class */ (function () {
-    function RequestManager(transports, nextID) {
-        if (nextID === void 0) { nextID = exports.defaultNextRequest(); }
-        this.batch = [];
-        this.batchStarted = false;
-        this.lastId = -1;
-        this.transports = transports;
-        this.requests = {};
-        this.connectPromise = this.connect();
-        this.requestChannel = new events_1.EventEmitter();
-        this.nextID = nextID;
-    }
-    RequestManager.prototype.connect = function () {
-        var _this = this;
-        return Promise.all(this.transports.map(function (transport) { return __awaiter(_this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        transport.subscribe("error", this.handleError.bind(this));
-                        transport.subscribe("notification", this.handleNotification.bind(this));
-                        return [4 /*yield*/, transport.connect()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        }); }));
-    };
-    RequestManager.prototype.getPrimaryTransport = function () {
-        return this.transports[0];
-    };
-    RequestManager.prototype.request = function (requestObject, notification, timeout) {
-        if (notification === void 0) { notification = false; }
-        return __awaiter(this, void 0, void 0, function () {
-            var internalID, id, payload, result;
-            var _this = this;
-            return __generator(this, function (_a) {
-                internalID = this.nextID().toString();
-                id = notification ? null : internalID;
-                payload = { request: this.makeRequest(requestObject.method, requestObject.params || [], id), internalID: internalID };
-                if (this.batchStarted) {
-                    result = new Promise(function (resolve, reject) {
-                        _this.batch.push({ resolve: resolve, reject: reject, request: payload });
-                    });
-                    return [2 /*return*/, result];
-                }
-                return [2 /*return*/, this.getPrimaryTransport().sendData(payload, timeout)];
-            });
-        });
-    };
-    RequestManager.prototype.close = function () {
-        this.requestChannel.removeAllListeners();
-        this.transports.forEach(function (transport) {
-            transport.unsubscribe();
-            transport.close();
-        });
-    };
-    /**
-     * Begins a batch call by setting the [[RequestManager.batchStarted]] flag to `true`.
-     *
-     * [[RequestManager.batch]] is a singleton - only one batch can exist at a given time, per [[RequestManager]].
-     *
-     */
-    RequestManager.prototype.startBatch = function () {
-        this.batchStarted = true;
-    };
-    RequestManager.prototype.stopBatch = function () {
-        if (this.batchStarted === false) {
-            throw new Error("cannot end that which has never started");
-        }
-        if (this.batch.length === 0) {
-            this.batchStarted = false;
-            return;
-        }
-        this.getPrimaryTransport().sendData(this.batch);
-        this.batch = [];
-        this.batchStarted = false;
-    };
-    RequestManager.prototype.makeRequest = function (method, params, id) {
-        if (id) {
-            return { jsonrpc: "2.0", id: id, method: method, params: params };
-        }
-        return { jsonrpc: "2.0", method: method, params: params };
-    };
-    RequestManager.prototype.handleError = function (data) {
-        this.requestChannel.emit("error", data);
-    };
-    RequestManager.prototype.handleNotification = function (data) {
-        this.requestChannel.emit("notification", data);
-    };
-    return RequestManager;
-}());
-exports.default = RequestManager;
-
-},{"events":3}],89:[function(require,module,exports){
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PostMessageIframeTransport = exports.PostMessageWindowTransport = exports.JSONRPCError = exports.WebSocketTransport = exports.EventEmitterTransport = exports.HTTPTransport = exports.RequestManager = exports.Client = void 0;
-var RequestManager_1 = __importDefault(require("./RequestManager"));
-exports.RequestManager = RequestManager_1.default;
-var EventEmitterTransport_1 = __importDefault(require("./transports/EventEmitterTransport"));
-exports.EventEmitterTransport = EventEmitterTransport_1.default;
-var HTTPTransport_1 = __importDefault(require("./transports/HTTPTransport"));
-exports.HTTPTransport = HTTPTransport_1.default;
-var WebSocketTransport_1 = __importDefault(require("./transports/WebSocketTransport"));
-exports.WebSocketTransport = WebSocketTransport_1.default;
-var PostMessageWindowTransport_1 = __importDefault(require("./transports/PostMessageWindowTransport"));
-exports.PostMessageWindowTransport = PostMessageWindowTransport_1.default;
-var PostMessageIframeTransport_1 = __importDefault(require("./transports/PostMessageIframeTransport"));
-exports.PostMessageIframeTransport = PostMessageIframeTransport_1.default;
-var Error_1 = require("./Error");
-Object.defineProperty(exports, "JSONRPCError", { enumerable: true, get: function () { return Error_1.JSONRPCError; } });
-var Client_1 = __importDefault(require("./Client"));
-exports.Client = Client_1.default;
-exports.default = Client_1.default;
-
-},{"./Client":85,"./Error":86,"./RequestManager":88,"./transports/EventEmitterTransport":90,"./transports/HTTPTransport":91,"./transports/PostMessageIframeTransport":92,"./transports/PostMessageWindowTransport":93,"./transports/WebSocketTransport":96}],90:[function(require,module,exports){
-"use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var Transport_1 = require("./Transport");
-var Request_1 = require("../Request");
-var Error_1 = require("../Error");
-var EventEmitterTransport = /** @class */ (function (_super) {
-    __extends(EventEmitterTransport, _super);
-    function EventEmitterTransport(destEmitter, reqUri, resUri) {
-        var _this = _super.call(this) || this;
-        _this.connection = destEmitter;
-        _this.reqUri = reqUri;
-        _this.resUri = resUri;
-        return _this;
-    }
-    EventEmitterTransport.prototype.connect = function () {
-        var _this = this;
-        this.connection.on(this.resUri, function (data) {
-            _this.transportRequestManager.resolveResponse(data);
-        });
-        return Promise.resolve();
-    };
-    EventEmitterTransport.prototype.sendData = function (data, timeout) {
-        if (timeout === void 0) { timeout = null; }
-        var prom = this.transportRequestManager.addRequest(data, timeout);
-        var notifications = Request_1.getNotifications(data);
-        var parsedData = this.parseData(data);
-        try {
-            this.connection.emit(this.reqUri, parsedData);
-            this.transportRequestManager.settlePendingRequest(notifications);
-            return prom;
-        }
-        catch (e) {
-            var responseErr = new Error_1.JSONRPCError(e.message, Error_1.ERR_UNKNOWN, e);
-            this.transportRequestManager.settlePendingRequest(notifications, responseErr);
-            return Promise.reject(responseErr);
-        }
-    };
-    EventEmitterTransport.prototype.close = function () {
-        this.connection.removeAllListeners();
-    };
-    return EventEmitterTransport;
-}(Transport_1.Transport));
-exports.default = EventEmitterTransport;
-
-},{"../Error":86,"../Request":87,"./Transport":94}],91:[function(require,module,exports){
-"use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.HTTPTransport = void 0;
-var isomorphic_fetch_1 = __importDefault(require("isomorphic-fetch"));
-var Transport_1 = require("./Transport");
-var Request_1 = require("../Request");
-var Error_1 = require("../Error");
-var HTTPTransport = /** @class */ (function (_super) {
-    __extends(HTTPTransport, _super);
-    function HTTPTransport(uri, options) {
-        var _this = _super.call(this) || this;
-        _this.onlyNotifications = function (data) {
-            if (data instanceof Array) {
-                return data.every(function (datum) {
-                    return datum.request.request.id === null ||
-                        datum.request.request.id === undefined;
-                });
-            }
-            return data.request.id === null || data.request.id === undefined;
-        };
-        _this.uri = uri;
-        _this.credentials = options && options.credentials;
-        _this.headers = HTTPTransport.setupHeaders(options && options.headers);
-        _this.injectedFetcher = options === null || options === void 0 ? void 0 : options.fetcher;
-        return _this;
-    }
-    HTTPTransport.prototype.connect = function () {
-        return Promise.resolve();
-    };
-    HTTPTransport.prototype.sendData = function (data, timeout) {
-        if (timeout === void 0) { timeout = null; }
-        return __awaiter(this, void 0, void 0, function () {
-            var prom, notifications, batch, fetcher, result, body, responseErr, e_1, responseErr;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        prom = this.transportRequestManager.addRequest(data, timeout);
-                        notifications = Request_1.getNotifications(data);
-                        batch = Request_1.getBatchRequests(data);
-                        fetcher = this.injectedFetcher || isomorphic_fetch_1.default;
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 4, , 5]);
-                        return [4 /*yield*/, fetcher(this.uri, {
-                                method: "POST",
-                                headers: this.headers,
-                                body: JSON.stringify(this.parseData(data)),
-                                credentials: this.credentials,
-                            })];
-                    case 2:
-                        result = _a.sent();
-                        // requirements are that notifications are successfully sent
-                        this.transportRequestManager.settlePendingRequest(notifications);
-                        if (this.onlyNotifications(data)) {
-                            return [2 /*return*/, Promise.resolve()];
-                        }
-                        return [4 /*yield*/, result.text()];
-                    case 3:
-                        body = _a.sent();
-                        responseErr = this.transportRequestManager.resolveResponse(body);
-                        if (responseErr) {
-                            // requirements are that batch requuests are successfully resolved
-                            // this ensures that individual requests within the batch request are settled
-                            this.transportRequestManager.settlePendingRequest(batch, responseErr);
-                            return [2 /*return*/, Promise.reject(responseErr)];
-                        }
-                        return [3 /*break*/, 5];
-                    case 4:
-                        e_1 = _a.sent();
-                        responseErr = new Error_1.JSONRPCError(e_1.message, Error_1.ERR_UNKNOWN, e_1);
-                        this.transportRequestManager.settlePendingRequest(notifications, responseErr);
-                        this.transportRequestManager.settlePendingRequest(Request_1.getBatchRequests(data), responseErr);
-                        return [2 /*return*/, Promise.reject(responseErr)];
-                    case 5: return [2 /*return*/, prom];
-                }
-            });
-        });
-    };
-    // tslint:disable-next-line:no-empty
-    HTTPTransport.prototype.close = function () { };
-    HTTPTransport.setupHeaders = function (headerOptions) {
-        var headers = new Headers(headerOptions);
-        // Overwrite header options to ensure correct content type.
-        headers.set("Content-Type", "application/json");
-        return headers;
-    };
-    return HTTPTransport;
-}(Transport_1.Transport));
-exports.HTTPTransport = HTTPTransport;
-exports.default = HTTPTransport;
-
-},{"../Error":86,"../Request":87,"./Transport":94,"isomorphic-fetch":105}],92:[function(require,module,exports){
-"use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-var Transport_1 = require("./Transport");
-var Request_1 = require("../Request");
-var PostMessageIframeTransport = /** @class */ (function (_super) {
-    __extends(PostMessageIframeTransport, _super);
-    function PostMessageIframeTransport(uri) {
-        var _this = _super.call(this) || this;
-        _this.messageHandler = function (ev) {
-            _this.transportRequestManager.resolveResponse(JSON.stringify(ev.data));
-        };
-        _this.uri = uri;
-        _this.postMessageID = "post-message-transport-" + Math.random();
-        return _this;
-    }
-    PostMessageIframeTransport.prototype.createWindow = function (uri) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var frame;
-            var iframe = document.createElement("iframe");
-            iframe.setAttribute("id", _this.postMessageID);
-            iframe.setAttribute("width", "0px");
-            iframe.setAttribute("height", "0px");
-            iframe.setAttribute("style", "visiblity:hidden;border:none;outline:none;");
-            iframe.addEventListener("load", function () {
-                resolve(frame);
-            });
-            iframe.setAttribute("src", uri);
-            window.document.body.appendChild(iframe);
-            frame = iframe.contentWindow;
-        });
-    };
-    PostMessageIframeTransport.prototype.connect = function () {
-        var _this = this;
-        var urlRegex = /^(http|https):\/\/.*$/;
-        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (!urlRegex.test(this.uri)) {
-                            reject(new Error("Bad URI"));
-                        }
-                        _a = this;
-                        return [4 /*yield*/, this.createWindow(this.uri)];
-                    case 1:
-                        _a.frame = _b.sent();
-                        window.addEventListener("message", this.messageHandler);
-                        resolve();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-    };
-    PostMessageIframeTransport.prototype.sendData = function (data, timeout) {
-        if (timeout === void 0) { timeout = 5000; }
-        return __awaiter(this, void 0, void 0, function () {
-            var prom, notifications;
-            return __generator(this, function (_a) {
-                prom = this.transportRequestManager.addRequest(data, null);
-                notifications = Request_1.getNotifications(data);
-                if (this.frame) {
-                    this.frame.postMessage(data.request, "*");
-                    this.transportRequestManager.settlePendingRequest(notifications);
-                }
-                return [2 /*return*/, prom];
-            });
-        });
-    };
-    PostMessageIframeTransport.prototype.close = function () {
-        var el = document.getElementById(this.postMessageID);
-        el === null || el === void 0 ? void 0 : el.remove();
-        window.removeEventListener("message", this.messageHandler);
-    };
-    return PostMessageIframeTransport;
-}(Transport_1.Transport));
-exports.default = PostMessageIframeTransport;
-
-},{"../Request":87,"./Transport":94}],93:[function(require,module,exports){
-"use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-var Transport_1 = require("./Transport");
-var Request_1 = require("../Request");
-var openPopup = function (url) {
-    var width = 400;
-    var height = window.screen.height;
-    var left = 0;
-    var top = 0;
-    return window.open(url, "inspector:popup", "left=" + left + ",top=" + top + ",width=" + width + ",height=" + height + ",resizable,scrollbars=yes,status=1");
-};
-var PostMessageTransport = /** @class */ (function (_super) {
-    __extends(PostMessageTransport, _super);
-    function PostMessageTransport(uri) {
-        var _this = _super.call(this) || this;
-        _this.messageHandler = function (ev) {
-            _this.transportRequestManager.resolveResponse(JSON.stringify(ev.data));
-        };
-        _this.uri = uri;
-        _this.postMessageID = "post-message-transport-" + Math.random();
-        return _this;
-    }
-    PostMessageTransport.prototype.createWindow = function (uri) {
-        return new Promise(function (resolve, reject) {
-            var frame;
-            frame = openPopup(uri);
-            setTimeout(function () {
-                resolve(frame);
-            }, 3000);
-        });
-    };
-    PostMessageTransport.prototype.connect = function () {
-        var _this = this;
-        var urlRegex = /^(http|https):\/\/.*$/;
-        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (!urlRegex.test(this.uri)) {
-                            reject(new Error("Bad URI"));
-                        }
-                        _a = this;
-                        return [4 /*yield*/, this.createWindow(this.uri)];
-                    case 1:
-                        _a.frame = _b.sent();
-                        window.addEventListener("message", this.messageHandler);
-                        resolve();
-                        return [2 /*return*/];
-                }
-            });
-        }); });
-    };
-    PostMessageTransport.prototype.sendData = function (data, timeout) {
-        if (timeout === void 0) { timeout = 5000; }
-        return __awaiter(this, void 0, void 0, function () {
-            var prom, notifications;
-            return __generator(this, function (_a) {
-                prom = this.transportRequestManager.addRequest(data, null);
-                notifications = Request_1.getNotifications(data);
-                if (this.frame) {
-                    this.frame.postMessage(data.request, this.uri);
-                    this.transportRequestManager.settlePendingRequest(notifications);
-                }
-                return [2 /*return*/, prom];
-            });
-        });
-    };
-    PostMessageTransport.prototype.close = function () {
-        if (this.frame) {
-            window.removeEventListener("message", this.messageHandler);
-            this.frame.close();
-        }
-    };
-    return PostMessageTransport;
-}(Transport_1.Transport));
-exports.default = PostMessageTransport;
-
-},{"../Request":87,"./Transport":94}],94:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Transport = void 0;
-var TransportRequestManager_1 = require("./TransportRequestManager");
-var Transport = /** @class */ (function () {
-    function Transport() {
-        this.transportRequestManager = new TransportRequestManager_1.TransportRequestManager();
-        // add a noop for the error event to not require handling the error event
-        // tslint:disable-next-line:no-empty
-        this.transportRequestManager.transportEventChannel.on("error", function () { });
-    }
-    Transport.prototype.subscribe = function (event, handler) {
-        this.transportRequestManager.transportEventChannel.addListener(event, handler);
-    };
-    Transport.prototype.unsubscribe = function (event, handler) {
-        if (!event) {
-            return this.transportRequestManager.transportEventChannel.removeAllListeners();
-        }
-        if (event && handler) {
-            this.transportRequestManager.transportEventChannel.removeListener(event, handler);
-        }
-    };
-    Transport.prototype.parseData = function (data) {
-        if (data instanceof Array) {
-            return data.map(function (batch) { return batch.request.request; });
-        }
-        return data.request;
-    };
-    return Transport;
-}());
-exports.Transport = Transport;
-
-},{"./TransportRequestManager":95}],95:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.TransportRequestManager = void 0;
-var events_1 = require("events");
-var Error_1 = require("../Error");
-var TransportRequestManager = /** @class */ (function () {
-    function TransportRequestManager() {
-        this.pendingRequest = {};
-        this.pendingBatchRequest = {};
-        this.transportEventChannel = new events_1.EventEmitter();
-    }
-    TransportRequestManager.prototype.addRequest = function (data, timeout) {
-        this.transportEventChannel.emit("pending", data);
-        if (data instanceof Array) {
-            this.addBatchReq(data, timeout);
-            return Promise.resolve();
-        }
-        return this.addReq(data.internalID, timeout);
-    };
-    TransportRequestManager.prototype.settlePendingRequest = function (request, error) {
-        var _this = this;
-        request.forEach(function (req) {
-            var resolver = _this.pendingRequest[req.internalID];
-            delete _this.pendingBatchRequest[req.internalID];
-            if (resolver === undefined) {
-                return;
-            }
-            if (error) {
-                resolver.reject(error);
-                return;
-            }
-            resolver.resolve();
-            // Notifications have no response and should clear their own pending requests
-            if (req.request.id === null || req.request.id === undefined) {
-                delete _this.pendingRequest[req.internalID];
-            }
-        });
-    };
-    TransportRequestManager.prototype.isPendingRequest = function (id) {
-        return this.pendingRequest.hasOwnProperty(id);
-    };
-    TransportRequestManager.prototype.resolveResponse = function (payload, emitError) {
-        if (emitError === void 0) { emitError = true; }
-        var data = payload;
-        try {
-            data = JSON.parse(payload);
-            if (this.checkJSONRPC(data) === false) {
-                return; // ignore messages that are not conforming to JSON-RPC
-            }
-            if (data instanceof Array) {
-                return this.resolveBatch(data, emitError);
-            }
-            return this.resolveRes(data, emitError);
-        }
-        catch (e) {
-            var err = new Error_1.JSONRPCError("Bad response format", Error_1.ERR_UNKNOWN, payload);
-            if (emitError) {
-                this.transportEventChannel.emit("error", err);
-            }
-            return err;
-        }
-    };
-    TransportRequestManager.prototype.addBatchReq = function (batches, timeout) {
-        var _this = this;
-        batches.forEach(function (batch) {
-            var resolve = batch.resolve, reject = batch.reject;
-            var internalID = batch.request.internalID;
-            _this.pendingBatchRequest[internalID] = true;
-            _this.pendingRequest[internalID] = { resolve: resolve, reject: reject };
-        });
-        return Promise.resolve();
-    };
-    TransportRequestManager.prototype.addReq = function (id, timeout) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            if (timeout !== null && timeout) {
-                _this.setRequestTimeout(id, timeout, reject);
-            }
-            _this.pendingRequest[id] = { resolve: resolve, reject: reject };
-        });
-    };
-    TransportRequestManager.prototype.checkJSONRPC = function (data) {
-        var payload = [data];
-        if (data instanceof Array) {
-            payload = data;
-        }
-        return payload.every(function (datum) { return (datum.result !== undefined || datum.error !== undefined || datum.method !== undefined); });
-    };
-    TransportRequestManager.prototype.processResult = function (payload, prom) {
-        if (payload.error) {
-            var err = Error_1.convertJSONToRPCError(payload);
-            prom.reject(err);
-            return;
-        }
-        prom.resolve(payload.result);
-    };
-    TransportRequestManager.prototype.resolveBatch = function (payload, emitError) {
-        var _this = this;
-        var results = payload.map(function (datum) {
-            return _this.resolveRes(datum, emitError);
-        });
-        var errors = results.filter(function (result) { return result; });
-        if (errors.length > 0) {
-            return errors[0];
-        }
-        return undefined;
-    };
-    TransportRequestManager.prototype.resolveRes = function (data, emitError) {
-        var id = data.id, error = data.error;
-        var status = this.pendingRequest[id];
-        if (status) {
-            delete this.pendingRequest[id];
-            this.processResult(data, status);
-            this.transportEventChannel.emit("response", data);
-            return;
-        }
-        if (id === undefined && error === undefined) {
-            this.transportEventChannel.emit("notification", data);
-            return;
-        }
-        var err;
-        if (error) {
-            err = Error_1.convertJSONToRPCError(data);
-        }
-        if (emitError && error && err) {
-            this.transportEventChannel.emit("error", err);
-        }
-        return err;
-    };
-    TransportRequestManager.prototype.setRequestTimeout = function (id, timeout, reject) {
-        var _this = this;
-        setTimeout(function () {
-            delete _this.pendingRequest[id];
-            reject(new Error_1.JSONRPCError("Request timeout request took longer than " + timeout + " ms to resolve", Error_1.ERR_TIMEOUT));
-        }, timeout);
-    };
-    return TransportRequestManager;
-}());
-exports.TransportRequestManager = TransportRequestManager;
-
-},{"../Error":86,"events":3}],96:[function(require,module,exports){
-"use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-var isomorphic_ws_1 = __importDefault(require("isomorphic-ws"));
-var Transport_1 = require("./Transport");
-var Request_1 = require("../Request");
-var Error_1 = require("../Error");
-var WebSocketTransport = /** @class */ (function (_super) {
-    __extends(WebSocketTransport, _super);
-    function WebSocketTransport(uri) {
-        var _this = _super.call(this) || this;
-        _this.uri = uri;
-        _this.connection = new isomorphic_ws_1.default(uri);
-        return _this;
-    }
-    WebSocketTransport.prototype.connect = function () {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var cb = function () {
-                _this.connection.removeEventListener("open", cb);
-                resolve();
-            };
-            _this.connection.addEventListener("open", cb);
-            _this.connection.addEventListener("message", function (message) {
-                var data = message.data;
-                _this.transportRequestManager.resolveResponse(data);
-            });
-        });
-    };
-    WebSocketTransport.prototype.sendData = function (data, timeout) {
-        if (timeout === void 0) { timeout = 5000; }
-        return __awaiter(this, void 0, void 0, function () {
-            var prom, notifications, jsonError;
-            return __generator(this, function (_a) {
-                prom = this.transportRequestManager.addRequest(data, timeout);
-                notifications = Request_1.getNotifications(data);
-                try {
-                    this.connection.send(JSON.stringify(this.parseData(data)));
-                    this.transportRequestManager.settlePendingRequest(notifications);
-                }
-                catch (err) {
-                    jsonError = new Error_1.JSONRPCError(err.message, Error_1.ERR_UNKNOWN, err);
-                    this.transportRequestManager.settlePendingRequest(notifications, jsonError);
-                    this.transportRequestManager.settlePendingRequest(Request_1.getBatchRequests(data), jsonError);
-                    prom = Promise.reject(jsonError);
-                }
-                return [2 /*return*/, prom];
-            });
-        });
-    };
-    WebSocketTransport.prototype.close = function () {
-        this.connection.close();
-    };
-    return WebSocketTransport;
-}(Transport_1.Transport));
-exports.default = WebSocketTransport;
-
-},{"../Error":86,"../Request":87,"./Transport":94,"isomorphic-ws":106}],97:[function(require,module,exports){
+},{"@noble/hashes/crypto":94}],100:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.assertNumber = assertNumber;
-exports.utils = exports.utf8 = exports.stringToBytes = exports.str = exports.hex = exports.createBase58check = exports.bytesToString = exports.bytes = exports.bech32m = exports.bech32 = exports.base64urlnopad = exports.base64url = exports.base64 = exports.base58xrp = exports.base58xmr = exports.base58flickr = exports.base58check = exports.base58 = exports.base32hex = exports.base32crockford = exports.base32 = exports.base16 = void 0;
+exports.utils = exports.utf8 = exports.stringToBytes = exports.str = exports.hex = exports.createBase58check = exports.bytesToString = exports.bytes = exports.bech32m = exports.bech32 = exports.base64urlnopad = exports.base64url = exports.base64nopad = exports.base64 = exports.base58xrp = exports.base58xmr = exports.base58flickr = exports.base58check = exports.base58 = exports.base32hex = exports.base32crockford = exports.base32 = exports.base16 = void 0;
 /*! scure-base - MIT License (c) 2022 Paul Miller (paulmillr.com) */
 // Utilities
 /**
@@ -17203,6 +16761,7 @@ const base32 = exports.base32 = /* @__PURE__ */chain(radix2(5), alphabet('ABCDEF
 const base32hex = exports.base32hex = /* @__PURE__ */chain(radix2(5), alphabet('0123456789ABCDEFGHIJKLMNOPQRSTUV'), padding(5), join(''));
 const base32crockford = exports.base32crockford = /* @__PURE__ */chain(radix2(5), alphabet('0123456789ABCDEFGHJKMNPQRSTVWXYZ'), join(''), normalize(s => s.toUpperCase().replace(/O/g, '0').replace(/[IL]/g, '1')));
 const base64 = exports.base64 = /* @__PURE__ */chain(radix2(6), alphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'), padding(6), join(''));
+const base64nopad = exports.base64nopad = /* @__PURE__ */chain(radix2(6), alphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'), join(''));
 const base64url = exports.base64url = /* @__PURE__ */chain(radix2(6), alphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'), padding(6), join(''));
 const base64urlnopad = exports.base64urlnopad = /* @__PURE__ */chain(radix2(6), alphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'), join(''));
 // base58 code
@@ -17285,6 +16844,7 @@ function genBech32(encoding) {
   function encode(prefix, words, limit = 90) {
     if (typeof prefix !== 'string') throw new Error(`bech32.encode prefix should be string, not ${typeof prefix}`);
     if (!Array.isArray(words) || words.length && typeof words[0] !== 'number') throw new Error(`bech32.encode words should be array of numbers, not ${typeof words}`);
+    if (prefix.length === 0) throw new TypeError(`Invalid prefix length ${prefix.length}`);
     const actualLength = prefix.length + 7 + words.length;
     if (limit !== false && actualLength > limit) throw new TypeError(`Length ${actualLength} exceeds limit ${limit}`);
     const lowered = prefix.toLowerCase();
@@ -17297,15 +16857,14 @@ function genBech32(encoding) {
     // don't allow mixed case
     const lowered = str.toLowerCase();
     if (str !== lowered && str !== str.toUpperCase()) throw new Error(`String must be lowercase or uppercase`);
-    str = lowered;
-    const sepIndex = str.lastIndexOf('1');
+    const sepIndex = lowered.lastIndexOf('1');
     if (sepIndex === 0 || sepIndex === -1) throw new Error(`Letter "1" must be present between prefix and data only`);
-    const prefix = str.slice(0, sepIndex);
-    const _words = str.slice(sepIndex + 1);
-    if (_words.length < 6) throw new Error('Data must be at least 6 characters long');
-    const words = BECH_ALPHABET.decode(_words).slice(0, -6);
+    const prefix = lowered.slice(0, sepIndex);
+    const data = lowered.slice(sepIndex + 1);
+    if (data.length < 6) throw new Error('Data must be at least 6 characters long');
+    const words = BECH_ALPHABET.decode(data).slice(0, -6);
     const sum = bechChecksum(prefix, words, ENCODING_CONST);
-    if (!_words.endsWith(sum)) throw new Error(`Invalid checksum in ${str}: expected "${sum}"`);
+    if (!data.endsWith(sum)) throw new Error(`Invalid checksum in ${str}: expected "${sum}"`);
     return {
       prefix,
       words
@@ -17370,7 +16929,7 @@ const stringToBytes = (type, str) => {
 exports.stringToBytes = stringToBytes;
 const bytes = exports.bytes = stringToBytes;
 
-},{}],98:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mnemonicToSeedSync = exports.mnemonicToSeed = exports.validateMnemonic = exports.entropyToMnemonic = exports.mnemonicToEntropy = exports.generateMnemonic = void 0;
@@ -17514,7 +17073,7 @@ function mnemonicToSeedSync(mnemonic, passphrase = '') {
 }
 exports.mnemonicToSeedSync = mnemonicToSeedSync;
 
-},{"@noble/hashes/_assert":74,"@noble/hashes/pbkdf2":81,"@noble/hashes/sha256":82,"@noble/hashes/sha512":83,"@noble/hashes/utils":84,"@scure/base":97}],99:[function(require,module,exports){
+},{"@noble/hashes/_assert":89,"@noble/hashes/pbkdf2":96,"@noble/hashes/sha256":97,"@noble/hashes/sha512":98,"@noble/hashes/utils":99,"@scure/base":100}],102:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.wordlist = void 0;
@@ -19567,7 +19126,7 @@ zero
 zone
 zoo`.split('\n');
 
-},{}],100:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 'use strict'
 // base-x encoding / decoding
 // Copyright (c) 2018 base-x contributors
@@ -19690,7 +19249,7 @@ function base (ALPHABET) {
 }
 module.exports = base
 
-},{}],101:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 (function (module, exports) {
   'use strict';
 
@@ -23239,15 +22798,15 @@ module.exports = base
   };
 })(typeof module === 'undefined' || module, this);
 
-},{"buffer":102}],102:[function(require,module,exports){
+},{"buffer":105}],105:[function(require,module,exports){
 
-},{}],103:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 const basex = require('base-x')
 const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 module.exports = basex(ALPHABET)
 
-},{"base-x":100}],104:[function(require,module,exports){
+},{"base-x":103}],107:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -23276,45 +22835,10 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],105:[function(require,module,exports){
-"use strict";
-
-// the whatwg-fetch polyfill installs the fetch() function
-// on the global object (window or self)
-//
-// Return that as the export for use in Webpack, Browserify etc.
-require('whatwg-fetch');
-module.exports = self.fetch.bind(self);
-
-},{"whatwg-fetch":134}],106:[function(require,module,exports){
-(function (global){(function (){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-// https://github.com/maxogden/websocket-stream/blob/48dc3ddf943e5ada668c31ccd94e9186f02fafbd/ws-fallback.js
-
-var ws = null;
-if (typeof WebSocket !== 'undefined') {
-  ws = WebSocket;
-} else if (typeof MozWebSocket !== 'undefined') {
-  ws = MozWebSocket;
-} else if (typeof global !== 'undefined') {
-  ws = global.WebSocket || global.MozWebSocket;
-} else if (typeof window !== 'undefined') {
-  ws = window.WebSocket || window.MozWebSocket;
-} else if (typeof self !== 'undefined') {
-  ws = self.WebSocket || self.MozWebSocket;
-}
-var _default = exports.default = ws;
-
-}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],107:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 module.exports = require('./lib/api')(require('./lib/keccak'))
 
-},{"./lib/api":108,"./lib/keccak":112}],108:[function(require,module,exports){
+},{"./lib/api":109,"./lib/keccak":113}],109:[function(require,module,exports){
 const createKeccak = require('./keccak')
 const createShake = require('./shake')
 
@@ -23343,7 +22867,7 @@ module.exports = function (KeccakState) {
   }
 }
 
-},{"./keccak":109,"./shake":110}],109:[function(require,module,exports){
+},{"./keccak":110,"./shake":111}],110:[function(require,module,exports){
 (function (Buffer){(function (){
 const { Transform } = require('readable-stream')
 
@@ -23424,7 +22948,7 @@ module.exports = (KeccakState) => class Keccak extends Transform {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":2,"readable-stream":127}],110:[function(require,module,exports){
+},{"buffer":2,"readable-stream":128}],111:[function(require,module,exports){
 (function (Buffer){(function (){
 const { Transform } = require('readable-stream')
 
@@ -23496,7 +23020,7 @@ module.exports = (KeccakState) => class Shake extends Transform {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":2,"readable-stream":127}],111:[function(require,module,exports){
+},{"buffer":2,"readable-stream":128}],112:[function(require,module,exports){
 const P1600_ROUND_CONSTANTS = [1, 0, 32898, 0, 32906, 2147483648, 2147516416, 2147483648, 32907, 0, 2147483649, 0, 2147516545, 2147483648, 32777, 2147483648, 138, 0, 136, 0, 2147516425, 0, 2147483658, 0, 2147516555, 0, 139, 2147483648, 32905, 2147483648, 32771, 2147483648, 32770, 2147483648, 128, 2147483648, 32778, 0, 2147483658, 2147483648, 2147516545, 2147483648, 32896, 2147483648, 2147483649, 0, 2147516424, 2147483648]
 
 exports.p1600 = function (s) {
@@ -23684,7 +23208,7 @@ exports.p1600 = function (s) {
   }
 }
 
-},{}],112:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 (function (Buffer){(function (){
 const keccakState = require('./keccak-state-unroll')
 
@@ -23756,7 +23280,7 @@ Keccak.prototype.copy = function (dest) {
 module.exports = Keccak
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./keccak-state-unroll":111,"buffer":2}],113:[function(require,module,exports){
+},{"./keccak-state-unroll":112,"buffer":2}],114:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -23885,7 +23409,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],114:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 (function (process){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24014,7 +23538,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this)}).call(this,require('_process'))
-},{"./_stream_readable":116,"./_stream_writable":118,"_process":5,"inherits":104}],115:[function(require,module,exports){
+},{"./_stream_readable":117,"./_stream_writable":119,"_process":5,"inherits":107}],116:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24052,7 +23576,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":117,"inherits":104}],116:[function(require,module,exports){
+},{"./_stream_transform":118,"inherits":107}],117:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -25082,7 +24606,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":113,"./_stream_duplex":114,"./internal/streams/async_iterator":119,"./internal/streams/buffer_list":120,"./internal/streams/destroy":121,"./internal/streams/from":123,"./internal/streams/state":125,"./internal/streams/stream":126,"_process":5,"buffer":2,"events":3,"inherits":104,"string_decoder/":130,"util":102}],117:[function(require,module,exports){
+},{"../errors":114,"./_stream_duplex":115,"./internal/streams/async_iterator":120,"./internal/streams/buffer_list":121,"./internal/streams/destroy":122,"./internal/streams/from":124,"./internal/streams/state":126,"./internal/streams/stream":127,"_process":5,"buffer":2,"events":3,"inherits":107,"string_decoder/":131,"util":105}],118:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25273,7 +24797,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":113,"./_stream_duplex":114,"inherits":104}],118:[function(require,module,exports){
+},{"../errors":114,"./_stream_duplex":115,"inherits":107}],119:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -25917,7 +25441,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":113,"./_stream_duplex":114,"./internal/streams/destroy":121,"./internal/streams/state":125,"./internal/streams/stream":126,"_process":5,"buffer":2,"inherits":104,"util-deprecate":133}],119:[function(require,module,exports){
+},{"../errors":114,"./_stream_duplex":115,"./internal/streams/destroy":122,"./internal/streams/state":126,"./internal/streams/stream":127,"_process":5,"buffer":2,"inherits":107,"util-deprecate":134}],120:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -26100,7 +25624,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 };
 module.exports = createReadableStreamAsyncIterator;
 }).call(this)}).call(this,require('_process'))
-},{"./end-of-stream":122,"_process":5}],120:[function(require,module,exports){
+},{"./end-of-stream":123,"_process":5}],121:[function(require,module,exports){
 'use strict';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
@@ -26284,7 +25808,7 @@ module.exports = /*#__PURE__*/function () {
   }]);
   return BufferList;
 }();
-},{"buffer":2,"util":102}],121:[function(require,module,exports){
+},{"buffer":2,"util":105}],122:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -26383,7 +25907,7 @@ module.exports = {
   errorOrDestroy: errorOrDestroy
 };
 }).call(this)}).call(this,require('_process'))
-},{"_process":5}],122:[function(require,module,exports){
+},{"_process":5}],123:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 
@@ -26470,12 +25994,12 @@ function eos(stream, opts, callback) {
   };
 }
 module.exports = eos;
-},{"../../../errors":113}],123:[function(require,module,exports){
+},{"../../../errors":114}],124:[function(require,module,exports){
 module.exports = function () {
   throw new Error('Readable.from is not available in the browser')
 };
 
-},{}],124:[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 
@@ -26562,7 +26086,7 @@ function pipeline() {
   return streams.reduce(pipe);
 }
 module.exports = pipeline;
-},{"../../../errors":113,"./end-of-stream":122}],125:[function(require,module,exports){
+},{"../../../errors":114,"./end-of-stream":123}],126:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -26585,10 +26109,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":113}],126:[function(require,module,exports){
+},{"../../../errors":114}],127:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":3}],127:[function(require,module,exports){
+},{"events":3}],128:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -26599,7 +26123,7 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":114,"./lib/_stream_passthrough.js":115,"./lib/_stream_readable.js":116,"./lib/_stream_transform.js":117,"./lib/_stream_writable.js":118,"./lib/internal/streams/end-of-stream.js":122,"./lib/internal/streams/pipeline.js":124}],128:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":115,"./lib/_stream_passthrough.js":116,"./lib/_stream_readable.js":117,"./lib/_stream_transform.js":118,"./lib/_stream_writable.js":119,"./lib/internal/streams/end-of-stream.js":123,"./lib/internal/streams/pipeline.js":125}],129:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -26687,7 +26211,7 @@ if (typeof window !== 'undefined') {
 }
 module.exports = keccak256;
 
-},{"bn.js":101,"buffer":2,"keccak":107}],129:[function(require,module,exports){
+},{"bn.js":104,"buffer":2,"keccak":108}],130:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -26751,7 +26275,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":2}],130:[function(require,module,exports){
+},{"buffer":2}],131:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -27048,7 +26572,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":129}],131:[function(require,module,exports){
+},{"safe-buffer":130}],132:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28123,7 +27647,7 @@ function refine(struct, name, refiner) {
   });
 }
 
-},{}],132:[function(require,module,exports){
+},{}],133:[function(require,module,exports){
 (function(nacl) {
 'use strict';
 
@@ -30516,7 +30040,7 @@ nacl.setPRNG = function(fn) {
 
 })(typeof module !== 'undefined' && module.exports ? module.exports : (self.nacl = self.nacl || {}));
 
-},{"crypto":102}],133:[function(require,module,exports){
+},{"crypto":105}],134:[function(require,module,exports){
 (function (global){(function (){
 
 /**
@@ -30584,568 +30108,6 @@ function config (name) {
   var val = global.localStorage[name];
   if (null == val) return false;
   return String(val).toLowerCase() === 'true';
-}
-
-}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],134:[function(require,module,exports){
-(function (global){(function (){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.DOMException = void 0;
-exports.Headers = Headers;
-exports.Request = Request;
-exports.Response = Response;
-exports.fetch = fetch;
-/* eslint-disable no-prototype-builtins */
-var g = typeof globalThis !== 'undefined' && globalThis || typeof self !== 'undefined' && self ||
-// eslint-disable-next-line no-undef
-typeof global !== 'undefined' && global || {};
-var support = {
-  searchParams: 'URLSearchParams' in g,
-  iterable: 'Symbol' in g && 'iterator' in Symbol,
-  blob: 'FileReader' in g && 'Blob' in g && function () {
-    try {
-      new Blob();
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }(),
-  formData: 'FormData' in g,
-  arrayBuffer: 'ArrayBuffer' in g
-};
-function isDataView(obj) {
-  return obj && DataView.prototype.isPrototypeOf(obj);
-}
-if (support.arrayBuffer) {
-  var viewClasses = ['[object Int8Array]', '[object Uint8Array]', '[object Uint8ClampedArray]', '[object Int16Array]', '[object Uint16Array]', '[object Int32Array]', '[object Uint32Array]', '[object Float32Array]', '[object Float64Array]'];
-  var isArrayBufferView = ArrayBuffer.isView || function (obj) {
-    return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1;
-  };
-}
-function normalizeName(name) {
-  if (typeof name !== 'string') {
-    name = String(name);
-  }
-  if (/[^a-z0-9\-#$%&'*+.^_`|~!]/i.test(name) || name === '') {
-    throw new TypeError('Invalid character in header field name: "' + name + '"');
-  }
-  return name.toLowerCase();
-}
-function normalizeValue(value) {
-  if (typeof value !== 'string') {
-    value = String(value);
-  }
-  return value;
-}
-
-// Build a destructive iterator for the value list
-function iteratorFor(items) {
-  var iterator = {
-    next: function () {
-      var value = items.shift();
-      return {
-        done: value === undefined,
-        value: value
-      };
-    }
-  };
-  if (support.iterable) {
-    iterator[Symbol.iterator] = function () {
-      return iterator;
-    };
-  }
-  return iterator;
-}
-function Headers(headers) {
-  this.map = {};
-  if (headers instanceof Headers) {
-    headers.forEach(function (value, name) {
-      this.append(name, value);
-    }, this);
-  } else if (Array.isArray(headers)) {
-    headers.forEach(function (header) {
-      if (header.length != 2) {
-        throw new TypeError('Headers constructor: expected name/value pair to be length 2, found' + header.length);
-      }
-      this.append(header[0], header[1]);
-    }, this);
-  } else if (headers) {
-    Object.getOwnPropertyNames(headers).forEach(function (name) {
-      this.append(name, headers[name]);
-    }, this);
-  }
-}
-Headers.prototype.append = function (name, value) {
-  name = normalizeName(name);
-  value = normalizeValue(value);
-  var oldValue = this.map[name];
-  this.map[name] = oldValue ? oldValue + ', ' + value : value;
-};
-Headers.prototype['delete'] = function (name) {
-  delete this.map[normalizeName(name)];
-};
-Headers.prototype.get = function (name) {
-  name = normalizeName(name);
-  return this.has(name) ? this.map[name] : null;
-};
-Headers.prototype.has = function (name) {
-  return this.map.hasOwnProperty(normalizeName(name));
-};
-Headers.prototype.set = function (name, value) {
-  this.map[normalizeName(name)] = normalizeValue(value);
-};
-Headers.prototype.forEach = function (callback, thisArg) {
-  for (var name in this.map) {
-    if (this.map.hasOwnProperty(name)) {
-      callback.call(thisArg, this.map[name], name, this);
-    }
-  }
-};
-Headers.prototype.keys = function () {
-  var items = [];
-  this.forEach(function (value, name) {
-    items.push(name);
-  });
-  return iteratorFor(items);
-};
-Headers.prototype.values = function () {
-  var items = [];
-  this.forEach(function (value) {
-    items.push(value);
-  });
-  return iteratorFor(items);
-};
-Headers.prototype.entries = function () {
-  var items = [];
-  this.forEach(function (value, name) {
-    items.push([name, value]);
-  });
-  return iteratorFor(items);
-};
-if (support.iterable) {
-  Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
-}
-function consumed(body) {
-  if (body._noBody) return;
-  if (body.bodyUsed) {
-    return Promise.reject(new TypeError('Already read'));
-  }
-  body.bodyUsed = true;
-}
-function fileReaderReady(reader) {
-  return new Promise(function (resolve, reject) {
-    reader.onload = function () {
-      resolve(reader.result);
-    };
-    reader.onerror = function () {
-      reject(reader.error);
-    };
-  });
-}
-function readBlobAsArrayBuffer(blob) {
-  var reader = new FileReader();
-  var promise = fileReaderReady(reader);
-  reader.readAsArrayBuffer(blob);
-  return promise;
-}
-function readBlobAsText(blob) {
-  var reader = new FileReader();
-  var promise = fileReaderReady(reader);
-  var match = /charset=([A-Za-z0-9_-]+)/.exec(blob.type);
-  var encoding = match ? match[1] : 'utf-8';
-  reader.readAsText(blob, encoding);
-  return promise;
-}
-function readArrayBufferAsText(buf) {
-  var view = new Uint8Array(buf);
-  var chars = new Array(view.length);
-  for (var i = 0; i < view.length; i++) {
-    chars[i] = String.fromCharCode(view[i]);
-  }
-  return chars.join('');
-}
-function bufferClone(buf) {
-  if (buf.slice) {
-    return buf.slice(0);
-  } else {
-    var view = new Uint8Array(buf.byteLength);
-    view.set(new Uint8Array(buf));
-    return view.buffer;
-  }
-}
-function Body() {
-  this.bodyUsed = false;
-  this._initBody = function (body) {
-    /*
-      fetch-mock wraps the Response object in an ES6 Proxy to
-      provide useful test harness features such as flush. However, on
-      ES5 browsers without fetch or Proxy support pollyfills must be used;
-      the proxy-pollyfill is unable to proxy an attribute unless it exists
-      on the object before the Proxy is created. This change ensures
-      Response.bodyUsed exists on the instance, while maintaining the
-      semantic of setting Request.bodyUsed in the constructor before
-      _initBody is called.
-    */
-    // eslint-disable-next-line no-self-assign
-    this.bodyUsed = this.bodyUsed;
-    this._bodyInit = body;
-    if (!body) {
-      this._noBody = true;
-      this._bodyText = '';
-    } else if (typeof body === 'string') {
-      this._bodyText = body;
-    } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
-      this._bodyBlob = body;
-    } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
-      this._bodyFormData = body;
-    } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-      this._bodyText = body.toString();
-    } else if (support.arrayBuffer && support.blob && isDataView(body)) {
-      this._bodyArrayBuffer = bufferClone(body.buffer);
-      // IE 10-11 can't handle a DataView body.
-      this._bodyInit = new Blob([this._bodyArrayBuffer]);
-    } else if (support.arrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
-      this._bodyArrayBuffer = bufferClone(body);
-    } else {
-      this._bodyText = body = Object.prototype.toString.call(body);
-    }
-    if (!this.headers.get('content-type')) {
-      if (typeof body === 'string') {
-        this.headers.set('content-type', 'text/plain;charset=UTF-8');
-      } else if (this._bodyBlob && this._bodyBlob.type) {
-        this.headers.set('content-type', this._bodyBlob.type);
-      } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-        this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
-      }
-    }
-  };
-  if (support.blob) {
-    this.blob = function () {
-      var rejected = consumed(this);
-      if (rejected) {
-        return rejected;
-      }
-      if (this._bodyBlob) {
-        return Promise.resolve(this._bodyBlob);
-      } else if (this._bodyArrayBuffer) {
-        return Promise.resolve(new Blob([this._bodyArrayBuffer]));
-      } else if (this._bodyFormData) {
-        throw new Error('could not read FormData body as blob');
-      } else {
-        return Promise.resolve(new Blob([this._bodyText]));
-      }
-    };
-  }
-  this.arrayBuffer = function () {
-    if (this._bodyArrayBuffer) {
-      var isConsumed = consumed(this);
-      if (isConsumed) {
-        return isConsumed;
-      } else if (ArrayBuffer.isView(this._bodyArrayBuffer)) {
-        return Promise.resolve(this._bodyArrayBuffer.buffer.slice(this._bodyArrayBuffer.byteOffset, this._bodyArrayBuffer.byteOffset + this._bodyArrayBuffer.byteLength));
-      } else {
-        return Promise.resolve(this._bodyArrayBuffer);
-      }
-    } else if (support.blob) {
-      return this.blob().then(readBlobAsArrayBuffer);
-    } else {
-      throw new Error('could not read as ArrayBuffer');
-    }
-  };
-  this.text = function () {
-    var rejected = consumed(this);
-    if (rejected) {
-      return rejected;
-    }
-    if (this._bodyBlob) {
-      return readBlobAsText(this._bodyBlob);
-    } else if (this._bodyArrayBuffer) {
-      return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer));
-    } else if (this._bodyFormData) {
-      throw new Error('could not read FormData body as text');
-    } else {
-      return Promise.resolve(this._bodyText);
-    }
-  };
-  if (support.formData) {
-    this.formData = function () {
-      return this.text().then(decode);
-    };
-  }
-  this.json = function () {
-    return this.text().then(JSON.parse);
-  };
-  return this;
-}
-
-// HTTP methods whose capitalization should be normalized
-var methods = ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE'];
-function normalizeMethod(method) {
-  var upcased = method.toUpperCase();
-  return methods.indexOf(upcased) > -1 ? upcased : method;
-}
-function Request(input, options) {
-  if (!(this instanceof Request)) {
-    throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.');
-  }
-  options = options || {};
-  var body = options.body;
-  if (input instanceof Request) {
-    if (input.bodyUsed) {
-      throw new TypeError('Already read');
-    }
-    this.url = input.url;
-    this.credentials = input.credentials;
-    if (!options.headers) {
-      this.headers = new Headers(input.headers);
-    }
-    this.method = input.method;
-    this.mode = input.mode;
-    this.signal = input.signal;
-    if (!body && input._bodyInit != null) {
-      body = input._bodyInit;
-      input.bodyUsed = true;
-    }
-  } else {
-    this.url = String(input);
-  }
-  this.credentials = options.credentials || this.credentials || 'same-origin';
-  if (options.headers || !this.headers) {
-    this.headers = new Headers(options.headers);
-  }
-  this.method = normalizeMethod(options.method || this.method || 'GET');
-  this.mode = options.mode || this.mode || null;
-  this.signal = options.signal || this.signal || function () {
-    if ('AbortController' in g) {
-      var ctrl = new AbortController();
-      return ctrl.signal;
-    }
-  }();
-  this.referrer = null;
-  if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-    throw new TypeError('Body not allowed for GET or HEAD requests');
-  }
-  this._initBody(body);
-  if (this.method === 'GET' || this.method === 'HEAD') {
-    if (options.cache === 'no-store' || options.cache === 'no-cache') {
-      // Search for a '_' parameter in the query string
-      var reParamSearch = /([?&])_=[^&]*/;
-      if (reParamSearch.test(this.url)) {
-        // If it already exists then set the value with the current time
-        this.url = this.url.replace(reParamSearch, '$1_=' + new Date().getTime());
-      } else {
-        // Otherwise add a new '_' parameter to the end with the current time
-        var reQueryString = /\?/;
-        this.url += (reQueryString.test(this.url) ? '&' : '?') + '_=' + new Date().getTime();
-      }
-    }
-  }
-}
-Request.prototype.clone = function () {
-  return new Request(this, {
-    body: this._bodyInit
-  });
-};
-function decode(body) {
-  var form = new FormData();
-  body.trim().split('&').forEach(function (bytes) {
-    if (bytes) {
-      var split = bytes.split('=');
-      var name = split.shift().replace(/\+/g, ' ');
-      var value = split.join('=').replace(/\+/g, ' ');
-      form.append(decodeURIComponent(name), decodeURIComponent(value));
-    }
-  });
-  return form;
-}
-function parseHeaders(rawHeaders) {
-  var headers = new Headers();
-  // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
-  // https://tools.ietf.org/html/rfc7230#section-3.2
-  var preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
-  // Avoiding split via regex to work around a common IE11 bug with the core-js 3.6.0 regex polyfill
-  // https://github.com/github/fetch/issues/748
-  // https://github.com/zloirock/core-js/issues/751
-  preProcessedHeaders.split('\r').map(function (header) {
-    return header.indexOf('\n') === 0 ? header.substr(1, header.length) : header;
-  }).forEach(function (line) {
-    var parts = line.split(':');
-    var key = parts.shift().trim();
-    if (key) {
-      var value = parts.join(':').trim();
-      try {
-        headers.append(key, value);
-      } catch (error) {
-        console.warn('Response ' + error.message);
-      }
-    }
-  });
-  return headers;
-}
-Body.call(Request.prototype);
-function Response(bodyInit, options) {
-  if (!(this instanceof Response)) {
-    throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.');
-  }
-  if (!options) {
-    options = {};
-  }
-  this.type = 'default';
-  this.status = options.status === undefined ? 200 : options.status;
-  if (this.status < 200 || this.status > 599) {
-    throw new RangeError("Failed to construct 'Response': The status provided (0) is outside the range [200, 599].");
-  }
-  this.ok = this.status >= 200 && this.status < 300;
-  this.statusText = options.statusText === undefined ? '' : '' + options.statusText;
-  this.headers = new Headers(options.headers);
-  this.url = options.url || '';
-  this._initBody(bodyInit);
-}
-Body.call(Response.prototype);
-Response.prototype.clone = function () {
-  return new Response(this._bodyInit, {
-    status: this.status,
-    statusText: this.statusText,
-    headers: new Headers(this.headers),
-    url: this.url
-  });
-};
-Response.error = function () {
-  var response = new Response(null, {
-    status: 200,
-    statusText: ''
-  });
-  response.ok = false;
-  response.status = 0;
-  response.type = 'error';
-  return response;
-};
-var redirectStatuses = [301, 302, 303, 307, 308];
-Response.redirect = function (url, status) {
-  if (redirectStatuses.indexOf(status) === -1) {
-    throw new RangeError('Invalid status code');
-  }
-  return new Response(null, {
-    status: status,
-    headers: {
-      location: url
-    }
-  });
-};
-var DOMException = exports.DOMException = g.DOMException;
-try {
-  new DOMException();
-} catch (err) {
-  exports.DOMException = DOMException = function (message, name) {
-    this.message = message;
-    this.name = name;
-    var error = Error(message);
-    this.stack = error.stack;
-  };
-  DOMException.prototype = Object.create(Error.prototype);
-  DOMException.prototype.constructor = DOMException;
-}
-function fetch(input, init) {
-  return new Promise(function (resolve, reject) {
-    var request = new Request(input, init);
-    if (request.signal && request.signal.aborted) {
-      return reject(new DOMException('Aborted', 'AbortError'));
-    }
-    var xhr = new XMLHttpRequest();
-    function abortXhr() {
-      xhr.abort();
-    }
-    xhr.onload = function () {
-      var options = {
-        statusText: xhr.statusText,
-        headers: parseHeaders(xhr.getAllResponseHeaders() || '')
-      };
-      // This check if specifically for when a user fetches a file locally from the file system
-      // Only if the status is out of a normal range
-      if (request.url.indexOf('file://') === 0 && (xhr.status < 200 || xhr.status > 599)) {
-        options.status = 200;
-      } else {
-        options.status = xhr.status;
-      }
-      options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL');
-      var body = 'response' in xhr ? xhr.response : xhr.responseText;
-      setTimeout(function () {
-        resolve(new Response(body, options));
-      }, 0);
-    };
-    xhr.onerror = function () {
-      setTimeout(function () {
-        reject(new TypeError('Network request failed'));
-      }, 0);
-    };
-    xhr.ontimeout = function () {
-      setTimeout(function () {
-        reject(new TypeError('Network request timed out'));
-      }, 0);
-    };
-    xhr.onabort = function () {
-      setTimeout(function () {
-        reject(new DOMException('Aborted', 'AbortError'));
-      }, 0);
-    };
-    function fixUrl(url) {
-      try {
-        return url === '' && g.location.href ? g.location.href : url;
-      } catch (e) {
-        return url;
-      }
-    }
-    xhr.open(request.method, fixUrl(request.url), true);
-    if (request.credentials === 'include') {
-      xhr.withCredentials = true;
-    } else if (request.credentials === 'omit') {
-      xhr.withCredentials = false;
-    }
-    if ('responseType' in xhr) {
-      if (support.blob) {
-        xhr.responseType = 'blob';
-      } else if (support.arrayBuffer) {
-        xhr.responseType = 'arraybuffer';
-      }
-    }
-    if (init && typeof init.headers === 'object' && !(init.headers instanceof Headers || g.Headers && init.headers instanceof g.Headers)) {
-      var names = [];
-      Object.getOwnPropertyNames(init.headers).forEach(function (name) {
-        names.push(normalizeName(name));
-        xhr.setRequestHeader(name, normalizeValue(init.headers[name]));
-      });
-      request.headers.forEach(function (value, name) {
-        if (names.indexOf(name) === -1) {
-          xhr.setRequestHeader(name, value);
-        }
-      });
-    } else {
-      request.headers.forEach(function (value, name) {
-        xhr.setRequestHeader(name, value);
-      });
-    }
-    if (request.signal) {
-      request.signal.addEventListener('abort', abortXhr);
-      xhr.onreadystatechange = function () {
-        // DONE (success or failure)
-        if (xhr.readyState === 4) {
-          request.signal.removeEventListener('abort', abortXhr);
-        }
-      };
-    }
-    xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit);
-  });
-}
-fetch.polyfill = true;
-if (!g.fetch) {
-  g.fetch = fetch;
-  g.Headers = Headers;
-  g.Request = Request;
-  g.Response = Response;
 }
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
