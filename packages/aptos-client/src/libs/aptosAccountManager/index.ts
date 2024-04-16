@@ -1,8 +1,7 @@
 import { AptosAccount, AptosAccountObject } from 'aptos';
-// import { Ed}
 import { getKeyPair } from './keypair';
 import { generateMnemonic } from './crypto';
-import type { AccountMangerParams, DerivePathParams } from 'src/types';
+import type { AccountMangerParams, DerivePathParams } from '../../types';
 
 export class AptosAccountManager {
   private mnemonics: string;

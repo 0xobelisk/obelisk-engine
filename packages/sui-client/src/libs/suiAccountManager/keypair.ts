@@ -1,5 +1,5 @@
-import { Ed25519Keypair, fromB64 } from '@mysten/sui.js';
-import type { DerivePathParams } from 'src/types';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import type { DerivePathParams } from '../../types';
 
 /**
  * @description Get ed25519 derive path for SUI

@@ -13,8 +13,8 @@
   "author": "team@0xobelisk.com",
   "license": "ISC",
   "dependencies": {
-    "@0xobelisk/sui-client": "^0.5.3",
-    "@0xobelisk/aptos-client": "^0.0.5",
+    "@0xobelisk/sui-client": "^0.5.10",
+    "@0xobelisk/aptos-client": "^0.0.6",
     "browser-resolve": "^2.0.0",
     "browser-sync": "^2.29.3"
   },

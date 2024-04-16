@@ -1,5 +1,5 @@
 import { AptosAccount } from 'aptos';
-import type { DerivePathParams } from 'src/types';
+import type { DerivePathParams } from '../../types';
 
 /**
  * @description Get ed25519 derive path for APTOS

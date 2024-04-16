@@ -6,7 +6,7 @@ import { FsIibError } from "./errors";
 
 export type DeploymentJsonType = {
   projectName: string;
-  network: "mainnet" | "testnet" | "devnet" | "localnet";
+  network: "mainnet" | "testnet" | "devnet" | "local";
   packageId: string;
   // worldId: string;
   // upgradeCap: string;
@@ -75,7 +75,7 @@ export async function getVersion(
 export async function getNetwork(
   projectPath: string,
   network: string
-): Promise<"mainnet" | "testnet" | "devnet" | "localnet"> {
+): Promise<"mainnet" | "testnet" | "devnet" | "local"> {
   const deployment = await getDeploymentJson(projectPath, network);
   return deployment.network;
 }
@@ -114,7 +114,7 @@ export async function getOldPackageId(
 
 export function saveContractData(
   projectName: string,
-  network: "mainnet" | "testnet" | "devnet" | "localnet",
+  network: "mainnet" | "testnet" | "devnet" | "local",
   packageId: string,
   // worldId: string,
   // upgradeCap: string,
