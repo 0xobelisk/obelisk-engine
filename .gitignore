@@ -40,3 +40,4 @@ pnpm-lock.yaml
 #sui log
 sui.log.*
 *.nohup.out
+*yarn.lock
