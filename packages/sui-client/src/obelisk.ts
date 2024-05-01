@@ -283,6 +283,18 @@ export class Obelisk {
     return this.suiInteractor.currentClient.getBalance({ owner, coinType });
   }
 
+  async balanceOf(
+    accountAddress?: string,
+    coinType?: string,
+    derivePathParams?: DerivePathParams
+  ) {
+    if (accountAddress === undefined) {
+      accountAddress = this.accountManager.getAddress(derivePathParams);
+    }
+    const owner = accountAddress;
+    return this.suiInteractor.currentClient.getBalance({ owner, coinType });
+  }
+
   client() {
     return this.suiInteractor.currentClient;
   }
