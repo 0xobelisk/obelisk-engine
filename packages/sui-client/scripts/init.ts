@@ -11,7 +11,7 @@ dotenv.config();
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0xdd1a5cabd1b187dfef39a7c04b2e112ad999ec46f521a408db89297b7973b6c6';
+    '0x92ef84155ccd3b5f377eff8b5c50d046a562bd9e0520837346173bf7c4f3a357';
 
   const metadata = await loadMetadata(network as NetworkType, packageId);
 
@@ -23,8 +23,15 @@ async function init() {
     metadata: metadata,
     secretKey: privateKey,
   });
+  const OBJECT_TYPE =
+    '0x92ef84155ccd3b5f377eff8b5c50d046a562bd9e0520837346173bf7c4f3a357::objects_seeder::Objects';
 
   console.log(obelisk.getAddress());
+  const data = await obelisk.selectObjectsWithType(
+    OBJECT_TYPE,
+    '0x379aa1cc401f024e2fee2ea25bdb85e48355491bd6fcaf685e39a7fcc84b2101'
+  );
+  console.log(data);
 
   // let txb = new TransactionBlock();
 
@@ -45,11 +52,11 @@ async function init() {
   // );
   // let res = await obelisk.signAndSendTxn(txb);
   // console.log(res);
-  let comsName = await obelisk.listSchemaNames(
-    '0xacfec03b65c34a4afff82e0913e00759e5c799fbcbbd4bdf6299de4749766304'
-  );
+  // let comsName = await obelisk.listSchemaNames(
+  //   '0xacfec03b65c34a4afff82e0913e00759e5c799fbcbbd4bdf6299de4749766304'
+  // );
 
-  console.log(comsName);
+  // console.log(comsName);
 
   // let entities = await obelisk.getEntities(
   //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0',

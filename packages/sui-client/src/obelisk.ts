@@ -450,6 +450,12 @@ export class Obelisk {
     return coins.map((c) => c.objectId);
   }
 
+  async selectObjectsWithType(objectType: string, owner?: string) {
+    owner = owner || this.accountManager.currentAddress;
+    const objects = await this.suiInteractor.selectObjects(owner, objectType);
+    return objects.map((c) => c.objectId);
+  }
+
   /**
    * stake the given amount of SUI to the validator
    * @param amount the amount of SUI to stake
@@ -517,7 +523,7 @@ export class Obelisk {
       tx,
       params
     )) as DevInspectResults;
-    const returnValue = [];
+    let returnValue = [];
 
     // "success" | "failure";
     if (getResult.effects.status.status === 'success') {
