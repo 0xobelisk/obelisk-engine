@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@0xobelisk/sui-common": "^0.5.7",
-    "@0xobelisk/sui-client": "^0.5.13",
+    "@0xobelisk/sui-client": "^0.5.16",
     "@0xobelisk/sui-cli": "^0.5.7",
     "@mysten/dapp-kit": "^0.12.9",
     "@mysten/sui.js": "^0.51.2",

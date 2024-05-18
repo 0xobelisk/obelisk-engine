@@ -27,10 +27,7 @@ async function init() {
     '0x92ef84155ccd3b5f377eff8b5c50d046a562bd9e0520837346173bf7c4f3a357::objects_seeder::Objects';
 
   console.log(obelisk.getAddress());
-  const data = await obelisk.selectObjectsWithType(
-    OBJECT_TYPE,
-    '0x379aa1cc401f024e2fee2ea25bdb85e48355491bd6fcaf685e39a7fcc84b2101'
-  );
+  const data = await obelisk.selectObjectsWithType(OBJECT_TYPE);
   console.log(data);
 
   // let txb = new TransactionBlock();
