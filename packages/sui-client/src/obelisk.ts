@@ -118,7 +118,7 @@ export class Obelisk {
    * If none of them is provided, will generate a random mnemonics with 24 words.
    *
    * @param mnemonics, 12 or 24 mnemonics words, separated by space
-   * @param secretKey, base64 or hex string, when mnemonics is provided, secretKey will be ignored
+   * @param secretKey, base64 or hex string or bech32, when mnemonics is provided, secretKey will be ignored
    * @param networkType, 'testnet' | 'mainnet' | 'devnet' | 'localnet', default is 'devnet'
    * @param fullnodeUrl, the fullnode url, default is the preconfig fullnode url for the given network type
    * @param packageId
@@ -283,6 +283,18 @@ export class Obelisk {
     return this.suiInteractor.currentClient.getBalance({ owner, coinType });
   }
 
+  async balanceOf(
+    accountAddress?: string,
+    coinType?: string,
+    derivePathParams?: DerivePathParams
+  ) {
+    if (accountAddress === undefined) {
+      accountAddress = this.accountManager.getAddress(derivePathParams);
+    }
+    const owner = accountAddress;
+    return this.suiInteractor.currentClient.getBalance({ owner, coinType });
+  }
+
   client() {
     return this.suiInteractor.currentClient;
   }
@@ -438,6 +450,12 @@ export class Obelisk {
     return coins.map((c) => c.objectId);
   }
 
+  async selectObjectsWithType(objectType: string, owner?: string) {
+    owner = owner || this.accountManager.currentAddress;
+    const objects = await this.suiInteractor.selectObjects(owner, objectType);
+    return objects.map((c) => c.objectId);
+  }
+
   /**
    * stake the given amount of SUI to the validator
    * @param amount the amount of SUI to stake
@@ -505,7 +523,7 @@ export class Obelisk {
       tx,
       params
     )) as DevInspectResults;
-    const returnValue = [];
+    let returnValue = [];
 
     // "success" | "failure";
     if (getResult.effects.status.status === 'success') {

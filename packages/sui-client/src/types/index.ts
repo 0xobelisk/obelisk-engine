@@ -1,4 +1,5 @@
-import { ObjectContentFields } from '@mysten/sui.js/src/types';
+import type { Infer } from 'superstruct';
+import { any, record, string } from 'superstruct';
 import type { SerializedBcs } from '@mysten/bcs';
 import type { TransactionArgument } from '@mysten/sui.js/transactions';
 import type {
@@ -18,6 +19,9 @@ import type { SharedObjectRef, ObjectArg } from '@mysten/sui.js/bcs';
 // export type TransactionResult = TransactionArgument & TransactionArgument[];
 
 import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
+
+export const ObjectContentFields = record(string(), any());
+export type ObjectContentFields = Infer<typeof ObjectContentFields>;
 
 export type ObeliskObjectData = {
   objectId: string;
