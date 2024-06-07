@@ -2809,6 +2809,7 @@ Object.keys(_secp256r).forEach(function (key) {
 var _bcs = require("@mysten/bcs");
 var _bip = require("@scure/bip39");
 var _english = require("@scure/bip39/wordlists/english");
+var _cryptography = require("@mysten/sui.js/cryptography");
 var _bcs2 = require("@mysten/sui.js/bcs");
 var _faucet = require("@mysten/sui.js/faucet");
 var _keccak = _interopRequireDefault(require("keccak256"));
@@ -2891,6 +2892,7 @@ var generateMnemonic = (numberOfWords = 24) => {
 };
 
 // src/libs/suiAccountManager/index.ts
+
 var SuiAccountManager = class {
   /**
    * Support the following ways to init the SuiToolkit:
@@ -2899,7 +2901,7 @@ var SuiAccountManager = class {
    * If none of them is provided, will generate a random mnemonics with 24 words.
    *
    * @param mnemonics, 12 or 24 mnemonics words, separated by space
-   * @param secretKey, base64 or hex string, when mnemonics is provided, secretKey will be ignored
+   * @param secretKey, base64 or hex string or Bech32 string, when mnemonics is provided, secretKey will be ignored
    */
   constructor({
     mnemonics,
@@ -2910,8 +2912,20 @@ var SuiAccountManager = class {
     if (!this.mnemonics && !this.secretKey) {
       this.mnemonics = generateMnemonic(24);
     }
-    this.currentKeyPair = this.secretKey ? _ed.Ed25519Keypair.fromSecretKey(normalizePrivateKey(hexOrBase64ToUint8Array(this.secretKey))) : getKeyPair(this.mnemonics);
+    this.currentKeyPair = this.secretKey ? this.parseSecretKey(this.secretKey) : getKeyPair(this.mnemonics);
     this.currentAddress = this.currentKeyPair.getPublicKey().toSuiAddress();
+  }
+  /**
+   * Check if the secretKey starts with bench32 format
+   */
+  parseSecretKey(secretKey) {
+    if (secretKey.startsWith(_cryptography.SUI_PRIVATE_KEY_PREFIX)) {
+      const {
+        secretKey: uint8ArraySecretKey
+      } = (0, _cryptography.decodeSuiPrivateKey)(secretKey);
+      return _ed.Ed25519Keypair.fromSecretKey(normalizePrivateKey(uint8ArraySecretKey));
+    }
+    return _ed.Ed25519Keypair.fromSecretKey(normalizePrivateKey(hexOrBase64ToUint8Array(secretKey)));
   }
   /**
    * if derivePathParams is not provided or mnemonics is empty, it will return the currentKeyPair.
@@ -3665,7 +3679,7 @@ var Obelisk = class {
    * If none of them is provided, will generate a random mnemonics with 24 words.
    *
    * @param mnemonics, 12 or 24 mnemonics words, separated by space
-   * @param secretKey, base64 or hex string, when mnemonics is provided, secretKey will be ignored
+   * @param secretKey, base64 or hex string or bech32, when mnemonics is provided, secretKey will be ignored
    * @param networkType, 'testnet' | 'mainnet' | 'devnet' | 'localnet', default is 'devnet'
    * @param fullnodeUrl, the fullnode url, default is the preconfig fullnode url for the given network type
    * @param packageId
@@ -4134,7 +4148,7 @@ async function loadMetadata(networkType, packageId) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"@mysten/bcs":12,"@mysten/sui.js/bcs":18,"@mysten/sui.js/client":23,"@mysten/sui.js/faucet":40,"@mysten/sui.js/keypairs/ed25519":42,"@mysten/sui.js/keypairs/secp256k1":45,"@mysten/sui.js/keypairs/secp256r1":48,"@mysten/sui.js/multisig":51,"@mysten/sui.js/transactions":58,"@mysten/sui.js/utils":65,"@scure/bip39":111,"@scure/bip39/wordlists/english":112,"buffer":2,"keccak256":140}],7:[function(require,module,exports){
+},{"@mysten/bcs":12,"@mysten/sui.js/bcs":18,"@mysten/sui.js/client":23,"@mysten/sui.js/cryptography":33,"@mysten/sui.js/faucet":40,"@mysten/sui.js/keypairs/ed25519":42,"@mysten/sui.js/keypairs/secp256k1":45,"@mysten/sui.js/keypairs/secp256r1":48,"@mysten/sui.js/multisig":51,"@mysten/sui.js/transactions":58,"@mysten/sui.js/utils":65,"@scure/bip39":111,"@scure/bip39/wordlists/english":112,"buffer":2,"keccak256":140}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
