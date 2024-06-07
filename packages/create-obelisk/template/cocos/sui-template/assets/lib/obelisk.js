@@ -2717,7 +2717,6 @@ var _exportNames = {
   SuiContractFactory: true,
   SuiTxBlock: true,
   loadMetadata: true,
-  Ed25519Keypair: true,
   BCS: true,
   getSuiMoveConfig: true
 };
@@ -2725,12 +2724,6 @@ Object.defineProperty(exports, "BCS", {
   enumerable: true,
   get: function () {
     return _bcs.BCS;
-  }
-});
-Object.defineProperty(exports, "Ed25519Keypair", {
-  enumerable: true,
-  get: function () {
-    return _ed.Ed25519Keypair;
   }
 });
 exports.SuiTxBlock = exports.SuiContractFactory = exports.SuiAccountManager = exports.Obelisk = exports.MultiSigClient = void 0;
@@ -2778,9 +2771,45 @@ Object.keys(_transactions).forEach(function (key) {
   });
 });
 var _ed = require("@mysten/sui.js/keypairs/ed25519");
+Object.keys(_ed).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _ed[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _ed[key];
+    }
+  });
+});
+var _secp256k = require("@mysten/sui.js/keypairs/secp256k1");
+Object.keys(_secp256k).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _secp256k[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _secp256k[key];
+    }
+  });
+});
+var _secp256r = require("@mysten/sui.js/keypairs/secp256r1");
+Object.keys(_secp256r).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _secp256r[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _secp256r[key];
+    }
+  });
+});
 var _bcs = require("@mysten/bcs");
 var _bip = require("@scure/bip39");
 var _english = require("@scure/bip39/wordlists/english");
+var _cryptography = require("@mysten/sui.js/cryptography");
 var _bcs2 = require("@mysten/sui.js/bcs");
 var _faucet = require("@mysten/sui.js/faucet");
 var _keccak = _interopRequireDefault(require("keccak256"));
@@ -2863,6 +2892,7 @@ var generateMnemonic = (numberOfWords = 24) => {
 };
 
 // src/libs/suiAccountManager/index.ts
+
 var SuiAccountManager = class {
   /**
    * Support the following ways to init the SuiToolkit:
@@ -2871,7 +2901,7 @@ var SuiAccountManager = class {
    * If none of them is provided, will generate a random mnemonics with 24 words.
    *
    * @param mnemonics, 12 or 24 mnemonics words, separated by space
-   * @param secretKey, base64 or hex string, when mnemonics is provided, secretKey will be ignored
+   * @param secretKey, base64 or hex string or Bech32 string, when mnemonics is provided, secretKey will be ignored
    */
   constructor({
     mnemonics,
@@ -2882,8 +2912,20 @@ var SuiAccountManager = class {
     if (!this.mnemonics && !this.secretKey) {
       this.mnemonics = generateMnemonic(24);
     }
-    this.currentKeyPair = this.secretKey ? _ed.Ed25519Keypair.fromSecretKey(normalizePrivateKey(hexOrBase64ToUint8Array(this.secretKey))) : getKeyPair(this.mnemonics);
+    this.currentKeyPair = this.secretKey ? this.parseSecretKey(this.secretKey) : getKeyPair(this.mnemonics);
     this.currentAddress = this.currentKeyPair.getPublicKey().toSuiAddress();
+  }
+  /**
+   * Check if the secretKey starts with bench32 format
+   */
+  parseSecretKey(secretKey) {
+    if (secretKey.startsWith(_cryptography.SUI_PRIVATE_KEY_PREFIX)) {
+      const {
+        secretKey: uint8ArraySecretKey
+      } = (0, _cryptography.decodeSuiPrivateKey)(secretKey);
+      return _ed.Ed25519Keypair.fromSecretKey(normalizePrivateKey(uint8ArraySecretKey));
+    }
+    return _ed.Ed25519Keypair.fromSecretKey(normalizePrivateKey(hexOrBase64ToUint8Array(secretKey)));
   }
   /**
    * if derivePathParams is not provided or mnemonics is empty, it will return the currentKeyPair.
@@ -3479,6 +3521,34 @@ var SuiInteractor = class {
     }
     return selectedCoins;
   }
+  /**
+   * @description Select owned objects with objectType.
+   * @param addr the address of the owner
+   * @param objectType the coin type, default is '0x2::SUI::SUI'
+   */
+  async selectObjects(addr, objectType) {
+    const selectedObjects = [];
+    let hasNext = true,
+      nextCursor = null;
+    while (hasNext) {
+      const ownedObjects = await this.currentClient.getOwnedObjects({
+        owner: addr,
+        cursor: nextCursor
+      });
+      for (const objectData of ownedObjects.data) {
+        const objectDetail = await this.getObject(objectData.data.objectId);
+        if (objectDetail.type === objectType) {
+          selectedObjects.push(objectDetail);
+        }
+      }
+      nextCursor = ownedObjects.nextCursor;
+      hasNext = ownedObjects.hasNextPage;
+    }
+    if (!selectedObjects.length) {
+      throw new Error("Not own this object found for the transaction.");
+    }
+    return selectedObjects;
+  }
   async requestFaucet(address, network) {
     await (0, _faucet.requestSuiFromFaucetV0)({
       host: (0, _faucet.getFaucetHost)(network),
@@ -3609,7 +3679,7 @@ var Obelisk = class {
    * If none of them is provided, will generate a random mnemonics with 24 words.
    *
    * @param mnemonics, 12 or 24 mnemonics words, separated by space
-   * @param secretKey, base64 or hex string, when mnemonics is provided, secretKey will be ignored
+   * @param secretKey, base64 or hex string or bech32, when mnemonics is provided, secretKey will be ignored
    * @param networkType, 'testnet' | 'mainnet' | 'devnet' | 'localnet', default is 'devnet'
    * @param fullnodeUrl, the fullnode url, default is the preconfig fullnode url for the given network type
    * @param packageId
@@ -3742,6 +3812,16 @@ var Obelisk = class {
       coinType
     });
   }
+  async balanceOf(accountAddress, coinType, derivePathParams) {
+    if (accountAddress === void 0) {
+      accountAddress = this.accountManager.getAddress(derivePathParams);
+    }
+    const owner = accountAddress;
+    return this.suiInteractor.currentClient.getBalance({
+      owner,
+      coinType
+    });
+  }
   client() {
     return this.suiInteractor.currentClient;
   }
@@ -3836,6 +3916,11 @@ var Obelisk = class {
     const coins = await this.suiInteractor.selectCoins(owner, amount, coinType);
     return coins.map(c => c.objectId);
   }
+  async selectObjectsWithType(objectType, owner) {
+    owner = owner || this.accountManager.currentAddress;
+    const objects = await this.suiInteractor.selectObjects(owner, objectType);
+    return objects.map(c => c.objectId);
+  }
   /**
    * stake the given amount of SUI to the validator
    * @param amount the amount of SUI to stake
@@ -3883,7 +3968,7 @@ var Obelisk = class {
       params.push(tx.pure(entityId));
     }
     const getResult = await this.query[schemaModuleName].get(tx, params);
-    const returnValue = [];
+    let returnValue = [];
     if (getResult.effects.status.status === "success") {
       const resultList = getResult.results[0].returnValues;
       for (const res of resultList) {
@@ -4063,7 +4148,7 @@ async function loadMetadata(networkType, packageId) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"@mysten/bcs":12,"@mysten/sui.js/bcs":18,"@mysten/sui.js/client":34,"@mysten/sui.js/faucet":51,"@mysten/sui.js/keypairs/ed25519":53,"@mysten/sui.js/multisig":58,"@mysten/sui.js/transactions":25,"@mysten/sui.js/utils":65,"@scure/bip39":101,"@scure/bip39/wordlists/english":102,"buffer":2,"keccak256":129}],7:[function(require,module,exports){
+},{"@mysten/bcs":12,"@mysten/sui.js/bcs":18,"@mysten/sui.js/client":23,"@mysten/sui.js/cryptography":33,"@mysten/sui.js/faucet":40,"@mysten/sui.js/keypairs/ed25519":42,"@mysten/sui.js/keypairs/secp256k1":45,"@mysten/sui.js/keypairs/secp256r1":48,"@mysten/sui.js/multisig":51,"@mysten/sui.js/transactions":58,"@mysten/sui.js/utils":65,"@scure/bip39":111,"@scure/bip39/wordlists/english":112,"buffer":2,"keccak256":140}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4077,7 +4162,7 @@ exports.toB58 = toB58;
 const fromB58 = str => _bs.default.decode(str);
 exports.fromB58 = fromB58;
 
-},{"bs58":106}],8:[function(require,module,exports){
+},{"bs58":117}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4085,41 +4170,20 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.fromB64 = fromB64;
 exports.toB64 = toB64;
-function b64ToUint6(nChr) {
-  return nChr > 64 && nChr < 91 ? nChr - 65 : nChr > 96 && nChr < 123 ? nChr - 71 : nChr > 47 && nChr < 58 ? nChr + 4 : nChr === 43 ? 62 : nChr === 47 ? 63 : 0;
+function fromB64(base64String) {
+  return Uint8Array.from(atob(base64String), char => char.charCodeAt(0));
 }
-function fromB64(sBase64, nBlocksSize) {
-  var sB64Enc = sBase64.replace(/[^A-Za-z0-9+/]/g, ""),
-    nInLen = sB64Enc.length,
-    nOutLen = nBlocksSize ? Math.ceil((nInLen * 3 + 1 >> 2) / nBlocksSize) * nBlocksSize : nInLen * 3 + 1 >> 2,
-    taBytes = new Uint8Array(nOutLen);
-  for (var nMod3, nMod4, nUint24 = 0, nOutIdx = 0, nInIdx = 0; nInIdx < nInLen; nInIdx++) {
-    nMod4 = nInIdx & 3;
-    nUint24 |= b64ToUint6(sB64Enc.charCodeAt(nInIdx)) << 6 * (3 - nMod4);
-    if (nMod4 === 3 || nInLen - nInIdx === 1) {
-      for (nMod3 = 0; nMod3 < 3 && nOutIdx < nOutLen; nMod3++, nOutIdx++) {
-        taBytes[nOutIdx] = nUint24 >>> (16 >>> nMod3 & 24) & 255;
-      }
-      nUint24 = 0;
-    }
+const CHUNK_SIZE = 8192;
+function toB64(bytes) {
+  if (bytes.length < CHUNK_SIZE) {
+    return btoa(String.fromCharCode(...bytes));
   }
-  return taBytes;
-}
-function uint6ToB64(nUint6) {
-  return nUint6 < 26 ? nUint6 + 65 : nUint6 < 52 ? nUint6 + 71 : nUint6 < 62 ? nUint6 - 4 : nUint6 === 62 ? 43 : nUint6 === 63 ? 47 : 65;
-}
-function toB64(aBytes) {
-  var nMod3 = 2,
-    sB64Enc = "";
-  for (var nLen = aBytes.length, nUint24 = 0, nIdx = 0; nIdx < nLen; nIdx++) {
-    nMod3 = nIdx % 3;
-    nUint24 |= aBytes[nIdx] << (16 >>> nMod3 & 24);
-    if (nMod3 === 2 || aBytes.length - nIdx === 1) {
-      sB64Enc += String.fromCodePoint(uint6ToB64(nUint24 >>> 18 & 63), uint6ToB64(nUint24 >>> 12 & 63), uint6ToB64(nUint24 >>> 6 & 63), uint6ToB64(nUint24 & 63));
-      nUint24 = 0;
-    }
+  let output = "";
+  for (var i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.slice(i, i + CHUNK_SIZE);
+    output += String.fromCharCode(...chunk);
   }
-  return sB64Enc.slice(0, sB64Enc.length - 2 + nMod3) + (nMod3 === 2 ? "" : nMod3 === 1 ? "=" : "==");
+  return btoa(output);
 }
 
 },{}],9:[function(require,module,exports){
@@ -6390,10 +6454,27 @@ const TransactionDataV1 = import_bcs.bcs.struct("TransactionDataV1", {
 const TransactionData = import_bcs.bcs.enum("TransactionData", {
   V1: TransactionDataV1
 });
-const SenderSignedData = import_bcs.bcs.struct("SenderSignedData", {
-  data: TransactionData,
-  txSignatures: import_bcs.bcs.vector(import_bcs.bcs.vector(import_bcs.bcs.u8()))
+const IntentScope = import_bcs.bcs.enum("IntentScope", {
+  TransactionData: null,
+  TransactionEffects: null,
+  CheckpointSummary: null,
+  PersonalMessage: null
 });
+const IntentVersion = import_bcs.bcs.enum("IntentVersion", {
+  V0: null
+});
+const AppId = import_bcs.bcs.enum("AppId", {
+  Sui: null
+});
+const Intent = import_bcs.bcs.struct("Intent", {
+  scope: IntentScope,
+  version: IntentVersion,
+  appId: AppId
+});
+const IntentMessage = import_bcs.bcs.generic(["T"], T => import_bcs.bcs.struct("IntentMessage<T>", {
+  intent: Intent,
+  value: T
+}));
 const CompressedSignature = import_bcs.bcs.enum("CompressedSignature", {
   ED25519: import_bcs.bcs.fixedArray(64, import_bcs.bcs.u8()),
   Secp256k1: import_bcs.bcs.fixedArray(64, import_bcs.bcs.u8()),
@@ -6418,6 +6499,17 @@ const MultiSig = import_bcs.bcs.struct("MultiSig", {
   sigs: import_bcs.bcs.vector(CompressedSignature),
   bitmap: import_bcs.bcs.u16(),
   multisig_pk: MultiSigPublicKey
+});
+const base64String = import_bcs.bcs.vector(import_bcs.bcs.u8()).transform({
+  input: val => typeof val === "string" ? (0, import_bcs.fromB64)(val) : val,
+  output: val => (0, import_bcs.toB64)(new Uint8Array(val))
+});
+const SenderSignedTransaction = import_bcs.bcs.struct("SenderSignedTransaction", {
+  intentMessage: IntentMessage(TransactionData),
+  txSignatures: import_bcs.bcs.vector(base64String)
+});
+const SenderSignedData = import_bcs.bcs.vector(SenderSignedTransaction, {
+  name: "SenderSignedData"
 });
 const suiBcs = {
   ...import_bcs.bcs,
@@ -6444,6 +6536,7 @@ const suiBcs = {
   ProgrammableTransaction,
   PublicKey,
   SenderSignedData,
+  SenderSignedTransaction,
   SharedObjectRef,
   StructTag,
   SuiObjectRef,
@@ -6610,1581 +6703,6 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var Inputs_exports = {};
-__export(Inputs_exports, {
-  BuilderCallArg: () => BuilderCallArg,
-  Inputs: () => Inputs,
-  ObjectCallArg: () => ObjectCallArg,
-  PureCallArg: () => PureCallArg,
-  getIdFromCallArg: () => getIdFromCallArg,
-  getSharedObjectInput: () => getSharedObjectInput,
-  isMutableSharedObjectInput: () => isMutableSharedObjectInput,
-  isSharedObjectInput: () => isSharedObjectInput
-});
-module.exports = __toCommonJS(Inputs_exports);
-var import_bcs = require("@mysten/bcs");
-var import_superstruct = require("superstruct");
-var import_bcs2 = require("../bcs/index.js");
-var import_types = require("../types/index.js");
-var import_sui_types = require("../utils/sui-types.js");
-const ObjectArg = (0, import_superstruct.union)([
-  (0, import_superstruct.object)({ ImmOrOwned: import_types.SuiObjectRef }),
-  (0, import_superstruct.object)({
-    Shared: (0, import_superstruct.object)({
-      objectId: (0, import_superstruct.string)(),
-      initialSharedVersion: (0, import_superstruct.union)([(0, import_superstruct.integer)(), (0, import_superstruct.string)()]),
-      mutable: (0, import_superstruct.boolean)()
-    })
-  }),
-  (0, import_superstruct.object)({ Receiving: import_types.SuiObjectRef })
-]);
-const PureCallArg = (0, import_superstruct.object)({ Pure: (0, import_superstruct.array)((0, import_superstruct.integer)()) });
-const ObjectCallArg = (0, import_superstruct.object)({ Object: ObjectArg });
-const BuilderCallArg = (0, import_superstruct.union)([PureCallArg, ObjectCallArg]);
-function Pure(data, type) {
-  return {
-    Pure: Array.from(
-      data instanceof Uint8Array ? data : (0, import_bcs.isSerializedBcs)(data) ? data.toBytes() : (
-        // NOTE: We explicitly set this to be growable to infinity, because we have maxSize validation at the builder-level:
-        import_bcs2.bcs.ser(type, data, { maxSize: Infinity }).toBytes()
-      )
-    )
-  };
-}
-const Inputs = {
-  Pure,
-  ObjectRef({ objectId, digest, version }) {
-    return {
-      Object: {
-        ImmOrOwned: {
-          digest,
-          version,
-          objectId: (0, import_sui_types.normalizeSuiAddress)(objectId)
-        }
-      }
-    };
-  },
-  SharedObjectRef({ objectId, mutable, initialSharedVersion }) {
-    return {
-      Object: {
-        Shared: {
-          mutable,
-          initialSharedVersion,
-          objectId: (0, import_sui_types.normalizeSuiAddress)(objectId)
-        }
-      }
-    };
-  },
-  ReceivingRef({ objectId, digest, version }) {
-    return {
-      Object: {
-        Receiving: {
-          digest,
-          version,
-          objectId: (0, import_sui_types.normalizeSuiAddress)(objectId)
-        }
-      }
-    };
-  }
-};
-function getIdFromCallArg(arg) {
-  if (typeof arg === "string") {
-    return (0, import_sui_types.normalizeSuiAddress)(arg);
-  }
-  if ("ImmOrOwned" in arg.Object) {
-    return (0, import_sui_types.normalizeSuiAddress)(arg.Object.ImmOrOwned.objectId);
-  }
-  if ("Receiving" in arg.Object) {
-    return (0, import_sui_types.normalizeSuiAddress)(arg.Object.Receiving.objectId);
-  }
-  return (0, import_sui_types.normalizeSuiAddress)(arg.Object.Shared.objectId);
-}
-function getSharedObjectInput(arg) {
-  return typeof arg === "object" && "Object" in arg && "Shared" in arg.Object ? arg.Object.Shared : void 0;
-}
-function isSharedObjectInput(arg) {
-  return !!getSharedObjectInput(arg);
-}
-function isMutableSharedObjectInput(arg) {
-  return getSharedObjectInput(arg)?.mutable ?? false;
-}
-
-
-},{"../bcs/index.js":18,"../types/index.js":61,"../utils/sui-types.js":66,"@mysten/bcs":12,"superstruct":132}],21:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-var __privateMethod = (obj, member, method) => {
-  __accessCheck(obj, member, "access private method");
-  return method;
-};
-var TransactionBlock_exports = {};
-__export(TransactionBlock_exports, {
-  TransactionBlock: () => TransactionBlock,
-  isTransactionBlock: () => isTransactionBlock
-});
-module.exports = __toCommonJS(TransactionBlock_exports);
-var import_bcs = require("@mysten/bcs");
-var import_superstruct = require("superstruct");
-var import_bcs2 = require("../bcs/index.js");
-var import_types = require("../types/index.js");
-var import_utils = require("../utils/index.js");
-var import_sui_types = require("../utils/sui-types.js");
-var import_Inputs = require("./Inputs.js");
-var import_pure = require("./pure.js");
-var import_serializer = require("./serializer.js");
-var import_TransactionBlockData = require("./TransactionBlockData.js");
-var import_Transactions = require("./Transactions.js");
-var import_utils2 = require("./utils.js");
-var _blockData, _input, input_fn, _normalizeTransactionArgument, normalizeTransactionArgument_fn, _getConfig, getConfig_fn, _validate, validate_fn, _prepareGasPayment, prepareGasPayment_fn, _prepareGasPrice, prepareGasPrice_fn, _prepareTransactions, prepareTransactions_fn, _prepare, prepare_fn;
-const DefaultOfflineLimits = {
-  maxPureArgumentSize: 16 * 1024,
-  maxTxGas: 5e10,
-  maxGasObjects: 256,
-  maxTxSizeBytes: 128 * 1024
-};
-function createTransactionResult(index) {
-  const baseResult = { kind: "Result", index };
-  const nestedResults = [];
-  const nestedResultFor = (resultIndex) => nestedResults[resultIndex] ?? (nestedResults[resultIndex] = {
-    kind: "NestedResult",
-    index,
-    resultIndex
-  });
-  return new Proxy(baseResult, {
-    set() {
-      throw new Error(
-        "The transaction result is a proxy, and does not support setting properties directly"
-      );
-    },
-    // TODO: Instead of making this return a concrete argument, we should ideally
-    // make it reference-based (so that this gets resolved at build-time), which
-    // allows re-ordering transactions.
-    get(target, property) {
-      if (property in target) {
-        return Reflect.get(target, property);
-      }
-      if (property === Symbol.iterator) {
-        return function* () {
-          let i = 0;
-          while (true) {
-            yield nestedResultFor(i);
-            i++;
-          }
-        };
-      }
-      if (typeof property === "symbol")
-        return;
-      const resultIndex = parseInt(property, 10);
-      if (Number.isNaN(resultIndex) || resultIndex < 0)
-        return;
-      return nestedResultFor(resultIndex);
-    }
-  });
-}
-function isReceivingType(normalizedType) {
-  const tag = (0, import_types.extractStructTag)(normalizedType);
-  if (tag) {
-    return tag.Struct.address === "0x2" && tag.Struct.module === "transfer" && tag.Struct.name === "Receiving";
-  }
-  return false;
-}
-function expectClient(options) {
-  if (!options.client) {
-    throw new Error(
-      `No provider passed to Transaction#build, but transaction data was not sufficient to build offline.`
-    );
-  }
-  return options.client;
-}
-const TRANSACTION_BRAND = Symbol.for("@mysten/transaction");
-const LIMITS = {
-  // The maximum gas that is allowed.
-  maxTxGas: "max_tx_gas",
-  // The maximum number of gas objects that can be selected for one transaction.
-  maxGasObjects: "max_gas_payment_objects",
-  // The maximum size (in bytes) that the transaction can be:
-  maxTxSizeBytes: "max_tx_size_bytes",
-  // The maximum size (in bytes) that pure arguments can be:
-  maxPureArgumentSize: "max_pure_argument_size"
-};
-const GAS_SAFE_OVERHEAD = 1000n;
-const MAX_OBJECTS_PER_FETCH = 50;
-const chunk = (arr, size) => Array.from(
-  { length: Math.ceil(arr.length / size) },
-  (_, i) => arr.slice(i * size, i * size + size)
-);
-function isTransactionBlock(obj) {
-  return !!obj && typeof obj === "object" && obj[TRANSACTION_BRAND] === true;
-}
-const _TransactionBlock = class {
-  constructor(transaction) {
-    /**
-     * Dynamically create a new input, which is separate from the `input`. This is important
-     * for generated clients to be able to define unique inputs that are non-overlapping with the
-     * defined inputs.
-     *
-     * For `Uint8Array` type automatically convert the input into a `Pure` CallArg, since this
-     * is the format required for custom serialization.
-     *
-     */
-    __privateAdd(this, _input);
-    __privateAdd(this, _normalizeTransactionArgument);
-    __privateAdd(this, _getConfig);
-    __privateAdd(this, _validate);
-    // The current default is just picking _all_ coins we can which may not be ideal.
-    __privateAdd(this, _prepareGasPayment);
-    __privateAdd(this, _prepareGasPrice);
-    __privateAdd(this, _prepareTransactions);
-    /**
-     * Prepare the transaction by valdiating the transaction data and resolving all inputs
-     * so that it can be built into bytes.
-     */
-    __privateAdd(this, _prepare);
-    __privateAdd(this, _blockData, void 0);
-    __privateSet(this, _blockData, new import_TransactionBlockData.TransactionBlockDataBuilder(
-      transaction ? transaction.blockData : void 0
-    ));
-  }
-  /**
-   * Converts from a serialize transaction kind (built with `build({ onlyTransactionKind: true })`) to a `Transaction` class.
-   * Supports either a byte array, or base64-encoded bytes.
-   */
-  static fromKind(serialized) {
-    const tx = new _TransactionBlock();
-    __privateSet(tx, _blockData, import_TransactionBlockData.TransactionBlockDataBuilder.fromKindBytes(
-      typeof serialized === "string" ? (0, import_bcs.fromB64)(serialized) : serialized
-    ));
-    return tx;
-  }
-  /**
-   * Converts from a serialized transaction format to a `Transaction` class.
-   * There are two supported serialized formats:
-   * - A string returned from `Transaction#serialize`. The serialized format must be compatible, or it will throw an error.
-   * - A byte array (or base64-encoded bytes) containing BCS transaction data.
-   */
-  static from(serialized) {
-    const tx = new _TransactionBlock();
-    if (typeof serialized !== "string" || !serialized.startsWith("{")) {
-      __privateSet(tx, _blockData, import_TransactionBlockData.TransactionBlockDataBuilder.fromBytes(
-        typeof serialized === "string" ? (0, import_bcs.fromB64)(serialized) : serialized
-      ));
-    } else {
-      __privateSet(tx, _blockData, import_TransactionBlockData.TransactionBlockDataBuilder.restore(JSON.parse(serialized)));
-    }
-    return tx;
-  }
-  setSender(sender) {
-    __privateGet(this, _blockData).sender = sender;
-  }
-  /**
-   * Sets the sender only if it has not already been set.
-   * This is useful for sponsored transaction flows where the sender may not be the same as the signer address.
-   */
-  setSenderIfNotSet(sender) {
-    if (!__privateGet(this, _blockData).sender) {
-      __privateGet(this, _blockData).sender = sender;
-    }
-  }
-  setExpiration(expiration) {
-    __privateGet(this, _blockData).expiration = expiration;
-  }
-  setGasPrice(price) {
-    __privateGet(this, _blockData).gasConfig.price = String(price);
-  }
-  setGasBudget(budget) {
-    __privateGet(this, _blockData).gasConfig.budget = String(budget);
-  }
-  setGasOwner(owner) {
-    __privateGet(this, _blockData).gasConfig.owner = owner;
-  }
-  setGasPayment(payments) {
-    __privateGet(this, _blockData).gasConfig.payment = payments.map((payment) => (0, import_superstruct.mask)(payment, import_types.SuiObjectRef));
-  }
-  /** Get a snapshot of the transaction data, in JSON form: */
-  get blockData() {
-    return __privateGet(this, _blockData).snapshot();
-  }
-  // Used to brand transaction classes so that they can be identified, even between multiple copies
-  // of the builder.
-  get [TRANSACTION_BRAND]() {
-    return true;
-  }
-  // Temporary workaround for the wallet interface accidentally serializing transaction blocks via postMessage
-  get pure() {
-    Object.defineProperty(this, "pure", {
-      enumerable: false,
-      value: (0, import_pure.createPure)((value, type) => {
-        if ((0, import_bcs.isSerializedBcs)(value)) {
-          return __privateMethod(this, _input, input_fn).call(this, "pure", {
-            Pure: Array.from(value.toBytes())
-          });
-        }
-        return __privateMethod(this, _input, input_fn).call(this, "pure", value instanceof Uint8Array ? import_Inputs.Inputs.Pure(value) : type ? import_Inputs.Inputs.Pure(value, type) : value);
-      })
-    });
-    return this.pure;
-  }
-  /** Returns an argument for the gas coin, to be used in a transaction. */
-  get gas() {
-    return { kind: "GasCoin" };
-  }
-  /**
-   * Add a new object input to the transaction.
-   */
-  object(value) {
-    if (typeof value === "object" && "kind" in value) {
-      return value;
-    }
-    const id = (0, import_Inputs.getIdFromCallArg)(value);
-    const inserted = __privateGet(this, _blockData).inputs.find(
-      (i) => i.type === "object" && id === (0, import_Inputs.getIdFromCallArg)(i.value)
-    );
-    return inserted ?? __privateMethod(this, _input, input_fn).call(this, "object", typeof value === "string" ? (0, import_sui_types.normalizeSuiAddress)(value) : value);
-  }
-  /**
-   * Add a new object input to the transaction using the fully-resolved object reference.
-   * If you only have an object ID, use `builder.object(id)` instead.
-   */
-  objectRef(...args) {
-    return this.object(import_Inputs.Inputs.ObjectRef(...args));
-  }
-  /**
-   * Add a new receiving input to the transaction using the fully-resolved object reference.
-   * If you only have an object ID, use `builder.object(id)` instead.
-   */
-  receivingRef(...args) {
-    return this.object(import_Inputs.Inputs.ReceivingRef(...args));
-  }
-  /**
-   * Add a new shared object input to the transaction using the fully-resolved shared object reference.
-   * If you only have an object ID, use `builder.object(id)` instead.
-   */
-  sharedObjectRef(...args) {
-    return this.object(import_Inputs.Inputs.SharedObjectRef(...args));
-  }
-  /** Add a transaction to the transaction block. */
-  add(transaction) {
-    const index = __privateGet(this, _blockData).transactions.push(transaction);
-    return createTransactionResult(index - 1);
-  }
-  // Method shorthands:
-  splitCoins(coin, amounts) {
-    return this.add(
-      import_Transactions.Transactions.SplitCoins(
-        typeof coin === "string" ? this.object(coin) : coin,
-        amounts.map(
-          (amount) => typeof amount === "number" || typeof amount === "bigint" || typeof amount === "string" ? this.pure.u64(amount) : __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, amount)
-        )
-      )
-    );
-  }
-  mergeCoins(destination, sources) {
-    return this.add(
-      import_Transactions.Transactions.MergeCoins(
-        typeof destination === "string" ? this.object(destination) : destination,
-        sources.map((src) => typeof src === "string" ? this.object(src) : src)
-      )
-    );
-  }
-  publish({ modules, dependencies }) {
-    return this.add(
-      import_Transactions.Transactions.Publish({
-        modules,
-        dependencies
-      })
-    );
-  }
-  upgrade({
-    modules,
-    dependencies,
-    packageId,
-    ticket
-  }) {
-    return this.add(
-      import_Transactions.Transactions.Upgrade({
-        modules,
-        dependencies,
-        packageId,
-        ticket: typeof ticket === "string" ? this.object(ticket) : ticket
-      })
-    );
-  }
-  moveCall({
-    arguments: args,
-    typeArguments,
-    target
-  }) {
-    return this.add(
-      import_Transactions.Transactions.MoveCall({
-        arguments: args?.map((arg) => __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, arg)),
-        typeArguments,
-        target
-      })
-    );
-  }
-  transferObjects(objects, address) {
-    return this.add(
-      import_Transactions.Transactions.TransferObjects(
-        objects.map((obj) => typeof obj === "string" ? this.object(obj) : obj),
-        typeof address === "string" ? this.pure.address(address) : __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, address)
-      )
-    );
-  }
-  makeMoveVec({
-    type,
-    objects
-  }) {
-    return this.add(
-      import_Transactions.Transactions.MakeMoveVec({
-        type,
-        objects: objects.map((obj) => typeof obj === "string" ? this.object(obj) : obj)
-      })
-    );
-  }
-  /**
-   * Serialize the transaction to a string so that it can be sent to a separate context.
-   * This is different from `build` in that it does not serialize to BCS bytes, and instead
-   * uses a separate format that is unique to the transaction builder. This allows
-   * us to serialize partially-complete transactions, that can then be completed and
-   * built in a separate context.
-   *
-   * For example, a dapp can construct a transaction, but not provide gas objects
-   * or a gas budget. The transaction then can be sent to the wallet, where this
-   * information is automatically filled in (e.g. by querying for coin objects
-   * and performing a dry run).
-   */
-  serialize() {
-    return JSON.stringify(__privateGet(this, _blockData).snapshot());
-  }
-  /** Build the transaction to BCS bytes, and sign it with the provided keypair. */
-  async sign(options) {
-    const { signer, ...buildOptions } = options;
-    const bytes = await this.build(buildOptions);
-    return signer.signTransactionBlock(bytes);
-  }
-  /** Build the transaction to BCS bytes. */
-  async build(options = {}) {
-    await __privateMethod(this, _prepare, prepare_fn).call(this, options);
-    return __privateGet(this, _blockData).build({
-      maxSizeBytes: __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxTxSizeBytes", options),
-      onlyTransactionKind: options.onlyTransactionKind
-    });
-  }
-  /** Derive transaction digest */
-  async getDigest(options = {}) {
-    await __privateMethod(this, _prepare, prepare_fn).call(this, options);
-    return __privateGet(this, _blockData).getDigest();
-  }
-};
-let TransactionBlock = _TransactionBlock;
-_blockData = new WeakMap();
-_input = new WeakSet();
-input_fn = function(type, value) {
-  const index = __privateGet(this, _blockData).inputs.length;
-  const input = (0, import_utils2.create)(
-    {
-      kind: "Input",
-      // bigints can't be serialized to JSON, so just string-convert them here:
-      value: typeof value === "bigint" ? String(value) : value,
-      index,
-      type
-    },
-    import_Transactions.TransactionBlockInput
-  );
-  __privateGet(this, _blockData).inputs.push(input);
-  return input;
-};
-_normalizeTransactionArgument = new WeakSet();
-normalizeTransactionArgument_fn = function(arg) {
-  if ((0, import_bcs.isSerializedBcs)(arg)) {
-    return this.pure(arg);
-  }
-  return arg;
-};
-_getConfig = new WeakSet();
-getConfig_fn = function(key, { protocolConfig, limits }) {
-  if (limits && typeof limits[key] === "number") {
-    return limits[key];
-  }
-  if (!protocolConfig) {
-    return DefaultOfflineLimits[key];
-  }
-  const attribute = protocolConfig?.attributes[LIMITS[key]];
-  if (!attribute) {
-    throw new Error(`Missing expected protocol config: "${LIMITS[key]}"`);
-  }
-  const value = "u64" in attribute ? attribute.u64 : "u32" in attribute ? attribute.u32 : attribute.f64;
-  if (!value) {
-    throw new Error(`Unexpected protocol config value found for: "${LIMITS[key]}"`);
-  }
-  return Number(value);
-};
-_validate = new WeakSet();
-validate_fn = function(options) {
-  const maxPureArgumentSize = __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxPureArgumentSize", options);
-  __privateGet(this, _blockData).inputs.forEach((input, index) => {
-    if ((0, import_superstruct.is)(input.value, import_Inputs.PureCallArg)) {
-      if (input.value.Pure.length > maxPureArgumentSize) {
-        throw new Error(
-          `Input at index ${index} is too large, max pure input size is ${maxPureArgumentSize} bytes, got ${input.value.Pure.length} bytes`
-        );
-      }
-    }
-  });
-};
-_prepareGasPayment = new WeakSet();
-prepareGasPayment_fn = async function(options) {
-  if (__privateGet(this, _blockData).gasConfig.payment) {
-    const maxGasObjects = __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxGasObjects", options);
-    if (__privateGet(this, _blockData).gasConfig.payment.length > maxGasObjects) {
-      throw new Error(`Payment objects exceed maximum amount: ${maxGasObjects}`);
-    }
-  }
-  if (options.onlyTransactionKind || __privateGet(this, _blockData).gasConfig.payment) {
-    return;
-  }
-  const gasOwner = __privateGet(this, _blockData).gasConfig.owner ?? __privateGet(this, _blockData).sender;
-  const coins = await expectClient(options).getCoins({
-    owner: gasOwner,
-    coinType: import_utils.SUI_TYPE_ARG
-  });
-  const paymentCoins = coins.data.filter((coin) => {
-    const matchingInput = __privateGet(this, _blockData).inputs.find((input) => {
-      if ((0, import_superstruct.is)(input.value, import_Inputs.BuilderCallArg) && "Object" in input.value && "ImmOrOwned" in input.value.Object) {
-        return coin.coinObjectId === input.value.Object.ImmOrOwned.objectId;
-      }
-      return false;
-    });
-    return !matchingInput;
-  }).slice(0, __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxGasObjects", options) - 1).map((coin) => ({
-    objectId: coin.coinObjectId,
-    digest: coin.digest,
-    version: coin.version
-  }));
-  if (!paymentCoins.length) {
-    throw new Error("No valid gas coins found for the transaction.");
-  }
-  this.setGasPayment(paymentCoins);
-};
-_prepareGasPrice = new WeakSet();
-prepareGasPrice_fn = async function(options) {
-  if (options.onlyTransactionKind || __privateGet(this, _blockData).gasConfig.price) {
-    return;
-  }
-  this.setGasPrice(await expectClient(options).getReferenceGasPrice());
-};
-_prepareTransactions = new WeakSet();
-prepareTransactions_fn = async function(options) {
-  const { inputs, transactions } = __privateGet(this, _blockData);
-  const moveModulesToResolve = [];
-  const objectsToResolve = [];
-  inputs.forEach((input) => {
-    if (input.type === "object" && typeof input.value === "string") {
-      objectsToResolve.push({ id: (0, import_sui_types.normalizeSuiAddress)(input.value), input });
-      return;
-    }
-  });
-  transactions.forEach((transaction) => {
-    if (transaction.kind === "MoveCall") {
-      const needsResolution = transaction.arguments.some(
-        (arg) => arg.kind === "Input" && !(0, import_superstruct.is)(inputs[arg.index].value, import_Inputs.BuilderCallArg)
-      );
-      if (needsResolution) {
-        moveModulesToResolve.push(transaction);
-      }
-    }
-    if (transaction.kind === "SplitCoins") {
-      transaction.amounts.forEach((amount) => {
-        if (amount.kind === "Input") {
-          const input = inputs[amount.index];
-          if (typeof input.value !== "object") {
-            input.value = import_Inputs.Inputs.Pure(import_bcs2.bcs.U64.serialize(input.value));
-          }
-        }
-      });
-    }
-    if (transaction.kind === "TransferObjects") {
-      if (transaction.address.kind === "Input") {
-        const input = inputs[transaction.address.index];
-        if (typeof input.value !== "object") {
-          input.value = import_Inputs.Inputs.Pure(import_bcs2.bcs.Address.serialize(input.value));
-        }
-      }
-    }
-  });
-  if (moveModulesToResolve.length) {
-    await Promise.all(
-      moveModulesToResolve.map(async (moveCall) => {
-        const [packageId, moduleName, functionName] = moveCall.target.split("::");
-        const normalized = await expectClient(options).getNormalizedMoveFunction({
-          package: (0, import_sui_types.normalizeSuiObjectId)(packageId),
-          module: moduleName,
-          function: functionName
-        });
-        const hasTxContext = normalized.parameters.length > 0 && (0, import_serializer.isTxContext)(normalized.parameters.at(-1));
-        const params = hasTxContext ? normalized.parameters.slice(0, normalized.parameters.length - 1) : normalized.parameters;
-        if (params.length !== moveCall.arguments.length) {
-          throw new Error("Incorrect number of arguments.");
-        }
-        params.forEach((param, i) => {
-          const arg = moveCall.arguments[i];
-          if (arg.kind !== "Input")
-            return;
-          const input = inputs[arg.index];
-          if ((0, import_superstruct.is)(input.value, import_Inputs.BuilderCallArg))
-            return;
-          const inputValue = input.value;
-          const serType = (0, import_serializer.getPureSerializationType)(param, inputValue);
-          if (serType) {
-            input.value = import_Inputs.Inputs.Pure(inputValue, serType);
-            return;
-          }
-          const structVal = (0, import_types.extractStructTag)(param);
-          if (structVal != null || typeof param === "object" && "TypeParameter" in param) {
-            if (typeof inputValue !== "string") {
-              throw new Error(
-                `Expect the argument to be an object id string, got ${JSON.stringify(
-                  inputValue,
-                  null,
-                  2
-                )}`
-              );
-            }
-            objectsToResolve.push({
-              id: inputValue,
-              input,
-              normalizedType: param
-            });
-            return;
-          }
-          throw new Error(
-            `Unknown call arg type ${JSON.stringify(param, null, 2)} for value ${JSON.stringify(
-              inputValue,
-              null,
-              2
-            )}`
-          );
-        });
-      })
-    );
-  }
-  if (objectsToResolve.length) {
-    const dedupedIds = [...new Set(objectsToResolve.map(({ id }) => id))];
-    const objectChunks = chunk(dedupedIds, MAX_OBJECTS_PER_FETCH);
-    const objects = (await Promise.all(
-      objectChunks.map(
-        (chunk2) => expectClient(options).multiGetObjects({
-          ids: chunk2,
-          options: { showOwner: true }
-        })
-      )
-    )).flat();
-    let objectsById = new Map(
-      dedupedIds.map((id, index) => {
-        return [id, objects[index]];
-      })
-    );
-    const invalidObjects = Array.from(objectsById).filter(([_, obj]) => obj.error).map(([id, _]) => id);
-    if (invalidObjects.length) {
-      throw new Error(`The following input objects are invalid: ${invalidObjects.join(", ")}`);
-    }
-    objectsToResolve.forEach(({ id, input, normalizedType }) => {
-      const object = objectsById.get(id);
-      const owner = object.data?.owner;
-      const initialSharedVersion = owner && typeof owner === "object" && "Shared" in owner ? owner.Shared.initial_shared_version : void 0;
-      if (initialSharedVersion) {
-        const isByValue = normalizedType != null && (0, import_types.extractMutableReference)(normalizedType) == null && (0, import_types.extractReference)(normalizedType) == null;
-        const mutable = (0, import_Inputs.isMutableSharedObjectInput)(input.value) || isByValue || normalizedType != null && (0, import_types.extractMutableReference)(normalizedType) != null;
-        input.value = import_Inputs.Inputs.SharedObjectRef({
-          objectId: id,
-          initialSharedVersion,
-          mutable
-        });
-      } else if (normalizedType && isReceivingType(normalizedType)) {
-        input.value = import_Inputs.Inputs.ReceivingRef((0, import_types.getObjectReference)(object));
-      } else {
-        input.value = import_Inputs.Inputs.ObjectRef((0, import_types.getObjectReference)(object));
-      }
-    });
-  }
-};
-_prepare = new WeakSet();
-prepare_fn = async function(options) {
-  if (!options.onlyTransactionKind && !__privateGet(this, _blockData).sender) {
-    throw new Error("Missing transaction sender");
-  }
-  if (!options.protocolConfig && !options.limits && options.client) {
-    options.protocolConfig = await options.client.getProtocolConfig();
-  }
-  await Promise.all([__privateMethod(this, _prepareGasPrice, prepareGasPrice_fn).call(this, options), __privateMethod(this, _prepareTransactions, prepareTransactions_fn).call(this, options)]);
-  if (!options.onlyTransactionKind) {
-    await __privateMethod(this, _prepareGasPayment, prepareGasPayment_fn).call(this, options);
-    if (!__privateGet(this, _blockData).gasConfig.budget) {
-      const dryRunResult = await expectClient(options).dryRunTransactionBlock({
-        transactionBlock: __privateGet(this, _blockData).build({
-          maxSizeBytes: __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxTxSizeBytes", options),
-          overrides: {
-            gasConfig: {
-              budget: String(__privateMethod(this, _getConfig, getConfig_fn).call(this, "maxTxGas", options)),
-              payment: []
-            }
-          }
-        })
-      });
-      if (dryRunResult.effects.status.status !== "success") {
-        throw new Error(
-          `Dry run failed, could not automatically determine a budget: ${dryRunResult.effects.status.error}`,
-          { cause: dryRunResult }
-        );
-      }
-      const safeOverhead = GAS_SAFE_OVERHEAD * BigInt(this.blockData.gasConfig.price || 1n);
-      const baseComputationCostWithOverhead = BigInt(dryRunResult.effects.gasUsed.computationCost) + safeOverhead;
-      const gasBudget = baseComputationCostWithOverhead + BigInt(dryRunResult.effects.gasUsed.storageCost) - BigInt(dryRunResult.effects.gasUsed.storageRebate);
-      this.setGasBudget(
-        gasBudget > baseComputationCostWithOverhead ? gasBudget : baseComputationCostWithOverhead
-      );
-    }
-  }
-  __privateMethod(this, _validate, validate_fn).call(this, options);
-};
-
-
-},{"../bcs/index.js":18,"../types/index.js":61,"../utils/index.js":65,"../utils/sui-types.js":66,"./Inputs.js":20,"./TransactionBlockData.js":22,"./Transactions.js":23,"./pure.js":28,"./serializer.js":29,"./utils.js":30,"@mysten/bcs":12,"superstruct":132}],22:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var TransactionBlockData_exports = {};
-__export(TransactionBlockData_exports, {
-  SerializedTransactionDataBuilder: () => SerializedTransactionDataBuilder,
-  TransactionBlockDataBuilder: () => TransactionBlockDataBuilder,
-  TransactionExpiration: () => TransactionExpiration
-});
-module.exports = __toCommonJS(TransactionBlockData_exports);
-var import_bcs = require("@mysten/bcs");
-var import_superstruct = require("superstruct");
-var import_bcs2 = require("../bcs/index.js");
-var import_types = require("../types/index.js");
-var import_sui_types = require("../utils/sui-types.js");
-var import_hash = require("./hash.js");
-var import_Inputs = require("./Inputs.js");
-var import_Transactions = require("./Transactions.js");
-var import_utils = require("./utils.js");
-const TransactionExpiration = (0, import_superstruct.optional)(
-  (0, import_superstruct.nullable)(
-    (0, import_superstruct.union)([(0, import_superstruct.object)({ Epoch: (0, import_superstruct.integer)() }), (0, import_superstruct.object)({ None: (0, import_superstruct.union)([(0, import_superstruct.literal)(true), (0, import_superstruct.literal)(null)]) })])
-  )
-);
-const StringEncodedBigint = (0, import_superstruct.define)("StringEncodedBigint", (val) => {
-  if (!["string", "number", "bigint"].includes(typeof val))
-    return false;
-  try {
-    BigInt(val);
-    return true;
-  } catch {
-    return false;
-  }
-});
-const GasConfig = (0, import_superstruct.object)({
-  budget: (0, import_superstruct.optional)(StringEncodedBigint),
-  price: (0, import_superstruct.optional)(StringEncodedBigint),
-  payment: (0, import_superstruct.optional)((0, import_superstruct.array)(import_types.SuiObjectRef)),
-  owner: (0, import_superstruct.optional)((0, import_superstruct.string)())
-});
-const SerializedTransactionDataBuilder = (0, import_superstruct.object)({
-  version: (0, import_superstruct.literal)(1),
-  sender: (0, import_superstruct.optional)((0, import_superstruct.string)()),
-  expiration: TransactionExpiration,
-  gasConfig: GasConfig,
-  inputs: (0, import_superstruct.array)(import_Transactions.TransactionBlockInput),
-  transactions: (0, import_superstruct.array)(import_Transactions.TransactionType)
-});
-function prepareSuiAddress(address) {
-  return (0, import_sui_types.normalizeSuiAddress)(address).replace("0x", "");
-}
-class TransactionBlockDataBuilder {
-  constructor(clone) {
-    this.version = 1;
-    this.sender = clone?.sender;
-    this.expiration = clone?.expiration;
-    this.gasConfig = clone?.gasConfig ?? {};
-    this.inputs = clone?.inputs ?? [];
-    this.transactions = clone?.transactions ?? [];
-  }
-  static fromKindBytes(bytes) {
-    const kind = import_bcs2.bcs.TransactionKind.parse(bytes);
-    const programmableTx = "ProgrammableTransaction" in kind ? kind.ProgrammableTransaction : null;
-    if (!programmableTx) {
-      throw new Error("Unable to deserialize from bytes.");
-    }
-    const serialized = (0, import_utils.create)(
-      {
-        version: 1,
-        gasConfig: {},
-        inputs: programmableTx.inputs.map(
-          (value, index) => (0, import_utils.create)(
-            {
-              kind: "Input",
-              value,
-              index,
-              type: (0, import_superstruct.is)(value, import_Inputs.PureCallArg) ? "pure" : "object"
-            },
-            import_Transactions.TransactionBlockInput
-          )
-        ),
-        transactions: programmableTx.transactions
-      },
-      SerializedTransactionDataBuilder
-    );
-    return TransactionBlockDataBuilder.restore(serialized);
-  }
-  static fromBytes(bytes) {
-    const rawData = import_bcs2.bcs.TransactionData.parse(bytes);
-    const data = rawData?.V1;
-    const programmableTx = "ProgrammableTransaction" in data.kind ? data?.kind?.ProgrammableTransaction : null;
-    if (!data || !programmableTx) {
-      throw new Error("Unable to deserialize from bytes.");
-    }
-    const serialized = (0, import_utils.create)(
-      {
-        version: 1,
-        sender: data.sender,
-        expiration: data.expiration,
-        gasConfig: data.gasData,
-        inputs: programmableTx.inputs.map(
-          (value, index) => (0, import_utils.create)(
-            {
-              kind: "Input",
-              value,
-              index,
-              type: (0, import_superstruct.is)(value, import_Inputs.PureCallArg) ? "pure" : "object"
-            },
-            import_Transactions.TransactionBlockInput
-          )
-        ),
-        transactions: programmableTx.transactions
-      },
-      SerializedTransactionDataBuilder
-    );
-    return TransactionBlockDataBuilder.restore(serialized);
-  }
-  static restore(data) {
-    (0, import_superstruct.assert)(data, SerializedTransactionDataBuilder);
-    const transactionData = new TransactionBlockDataBuilder();
-    Object.assign(transactionData, data);
-    return transactionData;
-  }
-  /**
-   * Generate transaction digest.
-   *
-   * @param bytes BCS serialized transaction data
-   * @returns transaction digest.
-   */
-  static getDigestFromBytes(bytes) {
-    const hash = (0, import_hash.hashTypedData)("TransactionData", bytes);
-    return (0, import_bcs.toB58)(hash);
-  }
-  build({
-    maxSizeBytes = Infinity,
-    overrides,
-    onlyTransactionKind
-  } = {}) {
-    const inputs = this.inputs.map((input) => {
-      (0, import_superstruct.assert)(input.value, import_Inputs.BuilderCallArg);
-      return input.value;
-    });
-    const kind = {
-      ProgrammableTransaction: {
-        inputs,
-        transactions: this.transactions
-      }
-    };
-    if (onlyTransactionKind) {
-      return import_bcs2.bcs.TransactionKind.serialize(kind, { maxSize: maxSizeBytes }).toBytes();
-    }
-    const expiration = overrides?.expiration ?? this.expiration;
-    const sender = overrides?.sender ?? this.sender;
-    const gasConfig = { ...this.gasConfig, ...overrides?.gasConfig };
-    if (!sender) {
-      throw new Error("Missing transaction sender");
-    }
-    if (!gasConfig.budget) {
-      throw new Error("Missing gas budget");
-    }
-    if (!gasConfig.payment) {
-      throw new Error("Missing gas payment");
-    }
-    if (!gasConfig.price) {
-      throw new Error("Missing gas price");
-    }
-    const transactionData = {
-      sender: prepareSuiAddress(sender),
-      expiration: expiration ? expiration : { None: true },
-      gasData: {
-        payment: gasConfig.payment,
-        owner: prepareSuiAddress(this.gasConfig.owner ?? sender),
-        price: BigInt(gasConfig.price),
-        budget: BigInt(gasConfig.budget)
-      },
-      kind: {
-        ProgrammableTransaction: {
-          inputs,
-          transactions: this.transactions
-        }
-      }
-    };
-    return import_bcs2.bcs.TransactionData.serialize(
-      { V1: transactionData },
-      { maxSize: maxSizeBytes }
-    ).toBytes();
-  }
-  getDigest() {
-    const bytes = this.build({ onlyTransactionKind: false });
-    return TransactionBlockDataBuilder.getDigestFromBytes(bytes);
-  }
-  snapshot() {
-    return (0, import_utils.create)(this, SerializedTransactionDataBuilder);
-  }
-}
-
-
-},{"../bcs/index.js":18,"../types/index.js":61,"../utils/sui-types.js":66,"./Inputs.js":20,"./Transactions.js":23,"./hash.js":26,"./utils.js":30,"@mysten/bcs":12,"superstruct":132}],23:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var Transactions_exports = {};
-__export(Transactions_exports, {
-  MakeMoveVecTransaction: () => MakeMoveVecTransaction,
-  MergeCoinsTransaction: () => MergeCoinsTransaction,
-  MoveCallTransaction: () => MoveCallTransaction,
-  PublishTransaction: () => PublishTransaction,
-  SplitCoinsTransaction: () => SplitCoinsTransaction,
-  TransactionArgument: () => TransactionArgument,
-  TransactionBlockInput: () => TransactionBlockInput,
-  TransactionType: () => TransactionType,
-  Transactions: () => Transactions,
-  TransferObjectsTransaction: () => TransferObjectsTransaction,
-  UpgradePolicy: () => UpgradePolicy,
-  UpgradeTransaction: () => UpgradeTransaction,
-  getTransactionType: () => getTransactionType
-});
-module.exports = __toCommonJS(Transactions_exports);
-var import_bcs = require("@mysten/bcs");
-var import_superstruct = require("superstruct");
-var import_bcs2 = require("../bcs/index.js");
-var import_type_tag_serializer = require("../bcs/type-tag-serializer.js");
-var import_sui_types = require("../utils/sui-types.js");
-var import_Inputs = require("./Inputs.js");
-var import_utils = require("./utils.js");
-const option = (some) => (0, import_superstruct.union)([(0, import_superstruct.object)({ None: (0, import_superstruct.union)([(0, import_superstruct.literal)(true), (0, import_superstruct.literal)(null)]) }), (0, import_superstruct.object)({ Some: some })]);
-const TransactionBlockInput = (0, import_superstruct.union)([
-  (0, import_superstruct.object)({
-    kind: (0, import_superstruct.literal)("Input"),
-    index: (0, import_superstruct.integer)(),
-    value: (0, import_superstruct.optional)((0, import_superstruct.any)()),
-    type: (0, import_superstruct.optional)((0, import_superstruct.literal)("object"))
-  }),
-  (0, import_superstruct.object)({
-    kind: (0, import_superstruct.literal)("Input"),
-    index: (0, import_superstruct.integer)(),
-    value: (0, import_superstruct.optional)((0, import_superstruct.any)()),
-    type: (0, import_superstruct.literal)("pure")
-  })
-]);
-const TransactionArgumentTypes = [
-  TransactionBlockInput,
-  (0, import_superstruct.object)({ kind: (0, import_superstruct.literal)("GasCoin") }),
-  (0, import_superstruct.object)({ kind: (0, import_superstruct.literal)("Result"), index: (0, import_superstruct.integer)() }),
-  (0, import_superstruct.object)({
-    kind: (0, import_superstruct.literal)("NestedResult"),
-    index: (0, import_superstruct.integer)(),
-    resultIndex: (0, import_superstruct.integer)()
-  })
-];
-const TransactionArgument = (0, import_superstruct.union)([...TransactionArgumentTypes]);
-const MoveCallTransaction = (0, import_superstruct.object)({
-  kind: (0, import_superstruct.literal)("MoveCall"),
-  target: (0, import_superstruct.define)("target", (0, import_superstruct.string)().validator),
-  typeArguments: (0, import_superstruct.array)((0, import_superstruct.string)()),
-  arguments: (0, import_superstruct.array)(TransactionArgument)
-});
-const TransferObjectsTransaction = (0, import_superstruct.object)({
-  kind: (0, import_superstruct.literal)("TransferObjects"),
-  objects: (0, import_superstruct.array)(TransactionArgument),
-  address: TransactionArgument
-});
-const SplitCoinsTransaction = (0, import_superstruct.object)({
-  kind: (0, import_superstruct.literal)("SplitCoins"),
-  coin: TransactionArgument,
-  amounts: (0, import_superstruct.array)(TransactionArgument)
-});
-const MergeCoinsTransaction = (0, import_superstruct.object)({
-  kind: (0, import_superstruct.literal)("MergeCoins"),
-  destination: TransactionArgument,
-  sources: (0, import_superstruct.array)(TransactionArgument)
-});
-const MakeMoveVecTransaction = (0, import_superstruct.object)({
-  kind: (0, import_superstruct.literal)("MakeMoveVec"),
-  // TODO: ideally we should use `TypeTag` instead of `record()` here,
-  // but TypeTag is recursively defined and it's tricky to define a
-  // recursive struct in superstruct
-  type: (0, import_superstruct.optional)(option((0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.unknown)()))),
-  objects: (0, import_superstruct.array)(TransactionArgument)
-});
-const PublishTransaction = (0, import_superstruct.object)({
-  kind: (0, import_superstruct.literal)("Publish"),
-  modules: (0, import_superstruct.array)((0, import_superstruct.array)((0, import_superstruct.integer)())),
-  dependencies: (0, import_superstruct.array)((0, import_superstruct.string)())
-});
-var UpgradePolicy = /* @__PURE__ */ ((UpgradePolicy2) => {
-  UpgradePolicy2[UpgradePolicy2["COMPATIBLE"] = 0] = "COMPATIBLE";
-  UpgradePolicy2[UpgradePolicy2["ADDITIVE"] = 128] = "ADDITIVE";
-  UpgradePolicy2[UpgradePolicy2["DEP_ONLY"] = 192] = "DEP_ONLY";
-  return UpgradePolicy2;
-})(UpgradePolicy || {});
-const UpgradeTransaction = (0, import_superstruct.object)({
-  kind: (0, import_superstruct.literal)("Upgrade"),
-  modules: (0, import_superstruct.array)((0, import_superstruct.array)((0, import_superstruct.integer)())),
-  dependencies: (0, import_superstruct.array)((0, import_superstruct.string)()),
-  packageId: (0, import_superstruct.string)(),
-  ticket: TransactionArgument
-});
-const TransactionTypes = [
-  MoveCallTransaction,
-  TransferObjectsTransaction,
-  SplitCoinsTransaction,
-  MergeCoinsTransaction,
-  PublishTransaction,
-  UpgradeTransaction,
-  MakeMoveVecTransaction
-];
-const TransactionType = (0, import_superstruct.union)([...TransactionTypes]);
-function getTransactionType(data) {
-  (0, import_superstruct.assert)(data, TransactionType);
-  return TransactionTypes.find((schema) => (0, import_superstruct.is)(data, schema));
-}
-const Transactions = {
-  MoveCall(input) {
-    return (0, import_utils.create)(
-      {
-        kind: "MoveCall",
-        target: input.target,
-        arguments: input.arguments ?? [],
-        typeArguments: input.typeArguments ?? []
-      },
-      MoveCallTransaction
-    );
-  },
-  TransferObjects(objects, address) {
-    if (address.kind === "Input" && address.type === "pure" && typeof address.value !== "object") {
-      address.value = import_Inputs.Inputs.Pure(import_bcs2.bcs.Address.serialize(address.value));
-    }
-    return (0, import_utils.create)({ kind: "TransferObjects", objects, address }, TransferObjectsTransaction);
-  },
-  SplitCoins(coin, amounts) {
-    amounts.forEach((input) => {
-      if (input.kind === "Input" && input.type === "pure" && typeof input.value !== "object") {
-        input.value = import_Inputs.Inputs.Pure(import_bcs2.bcs.U64.serialize(input.value));
-      }
-    });
-    return (0, import_utils.create)(
-      {
-        kind: "SplitCoins",
-        coin,
-        amounts
-      },
-      SplitCoinsTransaction
-    );
-  },
-  MergeCoins(destination, sources) {
-    return (0, import_utils.create)({ kind: "MergeCoins", destination, sources }, MergeCoinsTransaction);
-  },
-  Publish({
-    modules,
-    dependencies
-  }) {
-    return (0, import_utils.create)(
-      {
-        kind: "Publish",
-        modules: modules.map(
-          (module2) => typeof module2 === "string" ? Array.from((0, import_bcs.fromB64)(module2)) : module2
-        ),
-        dependencies: dependencies.map((dep) => (0, import_sui_types.normalizeSuiObjectId)(dep))
-      },
-      PublishTransaction
-    );
-  },
-  Upgrade({
-    modules,
-    dependencies,
-    packageId,
-    ticket
-  }) {
-    return (0, import_utils.create)(
-      {
-        kind: "Upgrade",
-        modules: modules.map(
-          (module2) => typeof module2 === "string" ? Array.from((0, import_bcs.fromB64)(module2)) : module2
-        ),
-        dependencies: dependencies.map((dep) => (0, import_sui_types.normalizeSuiObjectId)(dep)),
-        packageId,
-        ticket
-      },
-      UpgradeTransaction
-    );
-  },
-  MakeMoveVec({
-    type,
-    objects
-  }) {
-    return (0, import_utils.create)(
-      {
-        kind: "MakeMoveVec",
-        type: type ? { Some: import_type_tag_serializer.TypeTagSerializer.parseFromStr(type) } : { None: null },
-        objects
-      },
-      MakeMoveVecTransaction
-    );
-  }
-};
-
-
-},{"../bcs/index.js":18,"../bcs/type-tag-serializer.js":19,"../utils/sui-types.js":66,"./Inputs.js":20,"./utils.js":30,"@mysten/bcs":12,"superstruct":132}],24:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var bcs_exports = {};
-__export(bcs_exports, {
-  ARGUMENT: () => ARGUMENT,
-  ARGUMENT_INNER: () => ARGUMENT_INNER,
-  CALL_ARG: () => CALL_ARG,
-  COMPRESSED_SIGNATURE: () => COMPRESSED_SIGNATURE,
-  ENUM_KIND: () => ENUM_KIND,
-  MULTISIG: () => MULTISIG,
-  MULTISIG_PK_MAP: () => MULTISIG_PK_MAP,
-  MULTISIG_PUBLIC_KEY: () => MULTISIG_PUBLIC_KEY,
-  OBJECT_ARG: () => OBJECT_ARG,
-  OPTION: () => OPTION,
-  PROGRAMMABLE_CALL: () => PROGRAMMABLE_CALL,
-  PROGRAMMABLE_CALL_INNER: () => PROGRAMMABLE_CALL_INNER,
-  PROGRAMMABLE_TX_BLOCK: () => PROGRAMMABLE_TX_BLOCK,
-  PUBLIC_KEY: () => PUBLIC_KEY,
-  TRANSACTION: () => TRANSACTION,
-  TRANSACTION_INNER: () => TRANSACTION_INNER,
-  TYPE_TAG: () => TYPE_TAG,
-  VECTOR: () => VECTOR
-});
-module.exports = __toCommonJS(bcs_exports);
-const ARGUMENT_INNER = "Argument";
-const VECTOR = "vector";
-const OPTION = "Option";
-const CALL_ARG = "CallArg";
-const TYPE_TAG = "TypeTag";
-const OBJECT_ARG = "ObjectArg";
-const PROGRAMMABLE_TX_BLOCK = "ProgrammableTransaction";
-const PROGRAMMABLE_CALL_INNER = "ProgrammableMoveCall";
-const TRANSACTION_INNER = "Transaction";
-const COMPRESSED_SIGNATURE = "CompressedSignature";
-const PUBLIC_KEY = "PublicKey";
-const MULTISIG_PUBLIC_KEY = "MultiSigPublicKey";
-const MULTISIG_PK_MAP = "MultiSigPkMap";
-const MULTISIG = "MultiSig";
-const ENUM_KIND = "EnumKind";
-const TRANSACTION = TRANSACTION_INNER;
-const ARGUMENT = ARGUMENT_INNER;
-const PROGRAMMABLE_CALL = "ProgrammableMoveCall";
-
-
-},{}],25:[function(require,module,exports){
-"use strict";
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all) __defProp(target, name, {
-    get: all[name],
-    enumerable: true
-  });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from)) if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
-      get: () => from[key],
-      enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-    });
-  }
-  return to;
-};
-var __toCommonJS = mod => __copyProps(__defProp({}, "__esModule", {
-  value: true
-}), mod);
-var export_exports = {};
-__export(export_exports, {
-  Inputs: () => import_Inputs.Inputs,
-  TransactionBlock: () => import_TransactionBlock.TransactionBlock,
-  Transactions: () => import_Transactions.Transactions,
-  UpgradePolicy: () => import_Transactions.UpgradePolicy,
-  getPureSerializationType: () => import_serializer.getPureSerializationType,
-  isTransactionBlock: () => import_TransactionBlock.isTransactionBlock
-});
-module.exports = __toCommonJS(export_exports);
-var import_serializer = require("./serializer.js");
-var import_Inputs = require("./Inputs.js");
-var import_Transactions = require("./Transactions.js");
-var import_TransactionBlock = require("./TransactionBlock.js");
-
-},{"./Inputs.js":20,"./TransactionBlock.js":21,"./Transactions.js":23,"./serializer.js":29}],26:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var hash_exports = {};
-__export(hash_exports, {
-  hashTypedData: () => hashTypedData
-});
-module.exports = __toCommonJS(hash_exports);
-var import_blake2b = require("@noble/hashes/blake2b");
-function hashTypedData(typeTag, data) {
-  const typeTagBytes = Array.from(`${typeTag}::`).map((e) => e.charCodeAt(0));
-  const dataWithTag = new Uint8Array(typeTagBytes.length + data.length);
-  dataWithTag.set(typeTagBytes);
-  dataWithTag.set(data, typeTagBytes.length);
-  return (0, import_blake2b.blake2b)(dataWithTag, { dkLen: 32 });
-}
-
-
-},{"@noble/hashes/blake2b":93}],27:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var builder_exports = {};
-module.exports = __toCommonJS(builder_exports);
-__reExport(builder_exports, require("./TransactionBlock.js"), module.exports);
-__reExport(builder_exports, require("./Transactions.js"), module.exports);
-__reExport(builder_exports, require("./Inputs.js"), module.exports);
-__reExport(builder_exports, require("./serializer.js"), module.exports);
-__reExport(builder_exports, require("./bcs.js"), module.exports);
-
-
-},{"./Inputs.js":20,"./TransactionBlock.js":21,"./Transactions.js":23,"./bcs.js":24,"./serializer.js":29}],28:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var pure_exports = {};
-__export(pure_exports, {
-  createPure: () => createPure
-});
-module.exports = __toCommonJS(pure_exports);
-var import_bcs = require("../bcs/index.js");
-function createPure(makePure) {
-  function pure(value, type) {
-    return makePure(value, type);
-  }
-  pure.u8 = (value) => makePure(import_bcs.bcs.U8.serialize(value));
-  pure.u16 = (value) => makePure(import_bcs.bcs.U16.serialize(value));
-  pure.u32 = (value) => makePure(import_bcs.bcs.U32.serialize(value));
-  pure.u64 = (value) => makePure(import_bcs.bcs.U64.serialize(value));
-  pure.u128 = (value) => makePure(import_bcs.bcs.U128.serialize(value));
-  pure.u256 = (value) => makePure(import_bcs.bcs.U256.serialize(value));
-  pure.bool = (value) => makePure(import_bcs.bcs.Bool.serialize(value));
-  pure.string = (value) => makePure(import_bcs.bcs.String.serialize(value));
-  pure.address = (value) => makePure(import_bcs.bcs.Address.serialize(value));
-  pure.id = pure.address;
-  return pure;
-}
-
-
-},{"../bcs/index.js":18}],29:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var serializer_exports = {};
-__export(serializer_exports, {
-  getPureSerializationType: () => getPureSerializationType,
-  isTxContext: () => isTxContext
-});
-module.exports = __toCommonJS(serializer_exports);
-var import_types = require("../types/index.js");
-var import_utils = require("../utils/index.js");
-var import_sui_types = require("../utils/sui-types.js");
-const OBJECT_MODULE_NAME = "object";
-const ID_STRUCT_NAME = "ID";
-const STD_ASCII_MODULE_NAME = "ascii";
-const STD_ASCII_STRUCT_NAME = "String";
-const STD_UTF8_MODULE_NAME = "string";
-const STD_UTF8_STRUCT_NAME = "String";
-const STD_OPTION_MODULE_NAME = "option";
-const STD_OPTION_STRUCT_NAME = "Option";
-const RESOLVED_SUI_ID = {
-  address: import_utils.SUI_FRAMEWORK_ADDRESS,
-  module: OBJECT_MODULE_NAME,
-  name: ID_STRUCT_NAME
-};
-const RESOLVED_ASCII_STR = {
-  address: import_utils.MOVE_STDLIB_ADDRESS,
-  module: STD_ASCII_MODULE_NAME,
-  name: STD_ASCII_STRUCT_NAME
-};
-const RESOLVED_UTF8_STR = {
-  address: import_utils.MOVE_STDLIB_ADDRESS,
-  module: STD_UTF8_MODULE_NAME,
-  name: STD_UTF8_STRUCT_NAME
-};
-const RESOLVED_STD_OPTION = {
-  address: import_utils.MOVE_STDLIB_ADDRESS,
-  module: STD_OPTION_MODULE_NAME,
-  name: STD_OPTION_STRUCT_NAME
-};
-const isSameStruct = (a, b) => a.address === b.address && a.module === b.module && a.name === b.name;
-function isTxContext(param) {
-  const struct = (0, import_types.extractStructTag)(param)?.Struct;
-  return struct?.address === "0x2" && struct?.module === "tx_context" && struct?.name === "TxContext";
-}
-function expectType(typeName, argVal) {
-  if (typeof argVal === "undefined") {
-    return;
-  }
-  if (typeof argVal !== typeName) {
-    throw new Error(`Expect ${argVal} to be ${typeName}, received ${typeof argVal}`);
-  }
-}
-const allowedTypes = ["Address", "Bool", "U8", "U16", "U32", "U64", "U128", "U256"];
-function getPureSerializationType(normalizedType, argVal) {
-  if (typeof normalizedType === "string" && allowedTypes.includes(normalizedType)) {
-    if (normalizedType in ["U8", "U16", "U32", "U64", "U128", "U256"]) {
-      expectType("number", argVal);
-    } else if (normalizedType === "Bool") {
-      expectType("boolean", argVal);
-    } else if (normalizedType === "Address") {
-      expectType("string", argVal);
-      if (argVal && !(0, import_sui_types.isValidSuiAddress)(argVal)) {
-        throw new Error("Invalid Sui Address");
-      }
-    }
-    return normalizedType.toLowerCase();
-  } else if (typeof normalizedType === "string") {
-    throw new Error(`Unknown pure normalized type ${JSON.stringify(normalizedType, null, 2)}`);
-  }
-  if ("Vector" in normalizedType) {
-    if ((argVal === void 0 || typeof argVal === "string") && normalizedType.Vector === "U8") {
-      return "string";
-    }
-    if (argVal !== void 0 && !Array.isArray(argVal)) {
-      throw new Error(`Expect ${argVal} to be a array, received ${typeof argVal}`);
-    }
-    const innerType = getPureSerializationType(
-      normalizedType.Vector,
-      // undefined when argVal is empty
-      argVal ? argVal[0] : void 0
-    );
-    if (innerType === void 0) {
-      return;
-    }
-    return `vector<${innerType}>`;
-  }
-  if ("Struct" in normalizedType) {
-    if (isSameStruct(normalizedType.Struct, RESOLVED_ASCII_STR)) {
-      return "string";
-    } else if (isSameStruct(normalizedType.Struct, RESOLVED_UTF8_STR)) {
-      return "utf8string";
-    } else if (isSameStruct(normalizedType.Struct, RESOLVED_SUI_ID)) {
-      return "address";
-    } else if (isSameStruct(normalizedType.Struct, RESOLVED_STD_OPTION)) {
-      const optionToVec = {
-        Vector: normalizedType.Struct.typeArguments[0]
-      };
-      return getPureSerializationType(optionToVec, argVal);
-    }
-  }
-  return void 0;
-}
-
-
-},{"../types/index.js":61,"../utils/index.js":65,"../utils/sui-types.js":66}],30:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var utils_exports = {};
-__export(utils_exports, {
-  create: () => create
-});
-module.exports = __toCommonJS(utils_exports);
-var import_superstruct = require("superstruct");
-function create(value, struct) {
-  return (0, import_superstruct.create)(value, struct);
-}
-
-
-},{"superstruct":132}],31:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var client_exports = {};
 __export(client_exports, {
   SUI_CLIENT_BRAND: () => SUI_CLIENT_BRAND,
@@ -8193,7 +6711,7 @@ __export(client_exports, {
 });
 module.exports = __toCommonJS(client_exports);
 var import_bcs = require("@mysten/bcs");
-var import_builder = require("../builder/index.js");
+var import_transactions = require("../transactions/index.js");
 var import_sui_types = require("../utils/sui-types.js");
 var import_http_transport = require("./http-transport.js");
 const SUI_CLIENT_BRAND = Symbol.for("@mysten/SuiClient");
@@ -8552,7 +7070,7 @@ class SuiClient {
    */
   async devInspectTransactionBlock(input) {
     let devInspectTxBytes;
-    if ((0, import_builder.isTransactionBlock)(input.transactionBlock)) {
+    if ((0, import_transactions.isTransactionBlock)(input.transactionBlock)) {
       input.transactionBlock.setSenderIfNotSet(input.sender);
       devInspectTxBytes = (0, import_bcs.toB64)(
         await input.transactionBlock.build({
@@ -8742,7 +7260,7 @@ class SuiClient {
 }
 
 
-},{"../builder/index.js":27,"../utils/sui-types.js":66,"./http-transport.js":33,"@mysten/bcs":12}],32:[function(require,module,exports){
+},{"../transactions/index.js":60,"../utils/sui-types.js":66,"./http-transport.js":22,"@mysten/bcs":12}],21:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8793,7 +7311,7 @@ class SuiHTTPStatusError extends SuiHTTPTransportError {
 }
 
 
-},{}],33:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8853,7 +7371,7 @@ class SuiHTTPTransport {
   }
   fetch(input, init) {
     const fetch = __privateGet(this, _options).fetch ?? globalThis.fetch;
-    if (!this.fetch) {
+    if (!fetch) {
       throw new Error(
         "The current environment does not support fetch, you can provide a fetch implementation in the options for SuiHTTPTransport."
       );
@@ -8911,7 +7429,7 @@ getWebsocketClient_fn = function() {
     __privateSet(this, _websocketClient, new import_rpc_websocket_client.WebsocketClient(
       __privateGet(this, _options).websocket?.url ?? __privateGet(this, _options).url,
       {
-        WebSocketConstructor: __privateGet(this, _options).WebSocketConstructor,
+        WebSocketConstructor,
         ...__privateGet(this, _options).websocket
       }
     ));
@@ -8920,7 +7438,7 @@ getWebsocketClient_fn = function() {
 };
 
 
-},{"../version.js":68,"./errors.js":32,"./rpc-websocket-client.js":36}],34:[function(require,module,exports){
+},{"../version.js":68,"./errors.js":21,"./rpc-websocket-client.js":25}],23:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8945,7 +7463,7 @@ __reExport(client_exports, require("./client.js"), module.exports);
 __reExport(client_exports, require("./errors.js"), module.exports);
 
 
-},{"./client.js":31,"./errors.js":32,"./http-transport.js":33,"./network.js":35,"./types/index.js":42}],35:[function(require,module,exports){
+},{"./client.js":20,"./errors.js":21,"./http-transport.js":22,"./network.js":24,"./types/index.js":31}],24:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8985,7 +7503,7 @@ function getFullnodeUrl(network) {
 }
 
 
-},{}],36:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9193,7 +7711,7 @@ class RpcSubscription {
 }
 
 
-},{"./errors.js":32}],37:[function(require,module,exports){
+},{"./errors.js":21}],26:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9212,7 +7730,7 @@ var chain_exports = {};
 module.exports = __toCommonJS(chain_exports);
 
 
-},{}],38:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9231,7 +7749,7 @@ var changes_exports = {};
 module.exports = __toCommonJS(changes_exports);
 
 
-},{}],39:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9250,7 +7768,7 @@ var coins_exports = {};
 module.exports = __toCommonJS(coins_exports);
 
 
-},{}],40:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9269,7 +7787,7 @@ var common_exports = {};
 module.exports = __toCommonJS(common_exports);
 
 
-},{}],41:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9288,7 +7806,7 @@ var generated_exports = {};
 module.exports = __toCommonJS(generated_exports);
 
 
-},{}],42:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9314,7 +7832,7 @@ __reExport(types_exports, require("./generated.js"), module.exports);
 __reExport(types_exports, require("./params.js"), module.exports);
 
 
-},{"./chain.js":37,"./changes.js":38,"./coins.js":39,"./common.js":40,"./generated.js":41,"./params.js":43}],43:[function(require,module,exports){
+},{"./chain.js":26,"./changes.js":27,"./coins.js":28,"./common.js":29,"./generated.js":30,"./params.js":32}],32:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9333,7 +7851,7 @@ var params_exports = {};
 module.exports = __toCommonJS(params_exports);
 
 
-},{}],44:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9355,20 +7873,18 @@ var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "defau
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var cryptography_exports = {};
 __export(cryptography_exports, {
-  Keypair: () => import_keypair.Keypair,
-  PublicKey: () => import_publickey.PublicKey,
-  Signer: () => import_keypair.BaseSigner
+  PublicKey: () => import_publickey.PublicKey
 });
 module.exports = __toCommonJS(cryptography_exports);
 __reExport(cryptography_exports, require("./signature.js"), module.exports);
 __reExport(cryptography_exports, require("./signature-scheme.js"), module.exports);
 __reExport(cryptography_exports, require("./mnemonics.js"), module.exports);
 __reExport(cryptography_exports, require("./intent.js"), module.exports);
+__reExport(cryptography_exports, require("./keypair.js"), module.exports);
 var import_publickey = require("./publickey.js");
-var import_keypair = require("./keypair.js");
 
 
-},{"./intent.js":45,"./keypair.js":46,"./mnemonics.js":47,"./publickey.js":48,"./signature-scheme.js":49,"./signature.js":50}],45:[function(require,module,exports){
+},{"./intent.js":34,"./keypair.js":35,"./mnemonics.js":36,"./publickey.js":37,"./signature-scheme.js":38,"./signature.js":39}],34:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9422,48 +7938,61 @@ function messageWithIntent(scope, message) {
 }
 
 
-},{}],46:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 "use strict";
+
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
+  for (var name in all) __defProp(target, name, {
+    get: all[name],
+    enumerable: true
+  });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    for (let key of __getOwnPropNames(from)) if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
+      get: () => from[key],
+      enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+    });
   }
   return to;
 };
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __toCommonJS = mod => __copyProps(__defProp({}, "__esModule", {
+  value: true
+}), mod);
 var keypair_exports = {};
 __export(keypair_exports, {
-  BaseSigner: () => BaseSigner,
   Keypair: () => Keypair,
   LEGACY_PRIVATE_KEY_SIZE: () => LEGACY_PRIVATE_KEY_SIZE,
-  PRIVATE_KEY_SIZE: () => PRIVATE_KEY_SIZE
+  PRIVATE_KEY_SIZE: () => PRIVATE_KEY_SIZE,
+  SUI_PRIVATE_KEY_PREFIX: () => SUI_PRIVATE_KEY_PREFIX,
+  Signer: () => Signer,
+  decodeSuiPrivateKey: () => decodeSuiPrivateKey,
+  encodeSuiPrivateKey: () => encodeSuiPrivateKey
 });
 module.exports = __toCommonJS(keypair_exports);
 var import_bcs = require("@mysten/bcs");
 var import_blake2b = require("@noble/hashes/blake2b");
-var import_bcs2 = require("../bcs/index.js");
+var import_bech32 = require("bech32");
 var import_intent = require("./intent.js");
+var import_signature_scheme = require("./signature-scheme.js");
 var import_signature = require("./signature.js");
 const PRIVATE_KEY_SIZE = 32;
 const LEGACY_PRIVATE_KEY_SIZE = 64;
-class BaseSigner {
+const SUI_PRIVATE_KEY_PREFIX = "suiprivkey";
+class Signer {
   /**
    * Sign messages with a specific intent. By combining the message bytes with the intent before hashing and signing,
    * it ensures that a signed message is tied to a specific purpose and domain separator is provided
    */
   async signWithIntent(bytes, intent) {
     const intentMessage = (0, import_intent.messageWithIntent)(intent, bytes);
-    const digest = (0, import_blake2b.blake2b)(intentMessage, { dkLen: 32 });
+    const digest = (0, import_blake2b.blake2b)(intentMessage, {
+      dkLen: 32
+    });
     const signature = (0, import_signature.toSerializedSignature)({
       signature: await this.sign(digest),
       signatureScheme: this.getKeyScheme(),
@@ -9484,20 +8013,54 @@ class BaseSigner {
    * Signs provided personal message by calling `signWithIntent()` with a `PersonalMessage` provided as intent scope
    */
   async signPersonalMessage(bytes) {
-    return this.signWithIntent(
-      import_bcs2.bcs.vector(import_bcs2.bcs.u8()).serialize(bytes).toBytes(),
-      import_intent.IntentScope.PersonalMessage
-    );
+    return this.signWithIntent(import_bcs.bcs.vector(import_bcs.bcs.u8()).serialize(bytes).toBytes(), import_intent.IntentScope.PersonalMessage);
   }
   toSuiAddress() {
     return this.getPublicKey().toSuiAddress();
   }
 }
-class Keypair extends BaseSigner {
+class Keypair extends Signer {
+  /**
+   * @deprecated use {@link Keypair.getSecretKey} instead
+   * This returns an exported keypair object, schema is the signature
+   * scheme name, and the private key field is a Bech32 encoded string
+   * of 33-byte `flag || private_key` that starts with `suiprivkey`.
+   */
+  export() {
+    return {
+      schema: this.getKeyScheme(),
+      privateKey: this.getSecretKey()
+    };
+  }
+}
+function decodeSuiPrivateKey(value) {
+  const {
+    prefix,
+    words
+  } = import_bech32.bech32.decode(value);
+  if (prefix !== SUI_PRIVATE_KEY_PREFIX) {
+    throw new Error("invalid private key prefix");
+  }
+  const extendedSecretKey = new Uint8Array(import_bech32.bech32.fromWords(words));
+  const secretKey = extendedSecretKey.slice(1);
+  const signatureScheme = import_signature_scheme.SIGNATURE_FLAG_TO_SCHEME[extendedSecretKey[0]];
+  return {
+    schema: signatureScheme,
+    secretKey
+  };
+}
+function encodeSuiPrivateKey(bytes, scheme) {
+  if (bytes.length !== PRIVATE_KEY_SIZE) {
+    throw new Error("Invalid bytes length");
+  }
+  const flag = import_signature_scheme.SIGNATURE_SCHEME_TO_FLAG[scheme];
+  const privKeyBytes = new Uint8Array(bytes.length + 1);
+  privKeyBytes.set([flag]);
+  privKeyBytes.set(bytes, 1);
+  return import_bech32.bech32.encode(SUI_PRIVATE_KEY_PREFIX, import_bech32.bech32.toWords(privKeyBytes));
 }
 
-
-},{"../bcs/index.js":18,"./intent.js":45,"./signature.js":50,"@mysten/bcs":12,"@noble/hashes/blake2b":93}],47:[function(require,module,exports){
+},{"./intent.js":34,"./signature-scheme.js":38,"./signature.js":39,"@mysten/bcs":12,"@noble/hashes/blake2b":93,"bech32":114}],36:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9546,7 +8109,7 @@ function mnemonicToSeedHex(mnemonics) {
 }
 
 
-},{"@mysten/bcs":12,"@scure/bip39":101}],48:[function(require,module,exports){
+},{"@mysten/bcs":12,"@scure/bip39":111}],37:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9660,7 +8223,7 @@ class PublicKey {
 }
 
 
-},{"../bcs/index.js":18,"../utils/sui-types.js":66,"./intent.js":45,"@mysten/bcs":12,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],49:[function(require,module,exports){
+},{"../bcs/index.js":18,"../utils/sui-types.js":66,"./intent.js":34,"@mysten/bcs":12,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],38:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9707,7 +8270,7 @@ const SIGNATURE_FLAG_TO_SCHEME = {
 };
 
 
-},{}],50:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9803,7 +8366,7 @@ function parseSerializedSignature(serializedSignature) {
 }
 
 
-},{"../bcs/index.js":18,"../zklogin/address.js":69,"../zklogin/jwt-utils.js":71,"../zklogin/signature.js":73,"./signature-scheme.js":49,"@mysten/bcs":12}],51:[function(require,module,exports){
+},{"../bcs/index.js":18,"../zklogin/address.js":69,"../zklogin/jwt-utils.js":71,"../zklogin/signature.js":73,"./signature-scheme.js":38,"@mysten/bcs":12}],40:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9908,7 +8471,7 @@ function getFaucetHost(network) {
 }
 
 
-},{}],52:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -10011,7 +8574,7 @@ const derivePath = (path, seed, offset = HARDENED_OFFSET) => {
 };
 
 
-},{"@mysten/bcs":12,"@noble/hashes/hmac":95,"@noble/hashes/sha512":98,"tweetnacl":133}],53:[function(require,module,exports){
+},{"@mysten/bcs":12,"@noble/hashes/hmac":95,"@noble/hashes/sha512":98,"tweetnacl":144}],42:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10033,9 +8596,8 @@ __reExport(ed25519_exports, require("./keypair.js"), module.exports);
 __reExport(ed25519_exports, require("./publickey.js"), module.exports);
 
 
-},{"./keypair.js":54,"./publickey.js":55}],54:[function(require,module,exports){
+},{"./keypair.js":43,"./publickey.js":44}],43:[function(require,module,exports){
 "use strict";
-
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10043,39 +8605,32 @@ var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
-  for (var name in all) __defProp(target, name, {
-    get: all[name],
-    enumerable: true
-  });
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from)) if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
-      get: () => from[key],
-      enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
-    });
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
   }
   return to;
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-// If the importer is in node compatibility mode or this is not an ESM
-// file that has been converted to a CommonJS file using a Babel-
-// compatible transform (i.e. "__esModule" has not been set), then set
-// "default" to the CommonJS "module.exports" for node compatibility.
-isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
-  value: mod,
-  enumerable: true
-}) : target, mod));
-var __toCommonJS = mod => __copyProps(__defProp({}, "__esModule", {
-  value: true
-}), mod);
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var keypair_exports = {};
 __export(keypair_exports, {
   DEFAULT_ED25519_DERIVATION_PATH: () => DEFAULT_ED25519_DERIVATION_PATH,
   Ed25519Keypair: () => Ed25519Keypair
 });
 module.exports = __toCommonJS(keypair_exports);
-var import_bcs = require("@mysten/bcs");
 var import_tweetnacl = __toESM(require("tweetnacl"));
 var import_keypair = require("../../cryptography/keypair.js");
 var import_mnemonics = require("../../cryptography/mnemonics.js");
@@ -10114,18 +8669,6 @@ class Ed25519Keypair extends import_keypair.Keypair {
    * This is NOT the private scalar which is result of hashing and bit clamping of
    * the raw secret key.
    *
-   * The sui.keystore key is a list of Base64 encoded `flag || privkey`. To import
-   * a key from sui.keystore to typescript, decode from base64 and remove the first
-   * flag byte after checking it is indeed the Ed25519 scheme flag 0x00 (See more
-   * on flag for signature scheme: https://github.com/MystenLabs/sui/blob/818406c5abdf7de1b80915a0519071eec3a5b1c7/crates/sui-types/src/crypto.rs#L1650):
-   * ```
-   * import { Ed25519Keypair, fromB64 } from '@mysten/sui.js';
-   * const raw = fromB64(t[1]);
-   * if (raw[0] !== 0 || raw.length !== PRIVATE_KEY_SIZE + 1) {
-   *   throw new Error('invalid key');
-   * }
-   * const imported = Ed25519Keypair.fromSecretKey(raw.slice(1))
-   * ```
    * @throws error if the provided secret key is invalid and validation is not skipped.
    *
    * @param secretKey secret key byte array
@@ -10134,7 +8677,9 @@ class Ed25519Keypair extends import_keypair.Keypair {
   static fromSecretKey(secretKey, options) {
     const secretKeyLength = secretKey.length;
     if (secretKeyLength !== import_keypair.PRIVATE_KEY_SIZE) {
-      throw new Error(`Wrong secretKey size. Expected ${import_keypair.PRIVATE_KEY_SIZE} bytes, got ${secretKeyLength}.`);
+      throw new Error(
+        `Wrong secretKey size. Expected ${import_keypair.PRIVATE_KEY_SIZE} bytes, got ${secretKeyLength}.`
+      );
     }
     const keypair = import_tweetnacl.default.sign.keyPair.fromSeed(secretKey);
     if (!options || !options.skipValidation) {
@@ -10152,6 +8697,15 @@ class Ed25519Keypair extends import_keypair.Keypair {
    */
   getPublicKey() {
     return new import_publickey.Ed25519PublicKey(this.keypair.publicKey);
+  }
+  /**
+   * The Bech32 secret key string for this Ed25519 keypair
+   */
+  getSecretKey() {
+    return (0, import_keypair.encodeSuiPrivateKey)(
+      this.keypair.secretKey.slice(0, import_keypair.PRIVATE_KEY_SIZE),
+      this.getKeyScheme()
+    );
   }
   async sign(data) {
     return this.signData(data);
@@ -10176,9 +8730,7 @@ class Ed25519Keypair extends import_keypair.Keypair {
     if (!(0, import_mnemonics.isValidHardenedPath)(path)) {
       throw new Error("Invalid derivation path");
     }
-    const {
-      key
-    } = (0, import_ed25519_hd_key.derivePath)(path, (0, import_mnemonics.mnemonicToSeedHex)(mnemonics));
+    const { key } = (0, import_ed25519_hd_key.derivePath)(path, (0, import_mnemonics.mnemonicToSeedHex)(mnemonics));
     return Ed25519Keypair.fromSecretKey(key);
   }
   /**
@@ -10194,23 +8746,13 @@ class Ed25519Keypair extends import_keypair.Keypair {
     if (!(0, import_mnemonics.isValidHardenedPath)(path)) {
       throw new Error("Invalid derivation path");
     }
-    const {
-      key
-    } = (0, import_ed25519_hd_key.derivePath)(path, seedHex);
+    const { key } = (0, import_ed25519_hd_key.derivePath)(path, seedHex);
     return Ed25519Keypair.fromSecretKey(key);
-  }
-  /**
-   * This returns an exported keypair object, the private key field is the pure 32-byte seed.
-   */
-  export() {
-    return {
-      schema: "ED25519",
-      privateKey: (0, import_bcs.toB64)(this.keypair.secretKey.slice(0, import_keypair.PRIVATE_KEY_SIZE))
-    };
   }
 }
 
-},{"../../cryptography/keypair.js":46,"../../cryptography/mnemonics.js":47,"./ed25519-hd-key.js":52,"./publickey.js":55,"@mysten/bcs":12,"tweetnacl":133}],55:[function(require,module,exports){
+
+},{"../../cryptography/keypair.js":35,"../../cryptography/mnemonics.js":36,"./ed25519-hd-key.js":41,"./publickey.js":44,"tweetnacl":144}],44:[function(require,module,exports){
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -10311,7 +8853,177 @@ class Ed25519PublicKey extends import_publickey.PublicKey {
 Ed25519PublicKey.SIZE = PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":48,"../../cryptography/signature-scheme.js":49,"../../cryptography/signature.js":50,"@mysten/bcs":12,"tweetnacl":133}],56:[function(require,module,exports){
+},{"../../cryptography/publickey.js":37,"../../cryptography/signature-scheme.js":38,"../../cryptography/signature.js":39,"@mysten/bcs":12,"tweetnacl":144}],45:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var secp256k1_exports = {};
+module.exports = __toCommonJS(secp256k1_exports);
+__reExport(secp256k1_exports, require("./keypair.js"), module.exports);
+__reExport(secp256k1_exports, require("./publickey.js"), module.exports);
+
+
+},{"./keypair.js":46,"./publickey.js":47}],46:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var keypair_exports = {};
+__export(keypair_exports, {
+  DEFAULT_SECP256K1_DERIVATION_PATH: () => DEFAULT_SECP256K1_DERIVATION_PATH,
+  Secp256k1Keypair: () => Secp256k1Keypair
+});
+module.exports = __toCommonJS(keypair_exports);
+var import_secp256k1 = require("@noble/curves/secp256k1");
+var import_blake2b = require("@noble/hashes/blake2b");
+var import_sha256 = require("@noble/hashes/sha256");
+var import_utils = require("@noble/hashes/utils");
+var import_bip32 = require("@scure/bip32");
+var import_keypair = require("../../cryptography/keypair.js");
+var import_mnemonics = require("../../cryptography/mnemonics.js");
+var import_publickey = require("./publickey.js");
+const DEFAULT_SECP256K1_DERIVATION_PATH = "m/54'/784'/0'/0/0";
+class Secp256k1Keypair extends import_keypair.Keypair {
+  /**
+   * Create a new keypair instance.
+   * Generate random keypair if no {@link Secp256k1Keypair} is provided.
+   *
+   * @param keypair secp256k1 keypair
+   */
+  constructor(keypair) {
+    super();
+    if (keypair) {
+      this.keypair = keypair;
+    } else {
+      const secretKey = import_secp256k1.secp256k1.utils.randomPrivateKey();
+      const publicKey = import_secp256k1.secp256k1.getPublicKey(secretKey, true);
+      this.keypair = { publicKey, secretKey };
+    }
+  }
+  /**
+   * Get the key scheme of the keypair Secp256k1
+   */
+  getKeyScheme() {
+    return "Secp256k1";
+  }
+  /**
+   * Generate a new random keypair
+   */
+  static generate() {
+    return new Secp256k1Keypair();
+  }
+  /**
+   * Create a keypair from a raw secret key byte array.
+   *
+   * This method should only be used to recreate a keypair from a previously
+   * generated secret key. Generating keypairs from a random seed should be done
+   * with the {@link Keypair.fromSeed} method.
+   *
+   * @throws error if the provided secret key is invalid and validation is not skipped.
+   *
+   * @param secretKey secret key byte array
+   * @param options: skip secret key validation
+   */
+  static fromSecretKey(secretKey, options) {
+    const publicKey = import_secp256k1.secp256k1.getPublicKey(secretKey, true);
+    if (!options || !options.skipValidation) {
+      const encoder = new TextEncoder();
+      const signData = encoder.encode("sui validation");
+      const msgHash = (0, import_utils.bytesToHex)((0, import_blake2b.blake2b)(signData, { dkLen: 32 }));
+      const signature = import_secp256k1.secp256k1.sign(msgHash, secretKey);
+      if (!import_secp256k1.secp256k1.verify(signature, msgHash, publicKey, { lowS: true })) {
+        throw new Error("Provided secretKey is invalid");
+      }
+    }
+    return new Secp256k1Keypair({ publicKey, secretKey });
+  }
+  /**
+   * Generate a keypair from a 32 byte seed.
+   *
+   * @param seed seed byte array
+   */
+  static fromSeed(seed) {
+    let publicKey = import_secp256k1.secp256k1.getPublicKey(seed, true);
+    return new Secp256k1Keypair({ publicKey, secretKey: seed });
+  }
+  /**
+   * The public key for this keypair
+   */
+  getPublicKey() {
+    return new import_publickey.Secp256k1PublicKey(this.keypair.publicKey);
+  }
+  /**
+   * The Bech32 secret key string for this Secp256k1 keypair
+   */
+  getSecretKey() {
+    return (0, import_keypair.encodeSuiPrivateKey)(this.keypair.secretKey, this.getKeyScheme());
+  }
+  async sign(data) {
+    return this.signData(data);
+  }
+  /**
+   * Return the signature for the provided data.
+   */
+  signData(data) {
+    const msgHash = (0, import_sha256.sha256)(data);
+    const sig = import_secp256k1.secp256k1.sign(msgHash, this.keypair.secretKey, {
+      lowS: true
+    });
+    return sig.toCompactRawBytes();
+  }
+  /**
+   * Derive Secp256k1 keypair from mnemonics and path. The mnemonics must be normalized
+   * and validated against the english wordlist.
+   *
+   * If path is none, it will default to m/54'/784'/0'/0/0, otherwise the path must
+   * be compliant to BIP-32 in form m/54'/784'/{account_index}'/{change_index}/{address_index}.
+   */
+  static deriveKeypair(mnemonics, path) {
+    if (path == null) {
+      path = DEFAULT_SECP256K1_DERIVATION_PATH;
+    }
+    if (!(0, import_mnemonics.isValidBIP32Path)(path)) {
+      throw new Error("Invalid derivation path");
+    }
+    const key = import_bip32.HDKey.fromMasterSeed((0, import_mnemonics.mnemonicToSeed)(mnemonics)).derive(path);
+    if (key.publicKey == null || key.privateKey == null) {
+      throw new Error("Invalid key");
+    }
+    return new Secp256k1Keypair({
+      publicKey: key.publicKey,
+      secretKey: key.privateKey
+    });
+  }
+}
+
+
+},{"../../cryptography/keypair.js":35,"../../cryptography/mnemonics.js":36,"./publickey.js":47,"@noble/curves/secp256k1":88,"@noble/hashes/blake2b":93,"@noble/hashes/sha256":97,"@noble/hashes/utils":99,"@scure/bip32":101}],47:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10407,7 +9119,171 @@ class Secp256k1PublicKey extends import_publickey.PublicKey {
 Secp256k1PublicKey.SIZE = SECP256K1_PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":48,"../../cryptography/signature-scheme.js":49,"../../cryptography/signature.js":50,"@mysten/bcs":12,"@noble/curves/secp256k1":88,"@noble/hashes/sha256":97}],57:[function(require,module,exports){
+},{"../../cryptography/publickey.js":37,"../../cryptography/signature-scheme.js":38,"../../cryptography/signature.js":39,"@mysten/bcs":12,"@noble/curves/secp256k1":88,"@noble/hashes/sha256":97}],48:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var secp256r1_exports = {};
+module.exports = __toCommonJS(secp256r1_exports);
+__reExport(secp256r1_exports, require("./keypair.js"), module.exports);
+__reExport(secp256r1_exports, require("./publickey.js"), module.exports);
+
+
+},{"./keypair.js":49,"./publickey.js":50}],49:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var keypair_exports = {};
+__export(keypair_exports, {
+  DEFAULT_SECP256R1_DERIVATION_PATH: () => DEFAULT_SECP256R1_DERIVATION_PATH,
+  Secp256r1Keypair: () => Secp256r1Keypair
+});
+module.exports = __toCommonJS(keypair_exports);
+var import_p256 = require("@noble/curves/p256");
+var import_blake2b = require("@noble/hashes/blake2b");
+var import_sha256 = require("@noble/hashes/sha256");
+var import_utils = require("@noble/hashes/utils");
+var import_bip32 = require("@scure/bip32");
+var import_keypair = require("../../cryptography/keypair.js");
+var import_mnemonics = require("../../cryptography/mnemonics.js");
+var import_publickey = require("./publickey.js");
+const DEFAULT_SECP256R1_DERIVATION_PATH = "m/74'/784'/0'/0/0";
+class Secp256r1Keypair extends import_keypair.Keypair {
+  /**
+   * Create a new keypair instance.
+   * Generate random keypair if no {@link Secp256r1Keypair} is provided.
+   *
+   * @param keypair Secp256r1 keypair
+   */
+  constructor(keypair) {
+    super();
+    if (keypair) {
+      this.keypair = keypair;
+    } else {
+      const secretKey = import_p256.secp256r1.utils.randomPrivateKey();
+      const publicKey = import_p256.secp256r1.getPublicKey(secretKey, true);
+      this.keypair = { publicKey, secretKey };
+    }
+  }
+  /**
+   * Get the key scheme of the keypair Secp256r1
+   */
+  getKeyScheme() {
+    return "Secp256r1";
+  }
+  /**
+   * Generate a new random keypair
+   */
+  static generate() {
+    return new Secp256r1Keypair();
+  }
+  /**
+   * Create a keypair from a raw secret key byte array.
+   *
+   * This method should only be used to recreate a keypair from a previously
+   * generated secret key. Generating keypairs from a random seed should be done
+   * with the {@link Keypair.fromSeed} method.
+   *
+   * @throws error if the provided secret key is invalid and validation is not skipped.
+   *
+   * @param secretKey secret key byte array
+   * @param options: skip secret key validation
+   */
+  static fromSecretKey(secretKey, options) {
+    const publicKey = import_p256.secp256r1.getPublicKey(secretKey, true);
+    if (!options || !options.skipValidation) {
+      const encoder = new TextEncoder();
+      const signData = encoder.encode("sui validation");
+      const msgHash = (0, import_utils.bytesToHex)((0, import_blake2b.blake2b)(signData, { dkLen: 32 }));
+      const signature = import_p256.secp256r1.sign(msgHash, secretKey, { lowS: true });
+      if (!import_p256.secp256r1.verify(signature, msgHash, publicKey, { lowS: true })) {
+        throw new Error("Provided secretKey is invalid");
+      }
+    }
+    return new Secp256r1Keypair({ publicKey, secretKey });
+  }
+  /**
+   * Generate a keypair from a 32 byte seed.
+   *
+   * @param seed seed byte array
+   */
+  static fromSeed(seed) {
+    let publicKey = import_p256.secp256r1.getPublicKey(seed, true);
+    return new Secp256r1Keypair({ publicKey, secretKey: seed });
+  }
+  /**
+   * The public key for this keypair
+   */
+  getPublicKey() {
+    return new import_publickey.Secp256r1PublicKey(this.keypair.publicKey);
+  }
+  /**
+   * The Bech32 secret key string for this Secp256r1 keypair
+   */
+  getSecretKey() {
+    return (0, import_keypair.encodeSuiPrivateKey)(this.keypair.secretKey, this.getKeyScheme());
+  }
+  async sign(data) {
+    return this.signData(data);
+  }
+  /**
+   * Return the signature for the provided data.
+   */
+  signData(data) {
+    const msgHash = (0, import_sha256.sha256)(data);
+    const sig = import_p256.secp256r1.sign(msgHash, this.keypair.secretKey, {
+      lowS: true
+    });
+    return sig.toCompactRawBytes();
+  }
+  /**
+   * Derive Secp256r1 keypair from mnemonics and path. The mnemonics must be normalized
+   * and validated against the english wordlist.
+   *
+   * If path is none, it will default to m/74'/784'/0'/0/0, otherwise the path must
+   * be compliant to BIP-32 in form m/74'/784'/{account_index}'/{change_index}/{address_index}.
+   */
+  static deriveKeypair(mnemonics, path) {
+    if (path == null) {
+      path = DEFAULT_SECP256R1_DERIVATION_PATH;
+    }
+    if (!(0, import_mnemonics.isValidBIP32Path)(path)) {
+      throw new Error("Invalid derivation path");
+    }
+    const privateKey = import_bip32.HDKey.fromMasterSeed((0, import_mnemonics.mnemonicToSeed)(mnemonics)).derive(path).privateKey;
+    return Secp256r1Keypair.fromSecretKey(privateKey);
+  }
+}
+
+
+},{"../../cryptography/keypair.js":35,"../../cryptography/mnemonics.js":36,"./publickey.js":50,"@noble/curves/p256":87,"@noble/hashes/blake2b":93,"@noble/hashes/sha256":97,"@noble/hashes/utils":99,"@scure/bip32":101}],50:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10503,7 +9379,7 @@ class Secp256r1PublicKey extends import_publickey.PublicKey {
 Secp256r1PublicKey.SIZE = SECP256R1_PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":48,"../../cryptography/signature-scheme.js":49,"../../cryptography/signature.js":50,"@mysten/bcs":12,"@noble/curves/p256":87,"@noble/hashes/sha256":97}],58:[function(require,module,exports){
+},{"../../cryptography/publickey.js":37,"../../cryptography/signature-scheme.js":38,"../../cryptography/signature.js":39,"@mysten/bcs":12,"@noble/curves/p256":87,"@noble/hashes/sha256":97}],51:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10542,7 +9418,7 @@ function publicKeyFromSuiBytes(publicKey) {
 }
 
 
-},{"../cryptography/index.js":44,"../verify/index.js":67,"./publickey.js":59,"@mysten/bcs":12}],59:[function(require,module,exports){
+},{"../cryptography/index.js":33,"../verify/index.js":67,"./publickey.js":52,"@mysten/bcs":12}],52:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10794,7 +9670,7 @@ function asIndices(bitmap) {
 }
 
 
-},{"../bcs/index.js":18,"../cryptography/publickey.js":48,"../cryptography/signature-scheme.js":49,"../cryptography/signature.js":50,"../utils/sui-types.js":66,"../verify/index.js":67,"../zklogin/publickey.js":72,"@mysten/bcs":12,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],60:[function(require,module,exports){
+},{"../bcs/index.js":18,"../cryptography/publickey.js":37,"../cryptography/signature-scheme.js":38,"../cryptography/signature.js":39,"../utils/sui-types.js":66,"../verify/index.js":67,"../zklogin/publickey.js":72,"@mysten/bcs":12,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],53:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10813,44 +9689,115 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var common_exports = {};
-__export(common_exports, {
-  ObjectOwner: () => ObjectOwner,
-  ProtocolConfig: () => ProtocolConfig,
-  SuiJsonValue: () => SuiJsonValue
+var Inputs_exports = {};
+__export(Inputs_exports, {
+  BuilderCallArg: () => BuilderCallArg,
+  Inputs: () => Inputs,
+  ObjectCallArg: () => ObjectCallArg,
+  PureCallArg: () => PureCallArg,
+  SuiObjectRef: () => SuiObjectRef,
+  getIdFromCallArg: () => getIdFromCallArg,
+  getSharedObjectInput: () => getSharedObjectInput,
+  isMutableSharedObjectInput: () => isMutableSharedObjectInput,
+  isSharedObjectInput: () => isSharedObjectInput
 });
-module.exports = __toCommonJS(common_exports);
+module.exports = __toCommonJS(Inputs_exports);
+var import_bcs = require("@mysten/bcs");
 var import_superstruct = require("superstruct");
-const ObjectOwner = (0, import_superstruct.union)([
-  (0, import_superstruct.object)({
-    AddressOwner: (0, import_superstruct.string)()
-  }),
-  (0, import_superstruct.object)({
-    ObjectOwner: (0, import_superstruct.string)()
-  }),
+var import_bcs2 = require("../bcs/index.js");
+var import_sui_types = require("../utils/sui-types.js");
+const SuiObjectRef = (0, import_superstruct.object)({
+  /** Base64 string representing the object digest */
+  digest: (0, import_superstruct.string)(),
+  /** Hex code as string representing the object id */
+  objectId: (0, import_superstruct.string)(),
+  /** Object version */
+  version: (0, import_superstruct.union)([(0, import_superstruct.number)(), (0, import_superstruct.string)(), (0, import_superstruct.bigint)()])
+});
+const ObjectArg = (0, import_superstruct.union)([
+  (0, import_superstruct.object)({ ImmOrOwned: SuiObjectRef }),
   (0, import_superstruct.object)({
     Shared: (0, import_superstruct.object)({
-      initial_shared_version: (0, import_superstruct.nullable)((0, import_superstruct.string)())
+      objectId: (0, import_superstruct.string)(),
+      initialSharedVersion: (0, import_superstruct.union)([(0, import_superstruct.integer)(), (0, import_superstruct.string)()]),
+      mutable: (0, import_superstruct.boolean)()
     })
   }),
-  (0, import_superstruct.literal)("Immutable")
+  (0, import_superstruct.object)({ Receiving: SuiObjectRef })
 ]);
-const SuiJsonValue = (0, import_superstruct.define)("SuiJsonValue", () => true);
-const ProtocolConfigValue = (0, import_superstruct.union)([
-  (0, import_superstruct.object)({ u32: (0, import_superstruct.string)() }),
-  (0, import_superstruct.object)({ u64: (0, import_superstruct.string)() }),
-  (0, import_superstruct.object)({ f64: (0, import_superstruct.string)() })
-]);
-const ProtocolConfig = (0, import_superstruct.object)({
-  attributes: (0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.nullable)(ProtocolConfigValue)),
-  featureFlags: (0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.boolean)()),
-  maxSupportedProtocolVersion: (0, import_superstruct.string)(),
-  minSupportedProtocolVersion: (0, import_superstruct.string)(),
-  protocolVersion: (0, import_superstruct.string)()
-});
+const PureCallArg = (0, import_superstruct.object)({ Pure: (0, import_superstruct.array)((0, import_superstruct.integer)()) });
+const ObjectCallArg = (0, import_superstruct.object)({ Object: ObjectArg });
+const BuilderCallArg = (0, import_superstruct.union)([PureCallArg, ObjectCallArg]);
+function Pure(data, type) {
+  return {
+    Pure: Array.from(
+      data instanceof Uint8Array ? data : (0, import_bcs.isSerializedBcs)(data) ? data.toBytes() : (
+        // NOTE: We explicitly set this to be growable to infinity, because we have maxSize validation at the builder-level:
+        import_bcs2.bcs.ser(type, data, { maxSize: Infinity }).toBytes()
+      )
+    )
+  };
+}
+const Inputs = {
+  Pure,
+  ObjectRef({ objectId, digest, version }) {
+    return {
+      Object: {
+        ImmOrOwned: {
+          digest,
+          version,
+          objectId: (0, import_sui_types.normalizeSuiAddress)(objectId)
+        }
+      }
+    };
+  },
+  SharedObjectRef({ objectId, mutable, initialSharedVersion }) {
+    return {
+      Object: {
+        Shared: {
+          mutable,
+          initialSharedVersion,
+          objectId: (0, import_sui_types.normalizeSuiAddress)(objectId)
+        }
+      }
+    };
+  },
+  ReceivingRef({ objectId, digest, version }) {
+    return {
+      Object: {
+        Receiving: {
+          digest,
+          version,
+          objectId: (0, import_sui_types.normalizeSuiAddress)(objectId)
+        }
+      }
+    };
+  }
+};
+function getIdFromCallArg(arg) {
+  if (typeof arg === "string") {
+    return (0, import_sui_types.normalizeSuiAddress)(arg);
+  }
+  if ("ImmOrOwned" in arg.Object) {
+    return (0, import_sui_types.normalizeSuiAddress)(arg.Object.ImmOrOwned.objectId);
+  }
+  if ("Receiving" in arg.Object) {
+    return (0, import_sui_types.normalizeSuiAddress)(arg.Object.Receiving.objectId);
+  }
+  return (0, import_sui_types.normalizeSuiAddress)(arg.Object.Shared.objectId);
+}
+function getSharedObjectInput(arg) {
+  return typeof arg === "object" && "Object" in arg && "Shared" in arg.Object ? arg.Object.Shared : void 0;
+}
+function isSharedObjectInput(arg) {
+  return !!getSharedObjectInput(arg);
+}
+function isMutableSharedObjectInput(arg) {
+  return getSharedObjectInput(arg)?.mutable ?? false;
+}
 
 
-},{"superstruct":132}],61:[function(require,module,exports){
+},{"../bcs/index.js":18,"../utils/sui-types.js":66,"@mysten/bcs":12,"superstruct":143}],54:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10869,76 +9816,663 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var types_exports = {};
-__export(types_exports, {
-  CheckpointedObjectId: () => import_objects.CheckpointedObjectId,
-  DisplayFieldsBackwardCompatibleResponse: () => import_objects.DisplayFieldsBackwardCompatibleResponse,
-  DisplayFieldsResponse: () => import_objects.DisplayFieldsResponse,
-  GetOwnedObjectsResponse: () => import_objects.GetOwnedObjectsResponse,
-  MoveCallMetric: () => import_normalized.MoveCallMetric,
-  MoveCallMetrics: () => import_normalized.MoveCallMetrics,
-  MovePackageContent: () => import_objects.MovePackageContent,
-  ObjectContentFields: () => import_objects.ObjectContentFields,
-  ObjectRead: () => import_objects.ObjectRead,
-  ObjectStatus: () => import_objects.ObjectStatus,
-  ObjectType: () => import_objects.ObjectType,
-  PaginatedObjectsResponse: () => import_objects.PaginatedObjectsResponse,
-  SuiGasData: () => import_objects.SuiGasData,
-  SuiMoveAbilitySet: () => import_normalized.SuiMoveAbilitySet,
-  SuiMoveFunctionArgType: () => import_normalized.SuiMoveFunctionArgType,
-  SuiMoveFunctionArgTypes: () => import_normalized.SuiMoveFunctionArgTypes,
-  SuiMoveModuleId: () => import_normalized.SuiMoveModuleId,
-  SuiMoveNormalizedField: () => import_normalized.SuiMoveNormalizedField,
-  SuiMoveNormalizedFunction: () => import_normalized.SuiMoveNormalizedFunction,
-  SuiMoveNormalizedModule: () => import_normalized.SuiMoveNormalizedModule,
-  SuiMoveNormalizedModules: () => import_normalized.SuiMoveNormalizedModules,
-  SuiMoveNormalizedStruct: () => import_normalized.SuiMoveNormalizedStruct,
-  SuiMoveNormalizedStructType: () => import_normalized.SuiMoveNormalizedStructType,
-  SuiMoveNormalizedType: () => import_normalized.SuiMoveNormalizedType,
-  SuiMoveNormalizedTypeParameterType: () => import_normalized.SuiMoveNormalizedTypeParameterType,
-  SuiMoveObject: () => import_objects.SuiMoveObject,
-  SuiMovePackage: () => import_objects.SuiMovePackage,
-  SuiMoveStructTypeParameter: () => import_normalized.SuiMoveStructTypeParameter,
-  SuiMoveVisibility: () => import_normalized.SuiMoveVisibility,
-  SuiObjectData: () => import_objects.SuiObjectData,
-  SuiObjectDataOptions: () => import_objects.SuiObjectDataOptions,
-  SuiObjectInfo: () => import_objects.SuiObjectInfo,
-  SuiObjectRef: () => import_objects.SuiObjectRef,
-  SuiObjectResponse: () => import_objects.SuiObjectResponse,
-  SuiObjectResponseError: () => import_objects.SuiObjectResponseError,
-  SuiParsedData: () => import_objects.SuiParsedData,
-  SuiRawData: () => import_objects.SuiRawData,
-  SuiRawMoveObject: () => import_objects.SuiRawMoveObject,
-  SuiRawMovePackage: () => import_objects.SuiRawMovePackage,
-  extractMutableReference: () => import_normalized.extractMutableReference,
-  extractReference: () => import_normalized.extractReference,
-  extractStructTag: () => import_normalized.extractStructTag,
-  getMoveObject: () => import_objects.getMoveObject,
-  getMoveObjectType: () => import_objects.getMoveObjectType,
-  getMovePackageContent: () => import_objects.getMovePackageContent,
-  getObjectDeletedResponse: () => import_objects.getObjectDeletedResponse,
-  getObjectDisplay: () => import_objects.getObjectDisplay,
-  getObjectFields: () => import_objects.getObjectFields,
-  getObjectId: () => import_objects.getObjectId,
-  getObjectNotExistsResponse: () => import_objects.getObjectNotExistsResponse,
-  getObjectOwner: () => import_objects.getObjectOwner,
-  getObjectPreviousTransactionDigest: () => import_objects.getObjectPreviousTransactionDigest,
-  getObjectReference: () => import_objects.getObjectReference,
-  getObjectType: () => import_objects.getObjectType,
-  getObjectVersion: () => import_objects.getObjectVersion,
-  getSharedObjectInitialVersion: () => import_objects.getSharedObjectInitialVersion,
-  getSuiObjectData: () => import_objects.getSuiObjectData,
-  hasPublicTransfer: () => import_objects.hasPublicTransfer,
-  isImmutableObject: () => import_objects.isImmutableObject,
-  isSharedObject: () => import_objects.isSharedObject,
-  isSuiObjectResponse: () => import_objects.isSuiObjectResponse
+var __accessCheck = (obj, member, msg) => {
+  if (!member.has(obj))
+    throw TypeError("Cannot " + msg);
+};
+var __privateGet = (obj, member, getter) => {
+  __accessCheck(obj, member, "read from private field");
+  return getter ? getter.call(obj) : member.get(obj);
+};
+var __privateAdd = (obj, member, value) => {
+  if (member.has(obj))
+    throw TypeError("Cannot add the same private member more than once");
+  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+};
+var __privateSet = (obj, member, value, setter) => {
+  __accessCheck(obj, member, "write to private field");
+  setter ? setter.call(obj, value) : member.set(obj, value);
+  return value;
+};
+var __privateMethod = (obj, member, method) => {
+  __accessCheck(obj, member, "access private method");
+  return method;
+};
+var TransactionBlock_exports = {};
+__export(TransactionBlock_exports, {
+  TransactionBlock: () => TransactionBlock,
+  isTransactionBlock: () => isTransactionBlock
 });
-module.exports = __toCommonJS(types_exports);
-var import_objects = require("./objects.js");
-var import_normalized = require("./normalized.js");
+module.exports = __toCommonJS(TransactionBlock_exports);
+var import_bcs = require("@mysten/bcs");
+var import_superstruct = require("superstruct");
+var import_bcs2 = require("../bcs/index.js");
+var import_utils = require("../utils/index.js");
+var import_sui_types = require("../utils/sui-types.js");
+var import_Inputs = require("./Inputs.js");
+var import_pure = require("./pure.js");
+var import_serializer = require("./serializer.js");
+var import_TransactionBlockData = require("./TransactionBlockData.js");
+var import_Transactions = require("./Transactions.js");
+var import_utils2 = require("./utils.js");
+var _blockData, _input, input_fn, _normalizeTransactionArgument, normalizeTransactionArgument_fn, _getConfig, getConfig_fn, _validate, validate_fn, _prepareGasPayment, prepareGasPayment_fn, _prepareGasPrice, prepareGasPrice_fn, _prepareTransactions, prepareTransactions_fn, _prepare, prepare_fn;
+const DefaultOfflineLimits = {
+  maxPureArgumentSize: 16 * 1024,
+  maxTxGas: 5e10,
+  maxGasObjects: 256,
+  maxTxSizeBytes: 128 * 1024
+};
+function createTransactionResult(index) {
+  const baseResult = { kind: "Result", index };
+  const nestedResults = [];
+  const nestedResultFor = (resultIndex) => nestedResults[resultIndex] ?? (nestedResults[resultIndex] = {
+    kind: "NestedResult",
+    index,
+    resultIndex
+  });
+  return new Proxy(baseResult, {
+    set() {
+      throw new Error(
+        "The transaction result is a proxy, and does not support setting properties directly"
+      );
+    },
+    // TODO: Instead of making this return a concrete argument, we should ideally
+    // make it reference-based (so that this gets resolved at build-time), which
+    // allows re-ordering transactions.
+    get(target, property) {
+      if (property in target) {
+        return Reflect.get(target, property);
+      }
+      if (property === Symbol.iterator) {
+        return function* () {
+          let i = 0;
+          while (true) {
+            yield nestedResultFor(i);
+            i++;
+          }
+        };
+      }
+      if (typeof property === "symbol")
+        return;
+      const resultIndex = parseInt(property, 10);
+      if (Number.isNaN(resultIndex) || resultIndex < 0)
+        return;
+      return nestedResultFor(resultIndex);
+    }
+  });
+}
+function isReceivingType(normalizedType) {
+  const tag = (0, import_utils2.extractStructTag)(normalizedType);
+  if (tag) {
+    return tag.Struct.address === "0x2" && tag.Struct.module === "transfer" && tag.Struct.name === "Receiving";
+  }
+  return false;
+}
+function expectClient(options) {
+  if (!options.client) {
+    throw new Error(
+      `No provider passed to Transaction#build, but transaction data was not sufficient to build offline.`
+    );
+  }
+  return options.client;
+}
+const TRANSACTION_BRAND = Symbol.for("@mysten/transaction");
+const LIMITS = {
+  // The maximum gas that is allowed.
+  maxTxGas: "max_tx_gas",
+  // The maximum number of gas objects that can be selected for one transaction.
+  maxGasObjects: "max_gas_payment_objects",
+  // The maximum size (in bytes) that the transaction can be:
+  maxTxSizeBytes: "max_tx_size_bytes",
+  // The maximum size (in bytes) that pure arguments can be:
+  maxPureArgumentSize: "max_pure_argument_size"
+};
+const GAS_SAFE_OVERHEAD = 1000n;
+const MAX_OBJECTS_PER_FETCH = 50;
+const chunk = (arr, size) => Array.from(
+  { length: Math.ceil(arr.length / size) },
+  (_, i) => arr.slice(i * size, i * size + size)
+);
+function isTransactionBlock(obj) {
+  return !!obj && typeof obj === "object" && obj[TRANSACTION_BRAND] === true;
+}
+const _TransactionBlock = class {
+  constructor(transaction) {
+    /**
+     * Dynamically create a new input, which is separate from the `input`. This is important
+     * for generated clients to be able to define unique inputs that are non-overlapping with the
+     * defined inputs.
+     *
+     * For `Uint8Array` type automatically convert the input into a `Pure` CallArg, since this
+     * is the format required for custom serialization.
+     *
+     */
+    __privateAdd(this, _input);
+    __privateAdd(this, _normalizeTransactionArgument);
+    __privateAdd(this, _getConfig);
+    __privateAdd(this, _validate);
+    // The current default is just picking _all_ coins we can which may not be ideal.
+    __privateAdd(this, _prepareGasPayment);
+    __privateAdd(this, _prepareGasPrice);
+    __privateAdd(this, _prepareTransactions);
+    /**
+     * Prepare the transaction by valdiating the transaction data and resolving all inputs
+     * so that it can be built into bytes.
+     */
+    __privateAdd(this, _prepare);
+    __privateAdd(this, _blockData, void 0);
+    __privateSet(this, _blockData, new import_TransactionBlockData.TransactionBlockDataBuilder(
+      transaction ? transaction.blockData : void 0
+    ));
+  }
+  /**
+   * Converts from a serialize transaction kind (built with `build({ onlyTransactionKind: true })`) to a `Transaction` class.
+   * Supports either a byte array, or base64-encoded bytes.
+   */
+  static fromKind(serialized) {
+    const tx = new _TransactionBlock();
+    __privateSet(tx, _blockData, import_TransactionBlockData.TransactionBlockDataBuilder.fromKindBytes(
+      typeof serialized === "string" ? (0, import_bcs.fromB64)(serialized) : serialized
+    ));
+    return tx;
+  }
+  /**
+   * Converts from a serialized transaction format to a `Transaction` class.
+   * There are two supported serialized formats:
+   * - A string returned from `Transaction#serialize`. The serialized format must be compatible, or it will throw an error.
+   * - A byte array (or base64-encoded bytes) containing BCS transaction data.
+   */
+  static from(serialized) {
+    const tx = new _TransactionBlock();
+    if (typeof serialized !== "string" || !serialized.startsWith("{")) {
+      __privateSet(tx, _blockData, import_TransactionBlockData.TransactionBlockDataBuilder.fromBytes(
+        typeof serialized === "string" ? (0, import_bcs.fromB64)(serialized) : serialized
+      ));
+    } else {
+      __privateSet(tx, _blockData, import_TransactionBlockData.TransactionBlockDataBuilder.restore(JSON.parse(serialized)));
+    }
+    return tx;
+  }
+  setSender(sender) {
+    __privateGet(this, _blockData).sender = sender;
+  }
+  /**
+   * Sets the sender only if it has not already been set.
+   * This is useful for sponsored transaction flows where the sender may not be the same as the signer address.
+   */
+  setSenderIfNotSet(sender) {
+    if (!__privateGet(this, _blockData).sender) {
+      __privateGet(this, _blockData).sender = sender;
+    }
+  }
+  setExpiration(expiration) {
+    __privateGet(this, _blockData).expiration = expiration;
+  }
+  setGasPrice(price) {
+    __privateGet(this, _blockData).gasConfig.price = String(price);
+  }
+  setGasBudget(budget) {
+    __privateGet(this, _blockData).gasConfig.budget = String(budget);
+  }
+  setGasOwner(owner) {
+    __privateGet(this, _blockData).gasConfig.owner = owner;
+  }
+  setGasPayment(payments) {
+    __privateGet(this, _blockData).gasConfig.payment = payments.map((payment) => (0, import_superstruct.mask)(payment, import_Inputs.SuiObjectRef));
+  }
+  /** Get a snapshot of the transaction data, in JSON form: */
+  get blockData() {
+    return __privateGet(this, _blockData).snapshot();
+  }
+  // Used to brand transaction classes so that they can be identified, even between multiple copies
+  // of the builder.
+  get [TRANSACTION_BRAND]() {
+    return true;
+  }
+  // Temporary workaround for the wallet interface accidentally serializing transaction blocks via postMessage
+  get pure() {
+    Object.defineProperty(this, "pure", {
+      enumerable: false,
+      value: (0, import_pure.createPure)((value, type) => {
+        if ((0, import_bcs.isSerializedBcs)(value)) {
+          return __privateMethod(this, _input, input_fn).call(this, "pure", {
+            Pure: Array.from(value.toBytes())
+          });
+        }
+        return __privateMethod(this, _input, input_fn).call(this, "pure", value instanceof Uint8Array ? import_Inputs.Inputs.Pure(value) : type ? import_Inputs.Inputs.Pure(value, type) : value);
+      })
+    });
+    return this.pure;
+  }
+  /** Returns an argument for the gas coin, to be used in a transaction. */
+  get gas() {
+    return { kind: "GasCoin" };
+  }
+  /**
+   * Add a new object input to the transaction.
+   */
+  object(value) {
+    if (typeof value === "object" && "kind" in value) {
+      return value;
+    }
+    const id = (0, import_Inputs.getIdFromCallArg)(value);
+    const inserted = __privateGet(this, _blockData).inputs.find(
+      (i) => i.type === "object" && id === (0, import_Inputs.getIdFromCallArg)(i.value)
+    );
+    if (inserted && (0, import_superstruct.is)(inserted.value, import_Inputs.ObjectCallArg) && "Shared" in inserted.value.Object && (0, import_superstruct.is)(value, import_Inputs.ObjectCallArg) && "Shared" in value.Object) {
+      inserted.value.Object.Shared.mutable = inserted.value.Object.Shared.mutable || value.Object.Shared.mutable;
+    }
+    return inserted ?? __privateMethod(this, _input, input_fn).call(this, "object", typeof value === "string" ? (0, import_sui_types.normalizeSuiAddress)(value) : value);
+  }
+  /**
+   * Add a new object input to the transaction using the fully-resolved object reference.
+   * If you only have an object ID, use `builder.object(id)` instead.
+   */
+  objectRef(...args) {
+    return this.object(import_Inputs.Inputs.ObjectRef(...args));
+  }
+  /**
+   * Add a new receiving input to the transaction using the fully-resolved object reference.
+   * If you only have an object ID, use `builder.object(id)` instead.
+   */
+  receivingRef(...args) {
+    return this.object(import_Inputs.Inputs.ReceivingRef(...args));
+  }
+  /**
+   * Add a new shared object input to the transaction using the fully-resolved shared object reference.
+   * If you only have an object ID, use `builder.object(id)` instead.
+   */
+  sharedObjectRef(...args) {
+    return this.object(import_Inputs.Inputs.SharedObjectRef(...args));
+  }
+  /** Add a transaction to the transaction block. */
+  add(transaction) {
+    const index = __privateGet(this, _blockData).transactions.push(transaction);
+    return createTransactionResult(index - 1);
+  }
+  // Method shorthands:
+  splitCoins(coin, amounts) {
+    return this.add(
+      import_Transactions.Transactions.SplitCoins(
+        typeof coin === "string" ? this.object(coin) : coin,
+        amounts.map(
+          (amount) => typeof amount === "number" || typeof amount === "bigint" || typeof amount === "string" ? this.pure.u64(amount) : __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, amount)
+        )
+      )
+    );
+  }
+  mergeCoins(destination, sources) {
+    return this.add(
+      import_Transactions.Transactions.MergeCoins(
+        typeof destination === "string" ? this.object(destination) : destination,
+        sources.map((src) => typeof src === "string" ? this.object(src) : src)
+      )
+    );
+  }
+  publish({ modules, dependencies }) {
+    return this.add(
+      import_Transactions.Transactions.Publish({
+        modules,
+        dependencies
+      })
+    );
+  }
+  upgrade({
+    modules,
+    dependencies,
+    packageId,
+    ticket
+  }) {
+    return this.add(
+      import_Transactions.Transactions.Upgrade({
+        modules,
+        dependencies,
+        packageId,
+        ticket: typeof ticket === "string" ? this.object(ticket) : ticket
+      })
+    );
+  }
+  moveCall({
+    arguments: args,
+    typeArguments,
+    target
+  }) {
+    return this.add(
+      import_Transactions.Transactions.MoveCall({
+        arguments: args?.map((arg) => __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, arg)),
+        typeArguments,
+        target
+      })
+    );
+  }
+  transferObjects(objects, address) {
+    return this.add(
+      import_Transactions.Transactions.TransferObjects(
+        objects.map((obj) => typeof obj === "string" ? this.object(obj) : obj),
+        typeof address === "string" ? this.pure.address(address) : __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, address)
+      )
+    );
+  }
+  makeMoveVec({
+    type,
+    objects
+  }) {
+    return this.add(
+      import_Transactions.Transactions.MakeMoveVec({
+        type,
+        objects: objects.map((obj) => typeof obj === "string" ? this.object(obj) : obj)
+      })
+    );
+  }
+  /**
+   * Serialize the transaction to a string so that it can be sent to a separate context.
+   * This is different from `build` in that it does not serialize to BCS bytes, and instead
+   * uses a separate format that is unique to the transaction builder. This allows
+   * us to serialize partially-complete transactions, that can then be completed and
+   * built in a separate context.
+   *
+   * For example, a dapp can construct a transaction, but not provide gas objects
+   * or a gas budget. The transaction then can be sent to the wallet, where this
+   * information is automatically filled in (e.g. by querying for coin objects
+   * and performing a dry run).
+   */
+  serialize() {
+    return JSON.stringify(__privateGet(this, _blockData).snapshot());
+  }
+  /** Build the transaction to BCS bytes, and sign it with the provided keypair. */
+  async sign(options) {
+    const { signer, ...buildOptions } = options;
+    const bytes = await this.build(buildOptions);
+    return signer.signTransactionBlock(bytes);
+  }
+  /** Build the transaction to BCS bytes. */
+  async build(options = {}) {
+    await __privateMethod(this, _prepare, prepare_fn).call(this, options);
+    return __privateGet(this, _blockData).build({
+      maxSizeBytes: __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxTxSizeBytes", options),
+      onlyTransactionKind: options.onlyTransactionKind
+    });
+  }
+  /** Derive transaction digest */
+  async getDigest(options = {}) {
+    await __privateMethod(this, _prepare, prepare_fn).call(this, options);
+    return __privateGet(this, _blockData).getDigest();
+  }
+};
+let TransactionBlock = _TransactionBlock;
+_blockData = new WeakMap();
+_input = new WeakSet();
+input_fn = function(type, value) {
+  const index = __privateGet(this, _blockData).inputs.length;
+  const input = (0, import_utils2.create)(
+    {
+      kind: "Input",
+      // bigints can't be serialized to JSON, so just string-convert them here:
+      value: typeof value === "bigint" ? String(value) : value,
+      index,
+      type
+    },
+    import_Transactions.TransactionBlockInput
+  );
+  __privateGet(this, _blockData).inputs.push(input);
+  return input;
+};
+_normalizeTransactionArgument = new WeakSet();
+normalizeTransactionArgument_fn = function(arg) {
+  if ((0, import_bcs.isSerializedBcs)(arg)) {
+    return this.pure(arg);
+  }
+  return arg;
+};
+_getConfig = new WeakSet();
+getConfig_fn = function(key, { protocolConfig, limits }) {
+  if (limits && typeof limits[key] === "number") {
+    return limits[key];
+  }
+  if (!protocolConfig) {
+    return DefaultOfflineLimits[key];
+  }
+  const attribute = protocolConfig?.attributes[LIMITS[key]];
+  if (!attribute) {
+    throw new Error(`Missing expected protocol config: "${LIMITS[key]}"`);
+  }
+  const value = "u64" in attribute ? attribute.u64 : "u32" in attribute ? attribute.u32 : attribute.f64;
+  if (!value) {
+    throw new Error(`Unexpected protocol config value found for: "${LIMITS[key]}"`);
+  }
+  return Number(value);
+};
+_validate = new WeakSet();
+validate_fn = function(options) {
+  const maxPureArgumentSize = __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxPureArgumentSize", options);
+  __privateGet(this, _blockData).inputs.forEach((input, index) => {
+    if ((0, import_superstruct.is)(input.value, import_Inputs.PureCallArg)) {
+      if (input.value.Pure.length > maxPureArgumentSize) {
+        throw new Error(
+          `Input at index ${index} is too large, max pure input size is ${maxPureArgumentSize} bytes, got ${input.value.Pure.length} bytes`
+        );
+      }
+    }
+  });
+};
+_prepareGasPayment = new WeakSet();
+prepareGasPayment_fn = async function(options) {
+  if (__privateGet(this, _blockData).gasConfig.payment) {
+    const maxGasObjects = __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxGasObjects", options);
+    if (__privateGet(this, _blockData).gasConfig.payment.length > maxGasObjects) {
+      throw new Error(`Payment objects exceed maximum amount: ${maxGasObjects}`);
+    }
+  }
+  if (options.onlyTransactionKind || __privateGet(this, _blockData).gasConfig.payment) {
+    return;
+  }
+  const gasOwner = __privateGet(this, _blockData).gasConfig.owner ?? __privateGet(this, _blockData).sender;
+  const coins = await expectClient(options).getCoins({
+    owner: gasOwner,
+    coinType: import_utils.SUI_TYPE_ARG
+  });
+  const paymentCoins = coins.data.filter((coin) => {
+    const matchingInput = __privateGet(this, _blockData).inputs.find((input) => {
+      if ((0, import_superstruct.is)(input.value, import_Inputs.BuilderCallArg) && "Object" in input.value && "ImmOrOwned" in input.value.Object) {
+        return coin.coinObjectId === input.value.Object.ImmOrOwned.objectId;
+      }
+      return false;
+    });
+    return !matchingInput;
+  }).slice(0, __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxGasObjects", options) - 1).map((coin) => ({
+    objectId: coin.coinObjectId,
+    digest: coin.digest,
+    version: coin.version
+  }));
+  if (!paymentCoins.length) {
+    throw new Error("No valid gas coins found for the transaction.");
+  }
+  this.setGasPayment(paymentCoins);
+};
+_prepareGasPrice = new WeakSet();
+prepareGasPrice_fn = async function(options) {
+  if (options.onlyTransactionKind || __privateGet(this, _blockData).gasConfig.price) {
+    return;
+  }
+  this.setGasPrice(await expectClient(options).getReferenceGasPrice());
+};
+_prepareTransactions = new WeakSet();
+prepareTransactions_fn = async function(options) {
+  const { inputs, transactions } = __privateGet(this, _blockData);
+  const moveModulesToResolve = [];
+  const objectsToResolve = [];
+  inputs.forEach((input) => {
+    if (input.type === "object" && typeof input.value === "string") {
+      objectsToResolve.push({ id: (0, import_sui_types.normalizeSuiAddress)(input.value), input });
+      return;
+    }
+  });
+  transactions.forEach((transaction) => {
+    if (transaction.kind === "MoveCall") {
+      const needsResolution = transaction.arguments.some(
+        (arg) => arg.kind === "Input" && !(0, import_superstruct.is)(inputs[arg.index].value, import_Inputs.BuilderCallArg)
+      );
+      if (needsResolution) {
+        moveModulesToResolve.push(transaction);
+      }
+    }
+    if (transaction.kind === "SplitCoins") {
+      transaction.amounts.forEach((amount) => {
+        if (amount.kind === "Input") {
+          const input = inputs[amount.index];
+          if (typeof input.value !== "object") {
+            input.value = import_Inputs.Inputs.Pure(import_bcs2.bcs.U64.serialize(input.value));
+          }
+        }
+      });
+    }
+    if (transaction.kind === "TransferObjects") {
+      if (transaction.address.kind === "Input") {
+        const input = inputs[transaction.address.index];
+        if (typeof input.value !== "object") {
+          input.value = import_Inputs.Inputs.Pure(import_bcs2.bcs.Address.serialize(input.value));
+        }
+      }
+    }
+  });
+  if (moveModulesToResolve.length) {
+    await Promise.all(
+      moveModulesToResolve.map(async (moveCall) => {
+        const [packageId, moduleName, functionName] = moveCall.target.split("::");
+        const normalized = await expectClient(options).getNormalizedMoveFunction({
+          package: (0, import_sui_types.normalizeSuiObjectId)(packageId),
+          module: moduleName,
+          function: functionName
+        });
+        const hasTxContext = normalized.parameters.length > 0 && (0, import_serializer.isTxContext)(normalized.parameters.at(-1));
+        const params = hasTxContext ? normalized.parameters.slice(0, normalized.parameters.length - 1) : normalized.parameters;
+        if (params.length !== moveCall.arguments.length) {
+          throw new Error("Incorrect number of arguments.");
+        }
+        params.forEach((param, i) => {
+          const arg = moveCall.arguments[i];
+          if (arg.kind !== "Input")
+            return;
+          const input = inputs[arg.index];
+          if ((0, import_superstruct.is)(input.value, import_Inputs.BuilderCallArg))
+            return;
+          const inputValue = input.value;
+          const serType = (0, import_serializer.getPureSerializationType)(param, inputValue);
+          if (serType) {
+            input.value = import_Inputs.Inputs.Pure(inputValue, serType);
+            return;
+          }
+          const structVal = (0, import_utils2.extractStructTag)(param);
+          if (structVal != null || typeof param === "object" && "TypeParameter" in param) {
+            if (typeof inputValue !== "string") {
+              throw new Error(
+                `Expect the argument to be an object id string, got ${JSON.stringify(
+                  inputValue,
+                  null,
+                  2
+                )}`
+              );
+            }
+            objectsToResolve.push({
+              id: inputValue,
+              input,
+              normalizedType: param
+            });
+            return;
+          }
+          throw new Error(
+            `Unknown call arg type ${JSON.stringify(param, null, 2)} for value ${JSON.stringify(
+              inputValue,
+              null,
+              2
+            )}`
+          );
+        });
+      })
+    );
+  }
+  if (objectsToResolve.length) {
+    const dedupedIds = [...new Set(objectsToResolve.map(({ id }) => id))];
+    const objectChunks = chunk(dedupedIds, MAX_OBJECTS_PER_FETCH);
+    const objects = (await Promise.all(
+      objectChunks.map(
+        (chunk2) => expectClient(options).multiGetObjects({
+          ids: chunk2,
+          options: { showOwner: true }
+        })
+      )
+    )).flat();
+    let objectsById = new Map(
+      dedupedIds.map((id, index) => {
+        return [id, objects[index]];
+      })
+    );
+    const invalidObjects = Array.from(objectsById).filter(([_, obj]) => obj.error).map(([id, _]) => id);
+    if (invalidObjects.length) {
+      throw new Error(`The following input objects are invalid: ${invalidObjects.join(", ")}`);
+    }
+    objectsToResolve.forEach(({ id, input, normalizedType }) => {
+      const object = objectsById.get(id);
+      const owner = object.data?.owner;
+      const initialSharedVersion = owner && typeof owner === "object" && "Shared" in owner ? owner.Shared.initial_shared_version : void 0;
+      if (initialSharedVersion) {
+        const isByValue = normalizedType != null && (0, import_utils2.extractMutableReference)(normalizedType) == null && (0, import_utils2.extractReference)(normalizedType) == null;
+        const mutable = (0, import_Inputs.isMutableSharedObjectInput)(input.value) || isByValue || normalizedType != null && (0, import_utils2.extractMutableReference)(normalizedType) != null;
+        input.value = import_Inputs.Inputs.SharedObjectRef({
+          objectId: id,
+          initialSharedVersion,
+          mutable
+        });
+      } else if (normalizedType && isReceivingType(normalizedType)) {
+        input.value = import_Inputs.Inputs.ReceivingRef(object.data);
+      } else {
+        input.value = import_Inputs.Inputs.ObjectRef(object.data);
+      }
+    });
+  }
+};
+_prepare = new WeakSet();
+prepare_fn = async function(options) {
+  if (!options.onlyTransactionKind && !__privateGet(this, _blockData).sender) {
+    throw new Error("Missing transaction sender");
+  }
+  if (!options.protocolConfig && !options.limits && options.client) {
+    options.protocolConfig = await options.client.getProtocolConfig();
+  }
+  await Promise.all([__privateMethod(this, _prepareGasPrice, prepareGasPrice_fn).call(this, options), __privateMethod(this, _prepareTransactions, prepareTransactions_fn).call(this, options)]);
+  if (!options.onlyTransactionKind) {
+    await __privateMethod(this, _prepareGasPayment, prepareGasPayment_fn).call(this, options);
+    if (!__privateGet(this, _blockData).gasConfig.budget) {
+      const dryRunResult = await expectClient(options).dryRunTransactionBlock({
+        transactionBlock: __privateGet(this, _blockData).build({
+          maxSizeBytes: __privateMethod(this, _getConfig, getConfig_fn).call(this, "maxTxSizeBytes", options),
+          overrides: {
+            gasConfig: {
+              budget: String(__privateMethod(this, _getConfig, getConfig_fn).call(this, "maxTxGas", options)),
+              payment: []
+            }
+          }
+        })
+      });
+      if (dryRunResult.effects.status.status !== "success") {
+        throw new Error(
+          `Dry run failed, could not automatically determine a budget: ${dryRunResult.effects.status.error}`,
+          { cause: dryRunResult }
+        );
+      }
+      const safeOverhead = GAS_SAFE_OVERHEAD * BigInt(this.blockData.gasConfig.price || 1n);
+      const baseComputationCostWithOverhead = BigInt(dryRunResult.effects.gasUsed.computationCost) + safeOverhead;
+      const gasBudget = baseComputationCostWithOverhead + BigInt(dryRunResult.effects.gasUsed.storageCost) - BigInt(dryRunResult.effects.gasUsed.storageRebate);
+      this.setGasBudget(
+        gasBudget > baseComputationCostWithOverhead ? gasBudget : baseComputationCostWithOverhead
+      );
+    }
+  }
+  __privateMethod(this, _validate, validate_fn).call(this, options);
+};
 
 
-},{"./normalized.js":62,"./objects.js":63}],62:[function(require,module,exports){
+},{"../bcs/index.js":18,"../utils/index.js":65,"../utils/sui-types.js":66,"./Inputs.js":53,"./TransactionBlockData.js":55,"./Transactions.js":56,"./pure.js":61,"./serializer.js":62,"./utils.js":63,"@mysten/bcs":12,"superstruct":143}],55:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10957,125 +10491,770 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var normalized_exports = {};
-__export(normalized_exports, {
-  MoveCallMetric: () => MoveCallMetric,
-  MoveCallMetrics: () => MoveCallMetrics,
-  SuiMoveAbilitySet: () => SuiMoveAbilitySet,
-  SuiMoveFunctionArgType: () => SuiMoveFunctionArgType,
-  SuiMoveFunctionArgTypes: () => SuiMoveFunctionArgTypes,
-  SuiMoveModuleId: () => SuiMoveModuleId,
-  SuiMoveNormalizedField: () => SuiMoveNormalizedField,
-  SuiMoveNormalizedFunction: () => SuiMoveNormalizedFunction,
-  SuiMoveNormalizedModule: () => SuiMoveNormalizedModule,
-  SuiMoveNormalizedModules: () => SuiMoveNormalizedModules,
-  SuiMoveNormalizedStruct: () => SuiMoveNormalizedStruct,
-  SuiMoveNormalizedStructType: () => SuiMoveNormalizedStructType,
-  SuiMoveNormalizedType: () => SuiMoveNormalizedType,
-  SuiMoveNormalizedTypeParameterType: () => SuiMoveNormalizedTypeParameterType,
-  SuiMoveStructTypeParameter: () => SuiMoveStructTypeParameter,
-  SuiMoveVisibility: () => SuiMoveVisibility,
+var TransactionBlockData_exports = {};
+__export(TransactionBlockData_exports, {
+  SerializedTransactionDataBuilder: () => SerializedTransactionDataBuilder,
+  TransactionBlockDataBuilder: () => TransactionBlockDataBuilder,
+  TransactionExpiration: () => TransactionExpiration
+});
+module.exports = __toCommonJS(TransactionBlockData_exports);
+var import_bcs = require("@mysten/bcs");
+var import_superstruct = require("superstruct");
+var import_bcs2 = require("../bcs/index.js");
+var import_sui_types = require("../utils/sui-types.js");
+var import_hash = require("./hash.js");
+var import_Inputs = require("./Inputs.js");
+var import_Transactions = require("./Transactions.js");
+var import_utils = require("./utils.js");
+const TransactionExpiration = (0, import_superstruct.optional)(
+  (0, import_superstruct.nullable)(
+    (0, import_superstruct.union)([(0, import_superstruct.object)({ Epoch: (0, import_superstruct.integer)() }), (0, import_superstruct.object)({ None: (0, import_superstruct.union)([(0, import_superstruct.literal)(true), (0, import_superstruct.literal)(null)]) })])
+  )
+);
+const StringEncodedBigint = (0, import_superstruct.define)("StringEncodedBigint", (val) => {
+  if (!["string", "number", "bigint"].includes(typeof val))
+    return false;
+  try {
+    BigInt(val);
+    return true;
+  } catch {
+    return false;
+  }
+});
+const GasConfig = (0, import_superstruct.object)({
+  budget: (0, import_superstruct.optional)(StringEncodedBigint),
+  price: (0, import_superstruct.optional)(StringEncodedBigint),
+  payment: (0, import_superstruct.optional)((0, import_superstruct.array)(import_Inputs.SuiObjectRef)),
+  owner: (0, import_superstruct.optional)((0, import_superstruct.string)())
+});
+const SerializedTransactionDataBuilder = (0, import_superstruct.object)({
+  version: (0, import_superstruct.literal)(1),
+  sender: (0, import_superstruct.optional)((0, import_superstruct.string)()),
+  expiration: TransactionExpiration,
+  gasConfig: GasConfig,
+  inputs: (0, import_superstruct.array)(import_Transactions.TransactionBlockInput),
+  transactions: (0, import_superstruct.array)(import_Transactions.TransactionType)
+});
+function prepareSuiAddress(address) {
+  return (0, import_sui_types.normalizeSuiAddress)(address).replace("0x", "");
+}
+class TransactionBlockDataBuilder {
+  constructor(clone) {
+    this.version = 1;
+    this.sender = clone?.sender;
+    this.expiration = clone?.expiration;
+    this.gasConfig = clone?.gasConfig ?? {};
+    this.inputs = clone?.inputs ?? [];
+    this.transactions = clone?.transactions ?? [];
+  }
+  static fromKindBytes(bytes) {
+    const kind = import_bcs2.bcs.TransactionKind.parse(bytes);
+    const programmableTx = "ProgrammableTransaction" in kind ? kind.ProgrammableTransaction : null;
+    if (!programmableTx) {
+      throw new Error("Unable to deserialize from bytes.");
+    }
+    const serialized = (0, import_utils.create)(
+      {
+        version: 1,
+        gasConfig: {},
+        inputs: programmableTx.inputs.map(
+          (value, index) => (0, import_utils.create)(
+            {
+              kind: "Input",
+              value,
+              index,
+              type: (0, import_superstruct.is)(value, import_Inputs.PureCallArg) ? "pure" : "object"
+            },
+            import_Transactions.TransactionBlockInput
+          )
+        ),
+        transactions: programmableTx.transactions
+      },
+      SerializedTransactionDataBuilder
+    );
+    return TransactionBlockDataBuilder.restore(serialized);
+  }
+  static fromBytes(bytes) {
+    const rawData = import_bcs2.bcs.TransactionData.parse(bytes);
+    const data = rawData?.V1;
+    const programmableTx = "ProgrammableTransaction" in data.kind ? data?.kind?.ProgrammableTransaction : null;
+    if (!data || !programmableTx) {
+      throw new Error("Unable to deserialize from bytes.");
+    }
+    const serialized = (0, import_utils.create)(
+      {
+        version: 1,
+        sender: data.sender,
+        expiration: data.expiration,
+        gasConfig: data.gasData,
+        inputs: programmableTx.inputs.map(
+          (value, index) => (0, import_utils.create)(
+            {
+              kind: "Input",
+              value,
+              index,
+              type: (0, import_superstruct.is)(value, import_Inputs.PureCallArg) ? "pure" : "object"
+            },
+            import_Transactions.TransactionBlockInput
+          )
+        ),
+        transactions: programmableTx.transactions
+      },
+      SerializedTransactionDataBuilder
+    );
+    return TransactionBlockDataBuilder.restore(serialized);
+  }
+  static restore(data) {
+    (0, import_superstruct.assert)(data, SerializedTransactionDataBuilder);
+    const transactionData = new TransactionBlockDataBuilder();
+    Object.assign(transactionData, data);
+    return transactionData;
+  }
+  /**
+   * Generate transaction digest.
+   *
+   * @param bytes BCS serialized transaction data
+   * @returns transaction digest.
+   */
+  static getDigestFromBytes(bytes) {
+    const hash = (0, import_hash.hashTypedData)("TransactionData", bytes);
+    return (0, import_bcs.toB58)(hash);
+  }
+  build({
+    maxSizeBytes = Infinity,
+    overrides,
+    onlyTransactionKind
+  } = {}) {
+    const inputs = this.inputs.map((input) => {
+      (0, import_superstruct.assert)(input.value, import_Inputs.BuilderCallArg);
+      return input.value;
+    });
+    const kind = {
+      ProgrammableTransaction: {
+        inputs,
+        transactions: this.transactions
+      }
+    };
+    if (onlyTransactionKind) {
+      return import_bcs2.bcs.TransactionKind.serialize(kind, { maxSize: maxSizeBytes }).toBytes();
+    }
+    const expiration = overrides?.expiration ?? this.expiration;
+    const sender = overrides?.sender ?? this.sender;
+    const gasConfig = { ...this.gasConfig, ...overrides?.gasConfig };
+    if (!sender) {
+      throw new Error("Missing transaction sender");
+    }
+    if (!gasConfig.budget) {
+      throw new Error("Missing gas budget");
+    }
+    if (!gasConfig.payment) {
+      throw new Error("Missing gas payment");
+    }
+    if (!gasConfig.price) {
+      throw new Error("Missing gas price");
+    }
+    const transactionData = {
+      sender: prepareSuiAddress(sender),
+      expiration: expiration ? expiration : { None: true },
+      gasData: {
+        payment: gasConfig.payment,
+        owner: prepareSuiAddress(this.gasConfig.owner ?? sender),
+        price: BigInt(gasConfig.price),
+        budget: BigInt(gasConfig.budget)
+      },
+      kind: {
+        ProgrammableTransaction: {
+          inputs,
+          transactions: this.transactions
+        }
+      }
+    };
+    return import_bcs2.bcs.TransactionData.serialize(
+      { V1: transactionData },
+      { maxSize: maxSizeBytes }
+    ).toBytes();
+  }
+  getDigest() {
+    const bytes = this.build({ onlyTransactionKind: false });
+    return TransactionBlockDataBuilder.getDigestFromBytes(bytes);
+  }
+  snapshot() {
+    return (0, import_utils.create)(this, SerializedTransactionDataBuilder);
+  }
+}
+
+
+},{"../bcs/index.js":18,"../utils/sui-types.js":66,"./Inputs.js":53,"./Transactions.js":56,"./hash.js":59,"./utils.js":63,"@mysten/bcs":12,"superstruct":143}],56:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var Transactions_exports = {};
+__export(Transactions_exports, {
+  MakeMoveVecTransaction: () => MakeMoveVecTransaction,
+  MergeCoinsTransaction: () => MergeCoinsTransaction,
+  MoveCallTransaction: () => MoveCallTransaction,
+  PublishTransaction: () => PublishTransaction,
+  SplitCoinsTransaction: () => SplitCoinsTransaction,
+  TransactionArgument: () => TransactionArgument,
+  TransactionBlockInput: () => TransactionBlockInput,
+  TransactionType: () => TransactionType,
+  Transactions: () => Transactions,
+  TransferObjectsTransaction: () => TransferObjectsTransaction,
+  UpgradePolicy: () => UpgradePolicy,
+  UpgradeTransaction: () => UpgradeTransaction,
+  getTransactionType: () => getTransactionType
+});
+module.exports = __toCommonJS(Transactions_exports);
+var import_bcs = require("@mysten/bcs");
+var import_superstruct = require("superstruct");
+var import_bcs2 = require("../bcs/index.js");
+var import_type_tag_serializer = require("../bcs/type-tag-serializer.js");
+var import_sui_types = require("../utils/sui-types.js");
+var import_Inputs = require("./Inputs.js");
+var import_utils = require("./utils.js");
+const option = (some) => (0, import_superstruct.union)([(0, import_superstruct.object)({ None: (0, import_superstruct.union)([(0, import_superstruct.literal)(true), (0, import_superstruct.literal)(null)]) }), (0, import_superstruct.object)({ Some: some })]);
+const TransactionBlockInput = (0, import_superstruct.union)([
+  (0, import_superstruct.object)({
+    kind: (0, import_superstruct.literal)("Input"),
+    index: (0, import_superstruct.integer)(),
+    value: (0, import_superstruct.optional)((0, import_superstruct.any)()),
+    type: (0, import_superstruct.optional)((0, import_superstruct.literal)("object"))
+  }),
+  (0, import_superstruct.object)({
+    kind: (0, import_superstruct.literal)("Input"),
+    index: (0, import_superstruct.integer)(),
+    value: (0, import_superstruct.optional)((0, import_superstruct.any)()),
+    type: (0, import_superstruct.literal)("pure")
+  })
+]);
+const TransactionArgumentTypes = [
+  TransactionBlockInput,
+  (0, import_superstruct.object)({ kind: (0, import_superstruct.literal)("GasCoin") }),
+  (0, import_superstruct.object)({ kind: (0, import_superstruct.literal)("Result"), index: (0, import_superstruct.integer)() }),
+  (0, import_superstruct.object)({
+    kind: (0, import_superstruct.literal)("NestedResult"),
+    index: (0, import_superstruct.integer)(),
+    resultIndex: (0, import_superstruct.integer)()
+  })
+];
+const TransactionArgument = (0, import_superstruct.union)([...TransactionArgumentTypes]);
+const MoveCallTransaction = (0, import_superstruct.object)({
+  kind: (0, import_superstruct.literal)("MoveCall"),
+  target: (0, import_superstruct.define)("target", (0, import_superstruct.string)().validator),
+  typeArguments: (0, import_superstruct.array)((0, import_superstruct.string)()),
+  arguments: (0, import_superstruct.array)(TransactionArgument)
+});
+const TransferObjectsTransaction = (0, import_superstruct.object)({
+  kind: (0, import_superstruct.literal)("TransferObjects"),
+  objects: (0, import_superstruct.array)(TransactionArgument),
+  address: TransactionArgument
+});
+const SplitCoinsTransaction = (0, import_superstruct.object)({
+  kind: (0, import_superstruct.literal)("SplitCoins"),
+  coin: TransactionArgument,
+  amounts: (0, import_superstruct.array)(TransactionArgument)
+});
+const MergeCoinsTransaction = (0, import_superstruct.object)({
+  kind: (0, import_superstruct.literal)("MergeCoins"),
+  destination: TransactionArgument,
+  sources: (0, import_superstruct.array)(TransactionArgument)
+});
+const MakeMoveVecTransaction = (0, import_superstruct.object)({
+  kind: (0, import_superstruct.literal)("MakeMoveVec"),
+  // TODO: ideally we should use `TypeTag` instead of `record()` here,
+  // but TypeTag is recursively defined and it's tricky to define a
+  // recursive struct in superstruct
+  type: (0, import_superstruct.optional)(option((0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.unknown)()))),
+  objects: (0, import_superstruct.array)(TransactionArgument)
+});
+const PublishTransaction = (0, import_superstruct.object)({
+  kind: (0, import_superstruct.literal)("Publish"),
+  modules: (0, import_superstruct.array)((0, import_superstruct.array)((0, import_superstruct.integer)())),
+  dependencies: (0, import_superstruct.array)((0, import_superstruct.string)())
+});
+var UpgradePolicy = /* @__PURE__ */ ((UpgradePolicy2) => {
+  UpgradePolicy2[UpgradePolicy2["COMPATIBLE"] = 0] = "COMPATIBLE";
+  UpgradePolicy2[UpgradePolicy2["ADDITIVE"] = 128] = "ADDITIVE";
+  UpgradePolicy2[UpgradePolicy2["DEP_ONLY"] = 192] = "DEP_ONLY";
+  return UpgradePolicy2;
+})(UpgradePolicy || {});
+const UpgradeTransaction = (0, import_superstruct.object)({
+  kind: (0, import_superstruct.literal)("Upgrade"),
+  modules: (0, import_superstruct.array)((0, import_superstruct.array)((0, import_superstruct.integer)())),
+  dependencies: (0, import_superstruct.array)((0, import_superstruct.string)()),
+  packageId: (0, import_superstruct.string)(),
+  ticket: TransactionArgument
+});
+const TransactionTypes = [
+  MoveCallTransaction,
+  TransferObjectsTransaction,
+  SplitCoinsTransaction,
+  MergeCoinsTransaction,
+  PublishTransaction,
+  UpgradeTransaction,
+  MakeMoveVecTransaction
+];
+const TransactionType = (0, import_superstruct.union)([...TransactionTypes]);
+function getTransactionType(data) {
+  (0, import_superstruct.assert)(data, TransactionType);
+  return TransactionTypes.find((schema) => (0, import_superstruct.is)(data, schema));
+}
+const Transactions = {
+  MoveCall(input) {
+    return (0, import_utils.create)(
+      {
+        kind: "MoveCall",
+        target: input.target,
+        arguments: input.arguments ?? [],
+        typeArguments: input.typeArguments ?? []
+      },
+      MoveCallTransaction
+    );
+  },
+  TransferObjects(objects, address) {
+    if (address.kind === "Input" && address.type === "pure" && typeof address.value !== "object") {
+      address.value = import_Inputs.Inputs.Pure(import_bcs2.bcs.Address.serialize(address.value));
+    }
+    return (0, import_utils.create)({ kind: "TransferObjects", objects, address }, TransferObjectsTransaction);
+  },
+  SplitCoins(coin, amounts) {
+    amounts.forEach((input) => {
+      if (input.kind === "Input" && input.type === "pure" && typeof input.value !== "object") {
+        input.value = import_Inputs.Inputs.Pure(import_bcs2.bcs.U64.serialize(input.value));
+      }
+    });
+    return (0, import_utils.create)(
+      {
+        kind: "SplitCoins",
+        coin,
+        amounts
+      },
+      SplitCoinsTransaction
+    );
+  },
+  MergeCoins(destination, sources) {
+    return (0, import_utils.create)({ kind: "MergeCoins", destination, sources }, MergeCoinsTransaction);
+  },
+  Publish({
+    modules,
+    dependencies
+  }) {
+    return (0, import_utils.create)(
+      {
+        kind: "Publish",
+        modules: modules.map(
+          (module2) => typeof module2 === "string" ? Array.from((0, import_bcs.fromB64)(module2)) : module2
+        ),
+        dependencies: dependencies.map((dep) => (0, import_sui_types.normalizeSuiObjectId)(dep))
+      },
+      PublishTransaction
+    );
+  },
+  Upgrade({
+    modules,
+    dependencies,
+    packageId,
+    ticket
+  }) {
+    return (0, import_utils.create)(
+      {
+        kind: "Upgrade",
+        modules: modules.map(
+          (module2) => typeof module2 === "string" ? Array.from((0, import_bcs.fromB64)(module2)) : module2
+        ),
+        dependencies: dependencies.map((dep) => (0, import_sui_types.normalizeSuiObjectId)(dep)),
+        packageId,
+        ticket
+      },
+      UpgradeTransaction
+    );
+  },
+  MakeMoveVec({
+    type,
+    objects
+  }) {
+    return (0, import_utils.create)(
+      {
+        kind: "MakeMoveVec",
+        type: type ? { Some: import_type_tag_serializer.TypeTagSerializer.parseFromStr(type) } : { None: null },
+        objects
+      },
+      MakeMoveVecTransaction
+    );
+  }
+};
+
+
+},{"../bcs/index.js":18,"../bcs/type-tag-serializer.js":19,"../utils/sui-types.js":66,"./Inputs.js":53,"./utils.js":63,"@mysten/bcs":12,"superstruct":143}],57:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var bcs_exports = {};
+__export(bcs_exports, {
+  ARGUMENT: () => ARGUMENT,
+  ARGUMENT_INNER: () => ARGUMENT_INNER,
+  CALL_ARG: () => CALL_ARG,
+  COMPRESSED_SIGNATURE: () => COMPRESSED_SIGNATURE,
+  ENUM_KIND: () => ENUM_KIND,
+  MULTISIG: () => MULTISIG,
+  MULTISIG_PK_MAP: () => MULTISIG_PK_MAP,
+  MULTISIG_PUBLIC_KEY: () => MULTISIG_PUBLIC_KEY,
+  OBJECT_ARG: () => OBJECT_ARG,
+  OPTION: () => OPTION,
+  PROGRAMMABLE_CALL: () => PROGRAMMABLE_CALL,
+  PROGRAMMABLE_CALL_INNER: () => PROGRAMMABLE_CALL_INNER,
+  PROGRAMMABLE_TX_BLOCK: () => PROGRAMMABLE_TX_BLOCK,
+  PUBLIC_KEY: () => PUBLIC_KEY,
+  TRANSACTION: () => TRANSACTION,
+  TRANSACTION_INNER: () => TRANSACTION_INNER,
+  TYPE_TAG: () => TYPE_TAG,
+  VECTOR: () => VECTOR
+});
+module.exports = __toCommonJS(bcs_exports);
+const ARGUMENT_INNER = "Argument";
+const VECTOR = "vector";
+const OPTION = "Option";
+const CALL_ARG = "CallArg";
+const TYPE_TAG = "TypeTag";
+const OBJECT_ARG = "ObjectArg";
+const PROGRAMMABLE_TX_BLOCK = "ProgrammableTransaction";
+const PROGRAMMABLE_CALL_INNER = "ProgrammableMoveCall";
+const TRANSACTION_INNER = "Transaction";
+const COMPRESSED_SIGNATURE = "CompressedSignature";
+const PUBLIC_KEY = "PublicKey";
+const MULTISIG_PUBLIC_KEY = "MultiSigPublicKey";
+const MULTISIG_PK_MAP = "MultiSigPkMap";
+const MULTISIG = "MultiSig";
+const ENUM_KIND = "EnumKind";
+const TRANSACTION = TRANSACTION_INNER;
+const ARGUMENT = ARGUMENT_INNER;
+const PROGRAMMABLE_CALL = "ProgrammableMoveCall";
+
+
+},{}],58:[function(require,module,exports){
+"use strict";
+
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all) __defProp(target, name, {
+    get: all[name],
+    enumerable: true
+  });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from)) if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
+      get: () => from[key],
+      enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+    });
+  }
+  return to;
+};
+var __toCommonJS = mod => __copyProps(__defProp({}, "__esModule", {
+  value: true
+}), mod);
+var export_exports = {};
+__export(export_exports, {
+  Inputs: () => import_Inputs.Inputs,
+  TransactionBlock: () => import_TransactionBlock.TransactionBlock,
+  Transactions: () => import_Transactions.Transactions,
+  UpgradePolicy: () => import_Transactions.UpgradePolicy,
+  getPureSerializationType: () => import_serializer.getPureSerializationType,
+  isTransactionBlock: () => import_TransactionBlock.isTransactionBlock
+});
+module.exports = __toCommonJS(export_exports);
+var import_serializer = require("./serializer.js");
+var import_Inputs = require("./Inputs.js");
+var import_Transactions = require("./Transactions.js");
+var import_TransactionBlock = require("./TransactionBlock.js");
+
+},{"./Inputs.js":53,"./TransactionBlock.js":54,"./Transactions.js":56,"./serializer.js":62}],59:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var hash_exports = {};
+__export(hash_exports, {
+  hashTypedData: () => hashTypedData
+});
+module.exports = __toCommonJS(hash_exports);
+var import_blake2b = require("@noble/hashes/blake2b");
+function hashTypedData(typeTag, data) {
+  const typeTagBytes = Array.from(`${typeTag}::`).map((e) => e.charCodeAt(0));
+  const dataWithTag = new Uint8Array(typeTagBytes.length + data.length);
+  dataWithTag.set(typeTagBytes);
+  dataWithTag.set(data, typeTagBytes.length);
+  return (0, import_blake2b.blake2b)(dataWithTag, { dkLen: 32 });
+}
+
+
+},{"@noble/hashes/blake2b":93}],60:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var transactions_exports = {};
+module.exports = __toCommonJS(transactions_exports);
+__reExport(transactions_exports, require("./TransactionBlock.js"), module.exports);
+__reExport(transactions_exports, require("./Transactions.js"), module.exports);
+__reExport(transactions_exports, require("./Inputs.js"), module.exports);
+__reExport(transactions_exports, require("./serializer.js"), module.exports);
+__reExport(transactions_exports, require("./bcs.js"), module.exports);
+
+
+},{"./Inputs.js":53,"./TransactionBlock.js":54,"./Transactions.js":56,"./bcs.js":57,"./serializer.js":62}],61:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var pure_exports = {};
+__export(pure_exports, {
+  createPure: () => createPure
+});
+module.exports = __toCommonJS(pure_exports);
+var import_bcs = require("../bcs/index.js");
+function createPure(makePure) {
+  function pure(value, type) {
+    return makePure(value, type);
+  }
+  pure.u8 = (value) => makePure(import_bcs.bcs.U8.serialize(value));
+  pure.u16 = (value) => makePure(import_bcs.bcs.U16.serialize(value));
+  pure.u32 = (value) => makePure(import_bcs.bcs.U32.serialize(value));
+  pure.u64 = (value) => makePure(import_bcs.bcs.U64.serialize(value));
+  pure.u128 = (value) => makePure(import_bcs.bcs.U128.serialize(value));
+  pure.u256 = (value) => makePure(import_bcs.bcs.U256.serialize(value));
+  pure.bool = (value) => makePure(import_bcs.bcs.Bool.serialize(value));
+  pure.string = (value) => makePure(import_bcs.bcs.String.serialize(value));
+  pure.address = (value) => makePure(import_bcs.bcs.Address.serialize(value));
+  pure.id = pure.address;
+  return pure;
+}
+
+
+},{"../bcs/index.js":18}],62:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var serializer_exports = {};
+__export(serializer_exports, {
+  getPureSerializationType: () => getPureSerializationType,
+  isTxContext: () => isTxContext
+});
+module.exports = __toCommonJS(serializer_exports);
+var import_utils = require("../utils/index.js");
+var import_sui_types = require("../utils/sui-types.js");
+var import_utils2 = require("./utils.js");
+const OBJECT_MODULE_NAME = "object";
+const ID_STRUCT_NAME = "ID";
+const STD_ASCII_MODULE_NAME = "ascii";
+const STD_ASCII_STRUCT_NAME = "String";
+const STD_UTF8_MODULE_NAME = "string";
+const STD_UTF8_STRUCT_NAME = "String";
+const STD_OPTION_MODULE_NAME = "option";
+const STD_OPTION_STRUCT_NAME = "Option";
+const RESOLVED_SUI_ID = {
+  address: import_utils.SUI_FRAMEWORK_ADDRESS,
+  module: OBJECT_MODULE_NAME,
+  name: ID_STRUCT_NAME
+};
+const RESOLVED_ASCII_STR = {
+  address: import_utils.MOVE_STDLIB_ADDRESS,
+  module: STD_ASCII_MODULE_NAME,
+  name: STD_ASCII_STRUCT_NAME
+};
+const RESOLVED_UTF8_STR = {
+  address: import_utils.MOVE_STDLIB_ADDRESS,
+  module: STD_UTF8_MODULE_NAME,
+  name: STD_UTF8_STRUCT_NAME
+};
+const RESOLVED_STD_OPTION = {
+  address: import_utils.MOVE_STDLIB_ADDRESS,
+  module: STD_OPTION_MODULE_NAME,
+  name: STD_OPTION_STRUCT_NAME
+};
+const isSameStruct = (a, b) => a.address === b.address && a.module === b.module && a.name === b.name;
+function isTxContext(param) {
+  const struct = (0, import_utils2.extractStructTag)(param)?.Struct;
+  return struct?.address === "0x2" && struct?.module === "tx_context" && struct?.name === "TxContext";
+}
+function expectType(typeName, argVal) {
+  if (typeof argVal === "undefined") {
+    return;
+  }
+  if (typeof argVal !== typeName) {
+    throw new Error(`Expect ${argVal} to be ${typeName}, received ${typeof argVal}`);
+  }
+}
+const allowedTypes = ["Address", "Bool", "U8", "U16", "U32", "U64", "U128", "U256"];
+function getPureSerializationType(normalizedType, argVal) {
+  if (typeof normalizedType === "string" && allowedTypes.includes(normalizedType)) {
+    if (normalizedType in ["U8", "U16", "U32", "U64", "U128", "U256"]) {
+      expectType("number", argVal);
+    } else if (normalizedType === "Bool") {
+      expectType("boolean", argVal);
+    } else if (normalizedType === "Address") {
+      expectType("string", argVal);
+      if (argVal && !(0, import_sui_types.isValidSuiAddress)(argVal)) {
+        throw new Error("Invalid Sui Address");
+      }
+    }
+    return normalizedType.toLowerCase();
+  } else if (typeof normalizedType === "string") {
+    throw new Error(`Unknown pure normalized type ${JSON.stringify(normalizedType, null, 2)}`);
+  }
+  if ("Vector" in normalizedType) {
+    if ((argVal === void 0 || typeof argVal === "string") && normalizedType.Vector === "U8") {
+      return "string";
+    }
+    if (argVal !== void 0 && !Array.isArray(argVal)) {
+      throw new Error(`Expect ${argVal} to be a array, received ${typeof argVal}`);
+    }
+    const innerType = getPureSerializationType(
+      normalizedType.Vector,
+      // undefined when argVal is empty
+      argVal ? argVal[0] : void 0
+    );
+    if (innerType === void 0) {
+      return;
+    }
+    return `vector<${innerType}>`;
+  }
+  if ("Struct" in normalizedType) {
+    if (isSameStruct(normalizedType.Struct, RESOLVED_ASCII_STR)) {
+      return "string";
+    } else if (isSameStruct(normalizedType.Struct, RESOLVED_UTF8_STR)) {
+      return "utf8string";
+    } else if (isSameStruct(normalizedType.Struct, RESOLVED_SUI_ID)) {
+      return "address";
+    } else if (isSameStruct(normalizedType.Struct, RESOLVED_STD_OPTION)) {
+      const optionToVec = {
+        Vector: normalizedType.Struct.typeArguments[0]
+      };
+      return getPureSerializationType(optionToVec, argVal);
+    }
+  }
+  return void 0;
+}
+
+
+},{"../utils/index.js":65,"../utils/sui-types.js":66,"./utils.js":63}],63:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var utils_exports = {};
+__export(utils_exports, {
+  create: () => create,
   extractMutableReference: () => extractMutableReference,
   extractReference: () => extractReference,
   extractStructTag: () => extractStructTag
 });
-module.exports = __toCommonJS(normalized_exports);
+module.exports = __toCommonJS(utils_exports);
 var import_superstruct = require("superstruct");
-const SuiMoveFunctionArgType = (0, import_superstruct.union)([(0, import_superstruct.string)(), (0, import_superstruct.object)({ Object: (0, import_superstruct.string)() })]);
-const SuiMoveFunctionArgTypes = (0, import_superstruct.array)(SuiMoveFunctionArgType);
-const SuiMoveModuleId = (0, import_superstruct.object)({
-  address: (0, import_superstruct.string)(),
-  name: (0, import_superstruct.string)()
-});
-const SuiMoveVisibility = (0, import_superstruct.union)([(0, import_superstruct.literal)("Private"), (0, import_superstruct.literal)("Public"), (0, import_superstruct.literal)("Friend")]);
-const SuiMoveAbilitySet = (0, import_superstruct.object)({
-  abilities: (0, import_superstruct.array)((0, import_superstruct.string)())
-});
-const SuiMoveStructTypeParameter = (0, import_superstruct.object)({
-  constraints: SuiMoveAbilitySet,
-  isPhantom: (0, import_superstruct.boolean)()
-});
-const SuiMoveNormalizedTypeParameterType = (0, import_superstruct.object)({
-  TypeParameter: (0, import_superstruct.number)()
-});
-const MoveCallMetric = (0, import_superstruct.tuple)([
-  (0, import_superstruct.object)({
-    module: (0, import_superstruct.string)(),
-    package: (0, import_superstruct.string)(),
-    function: (0, import_superstruct.string)()
-  }),
-  (0, import_superstruct.string)()
-]);
-const MoveCallMetrics = (0, import_superstruct.object)({
-  rank3Days: (0, import_superstruct.array)(MoveCallMetric),
-  rank7Days: (0, import_superstruct.array)(MoveCallMetric),
-  rank30Days: (0, import_superstruct.array)(MoveCallMetric)
-});
-function isSuiMoveNormalizedType(value) {
-  if (!value)
-    return false;
-  if (typeof value === "string")
-    return true;
-  if ((0, import_superstruct.is)(value, SuiMoveNormalizedTypeParameterType))
-    return true;
-  if (isSuiMoveNormalizedStructType(value))
-    return true;
-  if (typeof value !== "object")
-    return false;
-  const valueProperties = value;
-  if ((0, import_superstruct.is)(valueProperties.Reference, SuiMoveNormalizedType))
-    return true;
-  if ((0, import_superstruct.is)(valueProperties.MutableReference, SuiMoveNormalizedType))
-    return true;
-  if ((0, import_superstruct.is)(valueProperties.Vector, SuiMoveNormalizedType))
-    return true;
-  return false;
+function create(value, struct) {
+  return (0, import_superstruct.create)(value, struct);
 }
-const SuiMoveNormalizedType = (0, import_superstruct.define)(
-  "SuiMoveNormalizedType",
-  isSuiMoveNormalizedType
-);
-function isSuiMoveNormalizedStructType(value) {
-  if (!value || typeof value !== "object")
-    return false;
-  const valueProperties = value;
-  if (!valueProperties.Struct || typeof valueProperties.Struct !== "object")
-    return false;
-  const structProperties = valueProperties.Struct;
-  if (typeof structProperties.address !== "string" || typeof structProperties.module !== "string" || typeof structProperties.name !== "string" || !Array.isArray(structProperties.typeArguments) || !structProperties.typeArguments.every((value2) => isSuiMoveNormalizedType(value2))) {
-    return false;
-  }
-  return true;
-}
-const SuiMoveNormalizedStructType = (0, import_superstruct.define)(
-  "SuiMoveNormalizedStructType",
-  isSuiMoveNormalizedStructType
-);
-const SuiMoveNormalizedFunction = (0, import_superstruct.object)({
-  visibility: SuiMoveVisibility,
-  isEntry: (0, import_superstruct.boolean)(),
-  typeParameters: (0, import_superstruct.array)(SuiMoveAbilitySet),
-  parameters: (0, import_superstruct.array)(SuiMoveNormalizedType),
-  return: (0, import_superstruct.array)(SuiMoveNormalizedType)
-});
-const SuiMoveNormalizedField = (0, import_superstruct.object)({
-  name: (0, import_superstruct.string)(),
-  type: SuiMoveNormalizedType
-});
-const SuiMoveNormalizedStruct = (0, import_superstruct.object)({
-  abilities: SuiMoveAbilitySet,
-  typeParameters: (0, import_superstruct.array)(SuiMoveStructTypeParameter),
-  fields: (0, import_superstruct.array)(SuiMoveNormalizedField)
-});
-const SuiMoveNormalizedModule = (0, import_superstruct.object)({
-  fileFormatVersion: (0, import_superstruct.number)(),
-  address: (0, import_superstruct.string)(),
-  name: (0, import_superstruct.string)(),
-  friends: (0, import_superstruct.array)(SuiMoveModuleId),
-  structs: (0, import_superstruct.record)((0, import_superstruct.string)(), SuiMoveNormalizedStruct),
-  exposedFunctions: (0, import_superstruct.record)((0, import_superstruct.string)(), SuiMoveNormalizedFunction)
-});
-const SuiMoveNormalizedModules = (0, import_superstruct.record)((0, import_superstruct.string)(), SuiMoveNormalizedModule);
 function extractMutableReference(normalizedType) {
   return typeof normalizedType === "object" && "MutableReference" in normalizedType ? normalizedType.MutableReference : void 0;
 }
@@ -11098,388 +11277,7 @@ function extractStructTag(normalizedType) {
 }
 
 
-},{"superstruct":132}],63:[function(require,module,exports){
-"use strict";
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var objects_exports = {};
-__export(objects_exports, {
-  CheckpointedObjectId: () => CheckpointedObjectId,
-  DisplayFieldsBackwardCompatibleResponse: () => DisplayFieldsBackwardCompatibleResponse,
-  DisplayFieldsResponse: () => DisplayFieldsResponse,
-  GetOwnedObjectsResponse: () => GetOwnedObjectsResponse,
-  MIST_PER_SUI: () => MIST_PER_SUI,
-  MovePackageContent: () => MovePackageContent,
-  ObjectContentFields: () => ObjectContentFields,
-  ObjectRead: () => ObjectRead,
-  ObjectStatus: () => ObjectStatus,
-  ObjectType: () => ObjectType,
-  OwnedObjectRef: () => OwnedObjectRef,
-  PaginatedObjectsResponse: () => PaginatedObjectsResponse,
-  SUI_DECIMALS: () => SUI_DECIMALS,
-  SuiGasData: () => SuiGasData,
-  SuiMoveObject: () => SuiMoveObject,
-  SuiMovePackage: () => SuiMovePackage,
-  SuiObjectData: () => SuiObjectData,
-  SuiObjectDataOptions: () => SuiObjectDataOptions,
-  SuiObjectInfo: () => SuiObjectInfo,
-  SuiObjectRef: () => SuiObjectRef,
-  SuiObjectResponse: () => SuiObjectResponse,
-  SuiObjectResponseError: () => SuiObjectResponseError,
-  SuiParsedData: () => SuiParsedData,
-  SuiRawData: () => SuiRawData,
-  SuiRawMoveObject: () => SuiRawMoveObject,
-  SuiRawMovePackage: () => SuiRawMovePackage,
-  TransactionEffectsModifiedAtVersions: () => TransactionEffectsModifiedAtVersions,
-  getMoveObject: () => getMoveObject,
-  getMoveObjectType: () => getMoveObjectType,
-  getMovePackageContent: () => getMovePackageContent,
-  getObjectDeletedResponse: () => getObjectDeletedResponse,
-  getObjectDisplay: () => getObjectDisplay,
-  getObjectFields: () => getObjectFields,
-  getObjectId: () => getObjectId,
-  getObjectNotExistsResponse: () => getObjectNotExistsResponse,
-  getObjectOwner: () => getObjectOwner,
-  getObjectPreviousTransactionDigest: () => getObjectPreviousTransactionDigest,
-  getObjectReference: () => getObjectReference,
-  getObjectType: () => getObjectType,
-  getObjectVersion: () => getObjectVersion,
-  getSharedObjectInitialVersion: () => getSharedObjectInitialVersion,
-  getSuiObjectData: () => getSuiObjectData,
-  hasPublicTransfer: () => hasPublicTransfer,
-  isImmutableObject: () => isImmutableObject,
-  isSharedObject: () => isSharedObject,
-  isSuiObjectResponse: () => isSuiObjectResponse
-});
-module.exports = __toCommonJS(objects_exports);
-var import_superstruct = require("superstruct");
-var import_common = require("./common.js");
-const ObjectType = (0, import_superstruct.union)([(0, import_superstruct.string)(), (0, import_superstruct.literal)("package")]);
-const SuiObjectRef = (0, import_superstruct.object)({
-  /** Base64 string representing the object digest */
-  digest: (0, import_superstruct.string)(),
-  /** Hex code as string representing the object id */
-  objectId: (0, import_superstruct.string)(),
-  /** Object version */
-  version: (0, import_superstruct.union)([(0, import_superstruct.number)(), (0, import_superstruct.string)(), (0, import_superstruct.bigint)()])
-});
-const OwnedObjectRef = (0, import_superstruct.object)({
-  owner: import_common.ObjectOwner,
-  reference: SuiObjectRef
-});
-const TransactionEffectsModifiedAtVersions = (0, import_superstruct.object)({
-  objectId: (0, import_superstruct.string)(),
-  sequenceNumber: (0, import_superstruct.string)()
-});
-const SuiGasData = (0, import_superstruct.object)({
-  payment: (0, import_superstruct.array)(SuiObjectRef),
-  /** Gas Object's owner */
-  owner: (0, import_superstruct.string)(),
-  price: (0, import_superstruct.string)(),
-  budget: (0, import_superstruct.string)()
-});
-const SuiObjectInfo = (0, import_superstruct.assign)(
-  SuiObjectRef,
-  (0, import_superstruct.object)({
-    type: (0, import_superstruct.string)(),
-    owner: import_common.ObjectOwner,
-    previousTransaction: (0, import_superstruct.string)()
-  })
-);
-const ObjectContentFields = (0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.any)());
-const MovePackageContent = (0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.unknown)());
-const SuiMoveObject = (0, import_superstruct.object)({
-  /** Move type (e.g., "0x2::coin::Coin<0x2::sui::SUI>") */
-  type: (0, import_superstruct.string)(),
-  /** Fields and values stored inside the Move object */
-  fields: ObjectContentFields,
-  hasPublicTransfer: (0, import_superstruct.boolean)()
-});
-const SuiMovePackage = (0, import_superstruct.object)({
-  /** A mapping from module name to disassembled Move bytecode */
-  disassembled: MovePackageContent
-});
-const SuiParsedData = (0, import_superstruct.union)([
-  (0, import_superstruct.assign)(SuiMoveObject, (0, import_superstruct.object)({ dataType: (0, import_superstruct.literal)("moveObject") })),
-  (0, import_superstruct.assign)(SuiMovePackage, (0, import_superstruct.object)({ dataType: (0, import_superstruct.literal)("package") }))
-]);
-const SuiRawMoveObject = (0, import_superstruct.object)({
-  /** Move type (e.g., "0x2::coin::Coin<0x2::sui::SUI>") */
-  type: (0, import_superstruct.string)(),
-  hasPublicTransfer: (0, import_superstruct.boolean)(),
-  version: (0, import_superstruct.string)(),
-  bcsBytes: (0, import_superstruct.string)()
-});
-const SuiRawMovePackage = (0, import_superstruct.object)({
-  id: (0, import_superstruct.string)(),
-  /** A mapping from module name to Move bytecode enocded in base64*/
-  moduleMap: (0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.string)())
-});
-const SuiRawData = (0, import_superstruct.union)([
-  (0, import_superstruct.assign)(SuiRawMoveObject, (0, import_superstruct.object)({ dataType: (0, import_superstruct.literal)("moveObject") })),
-  (0, import_superstruct.assign)(SuiRawMovePackage, (0, import_superstruct.object)({ dataType: (0, import_superstruct.literal)("package") }))
-]);
-const SUI_DECIMALS = 9;
-const MIST_PER_SUI = BigInt(1e9);
-const SuiObjectResponseError = (0, import_superstruct.object)({
-  code: (0, import_superstruct.string)(),
-  error: (0, import_superstruct.optional)((0, import_superstruct.string)()),
-  object_id: (0, import_superstruct.optional)((0, import_superstruct.string)()),
-  parent_object_id: (0, import_superstruct.optional)((0, import_superstruct.string)()),
-  version: (0, import_superstruct.optional)((0, import_superstruct.string)()),
-  digest: (0, import_superstruct.optional)((0, import_superstruct.string)())
-});
-const DisplayFieldsResponse = (0, import_superstruct.object)({
-  data: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.string)()))),
-  error: (0, import_superstruct.nullable)((0, import_superstruct.optional)(SuiObjectResponseError))
-});
-const DisplayFieldsBackwardCompatibleResponse = (0, import_superstruct.union)([
-  DisplayFieldsResponse,
-  (0, import_superstruct.optional)((0, import_superstruct.record)((0, import_superstruct.string)(), (0, import_superstruct.string)()))
-]);
-const SuiObjectData = (0, import_superstruct.object)({
-  objectId: (0, import_superstruct.string)(),
-  version: (0, import_superstruct.string)(),
-  digest: (0, import_superstruct.string)(),
-  /**
-   * Type of the object, default to be undefined unless SuiObjectDataOptions.showType is set to true
-   */
-  type: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.string)())),
-  /**
-   * Move object content or package content, default to be undefined unless SuiObjectDataOptions.showContent is set to true
-   */
-  content: (0, import_superstruct.nullable)((0, import_superstruct.optional)(SuiParsedData)),
-  /**
-   * Move object content or package content in BCS bytes, default to be undefined unless SuiObjectDataOptions.showBcs is set to true
-   */
-  bcs: (0, import_superstruct.nullable)((0, import_superstruct.optional)(SuiRawData)),
-  /**
-   * The owner of this object. Default to be undefined unless SuiObjectDataOptions.showOwner is set to true
-   */
-  owner: (0, import_superstruct.nullable)((0, import_superstruct.optional)(import_common.ObjectOwner)),
-  /**
-   * The digest of the transaction that created or last mutated this object.
-   * Default to be undefined unless SuiObjectDataOptions.showPreviousTransaction is set to true
-   */
-  previousTransaction: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.string)())),
-  /**
-   * The amount of SUI we would rebate if this object gets deleted.
-   * This number is re-calculated each time the object is mutated based on
-   * the present storage gas price.
-   * Default to be undefined unless SuiObjectDataOptions.showStorageRebate is set to true
-   */
-  storageRebate: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.string)())),
-  /**
-   * Display metadata for this object, default to be undefined unless SuiObjectDataOptions.showDisplay is set to true
-   * This can also be None if the struct type does not have Display defined
-   * See more details in https://forums.sui.io/t/nft-object-display-proposal/4872
-   */
-  display: (0, import_superstruct.nullable)((0, import_superstruct.optional)(DisplayFieldsBackwardCompatibleResponse))
-});
-const SuiObjectDataOptions = (0, import_superstruct.object)({
-  /* Whether to fetch the object type, default to be true */
-  showType: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.boolean)())),
-  /* Whether to fetch the object content, default to be false */
-  showContent: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.boolean)())),
-  /* Whether to fetch the object content in BCS bytes, default to be false */
-  showBcs: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.boolean)())),
-  /* Whether to fetch the object owner, default to be false */
-  showOwner: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.boolean)())),
-  /* Whether to fetch the previous transaction digest, default to be false */
-  showPreviousTransaction: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.boolean)())),
-  /* Whether to fetch the storage rebate, default to be false */
-  showStorageRebate: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.boolean)())),
-  /* Whether to fetch the display metadata, default to be false */
-  showDisplay: (0, import_superstruct.nullable)((0, import_superstruct.optional)((0, import_superstruct.boolean)()))
-});
-const ObjectStatus = (0, import_superstruct.union)([(0, import_superstruct.literal)("Exists"), (0, import_superstruct.literal)("notExists"), (0, import_superstruct.literal)("Deleted")]);
-const GetOwnedObjectsResponse = (0, import_superstruct.array)(SuiObjectInfo);
-const SuiObjectResponse = (0, import_superstruct.object)({
-  data: (0, import_superstruct.nullable)((0, import_superstruct.optional)(SuiObjectData)),
-  error: (0, import_superstruct.nullable)((0, import_superstruct.optional)(SuiObjectResponseError))
-});
-function getSuiObjectData(resp) {
-  return resp.data;
-}
-function getObjectDeletedResponse(resp) {
-  if (resp.error && "object_id" in resp.error && "version" in resp.error && "digest" in resp.error) {
-    const error = resp.error;
-    return {
-      objectId: error.object_id,
-      version: error.version,
-      digest: error.digest
-    };
-  }
-  return void 0;
-}
-function getObjectNotExistsResponse(resp) {
-  if (resp.error && "object_id" in resp.error && !("version" in resp.error) && !("digest" in resp.error)) {
-    return resp.error.object_id;
-  }
-  return void 0;
-}
-function getObjectReference(resp) {
-  if ("reference" in resp) {
-    return resp.reference;
-  }
-  const exists = getSuiObjectData(resp);
-  if (exists) {
-    return {
-      objectId: exists.objectId,
-      version: exists.version,
-      digest: exists.digest
-    };
-  }
-  return getObjectDeletedResponse(resp);
-}
-function getObjectId(data) {
-  if ("objectId" in data) {
-    return data.objectId;
-  }
-  return getObjectReference(data)?.objectId ?? getObjectNotExistsResponse(data);
-}
-function getObjectVersion(data) {
-  if ("version" in data) {
-    return data.version;
-  }
-  return getObjectReference(data)?.version;
-}
-function isSuiObjectResponse(resp) {
-  return resp.data !== void 0;
-}
-function getObjectType(resp) {
-  const data = isSuiObjectResponse(resp) ? resp.data : resp;
-  if (!data?.type && "data" in resp) {
-    if (data?.content?.dataType === "package") {
-      return "package";
-    }
-    return getMoveObjectType(resp);
-  }
-  return data?.type;
-}
-function getObjectPreviousTransactionDigest(resp) {
-  return getSuiObjectData(resp)?.previousTransaction;
-}
-function getObjectOwner(resp) {
-  if ((0, import_superstruct.is)(resp, import_common.ObjectOwner)) {
-    return resp;
-  }
-  return getSuiObjectData(resp)?.owner;
-}
-function getObjectDisplay(resp) {
-  const display = getSuiObjectData(resp)?.display;
-  if (!display) {
-    return { data: null, error: null };
-  }
-  if ((0, import_superstruct.is)(display, DisplayFieldsResponse)) {
-    return display;
-  }
-  return {
-    data: display,
-    error: null
-  };
-}
-function getSharedObjectInitialVersion(resp) {
-  const owner = getObjectOwner(resp);
-  if (owner && typeof owner === "object" && "Shared" in owner) {
-    return owner.Shared.initial_shared_version;
-  } else {
-    return void 0;
-  }
-}
-function isSharedObject(resp) {
-  const owner = getObjectOwner(resp);
-  return !!owner && typeof owner === "object" && "Shared" in owner;
-}
-function isImmutableObject(resp) {
-  const owner = getObjectOwner(resp);
-  return owner === "Immutable";
-}
-function getMoveObjectType(resp) {
-  return getMoveObject(resp)?.type;
-}
-function getObjectFields(resp) {
-  if ("fields" in resp) {
-    return resp.fields;
-  }
-  return getMoveObject(resp)?.fields;
-}
-function isSuiObjectDataWithContent(data) {
-  return data.content !== void 0;
-}
-function getMoveObject(data) {
-  const suiObject = "data" in data ? getSuiObjectData(data) : data;
-  if (!suiObject || !isSuiObjectDataWithContent(suiObject) || suiObject.content.dataType !== "moveObject") {
-    return void 0;
-  }
-  return suiObject.content;
-}
-function hasPublicTransfer(data) {
-  return getMoveObject(data)?.hasPublicTransfer ?? false;
-}
-function getMovePackageContent(data) {
-  if ("disassembled" in data) {
-    return data.disassembled;
-  }
-  const suiObject = getSuiObjectData(data);
-  if (suiObject?.content?.dataType !== "package") {
-    return void 0;
-  }
-  return suiObject.content.disassembled;
-}
-const CheckpointedObjectId = (0, import_superstruct.object)({
-  objectId: (0, import_superstruct.string)(),
-  atCheckpoint: (0, import_superstruct.optional)((0, import_superstruct.number)())
-});
-const PaginatedObjectsResponse = (0, import_superstruct.object)({
-  data: (0, import_superstruct.array)(SuiObjectResponse),
-  nextCursor: (0, import_superstruct.optional)((0, import_superstruct.nullable)((0, import_superstruct.string)())),
-  hasNextPage: (0, import_superstruct.boolean)()
-});
-const ObjectRead = (0, import_superstruct.union)([
-  (0, import_superstruct.object)({
-    details: SuiObjectData,
-    status: (0, import_superstruct.literal)("VersionFound")
-  }),
-  (0, import_superstruct.object)({
-    details: (0, import_superstruct.string)(),
-    status: (0, import_superstruct.literal)("ObjectNotExists")
-  }),
-  (0, import_superstruct.object)({
-    details: SuiObjectRef,
-    status: (0, import_superstruct.literal)("ObjectDeleted")
-  }),
-  (0, import_superstruct.object)({
-    details: (0, import_superstruct.tuple)([(0, import_superstruct.string)(), (0, import_superstruct.number)()]),
-    status: (0, import_superstruct.literal)("VersionNotFound")
-  }),
-  (0, import_superstruct.object)({
-    details: (0, import_superstruct.object)({
-      asked_version: (0, import_superstruct.number)(),
-      latest_version: (0, import_superstruct.number)(),
-      object_id: (0, import_superstruct.string)()
-    }),
-    status: (0, import_superstruct.literal)("VersionTooHigh")
-  })
-]);
-
-
-},{"./common.js":60,"superstruct":132}],64:[function(require,module,exports){
+},{"superstruct":143}],64:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11580,7 +11378,7 @@ const SUI_TYPE_ARG = `${SUI_FRAMEWORK_ADDRESS}::sui::SUI`;
 const SUI_SYSTEM_STATE_OBJECT_ID = (0, import_sui_types.normalizeSuiObjectId)("0x5");
 
 
-},{"./format.js":64,"./sui-types.js":66,"@mysten/bcs":12,"superstruct":132}],66:[function(require,module,exports){
+},{"./format.js":64,"./sui-types.js":66,"@mysten/bcs":12,"superstruct":143}],66:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11649,7 +11447,7 @@ function parseStructTag(type) {
 }
 function normalizeStructTag(type) {
   const { address, module: module2, name, typeParams } = typeof type === "string" ? parseStructTag(type) : type;
-  const formattedTypeParams = typeParams.length > 0 ? `<${typeParams.map(
+  const formattedTypeParams = typeParams?.length > 0 ? `<${typeParams.map(
     (typeParam) => typeof typeParam === "string" ? typeParam : normalizeStructTag(typeParam)
   ).join(",")}>` : "";
   return `${address}::${module2}::${name}${formattedTypeParams}`;
@@ -11770,7 +11568,7 @@ function publicKeyFromRawBytes(signatureScheme, bytes) {
 }
 
 
-},{"../cryptography/index.js":44,"../keypairs/ed25519/publickey.js":55,"../keypairs/secp256k1/publickey.js":56,"../keypairs/secp256r1/publickey.js":57,"../multisig/publickey.js":59,"../zklogin/publickey.js":72}],68:[function(require,module,exports){
+},{"../cryptography/index.js":33,"../keypairs/ed25519/publickey.js":44,"../keypairs/secp256k1/publickey.js":47,"../keypairs/secp256r1/publickey.js":50,"../multisig/publickey.js":52,"../zklogin/publickey.js":72}],68:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11795,8 +11593,8 @@ __export(version_exports, {
   TARGETED_RPC_VERSION: () => TARGETED_RPC_VERSION
 });
 module.exports = __toCommonJS(version_exports);
-const PACKAGE_VERSION = "0.49.1";
-const TARGETED_RPC_VERSION = "1.17.0";
+const PACKAGE_VERSION = "0.51.2";
+const TARGETED_RPC_VERSION = "1.23.0";
 
 
 },{}],69:[function(require,module,exports){
@@ -11845,7 +11643,7 @@ function computeZkLoginAddressFromSeed(addressSeed, iss) {
 }
 
 
-},{"../cryptography/signature-scheme.js":49,"../utils/index.js":65,"./utils.js":74,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],70:[function(require,module,exports){
+},{"../cryptography/signature-scheme.js":38,"../utils/index.js":65,"./utils.js":74,"@noble/hashes/blake2b":93,"@noble/hashes/utils":99}],70:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -12073,7 +11871,7 @@ function toZkLoginPublicIdentifier(addressSeed, iss) {
 }
 
 
-},{"../cryptography/publickey.js":48,"../cryptography/signature-scheme.js":49,"./utils.js":74,"@mysten/bcs":12}],73:[function(require,module,exports){
+},{"../cryptography/publickey.js":37,"../cryptography/signature-scheme.js":38,"./utils.js":74,"@mysten/bcs":12}],73:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -12123,7 +11921,7 @@ function parseZkLoginSignature(signature) {
 }
 
 
-},{"../cryptography/signature-scheme.js":49,"./bcs.js":70,"@mysten/bcs":12}],74:[function(require,module,exports){
+},{"../cryptography/signature-scheme.js":38,"./bcs.js":70,"@mysten/bcs":12}],74:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -16931,6 +16729,642 @@ const bytes = exports.bytes = stringToBytes;
 
 },{}],101:[function(require,module,exports){
 "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.HDKey = exports.HARDENED_OFFSET = void 0;
+var _hmac = require("@noble/hashes/hmac");
+var _ripemd = require("@noble/hashes/ripemd160");
+var _sha = require("@noble/hashes/sha256");
+var _sha2 = require("@noble/hashes/sha512");
+var _assert = require("@noble/hashes/_assert");
+var _utils = require("@noble/hashes/utils");
+var _secp256k = require("@noble/curves/secp256k1");
+var _modular = require("@noble/curves/abstract/modular");
+var _base = require("@scure/base");
+/*! scure-bip32 - MIT License (c) 2022 Patricio Palladino, Paul Miller (paulmillr.com) */
+
+const Point = _secp256k.secp256k1.ProjectivePoint;
+const base58check = (0, _base.createBase58check)(_sha.sha256);
+function bytesToNumber(bytes) {
+  return BigInt(`0x${(0, _utils.bytesToHex)(bytes)}`);
+}
+function numberToBytes(num) {
+  return (0, _utils.hexToBytes)(num.toString(16).padStart(64, '0'));
+}
+const MASTER_SECRET = (0, _utils.utf8ToBytes)('Bitcoin seed');
+// Bitcoin hardcoded by default
+const BITCOIN_VERSIONS = {
+  private: 0x0488ade4,
+  public: 0x0488b21e
+};
+const HARDENED_OFFSET = exports.HARDENED_OFFSET = 0x80000000;
+const hash160 = data => (0, _ripemd.ripemd160)((0, _sha.sha256)(data));
+const fromU32 = data => (0, _utils.createView)(data).getUint32(0, false);
+const toU32 = n => {
+  if (!Number.isSafeInteger(n) || n < 0 || n > 2 ** 32 - 1) {
+    throw new Error(`Invalid number=${n}. Should be from 0 to 2 ** 32 - 1`);
+  }
+  const buf = new Uint8Array(4);
+  (0, _utils.createView)(buf).setUint32(0, n, false);
+  return buf;
+};
+class HDKey {
+  get fingerprint() {
+    if (!this.pubHash) {
+      throw new Error('No publicKey set!');
+    }
+    return fromU32(this.pubHash);
+  }
+  get identifier() {
+    return this.pubHash;
+  }
+  get pubKeyHash() {
+    return this.pubHash;
+  }
+  get privateKey() {
+    return this.privKeyBytes || null;
+  }
+  get publicKey() {
+    return this.pubKey || null;
+  }
+  get privateExtendedKey() {
+    const priv = this.privateKey;
+    if (!priv) {
+      throw new Error('No private key');
+    }
+    return base58check.encode(this.serialize(this.versions.private, (0, _utils.concatBytes)(new Uint8Array([0]), priv)));
+  }
+  get publicExtendedKey() {
+    if (!this.pubKey) {
+      throw new Error('No public key');
+    }
+    return base58check.encode(this.serialize(this.versions.public, this.pubKey));
+  }
+  static fromMasterSeed(seed, versions = BITCOIN_VERSIONS) {
+    (0, _assert.bytes)(seed);
+    if (8 * seed.length < 128 || 8 * seed.length > 512) {
+      throw new Error(`HDKey: wrong seed length=${seed.length}. Should be between 128 and 512 bits; 256 bits is advised)`);
+    }
+    const I = (0, _hmac.hmac)(_sha2.sha512, MASTER_SECRET, seed);
+    return new HDKey({
+      versions,
+      chainCode: I.slice(32),
+      privateKey: I.slice(0, 32)
+    });
+  }
+  static fromExtendedKey(base58key, versions = BITCOIN_VERSIONS) {
+    // => version(4) || depth(1) || fingerprint(4) || index(4) || chain(32) || key(33)
+    const keyBuffer = base58check.decode(base58key);
+    const keyView = (0, _utils.createView)(keyBuffer);
+    const version = keyView.getUint32(0, false);
+    const opt = {
+      versions,
+      depth: keyBuffer[4],
+      parentFingerprint: keyView.getUint32(5, false),
+      index: keyView.getUint32(9, false),
+      chainCode: keyBuffer.slice(13, 45)
+    };
+    const key = keyBuffer.slice(45);
+    const isPriv = key[0] === 0;
+    if (version !== versions[isPriv ? 'private' : 'public']) {
+      throw new Error('Version mismatch');
+    }
+    if (isPriv) {
+      return new HDKey({
+        ...opt,
+        privateKey: key.slice(1)
+      });
+    } else {
+      return new HDKey({
+        ...opt,
+        publicKey: key
+      });
+    }
+  }
+  static fromJSON(json) {
+    return HDKey.fromExtendedKey(json.xpriv);
+  }
+  constructor(opt) {
+    this.depth = 0;
+    this.index = 0;
+    this.chainCode = null;
+    this.parentFingerprint = 0;
+    if (!opt || typeof opt !== 'object') {
+      throw new Error('HDKey.constructor must not be called directly');
+    }
+    this.versions = opt.versions || BITCOIN_VERSIONS;
+    this.depth = opt.depth || 0;
+    this.chainCode = opt.chainCode || null;
+    this.index = opt.index || 0;
+    this.parentFingerprint = opt.parentFingerprint || 0;
+    if (!this.depth) {
+      if (this.parentFingerprint || this.index) {
+        throw new Error('HDKey: zero depth with non-zero index/parent fingerprint');
+      }
+    }
+    if (opt.publicKey && opt.privateKey) {
+      throw new Error('HDKey: publicKey and privateKey at same time.');
+    }
+    if (opt.privateKey) {
+      if (!_secp256k.secp256k1.utils.isValidPrivateKey(opt.privateKey)) {
+        throw new Error('Invalid private key');
+      }
+      this.privKey = typeof opt.privateKey === 'bigint' ? opt.privateKey : bytesToNumber(opt.privateKey);
+      this.privKeyBytes = numberToBytes(this.privKey);
+      this.pubKey = _secp256k.secp256k1.getPublicKey(opt.privateKey, true);
+    } else if (opt.publicKey) {
+      this.pubKey = Point.fromHex(opt.publicKey).toRawBytes(true); // force compressed point
+    } else {
+      throw new Error('HDKey: no public or private key provided');
+    }
+    this.pubHash = hash160(this.pubKey);
+  }
+  derive(path) {
+    if (!/^[mM]'?/.test(path)) {
+      throw new Error('Path must start with "m" or "M"');
+    }
+    if (/^[mM]'?$/.test(path)) {
+      return this;
+    }
+    const parts = path.replace(/^[mM]'?\//, '').split('/');
+    // tslint:disable-next-line
+    let child = this;
+    for (const c of parts) {
+      const m = /^(\d+)('?)$/.exec(c);
+      const m1 = m && m[1];
+      if (!m || m.length !== 3 || typeof m1 !== 'string') {
+        throw new Error(`Invalid child index: ${c}`);
+      }
+      let idx = +m1;
+      if (!Number.isSafeInteger(idx) || idx >= HARDENED_OFFSET) {
+        throw new Error('Invalid index');
+      }
+      // hardened key
+      if (m[2] === "'") {
+        idx += HARDENED_OFFSET;
+      }
+      child = child.deriveChild(idx);
+    }
+    return child;
+  }
+  deriveChild(index) {
+    if (!this.pubKey || !this.chainCode) {
+      throw new Error('No publicKey or chainCode set');
+    }
+    let data = toU32(index);
+    if (index >= HARDENED_OFFSET) {
+      // Hardened
+      const priv = this.privateKey;
+      if (!priv) {
+        throw new Error('Could not derive hardened child key');
+      }
+      // Hardened child: 0x00 || ser256(kpar) || ser32(index)
+      data = (0, _utils.concatBytes)(new Uint8Array([0]), priv, data);
+    } else {
+      // Normal child: serP(point(kpar)) || ser32(index)
+      data = (0, _utils.concatBytes)(this.pubKey, data);
+    }
+    const I = (0, _hmac.hmac)(_sha2.sha512, this.chainCode, data);
+    const childTweak = bytesToNumber(I.slice(0, 32));
+    const chainCode = I.slice(32);
+    if (!_secp256k.secp256k1.utils.isValidPrivateKey(childTweak)) {
+      throw new Error('Tweak bigger than curve order');
+    }
+    const opt = {
+      versions: this.versions,
+      chainCode,
+      depth: this.depth + 1,
+      parentFingerprint: this.fingerprint,
+      index
+    };
+    try {
+      // Private parent key -> private child key
+      if (this.privateKey) {
+        const added = (0, _modular.mod)(this.privKey + childTweak, _secp256k.secp256k1.CURVE.n);
+        if (!_secp256k.secp256k1.utils.isValidPrivateKey(added)) {
+          throw new Error('The tweak was out of range or the resulted private key is invalid');
+        }
+        opt.privateKey = added;
+      } else {
+        const added = Point.fromHex(this.pubKey).add(Point.fromPrivateKey(childTweak));
+        // Cryptographically impossible: hmac-sha512 preimage would need to be found
+        if (added.equals(Point.ZERO)) {
+          throw new Error('The tweak was equal to negative P, which made the result key invalid');
+        }
+        opt.publicKey = added.toRawBytes(true);
+      }
+      return new HDKey(opt);
+    } catch (err) {
+      return this.deriveChild(index + 1);
+    }
+  }
+  sign(hash) {
+    if (!this.privateKey) {
+      throw new Error('No privateKey set!');
+    }
+    (0, _assert.bytes)(hash, 32);
+    return _secp256k.secp256k1.sign(hash, this.privKey).toCompactRawBytes();
+  }
+  verify(hash, signature) {
+    (0, _assert.bytes)(hash, 32);
+    (0, _assert.bytes)(signature, 64);
+    if (!this.publicKey) {
+      throw new Error('No publicKey set!');
+    }
+    let sig;
+    try {
+      sig = _secp256k.secp256k1.Signature.fromCompact(signature);
+    } catch (error) {
+      return false;
+    }
+    return _secp256k.secp256k1.verify(sig, hash, this.publicKey);
+  }
+  wipePrivateData() {
+    this.privKey = undefined;
+    if (this.privKeyBytes) {
+      this.privKeyBytes.fill(0);
+      this.privKeyBytes = undefined;
+    }
+    return this;
+  }
+  toJSON() {
+    return {
+      xpriv: this.privateExtendedKey,
+      xpub: this.publicExtendedKey
+    };
+  }
+  serialize(version, key) {
+    if (!this.chainCode) {
+      throw new Error('No chainCode set');
+    }
+    (0, _assert.bytes)(key, 33);
+    // version(4) || depth(1) || fingerprint(4) || index(4) || chain(32) || key(33)
+    return (0, _utils.concatBytes)(toU32(version), new Uint8Array([this.depth]), toU32(this.parentFingerprint), toU32(this.index), this.chainCode, key);
+  }
+}
+exports.HDKey = HDKey;
+
+},{"@noble/curves/abstract/modular":78,"@noble/curves/secp256k1":88,"@noble/hashes/_assert":102,"@noble/hashes/hmac":106,"@noble/hashes/ripemd160":107,"@noble/hashes/sha256":108,"@noble/hashes/sha512":109,"@noble/hashes/utils":110,"@scure/base":100}],102:[function(require,module,exports){
+arguments[4][81][0].apply(exports,arguments)
+},{"dup":81}],103:[function(require,module,exports){
+arguments[4][82][0].apply(exports,arguments)
+},{"./_assert.js":102,"./utils.js":110,"dup":82}],104:[function(require,module,exports){
+arguments[4][92][0].apply(exports,arguments)
+},{"dup":92}],105:[function(require,module,exports){
+arguments[4][83][0].apply(exports,arguments)
+},{"dup":83}],106:[function(require,module,exports){
+arguments[4][84][0].apply(exports,arguments)
+},{"./_assert.js":102,"./utils.js":110,"dup":84}],107:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ripemd160 = exports.RIPEMD160 = void 0;
+const _md_js_1 = require("./_md.js");
+const utils_js_1 = require("./utils.js");
+// https://homes.esat.kuleuven.be/~bosselae/ripemd160.html
+// https://homes.esat.kuleuven.be/~bosselae/ripemd160/pdf/AB-9601/AB-9601.pdf
+const Rho = /* @__PURE__ */ new Uint8Array([7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8]);
+const Id = /* @__PURE__ */ new Uint8Array(new Array(16).fill(0).map((_, i) => i));
+const Pi = /* @__PURE__ */ Id.map((i) => (9 * i + 5) % 16);
+let idxL = [Id];
+let idxR = [Pi];
+for (let i = 0; i < 4; i++)
+    for (let j of [idxL, idxR])
+        j.push(j[i].map((k) => Rho[k]));
+const shifts = /* @__PURE__ */ [
+    [11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8],
+    [12, 13, 11, 15, 6, 9, 9, 7, 12, 15, 11, 13, 7, 8, 7, 7],
+    [13, 15, 14, 11, 7, 7, 6, 8, 13, 14, 13, 12, 5, 5, 6, 9],
+    [14, 11, 12, 14, 8, 6, 5, 5, 15, 12, 15, 14, 9, 9, 8, 6],
+    [15, 12, 13, 13, 9, 5, 8, 6, 14, 11, 12, 11, 8, 6, 5, 5],
+].map((i) => new Uint8Array(i));
+const shiftsL = /* @__PURE__ */ idxL.map((idx, i) => idx.map((j) => shifts[i][j]));
+const shiftsR = /* @__PURE__ */ idxR.map((idx, i) => idx.map((j) => shifts[i][j]));
+const Kl = /* @__PURE__ */ new Uint32Array([
+    0x00000000, 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xa953fd4e,
+]);
+const Kr = /* @__PURE__ */ new Uint32Array([
+    0x50a28be6, 0x5c4dd124, 0x6d703ef3, 0x7a6d76e9, 0x00000000,
+]);
+// It's called f() in spec.
+function f(group, x, y, z) {
+    if (group === 0)
+        return x ^ y ^ z;
+    else if (group === 1)
+        return (x & y) | (~x & z);
+    else if (group === 2)
+        return (x | ~y) ^ z;
+    else if (group === 3)
+        return (x & z) | (y & ~z);
+    else
+        return x ^ (y | ~z);
+}
+// Temporary buffer, not used to store anything between runs
+const R_BUF = /* @__PURE__ */ new Uint32Array(16);
+class RIPEMD160 extends _md_js_1.HashMD {
+    constructor() {
+        super(64, 20, 8, true);
+        this.h0 = 0x67452301 | 0;
+        this.h1 = 0xefcdab89 | 0;
+        this.h2 = 0x98badcfe | 0;
+        this.h3 = 0x10325476 | 0;
+        this.h4 = 0xc3d2e1f0 | 0;
+    }
+    get() {
+        const { h0, h1, h2, h3, h4 } = this;
+        return [h0, h1, h2, h3, h4];
+    }
+    set(h0, h1, h2, h3, h4) {
+        this.h0 = h0 | 0;
+        this.h1 = h1 | 0;
+        this.h2 = h2 | 0;
+        this.h3 = h3 | 0;
+        this.h4 = h4 | 0;
+    }
+    process(view, offset) {
+        for (let i = 0; i < 16; i++, offset += 4)
+            R_BUF[i] = view.getUint32(offset, true);
+        // prettier-ignore
+        let al = this.h0 | 0, ar = al, bl = this.h1 | 0, br = bl, cl = this.h2 | 0, cr = cl, dl = this.h3 | 0, dr = dl, el = this.h4 | 0, er = el;
+        // Instead of iterating 0 to 80, we split it into 5 groups
+        // And use the groups in constants, functions, etc. Much simpler
+        for (let group = 0; group < 5; group++) {
+            const rGroup = 4 - group;
+            const hbl = Kl[group], hbr = Kr[group]; // prettier-ignore
+            const rl = idxL[group], rr = idxR[group]; // prettier-ignore
+            const sl = shiftsL[group], sr = shiftsR[group]; // prettier-ignore
+            for (let i = 0; i < 16; i++) {
+                const tl = ((0, utils_js_1.rotl)(al + f(group, bl, cl, dl) + R_BUF[rl[i]] + hbl, sl[i]) + el) | 0;
+                al = el, el = dl, dl = (0, utils_js_1.rotl)(cl, 10) | 0, cl = bl, bl = tl; // prettier-ignore
+            }
+            // 2 loops are 10% faster
+            for (let i = 0; i < 16; i++) {
+                const tr = ((0, utils_js_1.rotl)(ar + f(rGroup, br, cr, dr) + R_BUF[rr[i]] + hbr, sr[i]) + er) | 0;
+                ar = er, er = dr, dr = (0, utils_js_1.rotl)(cr, 10) | 0, cr = br, br = tr; // prettier-ignore
+            }
+        }
+        // Add the compressed chunk to the current hash value
+        this.set((this.h1 + cl + dr) | 0, (this.h2 + dl + er) | 0, (this.h3 + el + ar) | 0, (this.h4 + al + br) | 0, (this.h0 + bl + cr) | 0);
+    }
+    roundClean() {
+        R_BUF.fill(0);
+    }
+    destroy() {
+        this.destroyed = true;
+        this.buffer.fill(0);
+        this.set(0, 0, 0, 0, 0);
+    }
+}
+exports.RIPEMD160 = RIPEMD160;
+/**
+ * RIPEMD-160 - a hash function from 1990s.
+ * @param message - msg that would be hashed
+ */
+exports.ripemd160 = (0, utils_js_1.wrapConstructor)(() => new RIPEMD160());
+
+},{"./_md.js":103,"./utils.js":110}],108:[function(require,module,exports){
+arguments[4][85][0].apply(exports,arguments)
+},{"./_md.js":103,"./utils.js":110,"dup":85}],109:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.sha384 = exports.sha512_256 = exports.sha512_224 = exports.sha512 = exports.SHA512 = void 0;
+const _md_js_1 = require("./_md.js");
+const _u64_js_1 = require("./_u64.js");
+const utils_js_1 = require("./utils.js");
+// Round contants (first 32 bits of the fractional parts of the cube roots of the first 80 primes 2..409):
+// prettier-ignore
+const [SHA512_Kh, SHA512_Kl] = /* @__PURE__ */ (() => _u64_js_1.default.split([
+    '0x428a2f98d728ae22', '0x7137449123ef65cd', '0xb5c0fbcfec4d3b2f', '0xe9b5dba58189dbbc',
+    '0x3956c25bf348b538', '0x59f111f1b605d019', '0x923f82a4af194f9b', '0xab1c5ed5da6d8118',
+    '0xd807aa98a3030242', '0x12835b0145706fbe', '0x243185be4ee4b28c', '0x550c7dc3d5ffb4e2',
+    '0x72be5d74f27b896f', '0x80deb1fe3b1696b1', '0x9bdc06a725c71235', '0xc19bf174cf692694',
+    '0xe49b69c19ef14ad2', '0xefbe4786384f25e3', '0x0fc19dc68b8cd5b5', '0x240ca1cc77ac9c65',
+    '0x2de92c6f592b0275', '0x4a7484aa6ea6e483', '0x5cb0a9dcbd41fbd4', '0x76f988da831153b5',
+    '0x983e5152ee66dfab', '0xa831c66d2db43210', '0xb00327c898fb213f', '0xbf597fc7beef0ee4',
+    '0xc6e00bf33da88fc2', '0xd5a79147930aa725', '0x06ca6351e003826f', '0x142929670a0e6e70',
+    '0x27b70a8546d22ffc', '0x2e1b21385c26c926', '0x4d2c6dfc5ac42aed', '0x53380d139d95b3df',
+    '0x650a73548baf63de', '0x766a0abb3c77b2a8', '0x81c2c92e47edaee6', '0x92722c851482353b',
+    '0xa2bfe8a14cf10364', '0xa81a664bbc423001', '0xc24b8b70d0f89791', '0xc76c51a30654be30',
+    '0xd192e819d6ef5218', '0xd69906245565a910', '0xf40e35855771202a', '0x106aa07032bbd1b8',
+    '0x19a4c116b8d2d0c8', '0x1e376c085141ab53', '0x2748774cdf8eeb99', '0x34b0bcb5e19b48a8',
+    '0x391c0cb3c5c95a63', '0x4ed8aa4ae3418acb', '0x5b9cca4f7763e373', '0x682e6ff3d6b2b8a3',
+    '0x748f82ee5defb2fc', '0x78a5636f43172f60', '0x84c87814a1f0ab72', '0x8cc702081a6439ec',
+    '0x90befffa23631e28', '0xa4506cebde82bde9', '0xbef9a3f7b2c67915', '0xc67178f2e372532b',
+    '0xca273eceea26619c', '0xd186b8c721c0c207', '0xeada7dd6cde0eb1e', '0xf57d4f7fee6ed178',
+    '0x06f067aa72176fba', '0x0a637dc5a2c898a6', '0x113f9804bef90dae', '0x1b710b35131c471b',
+    '0x28db77f523047d84', '0x32caab7b40c72493', '0x3c9ebe0a15c9bebc', '0x431d67c49c100d4c',
+    '0x4cc5d4becb3e42b6', '0x597f299cfc657e2a', '0x5fcb6fab3ad6faec', '0x6c44198c4a475817'
+].map(n => BigInt(n))))();
+// Temporary buffer, not used to store anything between runs
+const SHA512_W_H = /* @__PURE__ */ new Uint32Array(80);
+const SHA512_W_L = /* @__PURE__ */ new Uint32Array(80);
+class SHA512 extends _md_js_1.HashMD {
+    constructor() {
+        super(128, 64, 16, false);
+        // We cannot use array here since array allows indexing by variable which means optimizer/compiler cannot use registers.
+        // Also looks cleaner and easier to verify with spec.
+        // Initial state (first 32 bits of the fractional parts of the square roots of the first 8 primes 2..19):
+        // h -- high 32 bits, l -- low 32 bits
+        this.Ah = 0x6a09e667 | 0;
+        this.Al = 0xf3bcc908 | 0;
+        this.Bh = 0xbb67ae85 | 0;
+        this.Bl = 0x84caa73b | 0;
+        this.Ch = 0x3c6ef372 | 0;
+        this.Cl = 0xfe94f82b | 0;
+        this.Dh = 0xa54ff53a | 0;
+        this.Dl = 0x5f1d36f1 | 0;
+        this.Eh = 0x510e527f | 0;
+        this.El = 0xade682d1 | 0;
+        this.Fh = 0x9b05688c | 0;
+        this.Fl = 0x2b3e6c1f | 0;
+        this.Gh = 0x1f83d9ab | 0;
+        this.Gl = 0xfb41bd6b | 0;
+        this.Hh = 0x5be0cd19 | 0;
+        this.Hl = 0x137e2179 | 0;
+    }
+    // prettier-ignore
+    get() {
+        const { Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl } = this;
+        return [Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl];
+    }
+    // prettier-ignore
+    set(Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl) {
+        this.Ah = Ah | 0;
+        this.Al = Al | 0;
+        this.Bh = Bh | 0;
+        this.Bl = Bl | 0;
+        this.Ch = Ch | 0;
+        this.Cl = Cl | 0;
+        this.Dh = Dh | 0;
+        this.Dl = Dl | 0;
+        this.Eh = Eh | 0;
+        this.El = El | 0;
+        this.Fh = Fh | 0;
+        this.Fl = Fl | 0;
+        this.Gh = Gh | 0;
+        this.Gl = Gl | 0;
+        this.Hh = Hh | 0;
+        this.Hl = Hl | 0;
+    }
+    process(view, offset) {
+        // Extend the first 16 words into the remaining 64 words w[16..79] of the message schedule array
+        for (let i = 0; i < 16; i++, offset += 4) {
+            SHA512_W_H[i] = view.getUint32(offset);
+            SHA512_W_L[i] = view.getUint32((offset += 4));
+        }
+        for (let i = 16; i < 80; i++) {
+            // s0 := (w[i-15] rightrotate 1) xor (w[i-15] rightrotate 8) xor (w[i-15] rightshift 7)
+            const W15h = SHA512_W_H[i - 15] | 0;
+            const W15l = SHA512_W_L[i - 15] | 0;
+            const s0h = _u64_js_1.default.rotrSH(W15h, W15l, 1) ^ _u64_js_1.default.rotrSH(W15h, W15l, 8) ^ _u64_js_1.default.shrSH(W15h, W15l, 7);
+            const s0l = _u64_js_1.default.rotrSL(W15h, W15l, 1) ^ _u64_js_1.default.rotrSL(W15h, W15l, 8) ^ _u64_js_1.default.shrSL(W15h, W15l, 7);
+            // s1 := (w[i-2] rightrotate 19) xor (w[i-2] rightrotate 61) xor (w[i-2] rightshift 6)
+            const W2h = SHA512_W_H[i - 2] | 0;
+            const W2l = SHA512_W_L[i - 2] | 0;
+            const s1h = _u64_js_1.default.rotrSH(W2h, W2l, 19) ^ _u64_js_1.default.rotrBH(W2h, W2l, 61) ^ _u64_js_1.default.shrSH(W2h, W2l, 6);
+            const s1l = _u64_js_1.default.rotrSL(W2h, W2l, 19) ^ _u64_js_1.default.rotrBL(W2h, W2l, 61) ^ _u64_js_1.default.shrSL(W2h, W2l, 6);
+            // SHA256_W[i] = s0 + s1 + SHA256_W[i - 7] + SHA256_W[i - 16];
+            const SUMl = _u64_js_1.default.add4L(s0l, s1l, SHA512_W_L[i - 7], SHA512_W_L[i - 16]);
+            const SUMh = _u64_js_1.default.add4H(SUMl, s0h, s1h, SHA512_W_H[i - 7], SHA512_W_H[i - 16]);
+            SHA512_W_H[i] = SUMh | 0;
+            SHA512_W_L[i] = SUMl | 0;
+        }
+        let { Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl } = this;
+        // Compression function main loop, 80 rounds
+        for (let i = 0; i < 80; i++) {
+            // S1 := (e rightrotate 14) xor (e rightrotate 18) xor (e rightrotate 41)
+            const sigma1h = _u64_js_1.default.rotrSH(Eh, El, 14) ^ _u64_js_1.default.rotrSH(Eh, El, 18) ^ _u64_js_1.default.rotrBH(Eh, El, 41);
+            const sigma1l = _u64_js_1.default.rotrSL(Eh, El, 14) ^ _u64_js_1.default.rotrSL(Eh, El, 18) ^ _u64_js_1.default.rotrBL(Eh, El, 41);
+            //const T1 = (H + sigma1 + Chi(E, F, G) + SHA256_K[i] + SHA256_W[i]) | 0;
+            const CHIh = (Eh & Fh) ^ (~Eh & Gh);
+            const CHIl = (El & Fl) ^ (~El & Gl);
+            // T1 = H + sigma1 + Chi(E, F, G) + SHA512_K[i] + SHA512_W[i]
+            // prettier-ignore
+            const T1ll = _u64_js_1.default.add5L(Hl, sigma1l, CHIl, SHA512_Kl[i], SHA512_W_L[i]);
+            const T1h = _u64_js_1.default.add5H(T1ll, Hh, sigma1h, CHIh, SHA512_Kh[i], SHA512_W_H[i]);
+            const T1l = T1ll | 0;
+            // S0 := (a rightrotate 28) xor (a rightrotate 34) xor (a rightrotate 39)
+            const sigma0h = _u64_js_1.default.rotrSH(Ah, Al, 28) ^ _u64_js_1.default.rotrBH(Ah, Al, 34) ^ _u64_js_1.default.rotrBH(Ah, Al, 39);
+            const sigma0l = _u64_js_1.default.rotrSL(Ah, Al, 28) ^ _u64_js_1.default.rotrBL(Ah, Al, 34) ^ _u64_js_1.default.rotrBL(Ah, Al, 39);
+            const MAJh = (Ah & Bh) ^ (Ah & Ch) ^ (Bh & Ch);
+            const MAJl = (Al & Bl) ^ (Al & Cl) ^ (Bl & Cl);
+            Hh = Gh | 0;
+            Hl = Gl | 0;
+            Gh = Fh | 0;
+            Gl = Fl | 0;
+            Fh = Eh | 0;
+            Fl = El | 0;
+            ({ h: Eh, l: El } = _u64_js_1.default.add(Dh | 0, Dl | 0, T1h | 0, T1l | 0));
+            Dh = Ch | 0;
+            Dl = Cl | 0;
+            Ch = Bh | 0;
+            Cl = Bl | 0;
+            Bh = Ah | 0;
+            Bl = Al | 0;
+            const All = _u64_js_1.default.add3L(T1l, sigma0l, MAJl);
+            Ah = _u64_js_1.default.add3H(All, T1h, sigma0h, MAJh);
+            Al = All | 0;
+        }
+        // Add the compressed chunk to the current hash value
+        ({ h: Ah, l: Al } = _u64_js_1.default.add(this.Ah | 0, this.Al | 0, Ah | 0, Al | 0));
+        ({ h: Bh, l: Bl } = _u64_js_1.default.add(this.Bh | 0, this.Bl | 0, Bh | 0, Bl | 0));
+        ({ h: Ch, l: Cl } = _u64_js_1.default.add(this.Ch | 0, this.Cl | 0, Ch | 0, Cl | 0));
+        ({ h: Dh, l: Dl } = _u64_js_1.default.add(this.Dh | 0, this.Dl | 0, Dh | 0, Dl | 0));
+        ({ h: Eh, l: El } = _u64_js_1.default.add(this.Eh | 0, this.El | 0, Eh | 0, El | 0));
+        ({ h: Fh, l: Fl } = _u64_js_1.default.add(this.Fh | 0, this.Fl | 0, Fh | 0, Fl | 0));
+        ({ h: Gh, l: Gl } = _u64_js_1.default.add(this.Gh | 0, this.Gl | 0, Gh | 0, Gl | 0));
+        ({ h: Hh, l: Hl } = _u64_js_1.default.add(this.Hh | 0, this.Hl | 0, Hh | 0, Hl | 0));
+        this.set(Ah, Al, Bh, Bl, Ch, Cl, Dh, Dl, Eh, El, Fh, Fl, Gh, Gl, Hh, Hl);
+    }
+    roundClean() {
+        SHA512_W_H.fill(0);
+        SHA512_W_L.fill(0);
+    }
+    destroy() {
+        this.buffer.fill(0);
+        this.set(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    }
+}
+exports.SHA512 = SHA512;
+class SHA512_224 extends SHA512 {
+    constructor() {
+        super();
+        // h -- high 32 bits, l -- low 32 bits
+        this.Ah = 0x8c3d37c8 | 0;
+        this.Al = 0x19544da2 | 0;
+        this.Bh = 0x73e19966 | 0;
+        this.Bl = 0x89dcd4d6 | 0;
+        this.Ch = 0x1dfab7ae | 0;
+        this.Cl = 0x32ff9c82 | 0;
+        this.Dh = 0x679dd514 | 0;
+        this.Dl = 0x582f9fcf | 0;
+        this.Eh = 0x0f6d2b69 | 0;
+        this.El = 0x7bd44da8 | 0;
+        this.Fh = 0x77e36f73 | 0;
+        this.Fl = 0x04c48942 | 0;
+        this.Gh = 0x3f9d85a8 | 0;
+        this.Gl = 0x6a1d36c8 | 0;
+        this.Hh = 0x1112e6ad | 0;
+        this.Hl = 0x91d692a1 | 0;
+        this.outputLen = 28;
+    }
+}
+class SHA512_256 extends SHA512 {
+    constructor() {
+        super();
+        // h -- high 32 bits, l -- low 32 bits
+        this.Ah = 0x22312194 | 0;
+        this.Al = 0xfc2bf72c | 0;
+        this.Bh = 0x9f555fa3 | 0;
+        this.Bl = 0xc84c64c2 | 0;
+        this.Ch = 0x2393b86b | 0;
+        this.Cl = 0x6f53b151 | 0;
+        this.Dh = 0x96387719 | 0;
+        this.Dl = 0x5940eabd | 0;
+        this.Eh = 0x96283ee2 | 0;
+        this.El = 0xa88effe3 | 0;
+        this.Fh = 0xbe5e1e25 | 0;
+        this.Fl = 0x53863992 | 0;
+        this.Gh = 0x2b0199fc | 0;
+        this.Gl = 0x2c85b8aa | 0;
+        this.Hh = 0x0eb72ddc | 0;
+        this.Hl = 0x81c52ca2 | 0;
+        this.outputLen = 32;
+    }
+}
+class SHA384 extends SHA512 {
+    constructor() {
+        super();
+        // h -- high 32 bits, l -- low 32 bits
+        this.Ah = 0xcbbb9d5d | 0;
+        this.Al = 0xc1059ed8 | 0;
+        this.Bh = 0x629a292a | 0;
+        this.Bl = 0x367cd507 | 0;
+        this.Ch = 0x9159015a | 0;
+        this.Cl = 0x3070dd17 | 0;
+        this.Dh = 0x152fecd8 | 0;
+        this.Dl = 0xf70e5939 | 0;
+        this.Eh = 0x67332667 | 0;
+        this.El = 0xffc00b31 | 0;
+        this.Fh = 0x8eb44a87 | 0;
+        this.Fl = 0x68581511 | 0;
+        this.Gh = 0xdb0c2e0d | 0;
+        this.Gl = 0x64f98fa7 | 0;
+        this.Hh = 0x47b5481d | 0;
+        this.Hl = 0xbefa4fa4 | 0;
+        this.outputLen = 48;
+    }
+}
+exports.sha512 = (0, utils_js_1.wrapConstructor)(() => new SHA512());
+exports.sha512_224 = (0, utils_js_1.wrapConstructor)(() => new SHA512_224());
+exports.sha512_256 = (0, utils_js_1.wrapConstructor)(() => new SHA512_256());
+exports.sha384 = (0, utils_js_1.wrapConstructor)(() => new SHA384());
+
+},{"./_md.js":103,"./_u64.js":104,"./utils.js":110}],110:[function(require,module,exports){
+arguments[4][86][0].apply(exports,arguments)
+},{"./_assert.js":102,"@noble/hashes/crypto":105,"dup":86}],111:[function(require,module,exports){
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mnemonicToSeedSync = exports.mnemonicToSeed = exports.validateMnemonic = exports.entropyToMnemonic = exports.mnemonicToEntropy = exports.generateMnemonic = void 0;
 /*! scure-bip39 - MIT License (c) 2022 Patricio Palladino, Paul Miller (paulmillr.com) */
@@ -17073,7 +17507,7 @@ function mnemonicToSeedSync(mnemonic, passphrase = '') {
 }
 exports.mnemonicToSeedSync = mnemonicToSeedSync;
 
-},{"@noble/hashes/_assert":89,"@noble/hashes/pbkdf2":96,"@noble/hashes/sha256":97,"@noble/hashes/sha512":98,"@noble/hashes/utils":99,"@scure/base":100}],102:[function(require,module,exports){
+},{"@noble/hashes/_assert":89,"@noble/hashes/pbkdf2":96,"@noble/hashes/sha256":97,"@noble/hashes/sha512":98,"@noble/hashes/utils":99,"@scure/base":100}],112:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.wordlist = void 0;
@@ -19126,7 +19560,7 @@ zero
 zone
 zoo`.split('\n');
 
-},{}],103:[function(require,module,exports){
+},{}],113:[function(require,module,exports){
 'use strict'
 // base-x encoding / decoding
 // Copyright (c) 2018 base-x contributors
@@ -19249,7 +19683,179 @@ function base (ALPHABET) {
 }
 module.exports = base
 
-},{}],104:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
+'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.bech32m = exports.bech32 = void 0;
+const ALPHABET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+const ALPHABET_MAP = {};
+for (let z = 0; z < ALPHABET.length; z++) {
+    const x = ALPHABET.charAt(z);
+    ALPHABET_MAP[x] = z;
+}
+function polymodStep(pre) {
+    const b = pre >> 25;
+    return (((pre & 0x1ffffff) << 5) ^
+        (-((b >> 0) & 1) & 0x3b6a57b2) ^
+        (-((b >> 1) & 1) & 0x26508e6d) ^
+        (-((b >> 2) & 1) & 0x1ea119fa) ^
+        (-((b >> 3) & 1) & 0x3d4233dd) ^
+        (-((b >> 4) & 1) & 0x2a1462b3));
+}
+function prefixChk(prefix) {
+    let chk = 1;
+    for (let i = 0; i < prefix.length; ++i) {
+        const c = prefix.charCodeAt(i);
+        if (c < 33 || c > 126)
+            return 'Invalid prefix (' + prefix + ')';
+        chk = polymodStep(chk) ^ (c >> 5);
+    }
+    chk = polymodStep(chk);
+    for (let i = 0; i < prefix.length; ++i) {
+        const v = prefix.charCodeAt(i);
+        chk = polymodStep(chk) ^ (v & 0x1f);
+    }
+    return chk;
+}
+function convert(data, inBits, outBits, pad) {
+    let value = 0;
+    let bits = 0;
+    const maxV = (1 << outBits) - 1;
+    const result = [];
+    for (let i = 0; i < data.length; ++i) {
+        value = (value << inBits) | data[i];
+        bits += inBits;
+        while (bits >= outBits) {
+            bits -= outBits;
+            result.push((value >> bits) & maxV);
+        }
+    }
+    if (pad) {
+        if (bits > 0) {
+            result.push((value << (outBits - bits)) & maxV);
+        }
+    }
+    else {
+        if (bits >= inBits)
+            return 'Excess padding';
+        if ((value << (outBits - bits)) & maxV)
+            return 'Non-zero padding';
+    }
+    return result;
+}
+function toWords(bytes) {
+    return convert(bytes, 8, 5, true);
+}
+function fromWordsUnsafe(words) {
+    const res = convert(words, 5, 8, false);
+    if (Array.isArray(res))
+        return res;
+}
+function fromWords(words) {
+    const res = convert(words, 5, 8, false);
+    if (Array.isArray(res))
+        return res;
+    throw new Error(res);
+}
+function getLibraryFromEncoding(encoding) {
+    let ENCODING_CONST;
+    if (encoding === 'bech32') {
+        ENCODING_CONST = 1;
+    }
+    else {
+        ENCODING_CONST = 0x2bc830a3;
+    }
+    function encode(prefix, words, LIMIT) {
+        LIMIT = LIMIT || 90;
+        if (prefix.length + 7 + words.length > LIMIT)
+            throw new TypeError('Exceeds length limit');
+        prefix = prefix.toLowerCase();
+        // determine chk mod
+        let chk = prefixChk(prefix);
+        if (typeof chk === 'string')
+            throw new Error(chk);
+        let result = prefix + '1';
+        for (let i = 0; i < words.length; ++i) {
+            const x = words[i];
+            if (x >> 5 !== 0)
+                throw new Error('Non 5-bit word');
+            chk = polymodStep(chk) ^ x;
+            result += ALPHABET.charAt(x);
+        }
+        for (let i = 0; i < 6; ++i) {
+            chk = polymodStep(chk);
+        }
+        chk ^= ENCODING_CONST;
+        for (let i = 0; i < 6; ++i) {
+            const v = (chk >> ((5 - i) * 5)) & 0x1f;
+            result += ALPHABET.charAt(v);
+        }
+        return result;
+    }
+    function __decode(str, LIMIT) {
+        LIMIT = LIMIT || 90;
+        if (str.length < 8)
+            return str + ' too short';
+        if (str.length > LIMIT)
+            return 'Exceeds length limit';
+        // don't allow mixed case
+        const lowered = str.toLowerCase();
+        const uppered = str.toUpperCase();
+        if (str !== lowered && str !== uppered)
+            return 'Mixed-case string ' + str;
+        str = lowered;
+        const split = str.lastIndexOf('1');
+        if (split === -1)
+            return 'No separator character for ' + str;
+        if (split === 0)
+            return 'Missing prefix for ' + str;
+        const prefix = str.slice(0, split);
+        const wordChars = str.slice(split + 1);
+        if (wordChars.length < 6)
+            return 'Data too short';
+        let chk = prefixChk(prefix);
+        if (typeof chk === 'string')
+            return chk;
+        const words = [];
+        for (let i = 0; i < wordChars.length; ++i) {
+            const c = wordChars.charAt(i);
+            const v = ALPHABET_MAP[c];
+            if (v === undefined)
+                return 'Unknown character ' + c;
+            chk = polymodStep(chk) ^ v;
+            // not in the checksum?
+            if (i + 6 >= wordChars.length)
+                continue;
+            words.push(v);
+        }
+        if (chk !== ENCODING_CONST)
+            return 'Invalid checksum for ' + str;
+        return { prefix, words };
+    }
+    function decodeUnsafe(str, LIMIT) {
+        const res = __decode(str, LIMIT);
+        if (typeof res === 'object')
+            return res;
+    }
+    function decode(str, LIMIT) {
+        const res = __decode(str, LIMIT);
+        if (typeof res === 'object')
+            return res;
+        throw new Error(res);
+    }
+    return {
+        decodeUnsafe,
+        decode,
+        encode,
+        toWords,
+        fromWordsUnsafe,
+        fromWords,
+    };
+}
+exports.bech32 = getLibraryFromEncoding('bech32');
+exports.bech32m = getLibraryFromEncoding('bech32m');
+
+},{}],115:[function(require,module,exports){
 (function (module, exports) {
   'use strict';
 
@@ -22798,15 +23404,15 @@ module.exports = base
   };
 })(typeof module === 'undefined' || module, this);
 
-},{"buffer":105}],105:[function(require,module,exports){
+},{"buffer":116}],116:[function(require,module,exports){
 
-},{}],106:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 const basex = require('base-x')
 const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 module.exports = basex(ALPHABET)
 
-},{"base-x":103}],107:[function(require,module,exports){
+},{"base-x":113}],118:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -22835,10 +23441,10 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],108:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 module.exports = require('./lib/api')(require('./lib/keccak'))
 
-},{"./lib/api":109,"./lib/keccak":113}],109:[function(require,module,exports){
+},{"./lib/api":120,"./lib/keccak":124}],120:[function(require,module,exports){
 const createKeccak = require('./keccak')
 const createShake = require('./shake')
 
@@ -22867,7 +23473,7 @@ module.exports = function (KeccakState) {
   }
 }
 
-},{"./keccak":110,"./shake":111}],110:[function(require,module,exports){
+},{"./keccak":121,"./shake":122}],121:[function(require,module,exports){
 (function (Buffer){(function (){
 const { Transform } = require('readable-stream')
 
@@ -22948,7 +23554,7 @@ module.exports = (KeccakState) => class Keccak extends Transform {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":2,"readable-stream":128}],111:[function(require,module,exports){
+},{"buffer":2,"readable-stream":139}],122:[function(require,module,exports){
 (function (Buffer){(function (){
 const { Transform } = require('readable-stream')
 
@@ -23020,7 +23626,7 @@ module.exports = (KeccakState) => class Shake extends Transform {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":2,"readable-stream":128}],112:[function(require,module,exports){
+},{"buffer":2,"readable-stream":139}],123:[function(require,module,exports){
 const P1600_ROUND_CONSTANTS = [1, 0, 32898, 0, 32906, 2147483648, 2147516416, 2147483648, 32907, 0, 2147483649, 0, 2147516545, 2147483648, 32777, 2147483648, 138, 0, 136, 0, 2147516425, 0, 2147483658, 0, 2147516555, 0, 139, 2147483648, 32905, 2147483648, 32771, 2147483648, 32770, 2147483648, 128, 2147483648, 32778, 0, 2147483658, 2147483648, 2147516545, 2147483648, 32896, 2147483648, 2147483649, 0, 2147516424, 2147483648]
 
 exports.p1600 = function (s) {
@@ -23208,7 +23814,7 @@ exports.p1600 = function (s) {
   }
 }
 
-},{}],113:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 (function (Buffer){(function (){
 const keccakState = require('./keccak-state-unroll')
 
@@ -23280,7 +23886,7 @@ Keccak.prototype.copy = function (dest) {
 module.exports = Keccak
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./keccak-state-unroll":112,"buffer":2}],114:[function(require,module,exports){
+},{"./keccak-state-unroll":123,"buffer":2}],125:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -23409,7 +24015,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],115:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 (function (process){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -23538,7 +24144,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this)}).call(this,require('_process'))
-},{"./_stream_readable":117,"./_stream_writable":119,"_process":5,"inherits":107}],116:[function(require,module,exports){
+},{"./_stream_readable":128,"./_stream_writable":130,"_process":5,"inherits":118}],127:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -23576,7 +24182,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":118,"inherits":107}],117:[function(require,module,exports){
+},{"./_stream_transform":129,"inherits":118}],128:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24606,7 +25212,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":114,"./_stream_duplex":115,"./internal/streams/async_iterator":120,"./internal/streams/buffer_list":121,"./internal/streams/destroy":122,"./internal/streams/from":124,"./internal/streams/state":126,"./internal/streams/stream":127,"_process":5,"buffer":2,"events":3,"inherits":107,"string_decoder/":131,"util":105}],118:[function(require,module,exports){
+},{"../errors":125,"./_stream_duplex":126,"./internal/streams/async_iterator":131,"./internal/streams/buffer_list":132,"./internal/streams/destroy":133,"./internal/streams/from":135,"./internal/streams/state":137,"./internal/streams/stream":138,"_process":5,"buffer":2,"events":3,"inherits":118,"string_decoder/":142,"util":116}],129:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24797,7 +25403,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":114,"./_stream_duplex":115,"inherits":107}],119:[function(require,module,exports){
+},{"../errors":125,"./_stream_duplex":126,"inherits":118}],130:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -25441,7 +26047,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":114,"./_stream_duplex":115,"./internal/streams/destroy":122,"./internal/streams/state":126,"./internal/streams/stream":127,"_process":5,"buffer":2,"inherits":107,"util-deprecate":134}],120:[function(require,module,exports){
+},{"../errors":125,"./_stream_duplex":126,"./internal/streams/destroy":133,"./internal/streams/state":137,"./internal/streams/stream":138,"_process":5,"buffer":2,"inherits":118,"util-deprecate":145}],131:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -25624,7 +26230,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 };
 module.exports = createReadableStreamAsyncIterator;
 }).call(this)}).call(this,require('_process'))
-},{"./end-of-stream":123,"_process":5}],121:[function(require,module,exports){
+},{"./end-of-stream":134,"_process":5}],132:[function(require,module,exports){
 'use strict';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
@@ -25808,7 +26414,7 @@ module.exports = /*#__PURE__*/function () {
   }]);
   return BufferList;
 }();
-},{"buffer":2,"util":105}],122:[function(require,module,exports){
+},{"buffer":2,"util":116}],133:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -25907,7 +26513,7 @@ module.exports = {
   errorOrDestroy: errorOrDestroy
 };
 }).call(this)}).call(this,require('_process'))
-},{"_process":5}],123:[function(require,module,exports){
+},{"_process":5}],134:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 
@@ -25994,12 +26600,12 @@ function eos(stream, opts, callback) {
   };
 }
 module.exports = eos;
-},{"../../../errors":114}],124:[function(require,module,exports){
+},{"../../../errors":125}],135:[function(require,module,exports){
 module.exports = function () {
   throw new Error('Readable.from is not available in the browser')
 };
 
-},{}],125:[function(require,module,exports){
+},{}],136:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 
@@ -26086,7 +26692,7 @@ function pipeline() {
   return streams.reduce(pipe);
 }
 module.exports = pipeline;
-},{"../../../errors":114,"./end-of-stream":123}],126:[function(require,module,exports){
+},{"../../../errors":125,"./end-of-stream":134}],137:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -26109,10 +26715,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":114}],127:[function(require,module,exports){
+},{"../../../errors":125}],138:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":3}],128:[function(require,module,exports){
+},{"events":3}],139:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -26123,7 +26729,7 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":115,"./lib/_stream_passthrough.js":116,"./lib/_stream_readable.js":117,"./lib/_stream_transform.js":118,"./lib/_stream_writable.js":119,"./lib/internal/streams/end-of-stream.js":123,"./lib/internal/streams/pipeline.js":125}],129:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":126,"./lib/_stream_passthrough.js":127,"./lib/_stream_readable.js":128,"./lib/_stream_transform.js":129,"./lib/_stream_writable.js":130,"./lib/internal/streams/end-of-stream.js":134,"./lib/internal/streams/pipeline.js":136}],140:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -26211,7 +26817,7 @@ if (typeof window !== 'undefined') {
 }
 module.exports = keccak256;
 
-},{"bn.js":104,"buffer":2,"keccak":108}],130:[function(require,module,exports){
+},{"bn.js":115,"buffer":2,"keccak":119}],141:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -26275,7 +26881,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":2}],131:[function(require,module,exports){
+},{"buffer":2}],142:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -26572,7 +27178,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":130}],132:[function(require,module,exports){
+},{"safe-buffer":141}],143:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27647,7 +28253,7 @@ function refine(struct, name, refiner) {
   });
 }
 
-},{}],133:[function(require,module,exports){
+},{}],144:[function(require,module,exports){
 (function(nacl) {
 'use strict';
 
@@ -30040,7 +30646,7 @@ nacl.setPRNG = function(fn) {
 
 })(typeof module !== 'undefined' && module.exports ? module.exports : (self.nacl = self.nacl || {}));
 
-},{"crypto":105}],134:[function(require,module,exports){
+},{"crypto":116}],145:[function(require,module,exports){
 (function (global){(function (){
 
 /**
@@ -30111,9 +30717,9 @@ function config (name) {
 }
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],135:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 var obelisk = require('@0xobelisk/sui-client');
 
 window.obelisk = obelisk;
 
-},{"@0xobelisk/sui-client":6}]},{},[135]);
+},{"@0xobelisk/sui-client":6}]},{},[146]);

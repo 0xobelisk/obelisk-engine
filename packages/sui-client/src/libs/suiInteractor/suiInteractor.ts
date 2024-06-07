@@ -288,6 +288,38 @@ export class SuiInteractor {
     return selectedCoins;
   }
 
+  /**
+   * @description Select owned objects with objectType.
+   * @param addr the address of the owner
+   * @param objectType the coin type, default is '0x2::SUI::SUI'
+   */
+  async selectObjects(addr: string, objectType: string) {
+    const selectedObjects = [];
+    let hasNext = true,
+      nextCursor: string | null | undefined = null;
+    while (hasNext) {
+      const ownedObjects = await this.currentClient.getOwnedObjects({
+        owner: addr,
+        cursor: nextCursor,
+      });
+
+      for (const objectData of ownedObjects.data) {
+        const objectDetail = await this.getObject(objectData.data!.objectId);
+        if (objectDetail.type === objectType) {
+          selectedObjects.push(objectDetail);
+        }
+      }
+
+      nextCursor = ownedObjects.nextCursor;
+      hasNext = ownedObjects.hasNextPage;
+    }
+
+    if (!selectedObjects.length) {
+      throw new Error('Not own this object found for the transaction.');
+    }
+    return selectedObjects;
+  }
+
   async requestFaucet(address: string, network: FaucetNetworkType) {
     await requestSuiFromFaucetV0({
       host: getFaucetHost(network),
