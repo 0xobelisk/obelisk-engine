@@ -17,7 +17,7 @@ export type DeploymentJsonType = {
 	version: number;
 };
 
-export function validatePrivateKey(privateKey: string): boolean | string {
+export function validatePrivateKey(privateKey: string): false | string {
 	if (privateKey.startsWith(SUI_PRIVATE_KEY_PREFIX)) {
 		if (privateKey.length === 70) {
 			return privateKey;

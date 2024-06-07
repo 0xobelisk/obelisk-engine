@@ -1,8 +1,9 @@
-import { Ed25519Keypair } from '@0xobelisk/sui-client';
+import { Obelisk } from '@0xobelisk/sui-client';
 import * as fs from 'fs';
 
 function generateAccount() {
-	const keypair = new Ed25519Keypair();
+	const obelisk = new Obelisk();
+	const keypair = obelisk.getKeypair();
 	const privateKey = keypair.getSecretKey();
 	const path = process.cwd();
 	const chainFolderPath = `${path}/src/chain`;
