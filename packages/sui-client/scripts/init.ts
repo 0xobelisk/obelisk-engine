@@ -2,7 +2,10 @@ import {
   Obelisk,
   NetworkType,
   TransactionResult,
+  TransactionArgument,
   loadMetadata,
+  Transaction,
+  DevInspectResults,
 } from '../src/index';
 import * as process from 'process';
 import dotenv from 'dotenv';
@@ -11,10 +14,11 @@ dotenv.config();
 async function init() {
   const network = 'devnet';
   const packageId =
-    '0x92ef84155ccd3b5f377eff8b5c50d046a562bd9e0520837346173bf7c4f3a357';
+    '0x5435a74aba28372d6bf3f5f7f1246891a371cd38eeb7801592042a6a4394c32d';
 
   const metadata = await loadMetadata(network as NetworkType, packageId);
 
+  console.log(JSON.stringify(metadata));
   const privateKey = process.env.PRIVATE_KEY;
 
   const obelisk = new Obelisk({
@@ -23,12 +27,149 @@ async function init() {
     metadata: metadata,
     secretKey: privateKey,
   });
-  const OBJECT_TYPE =
-    '0x92ef84155ccd3b5f377eff8b5c50d046a562bd9e0520837346173bf7c4f3a357::objects_seeder::Objects';
 
   console.log(obelisk.getAddress());
-  const data = await obelisk.selectObjectsWithType(OBJECT_TYPE);
-  console.log(data);
+  await obelisk.requestFaucet();
+  let balance = await obelisk.getBalance();
+  console.log('balance', balance);
+
+  let tx = new Transaction();
+  let params: TransactionArgument[] = [];
+  let query1 = (await obelisk.query.funt.get_u8(
+    tx,
+    params
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query1.results![0]));
+  let formatData1 = await obelisk.autoFormatDryValue(query1);
+  console.log(formatData1);
+
+  let tx2 = new Transaction();
+  let params2: TransactionArgument[] = [];
+  let query2 = (await obelisk.query.funt.get_u64(
+    tx2,
+    params2
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query2.results![0]));
+  let formatData2 = await obelisk.autoFormatDryValue(query2);
+  console.log(formatData2);
+
+  let tx3 = new Transaction();
+  let params3: TransactionArgument[] = [];
+  let query3 = (await obelisk.query.funt.get_u128(
+    tx3,
+    params3
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query3.results![0]));
+  let formatData3 = await obelisk.autoFormatDryValue(query3);
+  console.log(formatData3);
+
+  let tx4 = new Transaction();
+  let params4: TransactionArgument[] = [];
+  let query4 = (await obelisk.query.funt.get_u256(
+    tx4,
+    params4
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query4.results![0]));
+  let formatData4 = await obelisk.autoFormatDryValue(query4);
+  console.log(formatData4);
+
+  let tx5 = new Transaction();
+  let params5: TransactionArgument[] = [];
+  let query5 = (await obelisk.query.funt.get_bool(
+    tx5,
+    params5
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query5.results![0]));
+  let formatData5 = await obelisk.autoFormatDryValue(query5);
+  console.log(formatData5);
+
+  let tx6 = new Transaction();
+  let params6: TransactionArgument[] = [];
+  let query6 = (await obelisk.query.funt.get_address(
+    tx6,
+    params6
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query6.results![0]));
+  let formatData6 = await obelisk.autoFormatDryValue(query6);
+  console.log(formatData6);
+
+  let tx7 = new Transaction();
+  let params7: TransactionArgument[] = [];
+  let query7 = (await obelisk.query.funt.get_vector_u8(
+    tx7,
+    params7
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query7.results![0]));
+  let formatData7 = await obelisk.autoFormatDryValue(query7);
+  console.log(formatData7);
+
+  let tx8 = new Transaction();
+  let params8: TransactionArgument[] = [];
+  let query8 = (await obelisk.query.funt.get_tuple(
+    tx8,
+    params8
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query8.results![0]));
+  let formatData8 = await obelisk.autoFormatDryValue(query8);
+  console.log(formatData8);
+
+  let tx9 = new Transaction();
+  let params9: TransactionArgument[] = [];
+  let query9 = (await obelisk.query.funt.get_string(
+    tx9,
+    params9
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query9.results![0]));
+  let formatData9 = await obelisk.autoFormatDryValue(query9);
+  console.log(formatData9);
+
+  let tx10 = new Transaction();
+  let params10: TransactionArgument[] = [];
+  let query10 = (await obelisk.query.funt.get_option_type(
+    tx10,
+    params10
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query10.results![0]));
+  let formatData10 = await obelisk.autoFormatDryValue(query10);
+  console.log(formatData10);
+
+  let tx11 = new Transaction();
+  let params11: TransactionArgument[] = [];
+  let query11 = (await obelisk.query.funt.get_struct(
+    tx11,
+    params11
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query11.results![0]));
+  let formatData11 = await obelisk.autoFormatDryValue(query11);
+  console.log(formatData11);
+
+  const resultList = query11.results![0].returnValues!;
+  let structs =
+    obelisk.struct[
+      '0x5435a74aba28372d6bf3f5f7f1246891a371cd38eeb7801592042a6a4394c32d::funt::Test'
+    ];
+  console.log(JSON.stringify(structs));
+  for (const res of resultList) {
+    let baseValue = res[0];
+    let baseType = res[1];
+    // struct.parse();
+    console.log('-test-');
+    let struct = obelisk.struct[baseType].bcs;
+    const value = Uint8Array.from(baseValue);
+    console.log(struct.$inferType);
+    let resData = struct.parse(value);
+    console.log(resData);
+  }
+
+  let tx12 = new Transaction();
+  let params12: TransactionArgument[] = [];
+  let query12 = (await obelisk.query.funt.get_obj(
+    tx12,
+    params12
+  )) as DevInspectResults;
+  console.log(JSON.stringify(query12.results![0]));
+  let formatData12 = await obelisk.autoFormatDryValue(query12);
+  console.log(formatData12);
 
   // let txb = new TransactionBlock();
 

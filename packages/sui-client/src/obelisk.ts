@@ -1,23 +1,19 @@
-// import { RawSigner, SuiAddress } from '@mysten/sui.js';
-
-import { getFullnodeUrl } from '@mysten/sui.js/client';
-import {
-  TransactionBlock,
-  TransactionResult,
-} from '@mysten/sui.js/transactions';
-import type { SerializedBcs } from '@mysten/bcs';
-import type { TransactionArgument } from '@mysten/sui.js/transactions';
+import keccak256 from 'keccak256';
+import { getFullnodeUrl } from '@mysten/sui/client';
+import { Transaction, TransactionResult } from '@mysten/sui/transactions';
+import type { BcsType, SerializedBcs } from '@mysten/bcs';
+import type { TransactionArgument } from '@mysten/sui/transactions';
 import type {
   SuiTransactionBlockResponse,
   DevInspectResults,
   SuiMoveNormalizedModules,
   SuiObjectData,
-} from '@mysten/sui.js/client';
+} from '@mysten/sui/client';
 import { SuiAccountManager } from './libs/suiAccountManager';
-import { SuiTxBlock } from './libs/suiTxBuilder';
+import { SuiTx } from './libs/suiTxBuilder';
 import { SuiInteractor } from './libs/suiInteractor';
 
-import { ObeliskObjectContent } from './types';
+import { MapMoudleStruct, NetworkType, ObeliskObjectContent } from './types';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import {
   SuiMoveMoudleFuncType,
@@ -36,8 +32,8 @@ import {
   SuiVecTxArg,
 } from './types';
 import { normalizeHexAddress, numberToAddressHex } from './utils';
-import keccak256 from 'keccak256';
-import { BCS, getSuiMoveConfig } from '@mysten/bcs';
+import { bcs, fromHEX, toHEX } from '@mysten/bcs';
+import { TypeTagSerializer } from '@mysten/sui/bcs';
 
 export function isUndefined(value?: unknown): value is undefined {
   return value === undefined;
@@ -55,7 +51,7 @@ export function withMeta<T extends { meta: SuiMoveMoudleFuncType }>(
 function createQuery(
   meta: SuiMoveMoudleFuncType,
   fn: (
-    tx: TransactionBlock,
+    tx: Transaction,
     params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
@@ -64,7 +60,7 @@ function createQuery(
   return withMeta(
     meta,
     async (
-      tx: TransactionBlock,
+      tx: Transaction,
       params: (TransactionArgument | SerializedBcs<any>)[],
       typeArguments?: string[],
       isRaw?: boolean
@@ -78,7 +74,7 @@ function createQuery(
 function createTx(
   meta: SuiMoveMoudleFuncType,
   fn: (
-    tx: TransactionBlock,
+    tx: Transaction,
     params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
@@ -87,7 +83,7 @@ function createTx(
   return withMeta(
     meta,
     async (
-      tx: TransactionBlock,
+      tx: Transaction,
       params: (TransactionArgument | SerializedBcs<any>)[],
       typeArguments?: string[],
       isRaw?: boolean
@@ -111,6 +107,7 @@ export class Obelisk {
 
   readonly #query: MapMoudleFuncQuery = {};
   readonly #tx: MapMoudleFuncTx = {};
+  readonly #struct: MapMoudleStruct = {};
   /**
    * Support the following ways to init the ObeliskClient:
    * 1. mnemonics
@@ -140,37 +137,90 @@ export class Obelisk {
     this.packageId = packageId;
     if (metadata !== undefined) {
       this.metadata = metadata as SuiMoveNormalizedModules;
-      Object.values(metadata as SuiMoveNormalizedModules).forEach((value) => {
-        const data = value as SuiMoveMoudleValueType;
-        const moduleName = data.name;
-        Object.entries(data.exposedFunctions).forEach(([funcName, value]) => {
-          const meta = value as SuiMoveMoudleFuncType;
-          meta.moduleName = moduleName;
-          meta.funcName = funcName;
+      Object.values(metadata as SuiMoveNormalizedModules).forEach(
+        (moudlevalue) => {
+          const data = moudlevalue as SuiMoveMoudleValueType;
+          const moduleName = data.name;
+          const structAddr = `${data.address}::${data.name}`;
+          console.log('\n');
+          console.log(data.address, data.name);
+          console.log(JSON.stringify(data.structs));
+          console.log('\n');
 
-          if (isUndefined(this.#query[moduleName])) {
-            this.#query[moduleName] = {};
-          }
-          if (isUndefined(this.#query[moduleName][funcName])) {
-            this.#query[moduleName][funcName] = createQuery(
-              meta,
-              (tx, p, typeArguments, isRaw) =>
-                this.#read(meta, tx, p, typeArguments, isRaw)
-            );
-          }
+          Object.entries(data.structs).forEach(([structName, structBody]) => {
+            console.log(`${structAddr}::${structName}`);
+            const structId = `${structAddr}::${structName}`;
+            const structFields = structBody.fields;
+            let bcsJson: Record<string, BcsType<any, any>> = {};
+            Object.entries(structFields).forEach(([index, field]) => {
+              console.log(field);
+              if (field.name === 'Bool') {
+                bcsJson[field.name] = bcs.bool();
+              } else if (field.name === 'U8') {
+                bcsJson[field.name] = bcs.u8();
+              } else if (field.name === 'U16') {
+                bcsJson[field.name] = bcs.u16();
+              } else if (field.name === 'U32') {
+                bcsJson[field.name] = bcs.u32();
+              } else if (field.name === 'U64') {
+                bcsJson[field.name] = bcs.u64();
+              } else if (field.name === 'U128') {
+                bcsJson[field.name] = bcs.u128();
+              } else if (field.name === 'U256') {
+                bcsJson[field.name] = bcs.u256();
+              } else if (field.name === 'Address') {
+                const Address = bcs.bytes(32).transform({
+                  // To change the input type, you need to provide a type definition for the input
+                  input: (val: string) => fromHEX(val),
+                  output: (val) => toHEX(val),
+                });
 
-          if (isUndefined(this.#tx[moduleName])) {
-            this.#tx[moduleName] = {};
-          }
-          if (isUndefined(this.#tx[moduleName][funcName])) {
-            this.#tx[moduleName][funcName] = createTx(
-              meta,
-              (tx, p, typeArguments, isRaw) =>
-                this.#exec(meta, tx, p, typeArguments, isRaw)
-            );
-          }
-        });
-      });
+                bcsJson[field.name] = Address;
+              } else if (field.name === 'Signer') {
+              }
+            });
+            const bcsStruct = bcs.struct(structName, bcsJson);
+            this.#struct[structId] = {
+              struct: {
+                [structName]: structBody,
+              },
+              bcs: bcsStruct,
+            };
+          });
+
+          console.log('\n');
+
+          Object.entries(data.exposedFunctions).forEach(
+            ([funcName, funcvalue]) => {
+              const meta = funcvalue as SuiMoveMoudleFuncType;
+              meta.moduleName = moduleName;
+              meta.funcName = funcName;
+              // console.log(JSON.stringify(funcvalue));
+              if (isUndefined(this.#query[moduleName])) {
+                this.#query[moduleName] = {};
+              }
+              if (isUndefined(this.#query[moduleName][funcName])) {
+                this.#query[moduleName][funcName] = createQuery(
+                  meta,
+                  (tx, p, typeArguments, isRaw) =>
+                    this.#read(meta, tx, p, typeArguments, isRaw)
+                );
+              }
+
+              if (isUndefined(this.#tx[moduleName])) {
+                this.#tx[moduleName] = {};
+              }
+              if (isUndefined(this.#tx[moduleName][funcName])) {
+                this.#tx[moduleName][funcName] = createTx(
+                  meta,
+                  (tx, p, typeArguments, isRaw) =>
+                    this.#exec(meta, tx, p, typeArguments, isRaw)
+                );
+              }
+            }
+          );
+        }
+      );
     }
     this.contractFactory = new SuiContractFactory({
       packageId,
@@ -186,9 +236,13 @@ export class Obelisk {
     return this.#tx;
   }
 
+  public get struct(): MapMoudleStruct {
+    return this.#struct;
+  }
+
   #exec = async (
     meta: SuiMoveMoudleFuncType,
-    tx: TransactionBlock,
+    tx: Transaction,
     params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
@@ -211,7 +265,7 @@ export class Obelisk {
 
   #read = async (
     meta: SuiMoveMoudleFuncType,
-    tx: TransactionBlock,
+    tx: Transaction,
     params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
@@ -229,6 +283,7 @@ export class Obelisk {
       arguments: params,
       typeArguments,
     });
+
     return await this.inspectTxn(tx);
   };
 
@@ -269,11 +324,27 @@ export class Obelisk {
   getMetadata() {
     return this.contractFactory.metadata;
   }
+
+  getNetwork() {
+    return this.suiInteractor.network;
+  }
   /**
    * Request some SUI from faucet
    * @Returns {Promise<boolean>}, true if the request is successful, false otherwise.
    */
-  async requestFaucet(address: string, network: FaucetNetworkType) {
+  async requestFaucet(
+    address?: string,
+    network?: FaucetNetworkType,
+    derivePathParams?: DerivePathParams
+  ) {
+    if (address === undefined) {
+      address = this.accountManager.getAddress(derivePathParams);
+    }
+    if (network === undefined) {
+      network = this.getNetwork() as
+        | FaucetNetworkType
+        | 'devnet' as FaucetNetworkType;
+    }
     // const addr = this.accountManager.getAddress(derivePathParams);
     return this.suiInteractor.requestFaucet(address, network);
   }
@@ -308,23 +379,23 @@ export class Obelisk {
   }
 
   async signTxn(
-    tx: Uint8Array | TransactionBlock | SuiTxBlock,
+    tx: Uint8Array | Transaction | SuiTx,
     derivePathParams?: DerivePathParams
   ) {
-    if (tx instanceof SuiTxBlock || tx instanceof TransactionBlock) {
+    if (tx instanceof SuiTx || tx instanceof Transaction) {
       tx.setSender(this.getAddress(derivePathParams));
     }
-    const txBlock = tx instanceof SuiTxBlock ? tx.txBlock : tx;
+    const txBlock = tx instanceof SuiTx ? tx.tx : tx;
     const txBytes =
-      txBlock instanceof TransactionBlock
+      txBlock instanceof Transaction
         ? await txBlock.build({ client: this.client() })
         : txBlock;
     const keyPair = this.getKeypair(derivePathParams);
-    return await keyPair.signTransactionBlock(txBytes);
+    return await keyPair.signTransaction(txBytes);
   }
 
   async signAndSendTxn(
-    tx: Uint8Array | TransactionBlock | SuiTxBlock,
+    tx: Uint8Array | Transaction | SuiTx,
     derivePathParams?: DerivePathParams
   ): Promise<SuiTransactionBlockResponse> {
     const { bytes, signature } = await this.signTxn(tx, derivePathParams);
@@ -342,7 +413,7 @@ export class Obelisk {
     amount: number,
     derivePathParams?: DerivePathParams
   ) {
-    const tx = new SuiTxBlock();
+    const tx = new SuiTx();
     tx.transferSui(recipient, amount);
     return this.signAndSendTxn(tx, derivePathParams);
   }
@@ -358,7 +429,7 @@ export class Obelisk {
     amounts: number[],
     derivePathParams?: DerivePathParams
   ) {
-    const tx = new SuiTxBlock();
+    const tx = new SuiTx();
     tx.transferSuiToMany(recipients, amounts);
     return this.signAndSendTxn(tx, derivePathParams);
   }
@@ -376,7 +447,7 @@ export class Obelisk {
     coinType: string,
     derivePathParams?: DerivePathParams
   ) {
-    const tx = new SuiTxBlock();
+    const tx = new SuiTx();
     const owner = this.accountManager.getAddress(derivePathParams);
     const totalAmount = amounts.reduce((a, b) => a + b, 0);
     const coins = await this.suiInteractor.selectCoins(
@@ -412,7 +483,7 @@ export class Obelisk {
     recipient: string,
     derivePathParams?: DerivePathParams
   ) {
-    const tx = new SuiTxBlock();
+    const tx = new SuiTx();
     tx.transferObjects(objects, recipient);
     return this.signAndSendTxn(tx, derivePathParams);
   }
@@ -429,7 +500,7 @@ export class Obelisk {
       typeArguments = [],
       derivePathParams,
     } = callParams;
-    const tx = new SuiTxBlock();
+    const tx = new SuiTx();
     tx.moveCall(target, args, typeArguments);
     return this.signAndSendTxn(tx, derivePathParams);
   }
@@ -467,7 +538,7 @@ export class Obelisk {
     validatorAddr: string,
     derivePathParams?: DerivePathParams
   ) {
-    const tx = new SuiTxBlock();
+    const tx = new SuiTx();
     tx.stakeSui(amount, validatorAddr);
     return this.signAndSendTxn(tx, derivePathParams);
   }
@@ -480,10 +551,10 @@ export class Obelisk {
    * @returns the effects and events of the transaction, such as object changes, gas cost, event emitted.
    */
   async inspectTxn(
-    tx: Uint8Array | TransactionBlock | SuiTxBlock,
+    tx: Uint8Array | Transaction | SuiTx,
     derivePathParams?: DerivePathParams
   ): Promise<DevInspectResults> {
-    const txBlock = tx instanceof SuiTxBlock ? tx.txBlock : tx;
+    const txBlock = tx instanceof SuiTx ? tx.tx : tx;
     return this.suiInteractor.currentClient.devInspectTransactionBlock({
       transactionBlock: txBlock,
       sender: this.getAddress(derivePathParams),
@@ -512,30 +583,54 @@ export class Obelisk {
     entityId?: string
   ): Promise<any[] | undefined> {
     const schemaModuleName = `${schemaName}_schema`;
-    const tx = new TransactionBlock();
-    const params = [tx.pure(worldId)] as TransactionArgument[];
+    const tx = new Transaction();
+    const params = [tx.pure.address(worldId)] as TransactionArgument[];
 
     if (entityId !== undefined) {
-      params.push(tx.pure(entityId));
+      params.push(tx.pure.address(entityId));
     }
 
     const getResult = (await this.query[schemaModuleName].get(
       tx,
       params
     )) as DevInspectResults;
-    let returnValue = [];
+    let returnValues = [];
 
     // "success" | "failure";
     if (getResult.effects.status.status === 'success') {
       const resultList = getResult.results![0].returnValues!;
+
       for (const res of resultList) {
-        const bcs = new BCS(getSuiMoveConfig());
-        const value = Uint8Array.from(res[0]);
-        const bcsType = res[1].replace(/0x1::ascii::String/g, 'string');
-        const data = bcs.de(bcsType, value);
-        returnValue.push(data);
+        let baseValue = res[0];
+        let baseType = res[1];
+
+        const value = Uint8Array.from(baseValue);
+        if (baseType === 'address') {
+          const Address = bcs.bytes(32).transform({
+            // To change the input type, you need to provide a type definition for the input
+            input: (val: string) => fromHEX(val),
+            output: (val) => toHEX(val),
+          });
+          returnValues.push(Address.parse(value));
+        } else if (baseType === 'u8') {
+          returnValues.push(bcs.u8().parse(value));
+        } else if (baseType === 'u16') {
+          returnValues.push(bcs.u16().parse(value));
+        } else if (baseType === 'u32') {
+          returnValues.push(bcs.u32().parse(value));
+        } else if (baseType === 'u64') {
+          returnValues.push(bcs.u64().parse(value));
+        } else if (baseType === 'u128') {
+          returnValues.push(bcs.u128().parse(value));
+        } else if (baseType === 'u256') {
+          returnValues.push(bcs.u256().parse(value));
+        } else if (baseType === 'bool') {
+          returnValues.push(bcs.bool().parse(value));
+        } else if (baseType === '0x1::ascii::String') {
+          returnValues.push(bcs.string().parse(value));
+        }
       }
-      return returnValue;
+      return returnValues;
     } else {
       return undefined;
     }
@@ -547,11 +642,11 @@ export class Obelisk {
     entityId?: string
   ): Promise<boolean | undefined> {
     const schemaModuleName = `${schemaName}_schema`;
-    const tx = new TransactionBlock();
-    const params = [tx.pure(worldId)] as TransactionArgument[];
+    const tx = new Transaction();
+    const params = [tx.pure.address(worldId)] as TransactionArgument[];
 
     if (entityId !== undefined) {
-      params.push(tx.pure(entityId));
+      params.push(tx.pure.address(entityId));
     }
 
     const getResult = (await this.query[schemaModuleName].contains(
@@ -562,9 +657,10 @@ export class Obelisk {
     // "success" | "failure";
     if (getResult.effects.status.status === 'success') {
       const res = getResult.results![0].returnValues![0];
-      const bcs = new BCS(getSuiMoveConfig());
-      const value = Uint8Array.from(res[0]);
-      return bcs.de(res[1], value);
+      let baseValue = res[0];
+
+      const value = Uint8Array.from(baseValue);
+      return bcs.bool().parse(value);
     } else {
       return undefined;
     }
@@ -637,9 +733,13 @@ export class Obelisk {
   async entity_key_from_bytes(bytes: Uint8Array | Buffer | string) {
     const hashBytes = keccak256(bytes);
     const hashU8Array: number[] = Array.from(hashBytes);
-    const bcs = new BCS(getSuiMoveConfig());
     const value = Uint8Array.from(hashU8Array);
-    const data = bcs.de('address', value);
+    const Address = bcs.bytes(32).transform({
+      // To change the input type, you need to provide a type definition for the input
+      input: (val: string) => fromHEX(val),
+      output: (val) => toHEX(val),
+    });
+    const data = Address.parse(value);
     return '0x' + data;
   }
 
@@ -659,9 +759,10 @@ export class Obelisk {
     const checkObjectId = normalizeHexAddress(objectId);
     if (checkObjectId !== null) {
       objectId = checkObjectId;
-      const bcs = new BCS(getSuiMoveConfig());
       const bytes = Buffer.from(objectId.slice(2), 'hex');
-      const numberBytes = bcs.ser('u256', x).toBytes();
+
+      const numberBytes = bcs.u256().serialize(x).toBytes();
+
       return this.entity_key_from_bytes(Buffer.concat([bytes, numberBytes]));
     } else {
       return undefined;
@@ -672,9 +773,56 @@ export class Obelisk {
     return numberToAddressHex(x);
   }
 
-  async formatData(type: string, value: Buffer | number[] | Uint8Array) {
-    const bcs = new BCS(getSuiMoveConfig());
-    const u8Value = Uint8Array.from(value);
-    return bcs.de(type, u8Value);
+  // async formatData(type: string, value: Buffer | number[] | Uint8Array) {
+  //   const u8Value = Uint8Array.from(value);
+  //   return bcs.de(type, u8Value);
+  // }
+
+  async autoFormatDryValue(value: DevInspectResults) {
+    let returnValues = [];
+
+    // "success" | "failure";
+    if (value.effects.status.status === 'success') {
+      const resultList = value.results![0].returnValues!;
+
+      for (const res of resultList) {
+        let baseValue = res[0];
+        let baseType = res[1];
+        let serType = TypeTagSerializer.parseFromStr(baseType);
+        console.log('serType', serType);
+        const value = Uint8Array.from(baseValue);
+        if (baseType === 'address') {
+          const Address = bcs.bytes(32).transform({
+            // To change the input type, you need to provide a type definition for the input
+            input: (val: string) => fromHEX(val),
+            output: (val) => toHEX(val),
+          });
+          returnValues.push(Address.parse(value));
+        } else if (baseType === 'u8') {
+          returnValues.push(bcs.u8().parse(value));
+        } else if (baseType === 'u16') {
+          returnValues.push(bcs.u16().parse(value));
+        } else if (baseType === 'u32') {
+          returnValues.push(bcs.u32().parse(value));
+        } else if (baseType === 'u64') {
+          returnValues.push(bcs.u64().parse(value));
+        } else if (baseType === 'u128') {
+          returnValues.push(bcs.u128().parse(value));
+        } else if (baseType === 'u256') {
+          returnValues.push(bcs.u256().parse(value));
+        } else if (baseType === 'bool') {
+          returnValues.push(bcs.bool().parse(value));
+        } else if (baseType === '0x1::ascii::String') {
+          returnValues.push(bcs.string().parse(value));
+        } else if (baseType === 'vector<u8>') {
+          returnValues.push(bcs.vector(bcs.u8()).parse(value));
+        } else if (baseType === '0x1::option::Option<u8>') {
+          returnValues.push(bcs.option(bcs.u8()).parse(value));
+        }
+      }
+      return returnValues;
+    } else {
+      return undefined;
+    }
   }
 }

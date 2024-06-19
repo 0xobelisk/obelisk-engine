@@ -1,22 +1,23 @@
 import type { Infer } from 'superstruct';
 import { any, record, string } from 'superstruct';
-import type { SerializedBcs } from '@mysten/bcs';
-import type { TransactionArgument } from '@mysten/sui.js/transactions';
+import type { BcsType, SerializedBcs } from '@mysten/bcs';
+import type { TransactionArgument } from '@mysten/sui/transactions';
 import type {
-  TransactionBlock,
+  Transaction,
   TransactionObjectArgument,
   TransactionResult,
-} from '@mysten/sui.js/transactions';
+} from '@mysten/sui/transactions';
 import type {
   SuiObjectRef,
   SuiMoveNormalizedModules,
   DevInspectResults,
   SuiTransactionBlockResponse,
   DisplayFieldsResponse,
+  SuiMoveNormalizedType,
   MoveStruct,
-} from '@mysten/sui.js/client';
-import type { SharedObjectRef, ObjectArg } from '@mysten/sui.js/bcs';
-// export type TransactionResult = TransactionArgument & TransactionArgument[];
+} from '@mysten/sui/client';
+import { bcs } from '@mysten/sui/bcs';
+import { bcs as BCS } from '@mysten/bcs';
 
 import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
 
@@ -71,26 +72,6 @@ export type SchemaValueType = {
   };
 };
 
-// export type SuiTxArgument =
-//   | {
-//       kind: 'Input';
-//       index: number;
-//       type?: 'object' | 'pure' | undefined;
-//       value?: any;
-//     }
-//   | {
-//       kind: 'GasCoin';
-//     }
-//   | {
-//       kind: 'Result';
-//       index: number;
-//     }
-//   | {
-//       kind: 'NestedResult';
-//       index: number;
-//       resultIndex: number;
-//     };
-
 export type SchemaContentType = {
   type: string;
   fields: SchemaValueType;
@@ -104,7 +85,7 @@ export interface MessageMeta {
 
 export interface ContractQuery extends MessageMeta {
   (
-    tx: TransactionBlock,
+    tx: Transaction,
     params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
@@ -113,7 +94,7 @@ export interface ContractQuery extends MessageMeta {
 
 export interface ContractTx extends MessageMeta {
   (
-    tx: TransactionBlock,
+    tx: Transaction,
     params: (TransactionArgument | SerializedBcs<any>)[],
     typeArguments?: string[],
     isRaw?: boolean
@@ -125,6 +106,36 @@ export type MapMessageQuery = Record<string, ContractQuery>;
 
 export type MapMoudleFuncTx = Record<string, MapMessageTx>;
 export type MapMoudleFuncQuery = Record<string, MapMessageQuery>;
+
+type MoveStructType = {
+  struct: Record<
+    string,
+    {
+      fields: {
+        type: SuiMoveNormalizedType;
+        name: string;
+      }[];
+      abilities: {
+        abilities: string[];
+      };
+      typeParameters: {
+        constraints: {
+          abilities: string[];
+        };
+        isPhantom: boolean;
+      }[];
+    }
+  >;
+  bcs: BcsType<
+    {
+      [x: string]: any;
+    },
+    {
+      [x: string]: any;
+    }
+  >;
+};
+export type MapMoudleStruct = Record<string, MoveStructType>;
 
 export type MapMoudleFuncTest = Record<string, Record<string, string>>;
 export type MapMoudleFuncQueryTest = Record<string, Record<string, string>>;
@@ -160,13 +171,13 @@ export type ObjectData = {
   objectDisplay: DisplayFieldsResponse;
   objectFields: ObjectContentFields;
 };
-type TransactionBlockType = InstanceType<typeof TransactionBlock>;
+type TransactionBlockType = InstanceType<typeof Transaction>;
 
 export type PureCallArg = {
   Pure: number[];
 };
 export type ObjectCallArg = {
-  Object: ObjectArg;
+  Object: typeof bcs.CallArg.$inferType;
 };
 
 export type TransactionType = Parameters<TransactionBlockType['add']>;
@@ -204,7 +215,7 @@ export type SuiTxArg = SuiAddressArg | number | bigint | boolean;
 export type SuiObjectArg =
   | TransactionObjectArgument
   | string
-  | SharedObjectRef
+  | typeof bcs.SharedObjectRef.$inferType
   | SuiObjectRef
   | ObjectCallArg;
 
@@ -212,6 +223,7 @@ export type SuiVecTxArg =
   | { value: SuiTxArg[]; vecType: SuiInputTypes }
   | SuiTxArg[];
 
+export type DryTxReturnValues = Array<[Uint8Array, string]>;
 /**
  * These are the basics types that can be used in the SUI
  */

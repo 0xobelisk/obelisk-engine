@@ -1,5 +1,5 @@
-import type { SuiTransactionBlockResponse } from '@mysten/sui.js/client';
-import type { CallArg } from '@mysten/sui.js/bcs';
+import type { SuiTransactionBlockResponse } from '@mysten/sui/client';
+import { bcs } from '@mysten/sui/bcs';
 
 export class SuiOwnedObject {
   public readonly objectId: string;
@@ -21,13 +21,15 @@ export class SuiOwnedObject {
     return !!this.version && !!this.digest;
   }
 
-  asCallArg(): CallArg | string {
+  asCallArg(): typeof bcs.CallArg.$inferType | string {
     if (!this.version || !this.digest) {
       return this.objectId;
     }
     return {
+      $kind: 'Object',
       Object: {
-        ImmOrOwned: {
+        $kind: 'ImmOrOwnedObject',
+        ImmOrOwnedObject: {
           objectId: this.objectId,
           version: this.version,
           digest: this.digest,

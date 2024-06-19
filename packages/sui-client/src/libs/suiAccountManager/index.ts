@@ -1,12 +1,13 @@
-import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import {
+  SUI_PRIVATE_KEY_PREFIX,
+  decodeSuiPrivateKey,
+} from '@mysten/sui/cryptography';
+
 import { getKeyPair } from './keypair';
 import { hexOrBase64ToUint8Array, normalizePrivateKey } from './util';
 import { generateMnemonic } from './crypto';
 import type { AccountMangerParams, DerivePathParams } from 'src/types';
-import {
-  SUI_PRIVATE_KEY_PREFIX,
-  decodeSuiPrivateKey,
-} from '@mysten/sui.js/cryptography';
 
 export class SuiAccountManager {
   private mnemonics: string;

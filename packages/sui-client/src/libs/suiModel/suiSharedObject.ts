@@ -1,4 +1,4 @@
-import type { CallArg } from '@mysten/sui.js/bcs';
+import { bcs } from '@mysten/sui/bcs';
 
 export class SuiSharedObject {
   public readonly objectId: string;
@@ -13,13 +13,15 @@ export class SuiSharedObject {
     this.initialSharedVersion = param.initialSharedVersion;
   }
 
-  asCallArg(mutable: boolean = false): CallArg | string {
+  asCallArg(mutable: boolean = false): typeof bcs.CallArg.$inferType | string {
     if (!this.initialSharedVersion) {
       return this.objectId;
     }
     return {
+      $kind: 'Object',
       Object: {
-        Shared: {
+        $kind: 'SharedObject',
+        SharedObject: {
           objectId: this.objectId,
           initialSharedVersion: this.initialSharedVersion,
           mutable,
