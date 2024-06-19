@@ -20,7 +20,7 @@ import type {
   SuiVecTxArg,
   DryTxReturnValues,
 } from '../../types';
-
+import type { ObjectRef } from '@mysten/sui/transactions';
 export const getDefaultSuiInputType = (
   value: SuiTxArg
 ): SuiInputTypes | undefined => {
@@ -84,21 +84,23 @@ export function makeVecParam(
     !STRUCT_REGEX.test(type)
   ) {
     if (type === 'address') {
-      return tx.pure(bcs.vector(bcs.Address).serialize(args));
+      return tx.pure(bcs.vector(bcs.Address).serialize(args as string[]));
     } else if (type === 'bool') {
-      return tx.pure(bcs.vector(bcs.Bool).serialize(args));
+      return tx.pure(bcs.vector(bcs.Bool).serialize(args as boolean[]));
     } else if (type === 'u8') {
-      return tx.pure(bcs.vector(bcs.U8).serialize(args));
+      return tx.pure(bcs.vector(bcs.U8).serialize(args as number[]));
     } else if (type === 'u16') {
-      return tx.pure(bcs.vector(bcs.U16).serialize(args));
+      return tx.pure(bcs.vector(bcs.U16).serialize(args as number[]));
     } else if (type === 'u32') {
-      return tx.pure(bcs.vector(bcs.U32).serialize(args));
+      return tx.pure(bcs.vector(bcs.U32).serialize(args as number[]));
     } else if (type === 'u64') {
-      return tx.pure(bcs.vector(bcs.U64).serialize(args));
+      return tx.pure(bcs.vector(bcs.U64).serialize(args as string[]));
     } else if (type === 'u128') {
-      return tx.pure(bcs.vector(bcs.U128).serialize(args));
+      return tx.pure(bcs.vector(bcs.U128).serialize(args as string[]));
     } else if (type === 'u256') {
-      return tx.pure(bcs.vector(bcs.U256).serialize(args));
+      return tx.pure(bcs.vector(bcs.U256).serialize(args as string[]));
+    } else {
+      return tx.pure(bcs.vector(bcs.U8).serialize(args as number[]));
     }
     // return tx.pure(args, `vector<${type}>`);
   } else {
@@ -150,13 +152,13 @@ export function convertArgs(tx: Transaction, args: (SuiTxArg | SuiVecTxArg)[]) {
     } else {
       let argType = getDefaultSuiInputType(arg);
       if (argType === 'address') {
-        return tx.pure.address(arg);
+        return tx.pure.address(arg as string);
       } else if (argType === 'u64') {
-        return tx.pure.u64(arg);
+        return tx.pure.u64(arg as string);
       } else if (argType === 'bool') {
-        return tx.pure.bool(arg);
+        return tx.pure.bool(arg as boolean);
       } else {
-        return tx.pure(arg);
+        return tx.pure.u64(arg as string);
       }
     }
   });
@@ -239,11 +241,21 @@ export function convertObjArg(
 
   if ('Object' in arg) {
     if ('ImmOrOwnedObject' in arg.Object) {
-      return tx.object(Inputs.ObjectRef(arg.Object.ImmOrOwnedObject));
+      return tx.object(
+        Inputs.ObjectRef(arg.Object.ImmOrOwnedObject as ObjectRef)
+      );
     } else if ('SharedObject' in arg.Object) {
-      return tx.object(Inputs.SharedObjectRef(arg.Object.SharedObject));
+      return tx.object(
+        Inputs.SharedObjectRef(
+          arg.Object.SharedObject as {
+            objectId: string;
+            mutable: boolean;
+            initialSharedVersion: number | string;
+          }
+        )
+      );
     } else if ('Receiving' in arg.Object) {
-      return tx.object(Inputs.ReceivingRef(arg.Object.Receiving));
+      return tx.object(Inputs.ReceivingRef(arg.Object.Receiving as ObjectRef));
     } else {
       throw new Error('Invalid argument type');
     }

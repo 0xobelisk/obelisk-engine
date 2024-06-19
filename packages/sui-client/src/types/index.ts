@@ -6,6 +6,7 @@ import type {
   Transaction,
   TransactionObjectArgument,
   TransactionResult,
+  ObjectRef,
 } from '@mysten/sui/transactions';
 import type {
   SuiObjectRef,
@@ -213,6 +214,7 @@ export type SuiAddressArg =
 export type SuiTxArg = SuiAddressArg | number | bigint | boolean;
 
 export type SuiObjectArg =
+  | ObjectRef
   | TransactionObjectArgument
   | string
   | typeof bcs.SharedObjectRef.$inferType

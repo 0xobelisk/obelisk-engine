@@ -143,24 +143,6 @@ async function init() {
   let formatData11 = await obelisk.autoFormatDryValue(query11);
   console.log(formatData11);
 
-  const resultList = query11.results![0].returnValues!;
-  let structs =
-    obelisk.struct[
-      '0x5435a74aba28372d6bf3f5f7f1246891a371cd38eeb7801592042a6a4394c32d::funt::Test'
-    ];
-  console.log(JSON.stringify(structs));
-  for (const res of resultList) {
-    let baseValue = res[0];
-    let baseType = res[1];
-    // struct.parse();
-    console.log('-test-');
-    let struct = obelisk.struct[baseType].bcs;
-    const value = Uint8Array.from(baseValue);
-    console.log(struct.$inferType);
-    let resData = struct.parse(value);
-    console.log(resData);
-  }
-
   let tx12 = new Transaction();
   let params12: TransactionArgument[] = [];
   let query12 = (await obelisk.query.funt.get_obj(
@@ -245,16 +227,16 @@ async function init() {
 
   // console.log(containData);
 
-  // let objectAddress = await obelisk.entity_key_from_object(
-  //   '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
-  // );
-  // console.log(objectAddress);
+  let objectAddress = await obelisk.entity_key_from_object(
+    '0x1541f3a2e7ac48e3e68e60bb97a7cee94e16316cc3f9043a9c0f5e6790ea3af0'
+  );
+  console.log(objectAddress);
 
-  // let bytesAddress = await obelisk.entity_key_from_bytes('hello');
-  // console.log(bytesAddress);
+  let bytesAddress = await obelisk.entity_key_from_bytes('hello');
+  console.log(bytesAddress);
 
-  // let numberAddress = await obelisk.entity_key_from_u256(123);
-  // console.log(numberAddress);
+  let numberAddress = await obelisk.entity_key_from_u256(123);
+  console.log(numberAddress);
 }
 
 init();

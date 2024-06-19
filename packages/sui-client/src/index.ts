@@ -1,10 +1,11 @@
 export * from '@mysten/sui/client';
 export * from '@mysten/sui/utils';
 export * from '@mysten/sui/transactions';
+export * from '@mysten/sui/bcs';
 export * from '@mysten/sui/keypairs/ed25519';
 export * from '@mysten/sui/keypairs/secp256k1';
 export * from '@mysten/sui/keypairs/secp256r1';
-// export { BCS, getSuiMoveConfig } from '@mysten/bcs';
+export { bcs, BcsType } from '@mysten/bcs';
 export { Obelisk } from './obelisk';
 export { SuiAccountManager } from './libs/suiAccountManager';
 export { SuiTx } from './libs/suiTxBuilder';

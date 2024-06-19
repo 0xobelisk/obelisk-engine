@@ -141,54 +141,6 @@ export class Obelisk {
         (moudlevalue) => {
           const data = moudlevalue as SuiMoveMoudleValueType;
           const moduleName = data.name;
-          const structAddr = `${data.address}::${data.name}`;
-          console.log('\n');
-          console.log(data.address, data.name);
-          console.log(JSON.stringify(data.structs));
-          console.log('\n');
-
-          Object.entries(data.structs).forEach(([structName, structBody]) => {
-            console.log(`${structAddr}::${structName}`);
-            const structId = `${structAddr}::${structName}`;
-            const structFields = structBody.fields;
-            let bcsJson: Record<string, BcsType<any, any>> = {};
-            Object.entries(structFields).forEach(([index, field]) => {
-              console.log(field);
-              if (field.name === 'Bool') {
-                bcsJson[field.name] = bcs.bool();
-              } else if (field.name === 'U8') {
-                bcsJson[field.name] = bcs.u8();
-              } else if (field.name === 'U16') {
-                bcsJson[field.name] = bcs.u16();
-              } else if (field.name === 'U32') {
-                bcsJson[field.name] = bcs.u32();
-              } else if (field.name === 'U64') {
-                bcsJson[field.name] = bcs.u64();
-              } else if (field.name === 'U128') {
-                bcsJson[field.name] = bcs.u128();
-              } else if (field.name === 'U256') {
-                bcsJson[field.name] = bcs.u256();
-              } else if (field.name === 'Address') {
-                const Address = bcs.bytes(32).transform({
-                  // To change the input type, you need to provide a type definition for the input
-                  input: (val: string) => fromHEX(val),
-                  output: (val) => toHEX(val),
-                });
-
-                bcsJson[field.name] = Address;
-              } else if (field.name === 'Signer') {
-              }
-            });
-            const bcsStruct = bcs.struct(structName, bcsJson);
-            this.#struct[structId] = {
-              struct: {
-                [structName]: structBody,
-              },
-              bcs: bcsStruct,
-            };
-          });
-
-          console.log('\n');
 
           Object.entries(data.exposedFunctions).forEach(
             ([funcName, funcvalue]) => {
@@ -400,6 +352,13 @@ export class Obelisk {
   ): Promise<SuiTransactionBlockResponse> {
     const { bytes, signature } = await this.signTxn(tx, derivePathParams);
     return this.suiInteractor.sendTx(bytes, signature);
+  }
+
+  async sendTxn(
+    transactionBlock: Uint8Array | string,
+    signature: string | string[]
+  ): Promise<SuiTransactionBlockResponse> {
+    return this.suiInteractor.sendTx(transactionBlock, signature);
   }
 
   /**
@@ -628,6 +587,10 @@ export class Obelisk {
           returnValues.push(bcs.bool().parse(value));
         } else if (baseType === '0x1::ascii::String') {
           returnValues.push(bcs.string().parse(value));
+        } else if (baseType === 'vector<u8>') {
+          returnValues.push(bcs.vector(bcs.u8()).parse(value));
+        } else if (baseType === '0x1::option::Option<u8>') {
+          returnValues.push(bcs.option(bcs.u8()).parse(value));
         }
       }
       return returnValues;
@@ -788,8 +751,6 @@ export class Obelisk {
       for (const res of resultList) {
         let baseValue = res[0];
         let baseType = res[1];
-        let serType = TypeTagSerializer.parseFromStr(baseType);
-        console.log('serType', serType);
         const value = Uint8Array.from(baseValue);
         if (baseType === 'address') {
           const Address = bcs.bytes(32).transform({

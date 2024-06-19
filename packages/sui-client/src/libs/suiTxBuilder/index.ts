@@ -1,7 +1,10 @@
 import { Transaction } from '@mysten/sui/transactions';
 import { SUI_SYSTEM_STATE_OBJECT_ID } from '@mysten/sui/utils';
 import type { SuiClient, SuiObjectRef } from '@mysten/sui/client';
-import type { TransactionObjectArgument } from '@mysten/sui/transactions';
+import type {
+  TransactionObjectArgument,
+  TransactionObjectInput,
+} from '@mysten/sui/transactions';
 import { bcs } from '@mysten/sui/bcs';
 import type { Keypair } from '@mysten/sui/cryptography';
 import { SerializedBcs } from '@mysten/bcs';
@@ -54,7 +57,7 @@ export class SuiTx {
   pure(value: SerializedBcs<any, any> | Uint8Array) {
     return this.tx.pure(value);
   }
-  object(value: string | ObjectCallArg) {
+  object(value: TransactionObjectInput) {
     return this.tx.object(value);
   }
   objectRef(ref: SuiObjectRef) {
@@ -299,7 +302,7 @@ export class SuiTx {
       arguments: convertArgs(this.tx, [
         SUI_SYSTEM_STATE_OBJECT_ID,
         stakeCoin,
-        this.tx.pure(validatorAddr),
+        this.tx.pure.address(validatorAddr.toString()),
       ]),
     });
   }
