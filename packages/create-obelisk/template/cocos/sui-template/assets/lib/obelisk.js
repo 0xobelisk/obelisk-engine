@@ -3674,9 +3674,9 @@ Object.keys(_secp256r).forEach(function (key) {
 });
 var _bcs2 = require("@mysten/bcs");
 var _keccak = _interopRequireDefault(require("keccak256"));
-var _cryptography = require("@mysten/sui/cryptography");
 var _bip = require("@scure/bip39");
 var _english = require("@scure/bip39/wordlists/english");
+var _cryptography = require("@mysten/sui/cryptography");
 var _faucet = require("@mysten/sui/faucet");
 var _multisig = require("@mysten/sui/multisig");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -3757,6 +3757,7 @@ var generateMnemonic = (numberOfWords = 24) => {
 };
 
 // src/libs/suiAccountManager/index.ts
+
 var SuiAccountManager = class {
   /**
    * Support the following ways to init the SuiToolkit:
@@ -3836,43 +3837,23 @@ var getDefaultSuiInputType = value => {
     return void 0;
   }
 };
-function isPureArg(arg) {
-  return arg.Pure !== void 0;
-}
-function makeVecParam(tx, args, type) {
+function makeVecParam(txBlock, args, type) {
   if (args.length === 0) throw new Error("Transaction builder error: Empty array is not allowed");
   const defaultSuiType = getDefaultSuiInputType(args[0]);
   const VECTOR_REGEX = /^vector<(.+)>$/;
   const STRUCT_REGEX = /^([^:]+)::([^:]+)::([^<]+)(<(.+)>)?/;
   type = type || defaultSuiType;
   if (type === "object") {
-    const elements = args.map(arg => typeof arg === "string" && (0, _utils.isValidSuiObjectId)(arg) ? tx.object((0, _utils.normalizeSuiObjectId)(arg)) : convertObjArg(tx, arg));
-    return tx.makeMoveVec({
+    const elements = args.map(arg => typeof arg === "string" && (0, _utils.isValidSuiObjectId)(arg) ? txBlock.object((0, _utils.normalizeSuiObjectId)(arg)) : convertObjArg(txBlock, arg));
+    return txBlock.makeMoveVec({
       elements
     });
   } else if (typeof type === "string" && !VECTOR_REGEX.test(type) && !STRUCT_REGEX.test(type)) {
-    if (type === "address") {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.Address).serialize(args));
-    } else if (type === "bool") {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.Bool).serialize(args));
-    } else if (type === "u8") {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.U8).serialize(args));
-    } else if (type === "u16") {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.U16).serialize(args));
-    } else if (type === "u32") {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.U32).serialize(args));
-    } else if (type === "u64") {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.U64).serialize(args));
-    } else if (type === "u128") {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.U128).serialize(args));
-    } else if (type === "u256") {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.U256).serialize(args));
-    } else {
-      return tx.pure(_bcs.bcs.vector(_bcs.bcs.U8).serialize(args));
-    }
+    const bcsSchema = (0, _transactions.getPureBcsSchema)(type);
+    return txBlock.pure(_bcs2.bcs.vector(bcsSchema).serialize(args));
   } else {
-    const elements = args.map(arg => convertObjArg(tx, arg));
-    return tx.makeMoveVec({
+    const elements = args.map(arg => convertObjArg(txBlock, arg));
+    return txBlock.makeMoveVec({
       elements,
       type
     });
@@ -3886,67 +3867,60 @@ function isMoveVecArg(arg) {
   }
   return false;
 }
-function convertArgs(tx, args) {
+function convertArgs(txBlock, args) {
   return args.map(arg => {
-    if (typeof arg === "string" && (0, _utils.isValidSuiObjectId)(arg)) {
-      return tx.object((0, _utils.normalizeSuiObjectId)(arg));
-    } else if (typeof arg == "object" && !(0, _bcs2.isSerializedBcs)(arg) && !isPureArg(arg) && !isMoveVecArg(arg)) {
-      return convertObjArg(tx, arg);
-    } else if (isMoveVecArg(arg)) {
-      const vecType = ("vecType" in arg);
-      return vecType ? makeVecParam(tx, arg.value, arg.vecType) : makeVecParam(tx, arg);
-    } else if ((0, _bcs2.isSerializedBcs)(arg)) {
-      return arg;
-    } else {
-      let argType = getDefaultSuiInputType(arg);
-      if (argType === "address") {
-        return tx.pure.address(arg);
-      } else if (argType === "u64") {
-        return tx.pure.u64(arg);
-      } else if (argType === "bool") {
-        return tx.pure.bool(arg);
-      } else {
-        return tx.pure.u64(arg);
-      }
+    if (arg instanceof _bcs2.SerializedBcs || (0, _bcs2.isSerializedBcs)(arg)) {
+      return txBlock.pure(arg);
     }
+    if (isMoveVecArg(arg)) {
+      const vecType = ("vecType" in arg);
+      return vecType ? makeVecParam(txBlock, arg.value, arg.vecType) : makeVecParam(txBlock, arg);
+    }
+    return arg;
   });
 }
-function convertAddressArg(tx, arg) {
+function convertAddressArg(txBlock, arg) {
   if (typeof arg === "string" && (0, _utils.isValidSuiAddress)(arg)) {
-    return tx.pure.address((0, _utils.normalizeSuiAddress)(arg));
-  } else if (typeof arg == "object" && !(0, _bcs2.isSerializedBcs)(arg) && !isPureArg(arg)) {
-    return convertObjArg(tx, arg);
-  } else if (isPureArg(arg)) {
-    return tx.pure(Uint8Array.from(arg.Pure));
+    return txBlock.pure.address((0, _utils.normalizeSuiAddress)(arg));
   } else {
-    return arg;
+    return convertArgs(txBlock, [arg])[0];
   }
 }
-function convertObjArg(tx, arg) {
+function convertObjArg(txb, arg) {
   if (typeof arg === "string") {
-    return tx.object(arg);
+    return txb.object(arg);
   }
   if ("digest" in arg && "version" in arg && "objectId" in arg) {
-    return tx.objectRef(arg);
+    return txb.objectRef(arg);
   }
   if ("objectId" in arg && "initialSharedVersion" in arg && "mutable" in arg) {
-    return tx.sharedObjectRef(arg);
+    return txb.sharedObjectRef(arg);
   }
   if ("Object" in arg) {
     if ("ImmOrOwnedObject" in arg.Object) {
-      return tx.object(_transactions.Inputs.ObjectRef(arg.Object.ImmOrOwnedObject));
+      return txb.object(_transactions.Inputs.ObjectRef(arg.Object.ImmOrOwnedObject));
     } else if ("SharedObject" in arg.Object) {
-      return tx.object(_transactions.Inputs.SharedObjectRef(arg.Object.SharedObject));
-    } else if ("Receiving" in arg.Object) {
-      return tx.object(_transactions.Inputs.ReceivingRef(arg.Object.Receiving));
+      return txb.object(_transactions.Inputs.SharedObjectRef(arg.Object.SharedObject));
     } else {
       throw new Error("Invalid argument type");
     }
   }
-  if ("kind" in arg) {
+  if (typeof arg === "function") {
+    return arg;
+  }
+  if ("GasCoin" in arg || "Input" in arg || "Result" in arg || "NestedResult" in arg) {
     return arg;
   }
   throw new Error("Invalid argument type");
+}
+function convertAmounts(txBlock, amounts) {
+  return amounts.map(amount => {
+    if (typeof amount === "number" || typeof amount === "bigint") {
+      return amount;
+    } else {
+      return convertArgs(txBlock, [amount])[0];
+    }
+  });
 }
 
 // src/libs/suiTxBuilder/index.ts
@@ -3974,8 +3948,8 @@ var SuiTx = class {
   address(value) {
     return this.tx.pure.address(value);
   }
-  pure(value) {
-    return this.tx.pure(value);
+  get pure() {
+    return this.tx.pure.bind(this.tx);
   }
   object(value) {
     return this.tx.object(value);
@@ -4010,6 +3984,9 @@ var SuiTx = class {
   serialize() {
     return this.tx.serialize();
   }
+  toJSON() {
+    return this.tx.toJSON();
+  }
   sign(params) {
     return this.tx.sign(params);
   }
@@ -4031,27 +4008,11 @@ var SuiTx = class {
       dependencies
     });
   }
-  upgrade({
-    modules,
-    dependencies,
-    package: packageId,
-    ticket
-  }) {
-    return this.tx.upgrade({
-      modules,
-      dependencies,
-      package: packageId,
-      ticket
-    });
+  upgrade(...args) {
+    return this.tx.upgrade(...args);
   }
-  makeMoveVec({
-    elements,
-    type
-  }) {
-    return this.tx.makeMoveVec({
-      elements,
-      type
-    });
+  makeMoveVec(...args) {
+    return this.tx.makeMoveVec(...args);
   }
   /* Override methods of TransactionBlock */
   transferObjects(objects, address) {
@@ -4088,7 +4049,7 @@ var SuiTx = class {
     if (recipients.length !== amounts.length) {
       throw new Error("transferSuiToMany: recipients.length !== amounts.length");
     }
-    const coins = this.tx.splitCoins(this.tx.gas, convertArgs(this.tx, amounts));
+    const coins = this.tx.splitCoins(this.tx.gas, amounts.map(amount => typeof amount === "number" || typeof amount === "bigint" ? amount : convertArgs(this.tx, [amount])[0]));
     const recipientObjects = recipients.map(recipient => convertAddressArg(this.tx, recipient));
     recipientObjects.forEach((address, index) => {
       this.tx.transferObjects([coins[index]], address);
@@ -4104,7 +4065,7 @@ var SuiTx = class {
     if (coins.length > 1) {
       this.tx.mergeCoins(mergedCoin, coinObjects.slice(1));
     }
-    const [sendCoin] = this.tx.splitCoins(mergedCoin, convertArgs(this.tx, [amount]));
+    const [sendCoin] = this.tx.splitCoins(mergedCoin, [typeof amount === "number" || typeof amount === "bigint" ? amount : convertArgs(this.tx, [amount])[0]]);
     return [sendCoin, mergedCoin];
   }
   splitSUIFromGas(amounts) {
@@ -4116,7 +4077,7 @@ var SuiTx = class {
     if (coins.length > 1) {
       this.tx.mergeCoins(mergedCoin, coinObjects.slice(1));
     }
-    const splitedCoins = this.tx.splitCoins(mergedCoin, convertArgs(this.tx, amounts));
+    const splitedCoins = this.tx.splitCoins(mergedCoin, convertAmounts(this.tx, amounts));
     return {
       splitedCoins,
       mergedCoin
@@ -4142,10 +4103,10 @@ var SuiTx = class {
     return this.transferCoinToMany(coins, sender, [recipient], [amount]);
   }
   stakeSui(amount, validatorAddr) {
-    const [stakeCoin] = this.tx.splitCoins(this.tx.gas, convertArgs(this.tx, [amount]));
+    const [stakeCoin] = this.tx.splitCoins(this.tx.gas, convertAmounts(this.tx, [amount]));
     return this.tx.moveCall({
       target: "0x3::sui_system::request_add_stake",
-      arguments: convertArgs(this.tx, [_utils.SUI_SYSTEM_STATE_OBJECT_ID, stakeCoin, this.tx.pure.address(validatorAddr.toString())])
+      arguments: convertArgs(this.tx, [this.tx.object(_utils.SUI_SYSTEM_STATE_OBJECT_ID), stakeCoin, convertAddressArg(this.tx, validatorAddr)])
     });
   }
 };
