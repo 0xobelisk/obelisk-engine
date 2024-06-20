@@ -4,26 +4,24 @@ import {
   isValidSuiObjectId,
   isValidSuiAddress,
 } from '@mysten/sui/utils';
-import { Inputs } from '@mysten/sui/transactions';
-import { isSerializedBcs, EnumOutputShapeWithKeys } from '@mysten/bcs';
+import { Inputs, getPureBcsSchema } from '@mysten/sui/transactions';
+import { SerializedBcs, bcs, isSerializedBcs } from '@mysten/bcs';
 import type {
   TransactionArgument,
   Transaction,
   TransactionObjectArgument,
 } from '@mysten/sui/transactions';
-import { bcs } from '@mysten/sui/bcs';
 import type {
-  SuiInputTypes,
   SuiObjectArg,
   SuiAddressArg,
   SuiTxArg,
   SuiVecTxArg,
-  DryTxReturnValues,
-} from '../../types';
-import type { ObjectRef } from '@mysten/sui/transactions';
+  SuiInputTypes,
+} from 'src/types';
+
 export const getDefaultSuiInputType = (
   value: SuiTxArg
-): SuiInputTypes | undefined => {
+): 'u64' | 'bool' | 'object' | undefined => {
   if (typeof value === 'string' && isValidSuiObjectId(value)) {
     return 'object';
   } else if (typeof value === 'number' || typeof value === 'bigint') {
@@ -34,15 +32,6 @@ export const getDefaultSuiInputType = (
     return undefined;
   }
 };
-
-/**
- * A pure argument.
- */
-export type PureArg = { Pure: Array<number> };
-
-export function isPureArg(arg: any): arg is PureArg {
-  return (arg as PureArg).Pure !== undefined;
-}
 
 /**
  * Since we know the elements in the array are the same type
@@ -58,7 +47,7 @@ export function isPureArg(arg: any): arg is PureArg {
  * @param type 'address' | 'bool' | 'u8' | 'u16' | 'u32' | 'u64' | 'u128' | 'u256' | 'signer' | 'object' | string
  */
 export function makeVecParam(
-  tx: Transaction,
+  txBlock: Transaction,
   args: SuiTxArg[],
   type?: SuiInputTypes
 ): TransactionArgument {
@@ -74,38 +63,22 @@ export function makeVecParam(
   if (type === 'object') {
     const elements = args.map((arg) =>
       typeof arg === 'string' && isValidSuiObjectId(arg)
-        ? tx.object(normalizeSuiObjectId(arg))
-        : convertObjArg(tx, arg as SuiObjectArg)
+        ? txBlock.object(normalizeSuiObjectId(arg))
+        : convertObjArg(txBlock, arg as SuiObjectArg)
     );
-    return tx.makeMoveVec({ elements });
+    return txBlock.makeMoveVec({ elements });
   } else if (
     typeof type === 'string' &&
     !VECTOR_REGEX.test(type) &&
     !STRUCT_REGEX.test(type)
   ) {
-    if (type === 'address') {
-      return tx.pure(bcs.vector(bcs.Address).serialize(args as string[]));
-    } else if (type === 'bool') {
-      return tx.pure(bcs.vector(bcs.Bool).serialize(args as boolean[]));
-    } else if (type === 'u8') {
-      return tx.pure(bcs.vector(bcs.U8).serialize(args as number[]));
-    } else if (type === 'u16') {
-      return tx.pure(bcs.vector(bcs.U16).serialize(args as number[]));
-    } else if (type === 'u32') {
-      return tx.pure(bcs.vector(bcs.U32).serialize(args as number[]));
-    } else if (type === 'u64') {
-      return tx.pure(bcs.vector(bcs.U64).serialize(args as string[]));
-    } else if (type === 'u128') {
-      return tx.pure(bcs.vector(bcs.U128).serialize(args as string[]));
-    } else if (type === 'u256') {
-      return tx.pure(bcs.vector(bcs.U256).serialize(args as string[]));
-    } else {
-      return tx.pure(bcs.vector(bcs.U8).serialize(args as number[]));
-    }
-    // return tx.pure(args, `vector<${type}>`);
+    const bcsSchema = getPureBcsSchema(type)!;
+    return txBlock.pure(bcs.vector(bcsSchema).serialize(args));
   } else {
-    const elements = args.map((arg) => convertObjArg(tx, arg as SuiObjectArg));
-    return tx.makeMoveVec({ elements, type });
+    const elements = args.map((arg) =>
+      convertObjArg(txBlock, arg as SuiObjectArg)
+    );
+    return txBlock.makeMoveVec({ elements, type });
   }
 }
 
@@ -131,67 +104,25 @@ export function isMoveVecArg(arg: SuiTxArg | SuiVecTxArg): arg is SuiVecTxArg {
  * @param args The array of argument to convert.
  * @returns The converted array of TransactionArgument.
  */
-export function convertArgs(tx: Transaction, args: (SuiTxArg | SuiVecTxArg)[]) {
+export function convertArgs(
+  txBlock: Transaction,
+  args: (SuiTxArg | SuiVecTxArg)[]
+): TransactionArgument[] {
   return args.map((arg) => {
-    if (typeof arg === 'string' && isValidSuiObjectId(arg)) {
-      return tx.object(normalizeSuiObjectId(arg));
-    } else if (
-      typeof arg == 'object' &&
-      !isSerializedBcs(arg) &&
-      !isPureArg(arg) &&
-      !isMoveVecArg(arg)
-    ) {
-      return convertObjArg(tx, arg as SuiObjectArg);
-    } else if (isMoveVecArg(arg)) {
+    if (arg instanceof SerializedBcs || isSerializedBcs(arg)) {
+      return txBlock.pure(arg);
+    }
+
+    if (isMoveVecArg(arg)) {
       const vecType = 'vecType' in arg;
       return vecType
-        ? makeVecParam(tx, arg.value, arg.vecType)
-        : makeVecParam(tx, arg);
-    } else if (isSerializedBcs(arg)) {
-      return arg;
-    } else {
-      let argType = getDefaultSuiInputType(arg);
-      if (argType === 'address') {
-        return tx.pure.address(arg as string);
-      } else if (argType === 'u64') {
-        return tx.pure.u64(arg as string);
-      } else if (argType === 'bool') {
-        return tx.pure.bool(arg as boolean);
-      } else {
-        return tx.pure.u64(arg as string);
-      }
+        ? makeVecParam(txBlock, arg.value, arg.vecType)
+        : makeVecParam(txBlock, arg);
     }
+
+    return arg;
   });
 }
-
-// /**
-//  * Convert any valid input into array of TransactionArgument.
-//  *
-//  * @param txb The Transaction Block
-//  * @param args The array of argument to convert.z
-//  * @returns The converted array of TransactionArgument.
-//  */
-// export function convertReturnValue(values: DryTxReturnValues) {
-//   return values.map(([value, type]) => {
-//     if (type === 'address') {
-//       return tx.pure.address(value);
-//     } else if (type === 'bool') {
-//       return tx.pure.bool(value);
-//     } else if (type === 'u8') {
-//       return tx.pure(bcs.vector(bcs.U8).serialize(args));
-//     } else if (type === 'u16') {
-//       return tx.pure(bcs.vector(bcs.U16).serialize(args));
-//     } else if (type === 'u32') {
-//       return tx.pure(bcs.vector(bcs.U32).serialize(args));
-//     } else if (type === 'u64') {
-//       return tx.pure(bcs.vector(bcs.U64).serialize(args));
-//     } else if (type === 'u128') {
-//       return tx.pure(bcs.vector(bcs.U128).serialize(args));
-//     } else if (type === 'u256') {
-//       return tx.pure(bcs.vector(bcs.U256).serialize(args));
-//     }
-//   });
-// }
 
 /**
  * Convert any valid address input into a TransactionArgument.
@@ -200,70 +131,75 @@ export function convertArgs(tx: Transaction, args: (SuiTxArg | SuiVecTxArg)[]) {
  * @param arg The address argument to convert.
  * @returns The converted TransactionArgument.
  */
-export function convertAddressArg(tx: Transaction, arg: SuiAddressArg) {
+export function convertAddressArg(
+  txBlock: Transaction,
+  arg: SuiAddressArg
+): TransactionArgument {
   if (typeof arg === 'string' && isValidSuiAddress(arg)) {
-    return tx.pure.address(normalizeSuiAddress(arg));
-  } else if (
-    typeof arg == 'object' &&
-    !isSerializedBcs(arg) &&
-    !isPureArg(arg)
-  ) {
-    return convertObjArg(tx, arg as SuiObjectArg);
-  } else if (isPureArg(arg)) {
-    return tx.pure(Uint8Array.from(arg.Pure));
+    return txBlock.pure.address(normalizeSuiAddress(arg));
   } else {
-    return arg;
+    return convertArgs(txBlock, [arg])[0];
   }
 }
 
 /**
  * Convert any valid object input into a TransactionArgument.
  *
- * @param tx The Transaction
+ * @param txb The Transaction Block
  * @param arg The object argument to convert.
  * @returns The converted TransactionArgument.
  */
 export function convertObjArg(
-  tx: Transaction,
+  txb: Transaction,
   arg: SuiObjectArg
 ): TransactionObjectArgument {
   if (typeof arg === 'string') {
-    return tx.object(arg);
+    return txb.object(arg);
   }
 
   if ('digest' in arg && 'version' in arg && 'objectId' in arg) {
-    return tx.objectRef(arg);
+    return txb.objectRef(arg);
   }
 
   if ('objectId' in arg && 'initialSharedVersion' in arg && 'mutable' in arg) {
-    return tx.sharedObjectRef(arg);
+    return txb.sharedObjectRef(arg);
   }
 
   if ('Object' in arg) {
     if ('ImmOrOwnedObject' in arg.Object) {
-      return tx.object(
-        Inputs.ObjectRef(arg.Object.ImmOrOwnedObject as ObjectRef)
-      );
+      return txb.object(Inputs.ObjectRef(arg.Object.ImmOrOwnedObject));
     } else if ('SharedObject' in arg.Object) {
-      return tx.object(
-        Inputs.SharedObjectRef(
-          arg.Object.SharedObject as {
-            objectId: string;
-            mutable: boolean;
-            initialSharedVersion: number | string;
-          }
-        )
-      );
-    } else if ('Receiving' in arg.Object) {
-      return tx.object(Inputs.ReceivingRef(arg.Object.Receiving as ObjectRef));
+      return txb.object(Inputs.SharedObjectRef(arg.Object.SharedObject));
     } else {
       throw new Error('Invalid argument type');
     }
   }
 
-  if ('kind' in arg) {
+  if (typeof arg === 'function') {
+    return arg;
+  }
+
+  if (
+    'GasCoin' in arg ||
+    'Input' in arg ||
+    'Result' in arg ||
+    'NestedResult' in arg
+  ) {
     return arg;
   }
 
   throw new Error('Invalid argument type');
+}
+
+export function convertAmounts(
+  txBlock: Transaction,
+  amounts: (SuiTxArg | number | bigint)[]
+): (TransactionArgument | number | bigint)[] {
+  return amounts.map((amount) => {
+    if (typeof amount === 'number' || typeof amount === 'bigint') {
+      return amount;
+    } else {
+      return convertArgs(txBlock, [amount])[0];
+    }
+  });
 }

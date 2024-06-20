@@ -1,5 +1,5 @@
 import type { SuiTransactionBlockResponse } from '@mysten/sui/client';
-import { bcs } from '@mysten/sui/bcs';
+import type { CallArg } from '@mysten/sui/transactions';
 
 export class SuiOwnedObject {
   public readonly objectId: string;
@@ -21,7 +21,7 @@ export class SuiOwnedObject {
     return !!this.version && !!this.digest;
   }
 
-  asCallArg(): typeof bcs.CallArg.$inferType | string {
+  asCallArg(): CallArg | string {
     if (!this.version || !this.digest) {
       return this.objectId;
     }

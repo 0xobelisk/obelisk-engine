@@ -1,6 +1,6 @@
 {
   "name": "@0xobelisk/sui-client",
-  "version": "0.5.18",
+  "version": "0.5.19",
   "description": "Tookit for interacting with move eps framework",
   "keywords": [
     "sui",
@@ -77,9 +77,6 @@
     "tmp": "^0.2.1",
     "valibot": "^0.25.0"
   },
-  "peerDependencies": {
-    "@mysten/sui": "^1.1.2"
-  },
   "devDependencies": {
     "@commitlint/cli": "^18.0.0",
     "@commitlint/config-conventional": "^18.0.0",
@@ -98,7 +95,7 @@
     "tsconfig-paths": "^4.2.0",
     "tsup": "^7.1.0",
     "typedoc": "^0.25.2",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "lint-staged": {
     "**/*.ts": [

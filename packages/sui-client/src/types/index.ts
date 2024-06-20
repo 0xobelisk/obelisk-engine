@@ -7,9 +7,10 @@ import type {
   TransactionObjectArgument,
   TransactionResult,
   ObjectRef,
+  Argument,
+  Inputs,
 } from '@mysten/sui/transactions';
 import type {
-  SuiObjectRef,
   SuiMoveNormalizedModules,
   DevInspectResults,
   SuiTransactionBlockResponse,
@@ -177,17 +178,26 @@ type TransactionBlockType = InstanceType<typeof Transaction>;
 export type PureCallArg = {
   Pure: number[];
 };
+
+/**
+ * An object argument.
+ */
+type ObjectArg =
+  | { ImmOrOwnedObject: SuiObjectRef }
+  | { SharedObject: SharedObjectRef }
+  | { Receiving: SuiObjectRef };
+
 export type ObjectCallArg = {
-  Object: typeof bcs.CallArg.$inferType;
+  Object: ObjectArg;
 };
 
 export type TransactionType = Parameters<TransactionBlockType['add']>;
 
 export type TransactionPureArgument = Extract<
-  TransactionArgument,
+  Argument,
   {
-    kind: 'Input';
-    type: 'pure';
+    $kind: 'Input';
+    type?: 'pure';
   }
 >;
 
@@ -205,20 +215,35 @@ export type EntityData = {
   key: string;
 };
 
-export type SuiAddressArg =
-  | TransactionArgument
-  | SerializedBcs<any>
-  | string
-  | PureCallArg;
+type SharedObjectRef = {
+  /** Hex code as string representing the object id */
+  objectId: string;
 
-export type SuiTxArg = SuiAddressArg | number | bigint | boolean;
+  /** The version the object was shared at */
+  initialSharedVersion: number | string;
+
+  /** Whether reference is mutable */
+  mutable: boolean;
+};
+
+type SuiObjectRef = {
+  /** Base64 string representing the object digest */
+  objectId: string;
+  /** Object version */
+  version: number | string;
+  /** Hex code as string representing the object id */
+  digest: string;
+};
+
+export type SuiTxArg = TransactionArgument | SerializedBcs<any>;
+export type SuiAddressArg = Argument | SerializedBcs<any> | string;
+export type SuiAmountsArg = SuiTxArg | number | bigint;
 
 export type SuiObjectArg =
-  | ObjectRef
   | TransactionObjectArgument
   | string
-  | typeof bcs.SharedObjectRef.$inferType
-  | SuiObjectRef
+  | Parameters<typeof Inputs.ObjectRef>[0]
+  | Parameters<typeof Inputs.SharedObjectRef>[0]
   | ObjectCallArg;
 
 export type SuiVecTxArg =
@@ -237,8 +262,7 @@ export type SuiBasicTypes =
   | 'u32'
   | 'u64'
   | 'u128'
-  | 'u256'
-  | 'signer';
+  | 'u256';
 
 export type SuiInputTypes = 'object' | SuiBasicTypes;
 
