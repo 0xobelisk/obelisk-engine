@@ -6,15 +6,16 @@ import {
   loadMetadata,
   Transaction,
   DevInspectResults,
+  BcsType,
 } from '../src/index';
 import * as process from 'process';
 import dotenv from 'dotenv';
 dotenv.config();
 
 async function init() {
-  const network = 'devnet';
+  const network = 'testnet';
   const packageId =
-    '0x5435a74aba28372d6bf3f5f7f1246891a371cd38eeb7801592042a6a4394c32d';
+    '0x3b09247b204f17ef5cd240e6c5c9b2c03bb4907c6d2cb6e27597cdf97a00f004';
 
   const metadata = await loadMetadata(network as NetworkType, packageId);
 
@@ -60,8 +61,22 @@ async function init() {
     params3
   )) as DevInspectResults;
   console.log(JSON.stringify(query3.results![0]));
-  let formatData3 = await obelisk.autoFormatDryValue(query3);
-  console.log(formatData3);
+  // let formatData3 = await obelisk.autoFormatDryValue(query3);
+  let formatData3 =
+    obelisk.object[
+      '0x3b09247b204f17ef5cd240e6c5c9b2c03bb4907c6d2cb6e27597cdf97a00f004::funt::Test'
+    ];
+
+  const resultList = query3.results![0].returnValues!;
+
+  // for (const res of resultList) {
+  //   let baseValue = res[0];
+  //   let baseType = res[1];
+  //   const value = Uint8Array.from(baseValue);
+  //   console.log('------ test ------');
+  //   console.log(formatData3.parse(value));
+  //   console.log('------ test ------');
+  // }
 
   let tx4 = new Transaction();
   let params4: TransactionArgument[] = [];
@@ -140,8 +155,19 @@ async function init() {
     params11
   )) as DevInspectResults;
   console.log(JSON.stringify(query11.results![0]));
-  let formatData11 = await obelisk.autoFormatDryValue(query11);
-  console.log(formatData11);
+  // let formatData11 = await obelisk.autoFormatDryValue(query11);
+  // console.log(formatData11);
+
+  const objId = query11.results![0].returnValues![0][1] as string;
+  // let formatData12 = await obelisk.autoFormatDryValue(query12);
+  // console.log(formatData12);
+  let struct12 = obelisk.object[objId];
+  console.log(struct12);
+  console.log(JSON.stringify(struct12));
+  console.log(struct12.$inferType);
+  const value = Uint8Array.from(query11.results![0].returnValues![0][0]);
+  let returndata = struct12.parse(value);
+  console.log(returndata);
 
   let tx12 = new Transaction();
   let params12: TransactionArgument[] = [];
@@ -150,8 +176,7 @@ async function init() {
     params12
   )) as DevInspectResults;
   console.log(JSON.stringify(query12.results![0]));
-  let formatData12 = await obelisk.autoFormatDryValue(query12);
-  console.log(formatData12);
+  console.log(JSON.stringify(query12.results![0].returnValues![1]));
 
   // let txb = new TransactionBlock();
 

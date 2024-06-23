@@ -1,19 +1,19 @@
 import keccak256 from 'keccak256';
 import { getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction, TransactionResult } from '@mysten/sui/transactions';
-import type { BcsType, SerializedBcs } from '@mysten/bcs';
+import { BcsType, SerializedBcs } from '@mysten/bcs';
 import type { TransactionArgument } from '@mysten/sui/transactions';
 import type {
   SuiTransactionBlockResponse,
   DevInspectResults,
   SuiMoveNormalizedModules,
+  SuiMoveNormalizedType,
   SuiObjectData,
 } from '@mysten/sui/client';
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTx } from './libs/suiTxBuilder';
 import { SuiInteractor } from './libs/suiInteractor';
-
-import { MapMoudleStruct, NetworkType, ObeliskObjectContent } from './types';
+import { MapObjectStruct, MoveStructType, ObeliskObjectContent } from './types';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import {
   SuiMoveMoudleFuncType,
@@ -107,7 +107,7 @@ export class Obelisk {
 
   readonly #query: MapMoudleFuncQuery = {};
   readonly #tx: MapMoudleFuncTx = {};
-  readonly #struct: MapMoudleStruct = {};
+  readonly #object: MapObjectStruct = {};
   /**
    * Support the following ways to init the ObeliskClient:
    * 1. mnemonics
@@ -141,6 +141,36 @@ export class Obelisk {
         (moudlevalue) => {
           const data = moudlevalue as SuiMoveMoudleValueType;
           const moduleName = data.name;
+          const objMoudleId = `${packageId}::${moduleName}`;
+
+          let stillNeedFormat = true;
+          Object.entries(data.structs).forEach(([objectName, objectType]) => {
+            console.log('');
+            const objId = `${objMoudleId}::${objectName}`;
+            console.log(objId);
+            console.log(objectName);
+            console.log(objectType);
+            console.log('');
+            const bcsmeta: MoveStructType = {
+              objectName,
+              objectType,
+            };
+            if (isUndefined(this.#object[objId])) {
+              console.log('------ here 00000');
+              // this.#object[objId] = createBcs(bcsmeta, () =>
+              //   this.#bcs(bcsmeta)
+              // );
+              this.#object[objId] = this.#bcs(bcsmeta);
+              // this.#struct[objId] = createBcs();
+            }
+            // if (isUndefined(this.#query[moduleName][funcName])) {
+            //   this.#query[moduleName][funcName] = createQuery(
+            //     meta,
+            //     (tx, p, typeArguments, isRaw) =>
+            //       this.#read(meta, tx, p, typeArguments, isRaw)
+            //   );
+            // }
+          });
 
           Object.entries(data.exposedFunctions).forEach(
             ([funcName, funcvalue]) => {
@@ -188,8 +218,8 @@ export class Obelisk {
     return this.#tx;
   }
 
-  public get struct(): MapMoudleStruct {
-    return this.#struct;
+  public get object(): MapObjectStruct {
+    return this.#object;
   }
 
   #exec = async (
@@ -237,6 +267,177 @@ export class Obelisk {
     });
 
     return await this.inspectTxn(tx);
+  };
+
+  #bcs = (bcsmeta: MoveStructType) => {
+    console.log('--------- here1');
+    const bcsJson: Record<string, BcsType<any, any>> = {};
+    console.log(bcsmeta.objectType);
+    console.log(JSON.stringify(bcsmeta.objectType));
+    Object.entries(bcsmeta.objectType.fields).forEach(([index, type]) => {
+      const objName = type.name;
+      const objType: SuiMoveNormalizedType = type.type;
+      console.log(index);
+      console.log(type);
+      switch (typeof objType) {
+        case 'object':
+          console.log('---- object');
+          console.log(typeof objType);
+          console.log(objName);
+          console.log(objType);
+          for (const [key, value] of Object.entries(objType)) {
+            console.log(`Key: ${key}`);
+            console.log('Value:', value);
+            switch (key) {
+              case 'Struct':
+                const structType = value as {
+                  address: string;
+                  module: string;
+                  name: string;
+                  typeArguments: SuiMoveNormalizedType[];
+                };
+                if (
+                  structType.address === '0x1' &&
+                  structType.module === 'ascii' &&
+                  structType.name === 'String'
+                ) {
+                  bcsJson[objName] = bcs.string();
+                  return;
+                } else if (
+                  structType.address === '0x1' &&
+                  structType.module === 'option' &&
+                  structType.name === 'Option'
+                ) {
+                  switch (structType.typeArguments[0]) {
+                    case 'U8':
+                      bcsJson[objName] = bcs.option(bcs.u8());
+                      return;
+                    case 'U16':
+                      bcsJson[objName] = bcs.option(bcs.u16());
+                      return;
+                    case 'U32':
+                      bcsJson[objName] = bcs.option(bcs.u32());
+                      return;
+                    case 'U64':
+                      bcsJson[objName] = bcs.option(bcs.u64());
+                      return;
+                    case 'U128':
+                      bcsJson[objName] = bcs.option(bcs.u128());
+                      return;
+                    case 'U256':
+                      bcsJson[objName] = bcs.option(bcs.u256());
+                      return;
+                    case 'Bool':
+                      bcsJson[objName] = bcs.option(bcs.bool());
+                      return;
+                    case 'Address':
+                      bcsJson[objName] = bcs.option(
+                        bcs.bytes(32).transform({
+                          // To change the input type, you need to provide a type definition for the input
+                          input: (val: string) => fromHEX(val),
+                          output: (val) => toHEX(val),
+                        })
+                      );
+                      return;
+                    default:
+                    // throw new Error('Unsupported type');
+                  }
+                }
+                return;
+              case 'Vector':
+                switch (value) {
+                  case 'U8':
+                    bcsJson[objName] = bcs.vector(bcs.u8());
+                    return;
+                  case 'U16':
+                    bcsJson[objName] = bcs.vector(bcs.u16());
+                    return;
+                  case 'U32':
+                    bcsJson[objName] = bcs.vector(bcs.u32());
+                    return;
+                  case 'U64':
+                    bcsJson[objName] = bcs.vector(bcs.u64());
+                    return;
+                  case 'U128':
+                    bcsJson[objName] = bcs.vector(bcs.u128());
+                    return;
+                  case 'U256':
+                    bcsJson[objName] = bcs.vector(bcs.u256());
+                    return;
+                  case 'Bool':
+                    bcsJson[objName] = bcs.vector(bcs.bool());
+                    return;
+                  case 'Address':
+                    bcsJson[objName] = bcs.vector(
+                      bcs.bytes(32).transform({
+                        // To change the input type, you need to provide a type definition for the input
+                        input: (val: string) => fromHEX(val),
+                        output: (val) => toHEX(val),
+                      })
+                    );
+                    return;
+                  default:
+                  // throw new Error('Unsupported type');
+                }
+
+              case 'TypeParameter':
+                bcsJson[objName] = bcs.u128();
+                return;
+              // case 'Reference':
+
+              // case 'MutableReference':
+
+              default:
+                throw new Error('Unsupported type');
+            }
+          }
+          return;
+        case 'string':
+          console.log('---- base type');
+          console.log(typeof objType);
+          console.log(objName);
+          console.log(objType);
+          switch (objType) {
+            case 'U8':
+              bcsJson[objName] = bcs.u8();
+              return;
+            case 'U16':
+              bcsJson[objName] = bcs.u16();
+              return;
+            case 'U32':
+              bcsJson[objName] = bcs.u32();
+              return;
+            case 'U64':
+              bcsJson[objName] = bcs.u64();
+              return;
+            case 'U128':
+              bcsJson[objName] = bcs.u128();
+              return;
+            case 'U256':
+              bcsJson[objName] = bcs.u256();
+              return;
+            case 'Bool':
+              bcsJson[objName] = bcs.bool();
+              return;
+            case 'Address':
+              bcsJson[objName] = bcs.bytes(32).transform({
+                // To change the input type, you need to provide a type definition for the input
+                input: (val: string) => fromHEX(val),
+                output: (val) => toHEX(val),
+              });
+              return;
+            default:
+              return;
+          }
+        default:
+          throw new Error('Unsupported type');
+      }
+    });
+
+    console.log('--------- here2');
+    console.log(bcsJson);
+    return bcs.struct(bcsmeta.objectName, bcsJson);
+    // return await this.inspectTxn(tx);
   };
 
   /**
