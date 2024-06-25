@@ -835,54 +835,13 @@ export class Obelisk {
       params.push(tx.pure.address(entityId));
     }
 
-    const getResult = (await this.query[schemaModuleName].get(
+    const dryResult = (await this.query[schemaModuleName].get(
       tx,
       params
     )) as DevInspectResults;
-    let returnValues = [];
 
     // "success" | "failure";
-    if (getResult.effects.status.status === 'success') {
-      const resultList = getResult.results![0].returnValues!;
-
-      for (const res of resultList) {
-        let baseValue = res[0];
-        let baseType = res[1];
-
-        const value = Uint8Array.from(baseValue);
-        if (baseType === 'address') {
-          const Address = bcs.bytes(32).transform({
-            // To change the input type, you need to provide a type definition for the input
-            input: (val: string) => fromHEX(val),
-            output: (val) => toHEX(val),
-          });
-          returnValues.push(Address.parse(value));
-        } else if (baseType === 'u8') {
-          returnValues.push(bcs.u8().parse(value));
-        } else if (baseType === 'u16') {
-          returnValues.push(bcs.u16().parse(value));
-        } else if (baseType === 'u32') {
-          returnValues.push(bcs.u32().parse(value));
-        } else if (baseType === 'u64') {
-          returnValues.push(bcs.u64().parse(value));
-        } else if (baseType === 'u128') {
-          returnValues.push(bcs.u128().parse(value));
-        } else if (baseType === 'u256') {
-          returnValues.push(bcs.u256().parse(value));
-        } else if (baseType === 'bool') {
-          returnValues.push(bcs.bool().parse(value));
-        } else if (baseType === '0x1::ascii::String') {
-          returnValues.push(bcs.string().parse(value));
-        } else if (baseType === 'vector<u8>') {
-          returnValues.push(bcs.vector(bcs.u8()).parse(value));
-        } else if (baseType === '0x1::option::Option<u8>') {
-          returnValues.push(bcs.option(bcs.u8()).parse(value));
-        }
-      }
-      return returnValues;
-    } else {
-      return undefined;
-    }
+    return this.view(dryResult);
   }
 
   async containEntity(
@@ -898,21 +857,12 @@ export class Obelisk {
       params.push(tx.pure.address(entityId));
     }
 
-    const getResult = (await this.query[schemaModuleName].contains(
+    const dryResult = (await this.query[schemaModuleName].contains(
       tx,
       params
     )) as DevInspectResults;
 
-    // "success" | "failure";
-    if (getResult.effects.status.status === 'success') {
-      const res = getResult.results![0].returnValues![0];
-      let baseValue = res[0];
-
-      const value = Uint8Array.from(baseValue);
-      return bcs.bool().parse(value);
-    } else {
-      return undefined;
-    }
+    return this.view(dryResult) as boolean | undefined;
   }
 
   // async getEntities(
