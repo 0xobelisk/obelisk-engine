@@ -2,36 +2,13 @@ import { Types } from 'aptos';
 import type { ContractFactoryParams } from './types';
 export type ApiTypes = 'promise' | 'rxjs';
 
-// export interface ContractQuery {
-//   (origin: AccountId | string | Uint8Array, options: ContractOptions, ...params: unknown[]): SuiTransactionBlockResponse<ApiType, ContractCallOutcome>;
-// }
-
-// export type MapMessageQuery<ApiType extends ApiTypes> = Record<string, ContractQuery<ApiType>>;
-
-// // function createQuery <ApiType extends ApiTypes> (meta: AbiMessage, fn: (origin: string | AccountId | Uint8Array, options: ContractOptions, params: unknown[]) => ContractCallResult<ApiType, ContractCallOutcome>): ContractQuery<ApiType> {
-// //   return withMeta(meta, (origin: string | AccountId | Uint8Array, options: ContractOptions, ...params: unknown[]): ContractCallResult<ApiType, ContractCallOutcome> =>
-// //     fn(origin, options, params)
-// //   );
-// // }
-
-// export type MapMessageTx<ApiType extends ApiTypes> = Record<string, ContractTx<ApiType>>;
-
-// export interface ContractOptions {
-//   gasLimit?: bigint | string | number | BN | WeightV2;
-//   storageDepositLimit?: bigint | string | number | BN | null;
-//   value?: bigint | BN | string | number;
-// }
-
-// export interface ContractTx {
-//   (options: ContractOptions, ...params: unknown[]): SubmittableExtrinsic<ApiType>;
-// }
 export class AptosContractFactory {
   public packageId: string;
   public metadata: Types.MoveModule[] | undefined;
   // readonly #query: MapMessageQuery<ApiTypes> = {};
   // readonly #tx: MapMessageTx<ApiTypes> = {};
   /**
-   * Support the following ways to init the SuiToolkit:
+   * Support the following ways to init the Aptos Obelisk:
    * 1. mnemonics
    * 2. secretKey (base64 or hex)
    * If none of them is provided, will generate a random mnemonics with 24 words.

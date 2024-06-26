@@ -1,4 +1,4 @@
-import type { SuiMoveNormalizedModules } from '@mysten/sui.js/client';
+import type { SuiMoveNormalizedModules } from '@mysten/sui/client';
 import type { ContractFactoryParams, SuiMoveMoudleValueType } from './types';
 export type ApiTypes = 'promise' | 'rxjs';
 

@@ -1,10 +1,7 @@
 import * as fsAsync from 'fs/promises';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
-import {
-	SUI_PRIVATE_KEY_PREFIX,
-	decodeSuiPrivateKey,
-} from '@mysten/sui.js/cryptography';
+import { SUI_PRIVATE_KEY_PREFIX } from '@mysten/sui/cryptography';
 import { FsIibError } from './errors';
 
 export type DeploymentJsonType = {

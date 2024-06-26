@@ -1,12 +1,12 @@
-import { SuiClient } from '@mysten/sui.js/client';
+import { SuiClient } from '@mysten/sui/client';
 import type {
   SuiTransactionBlockResponseOptions,
   SuiTransactionBlockResponse,
   SuiObjectDataOptions,
   SuiObjectData,
-} from '@mysten/sui.js/client';
-import type * as RpcTypes from '@mysten/sui.js/dist/cjs/client/types/generated';
-import { requestSuiFromFaucetV0, getFaucetHost } from '@mysten/sui.js/faucet';
+} from '@mysten/sui/client';
+import type * as RpcTypes from '@mysten/sui/dist/cjs/client/types/generated';
+import { requestSuiFromFaucetV0, getFaucetHost } from '@mysten/sui/faucet';
 import { FaucetNetworkType, NetworkType, ObjectData } from '../../types';
 import { SuiOwnedObject, SuiSharedObject } from '../suiModel';
 import { delay } from './util';

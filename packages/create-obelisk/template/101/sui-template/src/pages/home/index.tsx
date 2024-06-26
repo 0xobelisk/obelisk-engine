@@ -1,4 +1,4 @@
-import { loadMetadata, Obelisk, TransactionBlock, TransactionResult } from '@0xobelisk/sui-client';
+import { loadMetadata, Obelisk, Transaction, TransactionResult } from '@0xobelisk/sui-client';
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
@@ -19,7 +19,7 @@ const Home = () => {
       metadata: metadata,
       secretKey: PRIVATEKEY,
     });
-    const tx = new TransactionBlock();
+    const tx = Transaction.from();
     const world = tx.pure(WORLD_ID);
     const params = [world];
     (await obelisk.tx.counter_system.inc(tx, params, undefined, true)) as TransactionResult;

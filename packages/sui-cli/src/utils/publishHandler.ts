@@ -1,10 +1,10 @@
 import { Obelisk } from '@0xobelisk/sui-client';
-import { TransactionBlock } from '@mysten/sui.js/transactions';
+import { Transaction } from '@mysten/sui/transactions';
 import {
 	getFullnodeUrl,
 	SuiClient,
 	SuiTransactionBlockResponse,
-} from '@mysten/sui.js/client';
+} from '@mysten/sui/client';
 import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { ObeliskCliError } from './errors';
@@ -67,7 +67,7 @@ in your contracts directory to use the default sui private key.`
 
 	console.log(chalk.blue(`Account: ${keypair.toSuiAddress()}`));
 
-	const tx = new TransactionBlock();
+	const tx = new Transaction();
 	const [upgradeCap] = tx.publish({
 		modules,
 		dependencies,
@@ -79,9 +79,9 @@ in your contracts directory to use the default sui private key.`
 
 	let result: SuiTransactionBlockResponse;
 	try {
-		result = await client.signAndExecuteTransactionBlock({
+		result = await client.signAndExecuteTransaction({
 			signer: keypair,
-			transactionBlock: tx,
+			transaction: tx,
 			options: {
 				showObjectChanges: true,
 			},
@@ -147,7 +147,7 @@ in your contracts directory to use the default sui private key.`
 		new Promise(resolve => setTimeout(resolve, ms));
 	await delay(5000);
 
-	const deployHookTx = new TransactionBlock();
+	const deployHookTx = new Transaction();
 
 	deployHookTx.moveCall({
 		target: `${packageId}::deploy_hook::run`,
@@ -159,9 +159,9 @@ in your contracts directory to use the default sui private key.`
 
 	let deployHookResult: SuiTransactionBlockResponse;
 	try {
-		deployHookResult = await client.signAndExecuteTransactionBlock({
+		deployHookResult = await client.signAndExecuteTransaction({
 			signer: keypair,
-			transactionBlock: deployHookTx,
+			transaction: deployHookTx,
 			options: {
 				showEffects: true,
 			},
