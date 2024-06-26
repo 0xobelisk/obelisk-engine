@@ -181,8 +181,10 @@ export class Obelisk {
     if (metadata !== undefined) {
       this.metadata = metadata as SuiMoveNormalizedModules;
 
+      const maxLoopNum = 5;
+      let loopNum = 0;
       let stillNeedFormat = true;
-      while (stillNeedFormat === true) {
+      while (stillNeedFormat === true && loopNum <= maxLoopNum) {
         let loopFlag = false;
         Object.values(metadata as SuiMoveNormalizedModules).forEach(
           (moudlevalue) => {
@@ -237,6 +239,7 @@ export class Obelisk {
         );
 
         stillNeedFormat = loopFlag;
+        loopNum++;
       }
     }
     this.contractFactory = new SuiContractFactory({
