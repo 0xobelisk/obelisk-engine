@@ -1,12 +1,10 @@
 import {
   Obelisk,
   NetworkType,
-  TransactionResult,
   TransactionArgument,
   loadMetadata,
   Transaction,
   DevInspectResults,
-  BcsType,
 } from '../src/index';
 import * as process from 'process';
 import dotenv from 'dotenv';
@@ -60,22 +58,8 @@ async function init() {
     params3
   )) as DevInspectResults;
   console.log(JSON.stringify(query3.results![0]));
-  // let formatData3 = await obelisk.autoFormatDryValue(query3);
-  let formatData3 =
-    obelisk.object[
-      '0x3b09247b204f17ef5cd240e6c5c9b2c03bb4907c6d2cb6e27597cdf97a00f004::funt::Test'
-    ];
-
-  const resultList = query3.results![0].returnValues!;
-
-  // for (const res of resultList) {
-  //   let baseValue = res[0];
-  //   let baseType = res[1];
-  //   const value = Uint8Array.from(baseValue);
-  //   console.log('------ test ------');
-  //   console.log(formatData3.parse(value));
-  //   console.log('------ test ------');
-  // }
+  let formatData3 = obelisk.view(query3);
+  console.log(formatData3);
 
   let tx4 = new Transaction();
   let params4: TransactionArgument[] = [];
