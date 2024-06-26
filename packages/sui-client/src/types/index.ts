@@ -109,35 +109,27 @@ export type MapMessageQuery = Record<string, ContractQuery>;
 export type MapMoudleFuncTx = Record<string, MapMessageTx>;
 export type MapMoudleFuncQuery = Record<string, MapMessageQuery>;
 
-type MoveStructType = {
-  struct: Record<
-    string,
-    {
-      fields: {
-        type: SuiMoveNormalizedType;
-        name: string;
-      }[];
-      abilities: {
-        abilities: string[];
-      };
-      typeParameters: {
-        constraints: {
-          abilities: string[];
-        };
-        isPhantom: boolean;
-      }[];
-    }
-  >;
-  bcs: BcsType<
-    {
-      [x: string]: any;
-    },
-    {
-      [x: string]: any;
-    }
-  >;
+export type MoveStructValueType = {
+  fields: {
+    type: SuiMoveNormalizedType;
+    name: string;
+  }[];
+  abilities: {
+    abilities: string[];
+  };
+  typeParameters: {
+    constraints: {
+      abilities: string[];
+    };
+    isPhantom: boolean;
+  }[];
 };
-export type MapMoudleStruct = Record<string, MoveStructType>;
+export type MoveStructType = {
+  objectType: MoveStructValueType;
+  objectName: string;
+};
+
+export type MapObjectStruct = Record<string, BcsType<any, any>>;
 
 export type MapMoudleFuncTest = Record<string, Record<string, string>>;
 export type MapMoudleFuncQueryTest = Record<string, Record<string, string>>;
