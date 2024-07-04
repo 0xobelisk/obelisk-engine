@@ -1,0 +1,1 @@
+System.register(["./xr-event-handle-3881acca.js","./index-433d8403.js","./touch-08df655d.js"],(function(e){"use strict";return{setters:[function(t){e({DeviceType:t.D,XrKeyboardEventType:t.a,XrUIPressEvent:t.b,XrUIPressEventType:t.X})},function(){},function(){}],execute:function(){}}}));

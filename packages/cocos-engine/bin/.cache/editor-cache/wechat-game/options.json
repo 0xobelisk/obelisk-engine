@@ -1,0 +1,18 @@
+{
+  "platform": "WECHAT",
+  "engine": "/Users/mac/Documents/editor_3d/v3.8.3/resources/3d/engine",
+  "out": "/Users/mac/Documents/editor_3d/v3.8.3/resources/3d/engine/bin/.cache/editor-cache/wechat-game/cocos",
+  "moduleFormat": "system",
+  "compress": true,
+  "split": true,
+  "mode": "BUILD",
+  "nativeCodeBundleMode": "wasm",
+  "flags": {
+    "SERVER_MODE": false,
+    "DEBUG": false,
+    "NATIVE_CODE_BUNDLE_MODE": 1,
+    "CULL_MESHOPT": false
+  },
+  "preserveType": false,
+  "loose": true
+}
