@@ -18,6 +18,7 @@ import {
   ContractTx,
   MapModuleFuncQuery,
   MapModuleFuncTx,
+  NetworkType,
 } from './types';
 
 const {
@@ -269,12 +270,13 @@ export class Obelisk {
   getMetadata(): Types.MoveModule[] | undefined {
     return this.contractFactory.metadata;
   }
+
   /**
    * Request some APT from faucet
    * @Returns {Promise<boolean>}, true if the request is successful, false otherwise.
    */
   async requestFaucet(
-    network: Network,
+    network: NetworkType,
     accountAddress?: string,
     amount?: number
   ) {
