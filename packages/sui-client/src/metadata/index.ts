@@ -1,8 +1,7 @@
-import { SuiMoveNormalizedModules } from '@mysten/sui.js/client';
-import { getFullnodeUrl } from '@mysten/sui.js/client';
+import { SuiMoveNormalizedModules } from '@mysten/sui/client';
+import { getFullnodeUrl } from '@mysten/sui/client';
 
 import { SuiInteractor } from '../libs/suiInteractor';
-
 import { NetworkType } from '../types';
 
 export async function loadMetadata(

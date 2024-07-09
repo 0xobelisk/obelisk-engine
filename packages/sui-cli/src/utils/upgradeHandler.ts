@@ -1,6 +1,6 @@
 import { Obelisk } from '@0xobelisk/sui-client';
-import { TransactionBlock, UpgradePolicy } from '@mysten/sui.js/transactions';
-import { getFullnodeUrl, SuiClient } from '@mysten/sui.js/client';
+import { Transaction, UpgradePolicy } from '@mysten/sui/transactions';
+import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { ObeliskCliError, UpgradeError } from './errors';
@@ -82,20 +82,20 @@ in your contracts directory to use the default sui private key.`
 			throw new UpgradeError(error.stdout);
 		}
 
-		const tx = new TransactionBlock();
+		const tx = new Transaction();
 		const ticket = tx.moveCall({
 			target: '0x2::package::authorize_upgrade',
 			arguments: [
 				tx.object(upgradeCap),
-				tx.pure(UpgradePolicy.COMPATIBLE),
-				tx.pure(digest),
+				tx.pure.u8(UpgradePolicy.COMPATIBLE),
+				tx.object(digest),
 			],
 		});
 
 		const receipt = tx.upgrade({
 			modules,
 			dependencies,
-			packageId: oldPackageId,
+			package: oldPackageId,
 			ticket,
 		});
 
@@ -109,9 +109,9 @@ in your contracts directory to use the default sui private key.`
 			tx.pure(keypair.getPublicKey().toSuiAddress())
 		);
 
-		const result = await client.signAndExecuteTransactionBlock({
+		const result = await client.signAndExecuteTransaction({
 			signer: keypair,
-			transactionBlock: tx,
+			transaction: tx,
 			options: {
 				showObjectChanges: true,
 			},
@@ -163,7 +163,7 @@ in your contracts directory to use the default sui private key.`
 			new Promise(resolve => setTimeout(resolve, ms));
 		await delay(5000);
 
-		const migrateTx = new TransactionBlock();
+		const migrateTx = new Transaction();
 		migrateTx.moveCall({
 			target: `${newPackageId}::world::migrate`,
 			arguments: [migrateTx.object(worldId), migrateTx.object(adminCap)],
@@ -196,9 +196,9 @@ in your contracts directory to use the default sui private key.`
 			});
 			needRegisterSchema.push(`${newSchema}_schema`);
 		}
-		const migrateResult = await client.signAndExecuteTransactionBlock({
+		const migrateResult = await client.signAndExecuteTransaction({
 			signer: keypair,
-			transactionBlock: migrateTx,
+			transaction: migrateTx,
 			options: {
 				showEffects: true,
 			},

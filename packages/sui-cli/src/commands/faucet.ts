@@ -1,11 +1,11 @@
 import { Obelisk } from '@0xobelisk/sui-client';
 import type { CommandModule } from 'yargs';
-import { requestSuiFromFaucetV0, getFaucetHost } from '@mysten/sui.js/faucet';
+import { requestSuiFromFaucetV0, getFaucetHost } from '@mysten/sui/faucet';
 import {
 	SuiClient,
 	getFullnodeUrl,
 	GetBalanceParams,
-} from '@mysten/sui.js/client';
+} from '@mysten/sui/client';
 import { validatePrivateKey, ObeliskCliError } from '../utils';
 
 type Options = {
