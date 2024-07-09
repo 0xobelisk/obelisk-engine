@@ -1,5 +1,6 @@
+import fs from 'fs';
+import chalk from 'chalk';
 import { execSync } from 'child_process';
-
 import {
 	AptosAccount,
 	TxnBuilderTypes,
@@ -13,15 +14,11 @@ import {
 	FungibleAssetClient,
 	CustomEndpoints,
 } from 'aptos';
-
 import { Seq } from 'aptos/src/bcs';
-
-import chalk from 'chalk';
+import { getDefaultURL, InputNetworkType } from '@0xobelisk/aptos-client';
 
 import { ObeliskCliError } from './errors';
-import { getDefaultURL, saveContractData, validatePrivateKey } from './utils';
-
-import fs from 'fs';
+import { saveContractData, validatePrivateKey } from './utils';
 
 const {
 	AccountAddress,
@@ -43,7 +40,7 @@ type Module = TxnBuilderTypes.Module;
 
 export async function upgradeHandler(
 	projectName: string,
-	network: 'mainnet' | 'testnet' | 'devnet' | 'local'
+	network: InputNetworkType
 ) {
 	const privateKey = process.env.PRIVATE_KEY;
 	if (!privateKey)

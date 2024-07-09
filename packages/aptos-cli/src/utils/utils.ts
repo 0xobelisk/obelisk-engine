@@ -1,3 +1,4 @@
+import { InputNetworkType } from '@0xobelisk/aptos-client';
 import * as fsAsync from 'fs/promises';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
@@ -5,7 +6,7 @@ import { FsIibError } from './errors';
 
 export type DeploymentJsonType = {
 	projectName: string;
-	network: 'mainnet' | 'testnet' | 'devnet' | 'local';
+	network: InputNetworkType;
 	packageId: string;
 	// worldId: string;
 	// upgradeCap: string;
@@ -74,7 +75,7 @@ export async function getVersion(
 export async function getNetwork(
 	projectPath: string,
 	network: string
-): Promise<'mainnet' | 'testnet' | 'devnet' | 'local'> {
+): Promise<InputNetworkType> {
 	const deployment = await getDeploymentJson(projectPath, network);
 	return deployment.network;
 }
@@ -113,7 +114,7 @@ export async function getOldPackageId(
 
 export function saveContractData(
 	projectName: string,
-	network: 'mainnet' | 'testnet' | 'devnet' | 'local',
+	network: InputNetworkType,
 	packageId: string,
 	// worldId: string,
 	// upgradeCap: string,
