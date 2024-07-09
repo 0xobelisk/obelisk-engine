@@ -1,4 +1,5 @@
 import { Network, Provider } from 'aptos';
+import { MovementNetwork, NetworkType } from 'src/types';
 export const defaultGasBudget = 10 ** 8; // 0.1 APTOS, should be enough for most of the transactions
 export const defaultGasPrice = 1000; // 1000 MIST
 
@@ -27,7 +28,7 @@ export const defaultGasPrice = 1000; // 1000 MIST
  * @param networkType, 'testnet' | 'mainnet' | 'devnet' | 'localnet', default is 'devnet'
  * @returns { fullNode: string, faucet?: string }
  */
-export const getDefaultURL = (networkType: Network = Network.DEVNET) => {
+export const getDefaultURL = (networkType: NetworkType = Network.DEVNET) => {
   switch (networkType) {
     case Network.LOCAL:
       return {
@@ -47,6 +48,16 @@ export const getDefaultURL = (networkType: Network = Network.DEVNET) => {
     case Network.MAINNET:
       return {
         fullNode: 'https://fullnode.mainnet.aptoslabs.com',
+      };
+    case MovementNetwork.DEVNET:
+      return {
+        fullNode: 'https://aptos.devnet.m1.movementlabs.xyz',
+        faucet: 'https://aptos.devnet.m1.movementlabs.xyz',
+      };
+    case MovementNetwork.TESTNET:
+      return {
+        fullNode: 'https://aptos.testnet.m1.movementlabs.xyz',
+        faucet: 'https://aptos.testnet.m1.movementlabs.xyz',
       };
     default:
       return {

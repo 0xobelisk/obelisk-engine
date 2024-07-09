@@ -1,8 +1,9 @@
-import { Types, Network } from 'aptos';
+import { Types } from 'aptos';
+import { NetworkType } from '../types';
 import { AptosInteractor, getDefaultURL } from '../libs/aptosInteractor';
 
 export async function loadMetadata(
-  networkType: Network,
+  networkType: NetworkType,
   packageId: string
 ): Promise<Types.MoveModule[] | undefined> {
   // Init the rpc provider

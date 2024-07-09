@@ -5,12 +5,16 @@ import {
   AptosAccount,
   AptosClient,
   IndexerClient,
-  NetworkToIndexerAPI,
   Network,
   Types,
 } from 'aptos';
 import { getDefaultURL } from './defaultConfig';
 import { delay } from './util';
+import {
+  MovementNetwork,
+  NetworkType,
+  NetworkNameToIndexerAPI,
+} from 'src/types';
 const {
   AccountAddress,
   EntryFunction,
@@ -30,10 +34,10 @@ export class AptosInteractor {
   public readonly providers: Provider[];
   public currentProvider: Provider;
   public currentClient: AptosClient;
-  public network?: Network;
+  public network?: NetworkType;
   public indexerClient?: IndexerClient;
 
-  constructor(fullNodeUrls: string[], network?: Network) {
+  constructor(fullNodeUrls: string[], network?: NetworkType) {
     if (fullNodeUrls.length === 0)
       throw new Error('fullNodeUrls must not be empty');
     this.providers = fullNodeUrls.map(
@@ -43,8 +47,16 @@ export class AptosInteractor {
     this.currentClient = new AptosClient(fullNodeUrls[0]);
 
     this.network = network;
-    if (network !== undefined && network !== Network.LOCAL) {
-      this.indexerClient = new IndexerClient(NetworkToIndexerAPI[network]);
+
+    // if (Object.values(MovementNetwork).includes(network as MovementNetwork)) {
+    // } else if (Object.values(Network).includes(network as Network)) {
+    // }
+    if (
+      network !== undefined &&
+      network !== Network.LOCAL &&
+      network !== MovementNetwork.LOCAL
+    ) {
+      this.indexerClient = new IndexerClient(NetworkNameToIndexerAPI[network]);
     }
   }
 
@@ -308,16 +320,16 @@ export class AptosInteractor {
   // }
 
   async requestFaucet(
-    network: Network,
+    network: NetworkType,
     accountAddress: string,
     amount: number
   ) {
-    try {
-      const defaultUrl = getDefaultURL(network);
-      if (defaultUrl.faucet === undefined) {
-        return false;
-      }
+    const defaultUrl = getDefaultURL(network);
+    if (defaultUrl.faucet === undefined) {
+      return false;
+    }
 
+    try {
       const faucetClient = new FaucetClient(
         defaultUrl.fullNode,
         defaultUrl.faucet
@@ -326,7 +338,6 @@ export class AptosInteractor {
       await faucetClient.fundAccount(accountAddress, amount);
       return true;
     } catch (err) {
-      await delay(2000);
       console.warn(`Failed to fund token with faucetClient: ${err}`);
     }
     return false;
