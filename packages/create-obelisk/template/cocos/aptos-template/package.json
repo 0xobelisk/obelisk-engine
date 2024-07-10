@@ -7,7 +7,7 @@
 	"scripts": {
 		"dev": "pnpm obelisk hello && pnpm run localnode && sleep 15 && ts-node scripts/generateAccount.ts && pnpm obelisk faucet --network local && pnpm obelisk publish --network local --configPath ./assets/Scripts/obelisk.config.ts && ts-node scripts/storeConfig.ts local && tail -f localnode.nohup.out",
 		"dev:movement": "pnpm obelisk hello && pnpm run start-movement-template",
-		"start-movement-template": "pnpm obelisk publish --network movementdevnet && ts-node scripts/storeConfig.ts movementdevnet && next",
+		"start-movement-template": "ts-node scripts/formatAccount.ts && pnpm obelisk publish --network movementdevnet && ts-node scripts/storeConfig.ts movementdevnet && next",
 		"faucet-localnet": "pnpm obelisk faucet --network local",
 		"faucet-devnet": "pnpm obelisk faucet --network devnet",
 		"faucet-testnet": "pnpm obelisk faucet --network testnet",
@@ -27,8 +27,9 @@
 	"dependencies": {
 		"@0xobelisk/aptos-common": "^0.0.6",
 		"@0xobelisk/aptos-client": "^0.0.7",
-		"@0xobelisk/aptos-cli": "^0.0.7",
-		"aptos": "^1.20.0"
+		"@0xobelisk/aptos-cli": "^0.0.8",
+		"aptos": "^1.20.0",
+		"dotenv": "^16.0.3"
 	},
 	"devDependencies": {
 		"@types/node": "18.16.16",

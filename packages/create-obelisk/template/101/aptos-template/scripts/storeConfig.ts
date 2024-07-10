@@ -24,7 +24,7 @@ async function getDeploymentJson(projectPath: string, network: string) {
 function storeConfig(network: string, packageId: string) {
   let code = `import { NetworkType } from '@0xobelisk/aptos-client';
 
-const NETWORK = ${network} as NetworkType;
+const NETWORK = '${network}' as NetworkType;
 
 const PACKAGE_ID = '${packageId}';
 
