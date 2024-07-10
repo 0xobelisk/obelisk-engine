@@ -1,12 +1,12 @@
 module examples::ephemeral_schema {
-    use std::option::none;
-    use examples::events;
+	use std::option::none;
+	use obelisk::events;
     
     const SCHEMA_ID: vector<u8> = b"ephemeral";
     const SCHEMA_TYPE: u8 = 2;
     
 	// value
-	struct EphemeralData has copy, drop  {
+	public struct EphemeralData has copy, drop  {
 		value: u64
 	}
   
