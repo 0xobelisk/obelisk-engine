@@ -2218,10 +2218,12 @@ Object.defineProperty(exports, "__esModule", {
 var _exportNames = {
   AptosAccountManager: true,
   AptosContractFactory: true,
+  AptosInteractor: true,
   Obelisk: true,
+  getDefaultURL: true,
   loadMetadata: true
 };
-exports.Obelisk = exports.AptosContractFactory = exports.AptosAccountManager = void 0;
+exports.getDefaultURL = exports.Obelisk = exports.AptosInteractor = exports.AptosContractFactory = exports.AptosAccountManager = void 0;
 exports.loadMetadata = loadMetadata;
 var _aptos = require("aptos");
 Object.keys(_aptos).forEach(function (key) {
@@ -2336,6 +2338,19 @@ var AptosAccountManager = class {
 
 // src/libs/aptosInteractor/defaultConfig.ts
 exports.AptosAccountManager = AptosAccountManager;
+// src/types/index.ts
+var NetworkNameToIndexerAPI = {
+  mainnet: "https://api.mainnet.aptoslabs.com/v1/graphql",
+  testnet: "https://api.testnet.aptoslabs.com/v1/graphql",
+  devnet: "https://api.devnet.aptoslabs.com/v1/graphql",
+  local: "http://127.0.0.1:8090/v1/graphql",
+  movementmainnet: "",
+  movementtestnet: "",
+  movementdevnet: "",
+  movementlocal: ""
+};
+
+// src/libs/aptosInteractor/defaultConfig.ts
 var defaultGasBudget = 10 ** 8;
 var getDefaultURL = (networkType = _aptos.Network.DEVNET) => {
   switch (networkType) {
@@ -2358,6 +2373,16 @@ var getDefaultURL = (networkType = _aptos.Network.DEVNET) => {
       return {
         fullNode: "https://fullnode.mainnet.aptoslabs.com"
       };
+    case "movementdevnet" /* DEVNET */:
+      return {
+        fullNode: "https://aptos.devnet.m1.movementlabs.xyz",
+        faucet: "https://aptos.devnet.m1.movementlabs.xyz"
+      };
+    case "movementtestnet" /* TESTNET */:
+      return {
+        fullNode: "https://aptos.testnet.m1.movementlabs.xyz",
+        faucet: "https://aptos.testnet.m1.movementlabs.xyz"
+      };
     default:
       return {
         fullNode: "https://fullnode.devnet.aptoslabs.com",
@@ -2367,6 +2392,7 @@ var getDefaultURL = (networkType = _aptos.Network.DEVNET) => {
 };
 
 // src/libs/aptosInteractor/util.ts
+exports.getDefaultURL = getDefaultURL;
 var delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // src/libs/aptosInteractor/aptosInteractor.ts
@@ -2387,8 +2413,8 @@ var AptosInteractor = class {
     this.currentProvider = this.providers[0];
     this.currentClient = new _aptos.AptosClient(fullNodeUrls[0]);
     this.network = network;
-    if (network !== void 0 && network !== _aptos.Network.LOCAL) {
-      this.indexerClient = new _aptos.IndexerClient(_aptos.NetworkToIndexerAPI[network]);
+    if (network !== void 0 && network !== _aptos.Network.LOCAL && network !== "movementlocal" /* LOCAL */) {
+      this.indexerClient = new _aptos.IndexerClient(NetworkNameToIndexerAPI[network]);
     }
   }
   switchToNextProvider() {
@@ -2588,16 +2614,15 @@ var AptosInteractor = class {
   //   return selectedCoins;
   // }
   async requestFaucet(network, accountAddress, amount) {
+    const defaultUrl = getDefaultURL(network);
+    if (defaultUrl.faucet === void 0) {
+      return false;
+    }
     try {
-      const defaultUrl = getDefaultURL(network);
-      if (defaultUrl.faucet === void 0) {
-        return false;
-      }
       const faucetClient = new _aptos.FaucetClient(defaultUrl.fullNode, defaultUrl.faucet);
       await faucetClient.fundAccount(accountAddress, amount);
       return true;
     } catch (err) {
-      await delay(2e3);
       console.warn(`Failed to fund token with faucetClient: ${err}`);
     }
     return false;
@@ -2605,6 +2630,7 @@ var AptosInteractor = class {
 };
 
 // src/libs/aptosContractFactory/index.ts
+exports.AptosInteractor = AptosInteractor;
 var AptosContractFactory = class {
   // readonly #query: MapMessageQuery<ApiTypes> = {};
   // readonly #tx: MapMessageTx<ApiTypes> = {};

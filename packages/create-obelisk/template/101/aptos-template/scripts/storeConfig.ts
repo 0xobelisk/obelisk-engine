@@ -6,7 +6,7 @@ import { dirname } from 'path';
 
 type DeploymentJsonType = {
   projectName: string;
-  network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
+  network: 'mainnet' | 'testnet' | 'devnet' | 'local' | 'movementtestnet' | 'movementdevnet' | 'movementlocal';
   packageId: string;
   version: number;
 };
@@ -22,9 +22,9 @@ async function getDeploymentJson(projectPath: string, network: string) {
 }
 
 function storeConfig(network: string, packageId: string) {
-  let code = `import { Network } from '@0xobelisk/aptos-client';
+  let code = `import { NetworkType } from '@0xobelisk/aptos-client';
 
-const NETWORK: Network = Network.${network.toUpperCase()};
+const NETWORK = '${network}' as NetworkType;
 
 const PACKAGE_ID = '${packageId}';
 
