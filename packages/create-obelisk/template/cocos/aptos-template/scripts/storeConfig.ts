@@ -1,7 +1,7 @@
 import * as fsAsync from 'fs/promises';
 import { mkdirSync, writeFileSync } from 'fs';
 import { exit } from 'process';
-import { obeliskConfig } from '../obelisk.config';
+import { obeliskConfig } from '../assets/Scripts/obelisk.config';
 import { dirname } from 'path';
 
 type DeploymentJsonType = {
@@ -41,7 +41,7 @@ const PACKAGE_ID = '${packageId}';
 export { NETWORK, PACKAGE_ID };
 `;
 	const path = process.cwd();
-	writeOutput(code, `${path}/src/chain/config.ts`, 'storeConfig');
+	writeOutput(code, `${path}/assets/Scripts/chain/config.ts`, 'storeConfig');
 }
 
 async function writeOutput(
