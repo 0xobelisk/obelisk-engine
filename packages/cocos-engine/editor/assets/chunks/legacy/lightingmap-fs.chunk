@@ -1,3 +1,0 @@
-in vec3 v_luv;
-#include <builtin/uniforms/cc-light-map>
-#include <common/lighting/light-map>

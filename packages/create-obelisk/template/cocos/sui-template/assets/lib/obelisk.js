@@ -3577,14 +3577,14 @@ var _exportNames = {
 Object.defineProperty(exports, "BcsType", {
   enumerable: true,
   get: function () {
-    return _bcs2.BcsType;
+    return _bcs3.BcsType;
   }
 });
 exports.SuiTx = exports.SuiContractFactory = exports.SuiAccountManager = exports.Obelisk = exports.MultiSigClient = void 0;
 Object.defineProperty(exports, "bcs", {
   enumerable: true,
   get: function () {
-    return _bcs2.bcs;
+    return _bcs3.bcs;
   }
 });
 exports.loadMetadata = loadMetadata;
@@ -3624,15 +3624,15 @@ Object.keys(_transactions).forEach(function (key) {
     }
   });
 });
-var _bcs = require("@mysten/sui/bcs");
-Object.keys(_bcs).forEach(function (key) {
+var _bcs2 = require("@mysten/sui/bcs");
+Object.keys(_bcs2).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _bcs[key]) return;
+  if (key in exports && exports[key] === _bcs2[key]) return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
-      return _bcs[key];
+      return _bcs2[key];
     }
   });
 });
@@ -3672,7 +3672,7 @@ Object.keys(_secp256r).forEach(function (key) {
     }
   });
 });
-var _bcs2 = require("@mysten/bcs");
+var _bcs3 = require("@mysten/bcs");
 var _keccak = _interopRequireDefault(require("keccak256"));
 var _bip = require("@scure/bip39");
 var _english = require("@scure/bip39/wordlists/english");
@@ -3850,7 +3850,7 @@ function makeVecParam(txBlock, args, type) {
     });
   } else if (typeof type === "string" && !VECTOR_REGEX.test(type) && !STRUCT_REGEX.test(type)) {
     const bcsSchema = (0, _transactions.getPureBcsSchema)(type);
-    return txBlock.pure(_bcs2.bcs.vector(bcsSchema).serialize(args));
+    return txBlock.pure(_bcs3.bcs.vector(bcsSchema).serialize(args));
   } else {
     const elements = args.map(arg => convertObjArg(txBlock, arg));
     return txBlock.makeMoveVec({
@@ -3869,7 +3869,7 @@ function isMoveVecArg(arg) {
 }
 function convertArgs(txBlock, args) {
   return args.map(arg => {
-    if (arg instanceof _bcs2.SerializedBcs || (0, _bcs2.isSerializedBcs)(arg)) {
+    if (arg instanceof _bcs3.SerializedBcs || (0, _bcs3.isSerializedBcs)(arg)) {
       return txBlock.pure(arg);
     }
     if (isMoveVecArg(arg)) {
@@ -4541,7 +4541,7 @@ function createTx(meta, fn) {
     return await fn(tx, params, typeArguments, isRaw);
   });
 }
-var _query, _tx, _struct, _exec, _read;
+var _query, _tx, _object, _exec, _read, _bcs;
 var Obelisk = class {
   /**
    * Support the following ways to init the ObeliskClient:
@@ -4565,7 +4565,45 @@ var Obelisk = class {
   } = {}) {
     __privateAdd(this, _query, {});
     __privateAdd(this, _tx, {});
-    __privateAdd(this, _struct, {});
+    __privateAdd(this, _object, {
+      address: _bcs3.bcs.bytes(32).transform({
+        // To change the input type, you need to provide a type definition for the input
+        input: val => (0, _bcs3.fromHEX)(val),
+        output: val => (0, _bcs3.toHEX)(val)
+      }),
+      u8: _bcs3.bcs.u8(),
+      u16: _bcs3.bcs.u16(),
+      u32: _bcs3.bcs.u32(),
+      u64: _bcs3.bcs.u64(),
+      u128: _bcs3.bcs.u128(),
+      u256: _bcs3.bcs.u256(),
+      bool: _bcs3.bcs.bool(),
+      "0x1::ascii::String": _bcs3.bcs.string(),
+      "0x1::option::Option<address>": _bcs3.bcs.option(_bcs3.bcs.bytes(32).transform({
+        // To change the input type, you need to provide a type definition for the input
+        input: val => (0, _bcs3.fromHEX)(val),
+        output: val => (0, _bcs3.toHEX)(val)
+      })),
+      "0x1::option::Option<u8>": _bcs3.bcs.option(_bcs3.bcs.u8()),
+      "0x1::option::Option<u16>": _bcs3.bcs.option(_bcs3.bcs.u16()),
+      "0x1::option::Option<u32>": _bcs3.bcs.option(_bcs3.bcs.u32()),
+      "0x1::option::Option<u64>": _bcs3.bcs.option(_bcs3.bcs.u64()),
+      "0x1::option::Option<u128>": _bcs3.bcs.option(_bcs3.bcs.u128()),
+      "0x1::option::Option<u256>": _bcs3.bcs.option(_bcs3.bcs.u256()),
+      "0x1::option::Option<bool>": _bcs3.bcs.option(_bcs3.bcs.bool()),
+      "vector<address>": _bcs3.bcs.vector(_bcs3.bcs.bytes(32).transform({
+        // To change the input type, you need to provide a type definition for the input
+        input: val => (0, _bcs3.fromHEX)(val),
+        output: val => (0, _bcs3.toHEX)(val)
+      })),
+      "vector<u8>": _bcs3.bcs.vector(_bcs3.bcs.u8()),
+      "vector<u16>": _bcs3.bcs.vector(_bcs3.bcs.u16()),
+      "vector<u32>": _bcs3.bcs.vector(_bcs3.bcs.u32()),
+      "vector<u64>": _bcs3.bcs.vector(_bcs3.bcs.u64()),
+      "vector<u128>": _bcs3.bcs.vector(_bcs3.bcs.u128()),
+      "vector<u256>": _bcs3.bcs.vector(_bcs3.bcs.u256()),
+      "vector<bool>": _bcs3.bcs.vector(_bcs3.bcs.bool())
+    });
     __privateAdd(this, _exec, async (meta, tx, params, typeArguments, isRaw) => {
       if (isRaw === true) {
         return tx.moveCall({
@@ -4596,6 +4634,162 @@ var Obelisk = class {
       });
       return await this.inspectTxn(tx);
     });
+    __privateAdd(this, _bcs, bcsmeta => {
+      let loopFlag = false;
+      const bcsJson = {};
+      Object.entries(bcsmeta.objectType.fields).forEach(([index, type]) => {
+        const objName = type.name;
+        const objType = type.type;
+        switch (typeof objType) {
+          case "object":
+            for (const [key, value] of Object.entries(objType)) {
+              switch (key) {
+                case "Struct":
+                  const structType = value;
+                  if (structType.address === "0x1" && structType.module === "ascii" && structType.name === "String") {
+                    bcsJson[objName] = _bcs3.bcs.string();
+                    return;
+                  } else if (structType.address === "0x2" && structType.module === "object" && structType.name === "UID") {
+                    bcsJson[objName] = _bcs3.bcs.fixedArray(32, _bcs3.bcs.u8()).transform({
+                      input: id => (0, _bcs3.fromHEX)(id),
+                      output: id => (0, _bcs3.toHEX)(Uint8Array.from(id))
+                    });
+                    return;
+                  } else if (structType.address === "0x2" && structType.module === "object" && structType.name === "ID") {
+                    bcsJson[objName] = _bcs3.bcs.fixedArray(32, _bcs3.bcs.u8()).transform({
+                      input: id => (0, _bcs3.fromHEX)(id),
+                      output: id => (0, _bcs3.toHEX)(Uint8Array.from(id))
+                    });
+                    return;
+                  } else if (structType.address === "0x2" && structType.module === "bag" && structType.name === "Bag") {
+                    bcsJson[objName] = _bcs3.bcs.fixedArray(32, _bcs3.bcs.u8()).transform({
+                      input: id => (0, _bcs3.fromHEX)(id),
+                      output: id => (0, _bcs3.toHEX)(Uint8Array.from(id))
+                    });
+                    return;
+                  } else if (structType.address === "0x1" && structType.module === "option" && structType.name === "Option") {
+                    switch (structType.typeArguments[0]) {
+                      case "U8":
+                        bcsJson[objName] = _bcs3.bcs.option(_bcs3.bcs.u8());
+                        return;
+                      case "U16":
+                        bcsJson[objName] = _bcs3.bcs.option(_bcs3.bcs.u16());
+                        return;
+                      case "U32":
+                        bcsJson[objName] = _bcs3.bcs.option(_bcs3.bcs.u32());
+                        return;
+                      case "U64":
+                        bcsJson[objName] = _bcs3.bcs.option(_bcs3.bcs.u64());
+                        return;
+                      case "U128":
+                        bcsJson[objName] = _bcs3.bcs.option(_bcs3.bcs.u128());
+                        return;
+                      case "U256":
+                        bcsJson[objName] = _bcs3.bcs.option(_bcs3.bcs.u256());
+                        return;
+                      case "Bool":
+                        bcsJson[objName] = _bcs3.bcs.option(_bcs3.bcs.bool());
+                        return;
+                      case "Address":
+                        bcsJson[objName] = _bcs3.bcs.option(_bcs3.bcs.bytes(32).transform({
+                          // To change the input type, you need to provide a type definition for the input
+                          input: val => (0, _bcs3.fromHEX)(val),
+                          output: val => (0, _bcs3.toHEX)(val)
+                        }));
+                        return;
+                      default:
+                    }
+                  } else {
+                    if (this.object[`${structType.address}::${structType.module}::${structType.name}`] === void 0) {
+                      loopFlag = true;
+                    } else {
+                      bcsJson[objName] = this.object[`${structType.address}::${structType.module}::${structType.name}`];
+                      return;
+                    }
+                  }
+                  return;
+                case "Vector":
+                  switch (value) {
+                    case "U8":
+                      bcsJson[objName] = _bcs3.bcs.vector(_bcs3.bcs.u8());
+                      return;
+                    case "U16":
+                      bcsJson[objName] = _bcs3.bcs.vector(_bcs3.bcs.u16());
+                      return;
+                    case "U32":
+                      bcsJson[objName] = _bcs3.bcs.vector(_bcs3.bcs.u32());
+                      return;
+                    case "U64":
+                      bcsJson[objName] = _bcs3.bcs.vector(_bcs3.bcs.u64());
+                      return;
+                    case "U128":
+                      bcsJson[objName] = _bcs3.bcs.vector(_bcs3.bcs.u128());
+                      return;
+                    case "U256":
+                      bcsJson[objName] = _bcs3.bcs.vector(_bcs3.bcs.u256());
+                      return;
+                    case "Bool":
+                      bcsJson[objName] = _bcs3.bcs.vector(_bcs3.bcs.bool());
+                      return;
+                    case "Address":
+                      bcsJson[objName] = _bcs3.bcs.vector(_bcs3.bcs.bytes(32).transform({
+                        // To change the input type, you need to provide a type definition for the input
+                        input: val => (0, _bcs3.fromHEX)(val),
+                        output: val => (0, _bcs3.toHEX)(val)
+                      }));
+                      return;
+                    default:
+                  }
+                case "TypeParameter":
+                  bcsJson[objName] = _bcs3.bcs.u128();
+                  return;
+                default:
+                  throw new Error("Unsupported type");
+              }
+            }
+            return;
+          case "string":
+            switch (objType) {
+              case "U8":
+                bcsJson[objName] = _bcs3.bcs.u8();
+                return;
+              case "U16":
+                bcsJson[objName] = _bcs3.bcs.u16();
+                return;
+              case "U32":
+                bcsJson[objName] = _bcs3.bcs.u32();
+                return;
+              case "U64":
+                bcsJson[objName] = _bcs3.bcs.u64();
+                return;
+              case "U128":
+                bcsJson[objName] = _bcs3.bcs.u128();
+                return;
+              case "U256":
+                bcsJson[objName] = _bcs3.bcs.u256();
+                return;
+              case "Bool":
+                bcsJson[objName] = _bcs3.bcs.bool();
+                return;
+              case "Address":
+                bcsJson[objName] = _bcs3.bcs.bytes(32).transform({
+                  // To change the input type, you need to provide a type definition for the input
+                  input: val => (0, _bcs3.fromHEX)(val),
+                  output: val => (0, _bcs3.toHEX)(val)
+                });
+                return;
+              default:
+                return;
+            }
+          default:
+            throw new Error("Unsupported type");
+        }
+      });
+      return {
+        bcs: _bcs3.bcs.struct(bcsmeta.objectName, bcsJson),
+        loopFlag
+      };
+    });
     this.accountManager = new SuiAccountManager({
       mnemonics,
       secretKey
@@ -4605,27 +4799,48 @@ var Obelisk = class {
     this.packageId = packageId;
     if (metadata !== void 0) {
       this.metadata = metadata;
-      Object.values(metadata).forEach(moudlevalue => {
-        const data = moudlevalue;
-        const moduleName = data.name;
-        Object.entries(data.exposedFunctions).forEach(([funcName, funcvalue]) => {
-          const meta = funcvalue;
-          meta.moduleName = moduleName;
-          meta.funcName = funcName;
-          if (isUndefined(__privateGet(this, _query)[moduleName])) {
-            __privateGet(this, _query)[moduleName] = {};
-          }
-          if (isUndefined(__privateGet(this, _query)[moduleName][funcName])) {
-            __privateGet(this, _query)[moduleName][funcName] = createQuery(meta, (tx, p, typeArguments, isRaw) => __privateGet(this, _read).call(this, meta, tx, p, typeArguments, isRaw));
-          }
-          if (isUndefined(__privateGet(this, _tx)[moduleName])) {
-            __privateGet(this, _tx)[moduleName] = {};
-          }
-          if (isUndefined(__privateGet(this, _tx)[moduleName][funcName])) {
-            __privateGet(this, _tx)[moduleName][funcName] = createTx(meta, (tx, p, typeArguments, isRaw) => __privateGet(this, _exec).call(this, meta, tx, p, typeArguments, isRaw));
-          }
+      const maxLoopNum = 5;
+      let loopNum = 0;
+      let stillNeedFormat = true;
+      while (stillNeedFormat === true && loopNum <= maxLoopNum) {
+        let loopFlag = false;
+        Object.values(metadata).forEach(moudlevalue => {
+          const data = moudlevalue;
+          const moduleName = data.name;
+          const objMoudleId = `${packageId}::${moduleName}`;
+          Object.entries(data.structs).forEach(([objectName, objectType]) => {
+            const objId = `${objMoudleId}::${objectName}`;
+            const bcsmeta = {
+              objectName,
+              objectType
+            };
+            let bcsObj = __privateGet(this, _bcs).call(this, bcsmeta);
+            if (bcsObj.loopFlag === true) {
+              loopFlag = bcsObj.loopFlag;
+            }
+            __privateGet(this, _object)[objId] = bcsObj.bcs;
+          });
+          Object.entries(data.exposedFunctions).forEach(([funcName, funcvalue]) => {
+            const meta = funcvalue;
+            meta.moduleName = moduleName;
+            meta.funcName = funcName;
+            if (isUndefined(__privateGet(this, _query)[moduleName])) {
+              __privateGet(this, _query)[moduleName] = {};
+            }
+            if (isUndefined(__privateGet(this, _query)[moduleName][funcName])) {
+              __privateGet(this, _query)[moduleName][funcName] = createQuery(meta, (tx, p, typeArguments, isRaw) => __privateGet(this, _read).call(this, meta, tx, p, typeArguments, isRaw));
+            }
+            if (isUndefined(__privateGet(this, _tx)[moduleName])) {
+              __privateGet(this, _tx)[moduleName] = {};
+            }
+            if (isUndefined(__privateGet(this, _tx)[moduleName][funcName])) {
+              __privateGet(this, _tx)[moduleName][funcName] = createTx(meta, (tx, p, typeArguments, isRaw) => __privateGet(this, _exec).call(this, meta, tx, p, typeArguments, isRaw));
+            }
+          });
         });
-      });
+        stillNeedFormat = loopFlag;
+        loopNum++;
+      }
     }
     this.contractFactory = new SuiContractFactory({
       packageId,
@@ -4638,8 +4853,23 @@ var Obelisk = class {
   get tx() {
     return __privateGet(this, _tx);
   }
-  get struct() {
-    return __privateGet(this, _struct);
+  get object() {
+    return __privateGet(this, _object);
+  }
+  view(dryResult) {
+    let returnValues = [];
+    if (dryResult.effects.status.status === "success") {
+      const resultList = dryResult.results[0].returnValues;
+      for (const res of resultList) {
+        let baseValue = res[0];
+        let baseType = res[1];
+        const value = Uint8Array.from(baseValue);
+        returnValues.push(this.object[baseType].parse(value));
+      }
+      return returnValues;
+    } else {
+      return void 0;
+    }
   }
   /**
    * if derivePathParams is not provided or mnemonics is empty, it will return the keypair.
@@ -4854,47 +5084,8 @@ var Obelisk = class {
     if (entityId !== void 0) {
       params.push(tx.pure.address(entityId));
     }
-    const getResult = await this.query[schemaModuleName].get(tx, params);
-    let returnValues = [];
-    if (getResult.effects.status.status === "success") {
-      const resultList = getResult.results[0].returnValues;
-      for (const res of resultList) {
-        let baseValue = res[0];
-        let baseType = res[1];
-        const value = Uint8Array.from(baseValue);
-        if (baseType === "address") {
-          const Address = _bcs2.bcs.bytes(32).transform({
-            // To change the input type, you need to provide a type definition for the input
-            input: val => (0, _bcs2.fromHEX)(val),
-            output: val => (0, _bcs2.toHEX)(val)
-          });
-          returnValues.push(Address.parse(value));
-        } else if (baseType === "u8") {
-          returnValues.push(_bcs2.bcs.u8().parse(value));
-        } else if (baseType === "u16") {
-          returnValues.push(_bcs2.bcs.u16().parse(value));
-        } else if (baseType === "u32") {
-          returnValues.push(_bcs2.bcs.u32().parse(value));
-        } else if (baseType === "u64") {
-          returnValues.push(_bcs2.bcs.u64().parse(value));
-        } else if (baseType === "u128") {
-          returnValues.push(_bcs2.bcs.u128().parse(value));
-        } else if (baseType === "u256") {
-          returnValues.push(_bcs2.bcs.u256().parse(value));
-        } else if (baseType === "bool") {
-          returnValues.push(_bcs2.bcs.bool().parse(value));
-        } else if (baseType === "0x1::ascii::String") {
-          returnValues.push(_bcs2.bcs.string().parse(value));
-        } else if (baseType === "vector<u8>") {
-          returnValues.push(_bcs2.bcs.vector(_bcs2.bcs.u8()).parse(value));
-        } else if (baseType === "0x1::option::Option<u8>") {
-          returnValues.push(_bcs2.bcs.option(_bcs2.bcs.u8()).parse(value));
-        }
-      }
-      return returnValues;
-    } else {
-      return void 0;
-    }
+    const dryResult = await this.query[schemaModuleName].get(tx, params);
+    return this.view(dryResult);
   }
   async containEntity(worldId, schemaName, entityId) {
     const schemaModuleName = `${schemaName}_schema`;
@@ -4903,15 +5094,8 @@ var Obelisk = class {
     if (entityId !== void 0) {
       params.push(tx.pure.address(entityId));
     }
-    const getResult = await this.query[schemaModuleName].contains(tx, params);
-    if (getResult.effects.status.status === "success") {
-      const res = getResult.results[0].returnValues[0];
-      let baseValue = res[0];
-      const value = Uint8Array.from(baseValue);
-      return _bcs2.bcs.bool().parse(value);
-    } else {
-      return void 0;
-    }
+    const dryResult = await this.query[schemaModuleName].contains(tx, params);
+    return this.view(dryResult);
   }
   // async getEntities(
   //   worldId: string,
@@ -4967,10 +5151,10 @@ var Obelisk = class {
     const hashBytes = (0, _keccak.default)(bytes);
     const hashU8Array = Array.from(hashBytes);
     const value = Uint8Array.from(hashU8Array);
-    const Address = _bcs2.bcs.bytes(32).transform({
+    const Address = _bcs3.bcs.bytes(32).transform({
       // To change the input type, you need to provide a type definition for the input
-      input: val => (0, _bcs2.fromHEX)(val),
-      output: val => (0, _bcs2.toHEX)(val)
+      input: val => (0, _bcs3.fromHEX)(val),
+      output: val => (0, _bcs3.toHEX)(val)
     });
     const data = Address.parse(value);
     return "0x" + data;
@@ -4991,7 +5175,7 @@ var Obelisk = class {
     if (checkObjectId !== null) {
       objectId = checkObjectId;
       const bytes = Buffer.from(objectId.slice(2), "hex");
-      const numberBytes = _bcs2.bcs.u256().serialize(x).toBytes();
+      const numberBytes = _bcs3.bcs.u256().serialize(x).toBytes();
       return this.entity_key_from_bytes(Buffer.concat([bytes, numberBytes]));
     } else {
       return void 0;
@@ -5004,55 +5188,14 @@ var Obelisk = class {
   //   const u8Value = Uint8Array.from(value);
   //   return bcs.de(type, u8Value);
   // }
-  async autoFormatDryValue(value) {
-    let returnValues = [];
-    if (value.effects.status.status === "success") {
-      const resultList = value.results[0].returnValues;
-      for (const res of resultList) {
-        let baseValue = res[0];
-        let baseType = res[1];
-        const value2 = Uint8Array.from(baseValue);
-        if (baseType === "address") {
-          const Address = _bcs2.bcs.bytes(32).transform({
-            // To change the input type, you need to provide a type definition for the input
-            input: val => (0, _bcs2.fromHEX)(val),
-            output: val => (0, _bcs2.toHEX)(val)
-          });
-          returnValues.push(Address.parse(value2));
-        } else if (baseType === "u8") {
-          returnValues.push(_bcs2.bcs.u8().parse(value2));
-        } else if (baseType === "u16") {
-          returnValues.push(_bcs2.bcs.u16().parse(value2));
-        } else if (baseType === "u32") {
-          returnValues.push(_bcs2.bcs.u32().parse(value2));
-        } else if (baseType === "u64") {
-          returnValues.push(_bcs2.bcs.u64().parse(value2));
-        } else if (baseType === "u128") {
-          returnValues.push(_bcs2.bcs.u128().parse(value2));
-        } else if (baseType === "u256") {
-          returnValues.push(_bcs2.bcs.u256().parse(value2));
-        } else if (baseType === "bool") {
-          returnValues.push(_bcs2.bcs.bool().parse(value2));
-        } else if (baseType === "0x1::ascii::String") {
-          returnValues.push(_bcs2.bcs.string().parse(value2));
-        } else if (baseType === "vector<u8>") {
-          returnValues.push(_bcs2.bcs.vector(_bcs2.bcs.u8()).parse(value2));
-        } else if (baseType === "0x1::option::Option<u8>") {
-          returnValues.push(_bcs2.bcs.option(_bcs2.bcs.u8()).parse(value2));
-        }
-      }
-      return returnValues;
-    } else {
-      return void 0;
-    }
-  }
 };
 exports.Obelisk = Obelisk;
 _query = new WeakMap();
 _tx = new WeakMap();
-_struct = new WeakMap();
+_object = new WeakMap();
 _exec = new WeakMap();
 _read = new WeakMap();
+_bcs = new WeakMap();
 
 // src/libs/multiSig/client.ts
 
