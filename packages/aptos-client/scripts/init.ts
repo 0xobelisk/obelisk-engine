@@ -1,5 +1,4 @@
-import { Types, Network } from 'aptos';
-import { Obelisk } from '../src/obelisk';
+import { NetworkType, Obelisk, Types } from './../src';
 import { loadMetadata } from '../src/metadata/index';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -8,22 +7,54 @@ export const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 async function init() {
-  const network = 'devnet' as Network;
+  const network = 'movementdevnet' as NetworkType;
   const packageId =
-    '0xafa14f6a40838a5891788dd441d49531bd94b0d1da0ec79d3153d921d8611464';
+    '0x35cc4910b9934ceacf0bbb014e3a823f9dee5b8725110360729b500ee81a2d3a';
   const metadata = await loadMetadata(network, packageId);
   const privateKey = process.env.PRIVATE_KEY;
-
   const obelisk = new Obelisk({
-    // networkType: network as Network,
-    // packageId: packageId,
-    // metadata: metadata,
-    // secretKey: privateKey,
+    networkType: network as NetworkType,
+    packageId: packageId,
+    metadata: metadata,
+    secretKey: privateKey,
   });
-  let faucetRes = await obelisk.requestFaucet(
-    network,
-    '0xf1b729515527b700135ca2108018450d7d3671fb078497558dbadbab9bcb0722'
-  );
+
+  let myAddr = obelisk.getAddress();
+  let myBalance = await obelisk.getBalance();
+  console.log(`Addr: ${myAddr}`);
+  console.log(`Balance: ${myBalance}`);
+
+  console.log('======= query other user message ========');
+
+  let message = await obelisk.query.message.get_message([
+    '0x35cc4910b9934ceacf0bbb014e3a823f9dee5b8725110360729b500ee81a2d3a',
+  ]);
+  console.log(message);
+
+  console.log('======= set our message ========');
+  const res1 = (await obelisk.tx.message.set_message([
+    'first set',
+  ])) as Types.PendingTransaction;
+  console.log(res1.hash);
+  await delay(1000);
+
+  console.log('======= query our message ========');
+  let myMessage = await obelisk.query.message.get_message([myAddr]);
+  console.log(myMessage);
+
+  console.log('======= set our message again ========');
+
+  const res2 = (await obelisk.tx.message.set_message([
+    'hello world',
+  ])) as Types.PendingTransaction;
+  console.log(res2.hash);
+  await delay(1000);
+
+  console.log('======= query our message ========');
+  let mySecondMessage = await obelisk.query.message.get_message([myAddr]);
+  console.log(mySecondMessage);
+
+  let faucetRes = await obelisk.requestFaucet(network);
   console.log(faucetRes);
   // const counter = await obelisk.getEntity('single_value');
   // console.log(counter);

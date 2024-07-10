@@ -7,7 +7,7 @@ export type ObeliskParams = {
   secretKey?: string;
   fullnodeUrls?: string[];
   faucetUrl?: string;
-  networkType?: Network;
+  networkType?: NetworkType;
   packageId?: string;
   metadata?: Types.MoveModule[];
 };
@@ -78,8 +78,34 @@ export type DerivePathParams = {
   addressIndex?: number;
 };
 
-// export type NetworkType = 'testnet' | 'mainnet' | 'devnet' | 'localnet';
-// export type NetworkType = Network;
+export enum MovementNetwork {
+  // MAINNET = "movementmainnet",
+  TESTNET = 'movementtestnet',
+  DEVNET = 'movementdevnet',
+  LOCAL = 'movementlocal',
+}
+
+export const NetworkNameToIndexerAPI: Record<string, string> = {
+  mainnet: 'https://api.mainnet.aptoslabs.com/v1/graphql',
+  testnet: 'https://api.testnet.aptoslabs.com/v1/graphql',
+  devnet: 'https://api.devnet.aptoslabs.com/v1/graphql',
+  local: 'http://127.0.0.1:8090/v1/graphql',
+  movementmainnet: '',
+  movementtestnet: '',
+  movementdevnet: '',
+  movementlocal: '',
+};
+
+export type NetworkType = Network | MovementNetwork;
+
+export type InputNetworkType =
+  | 'mainnet'
+  | 'testnet'
+  | 'devnet'
+  | 'local'
+  | 'movementtestnet'
+  | 'movementdevnet'
+  | 'movementlocal';
 
 /**
  * These are the basics types that can be used in the APT
