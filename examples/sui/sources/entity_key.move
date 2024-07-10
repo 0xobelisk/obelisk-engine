@@ -1,7 +1,6 @@
 module examples::entity_key {
     use sui::hash::keccak256;
     use sui::address;
-    use sui::object;
 
     public fun from_object<T: key + store>(object: &T): address {
         object::id_address(object)

@@ -2,21 +2,35 @@
 
 [move]
 version = 0
-manifest_digest = "29EBC8EEB6008703DCFCFC4C49D84765A6C3F555229A11B3917FD950A89CBD15"
-deps_digest = "112928C94A84031C09CD9B9D1D44B149B73FC0EEA5FA8D8B2D7CA4D91936335A"
+manifest_digest = "BEB16644382E13CE65CC5FF04B0517B09D4C6F44FE2F48931ED6CF708BAE93C1"
+deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
+
+dependencies = [
+  { name = "Obelisk" },
+  { name = "Sui" },
+]
+
+[[move.package]]
+name = "MoveStdlib"
+source = { git = "https://github.com/MystenLabs/sui.git", rev = "framework/testnet", subdir = "crates/sui-framework/packages/move-stdlib" }
+
+[[move.package]]
+name = "Obelisk"
+source = { local = "../../packages/obelisk-framework" }
 
 dependencies = [
   { name = "Sui" },
 ]
 
 [[move.package]]
-name = "MoveStdlib"
-source = { git = "https://github.com/MystenLabs/sui.git", rev = "testnet-v1.8.0", subdir = "crates/sui-framework/packages/move-stdlib" }
-
-[[move.package]]
 name = "Sui"
-source = { git = "https://github.com/MystenLabs/sui.git", rev = "testnet-v1.8.0", subdir = "crates/sui-framework/packages/sui-framework" }
+source = { git = "https://github.com/MystenLabs/sui.git", rev = "framework/testnet", subdir = "crates/sui-framework/packages/sui-framework" }
 
 dependencies = [
   { name = "MoveStdlib" },
 ]
+
+[move.toolchain-version]
+compiler-version = "1.27.2"
+edition = "2024.beta"
+flavor = "sui"

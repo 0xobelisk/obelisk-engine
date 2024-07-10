@@ -1,15 +1,14 @@
-module examples::events {
+module obelisk::events {
     use sui::event;
-    use std::option::Option;
 
-    struct SchemaSetRecord<T: copy + drop> has copy, drop {
+    public struct SchemaSetRecord<T: copy + drop> has copy, drop {
         _obelisk_schema_id: vector<u8>,
         _obelisk_schema_type: u8,
         _obelisk_entity_key: Option<address>,
         data: T
     }
 
-    struct SchemaRemoveRecord has copy, drop {
+    public struct SchemaRemoveRecord has copy, drop {
         _obelisk_schema_id: vector<u8>,
         _obelisk_entity_key: address
     }

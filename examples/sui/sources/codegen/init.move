@@ -1,15 +1,20 @@
+#[allow(lint(share_owned))]
+
 module examples::init {
     use std::ascii::string;
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
-    use examples::world;
+    use examples::app_key::AppKey;
+    use obelisk::access_control;
+    use obelisk::world;
 	use examples::single_column_schema;
 	use examples::multi_column_schema;
 	use examples::single_value_schema;
 	use examples::single_struct_schema;
 
     fun init(ctx: &mut TxContext) {
-        let (_obelisk_world, admin_cap) = world::create(string(b"Examples"), string(b"Examples"),ctx);
+        let (mut _obelisk_world, admin_cap) = world::create(string(b"Examples"), string(b"Examples"),ctx);
+
+        // Authorize this application to access protected features of the World.
+        access_control::authorize_app<AppKey>(&admin_cap, &mut _obelisk_world);
 
         // Add Schema
 		single_column_schema::register(&mut _obelisk_world, &admin_cap, ctx);

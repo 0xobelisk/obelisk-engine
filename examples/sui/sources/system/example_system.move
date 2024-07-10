@@ -1,6 +1,6 @@
 module examples::example_system {
     use examples::single_value_schema;
-    use examples::world::World;
+    use obelisk::world::World;
     #[test_only]
     use std::ascii::string;
     #[test_only]
@@ -18,12 +18,9 @@ module examples::example_system {
     #[test_only]
     use examples::single_struct_schema;
     #[test_only]
-    use examples::world;
-    #[test_only]
     use sui::test_scenario;
     #[test_only]
     use sui::test_scenario::Scenario;
-    use sui::transfer;
     #[test_only]
     use sui::sui::SUI;
     #[test_only]
@@ -46,30 +43,27 @@ module examples::example_system {
 
     #[test_only]
     public fun init_test(): Scenario {
-        let scenario_val = test_scenario::begin(@0x0001);
-        let scenario = &mut scenario_val;
+        let mut scenario = test_scenario::begin(@0x0001);
         {
-            let ctx = test_scenario::ctx(scenario);
+            let ctx = test_scenario::ctx(&mut scenario);
             init::init_world_for_testing(ctx);
         };
-        test_scenario::next_tx(scenario,@0x0001);
-        scenario_val
+        test_scenario::next_tx(&mut scenario,@0x0001);
+        scenario
     }
 
     #[test]
     public fun test_create_world()  {
-        let scenario_val = init_test();
-        let scenario = &mut scenario_val;
+        let scenario = init_test();
 
-        let world = test_scenario::take_shared<World>(scenario);
+        let world = test_scenario::take_shared<World>(&scenario);
 
-        let (name,description,version) = world::info(&world);
+        let (name,description) = world.info();
 
         assert!(name == string(b"Examples"), 0);
         assert!(description == string(b"Examples"), 0);
-        assert!(version == 1, 0);
 
-        let names = world::schema_names(&world);
+        let names = world.schema_names();
         debug::print(&names);
         assert!(names == vector[
             string(b"single_column"),
@@ -79,43 +73,40 @@ module examples::example_system {
         ], 0);
 
         test_scenario::return_shared<World>(world);
-        test_scenario::end(scenario_val);
+        test_scenario::end(scenario);
     }
 
     #[test]
     public fun test_increase_with_type()  {
-        let scenario_val = init_test();
-        let scenario = &mut scenario_val;
+        let mut scenario = init_test();
 
-        let world = test_scenario::take_shared<World>(scenario);
+        let mut world = test_scenario::take_shared<World>(&scenario);
 
-        let c = coin::mint_for_testing<SUI>(10, test_scenario::ctx(scenario));
+        let c = coin::mint_for_testing<SUI>(10, test_scenario::ctx(&mut scenario));
         increase_with_type<Coin<SUI>>(&mut world, c);
 
         test_scenario::return_shared<World>(world);
-        test_scenario::end(scenario_val);
+        test_scenario::end(scenario);
     }
 
 
     #[test]
     public fun test_ephemeral()  {
-        let scenario_val = init_test();
-        let scenario = &mut scenario_val;
+        let scenario = init_test();
 
-        let world = test_scenario::take_shared<World>(scenario);
+        let world = test_scenario::take_shared<World>(&scenario);
 
         ephemeral_schema::emit_ephemeral(100);
 
         test_scenario::return_shared<World>(world);
-        test_scenario::end(scenario_val);
+        test_scenario::end(scenario);
     }
 
     #[test]
     public fun test_single_value()  {
-        let scenario_val = init_test();
-        let scenario = &mut scenario_val;
+        let scenario = init_test();
 
-        let world = test_scenario::take_shared<World>(scenario);
+        let mut world = test_scenario::take_shared<World>(&scenario);
 
         // Value == 1000
         assert!(single_value_schema::get(&world) == 1000, 0 );
@@ -126,15 +117,14 @@ module examples::example_system {
         assert!(single_value_schema::get(&world) == 1001, 0 );
 
         test_scenario::return_shared<World>(world);
-        test_scenario::end(scenario_val);
+        test_scenario::end(scenario);
     }
 
     #[test]
     public fun test_single_struct()  {
-        let scenario_val = init_test();
-        let scenario = &mut scenario_val;
+        let scenario = init_test();
 
-        let world = test_scenario::take_shared<World>(scenario);
+        let mut world = test_scenario::take_shared<World>(&scenario);
 
         // admin == 0x1, fee == 100
         let (admin, fee) = single_struct_schema::get(&world);
@@ -176,30 +166,29 @@ module examples::example_system {
         assert!(fee == 102, 0);
 
         test_scenario::return_shared<World>(world);
-        test_scenario::end(scenario_val);
+        test_scenario::end(scenario);
     }
 
     #[test]
     public fun test_single_column()  {
-        let scenario_val = init_test();
-        let scenario = &mut scenario_val;
+        let scenario = init_test();
 
-        let world = test_scenario::take_shared<World>(scenario);
+        let mut world = test_scenario::take_shared<World>(&scenario);
 
-        let entity_key = entity_key::from_u256(0);
+        let entity_key = examples::entity_key::from_u256(0);
         // Add a field
         single_column_schema::set(&mut world, entity_key, 10);
         // is exist
         assert!(single_column_schema::contains(&world,entity_key) == true, 0);
 
         // get 10
-        let level = single_column_schema::get(&mut world, entity_key);
+        let level = single_column_schema::get(&world, entity_key);
         assert!(level == 10, 0);
 
         // Update a field
         single_column_schema::set(&mut world, entity_key::from_u256(0), 11);
         // get 11
-        let level = single_column_schema::get(&mut world, entity_key::from_u256(0));
+        let level = single_column_schema::get(&world, entity_key::from_u256(0));
         assert!(level == 11, 0);
 
         // Remove a field
@@ -208,15 +197,14 @@ module examples::example_system {
         assert!(single_column_schema::contains(&world,entity_key) == false, 0);
 
         test_scenario::return_shared<World>(world);
-        test_scenario::end(scenario_val);
+        test_scenario::end(scenario);
     }
 
     #[test]
     public fun test_multi_column()  {
-        let scenario_val = init_test();
-        let scenario = &mut scenario_val;
+        let scenario = init_test();
 
-        let world = test_scenario::take_shared<World>(scenario);
+        let mut world = test_scenario::take_shared<World>(&scenario);
 
         let entity_key = entity_key::from_u256(0);
         // Add a field
@@ -227,19 +215,19 @@ module examples::example_system {
         assert!(multi_column_schema::contains(&world, entity_key), 0);
 
         // get online and get 1000
-        let (state, last_update_time) = multi_column_schema::get(&mut world, entity_key);
+        let (state, last_update_time) = multi_column_schema::get(&world, entity_key);
         assert!(state == b"online", 0);
         assert!(last_update_time == 1000, 0);
 
-        let state = multi_column_schema::get_state(&mut world, entity_key);
-        let last_update_time = multi_column_schema::get_last_update_time(&mut world, entity_key);
+        let state = multi_column_schema::get_state(&world, entity_key);
+        let last_update_time = multi_column_schema::get_last_update_time(&world, entity_key);
         assert!(state == b"online", 0);
         assert!(last_update_time == 1000, 0);
 
         // Update a field
         multi_column_schema::set(&mut world, entity_key::from_u256(0), b"offline", 1001);
         // get offline and get 1001
-        let (state, last_update_time) = multi_column_schema::get(&mut world, entity_key::from_u256(0));
+        let (state, last_update_time) = multi_column_schema::get(&world, entity_key::from_u256(0));
         assert!(state == b"offline", 0);
         assert!(last_update_time == 1001, 0);
 
@@ -249,7 +237,7 @@ module examples::example_system {
         assert!(multi_column_schema::contains(&world,entity_key) == false, 0);
 
         test_scenario::return_shared<World>(world);
-        test_scenario::end(scenario_val);
+        test_scenario::end(scenario);
     }
 }
 
