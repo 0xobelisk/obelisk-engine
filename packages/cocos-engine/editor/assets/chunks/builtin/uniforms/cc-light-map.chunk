@@ -1,2 +1,0 @@
-#pragma builtin(local)
-layout(set = 2, binding = 11) uniform sampler2D cc_lightingMap;
