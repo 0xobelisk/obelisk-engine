@@ -1,4 +1,10 @@
-import { Types, TxnBuilderTypes, AptosAccount, Network } from 'aptos';
+import {
+  Types,
+  TxnBuilderTypes,
+  AptosAccount,
+  Network,
+  HexString,
+} from 'aptos';
 import { AptosAccountManager } from './libs/aptosAccountManager';
 // import { SuiTxBlock } from './libs/suiTxBuilder';
 import { AptosInteractor, getDefaultURL } from './libs/aptosInteractor';
@@ -66,6 +72,7 @@ function createQuery(
 function createTx(
   meta: MoveModuleFuncType,
   fn: (
+    sender?: HexString,
     params?: any[],
     typeArguments?: Types.MoveType[],
     isRaw?: boolean
@@ -74,11 +81,12 @@ function createTx(
   return withMeta(
     meta,
     async (
+      sender?: HexString,
       params?: any[],
       typeArguments?: Types.MoveType[],
       isRaw?: boolean
     ): Promise<Types.PendingTransaction | Types.EntryFunctionPayload> => {
-      const result = await fn(params, typeArguments, isRaw);
+      const result = await fn(sender, params, typeArguments, isRaw);
       return result;
     }
   );
@@ -161,7 +169,7 @@ export class Obelisk {
             if (isUndefined(this.#tx[moduleName][value.name])) {
               this.#tx[moduleName][value.name] = createTx(
                 meta,
-                (p, type_p, isRaw) => this.#exec(meta, p, type_p, isRaw)
+                (s, p, type_p, isRaw) => this.#exec(meta, s, p, type_p, isRaw)
               );
             }
           }
@@ -184,6 +192,7 @@ export class Obelisk {
 
   #exec = async (
     meta: MoveModuleFuncType,
+    sender?: HexString,
     params?: any[],
     typeArguments?: Types.MoveType[],
     isRaw?: boolean
@@ -205,7 +214,7 @@ export class Obelisk {
     if (isRaw === true) {
       return payload;
     }
-    return await this.signAndSendTxnWithPayload(payload);
+    return await this.signAndSendTxnWithPayload(payload, sender);
   };
 
   #read = async (
@@ -317,10 +326,15 @@ export class Obelisk {
 
   async signAndSendTxnWithPayload(
     payload: Types.EntryFunctionPayload,
+    sender?: HexString,
     derivePathParams?: DerivePathParams
   ) {
     const signer = this.getSigner(derivePathParams);
-    return this.aptosInteractor.sendTxWithPayload(signer, payload);
+    if (sender === undefined) {
+      sender = signer.address();
+    }
+
+    return this.aptosInteractor.sendTxWithPayload(signer, sender, payload);
   }
 
   async generatePayload(
@@ -337,7 +351,7 @@ export class Obelisk {
   }
 
   async generateTransaction(
-    sender: AptosAccount,
+    sender: HexString,
     contractAddress: string,
     moduleName: string,
     funcName: string,
@@ -345,7 +359,7 @@ export class Obelisk {
     params: any[]
   ): Promise<RawTransaction> {
     const rawTxn = await this.aptosInteractor.currentClient.generateTransaction(
-      sender.address(),
+      sender,
       {
         function: `${contractAddress}::${moduleName}::${funcName}`,
         type_arguments: typeArguments,
