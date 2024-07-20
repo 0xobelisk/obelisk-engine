@@ -54,7 +54,7 @@ export interface ContractQuery extends MessageMeta {
 
 export interface ContractTx extends MessageMeta {
   (
-    sender?: HexString,
+    sender?: HexString | string,
     params?: any[],
     typeArguments?: Types.MoveType[],
     isRaw?: boolean

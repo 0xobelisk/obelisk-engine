@@ -32,7 +32,7 @@ async function init() {
   console.log(message);
 
   console.log('======= set our message ========');
-  const res1 = (await obelisk.tx.message.set_message([
+  const res1 = (await obelisk.tx.message.set_message(obelisk.getAddress(), [
     'first set',
   ])) as Types.PendingTransaction;
   console.log(res1.hash);
@@ -44,7 +44,7 @@ async function init() {
 
   console.log('======= set our message again ========');
 
-  const res2 = (await obelisk.tx.message.set_message([
+  const res2 = (await obelisk.tx.message.set_message(obelisk.getAddress(), [
     'hello world',
   ])) as Types.PendingTransaction;
   console.log(res2.hash);

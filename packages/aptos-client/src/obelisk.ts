@@ -72,7 +72,7 @@ function createQuery(
 function createTx(
   meta: MoveModuleFuncType,
   fn: (
-    sender?: HexString,
+    sender?: HexString | string,
     params?: any[],
     typeArguments?: Types.MoveType[],
     isRaw?: boolean
@@ -81,7 +81,7 @@ function createTx(
   return withMeta(
     meta,
     async (
-      sender?: HexString,
+      sender?: HexString | string,
       params?: any[],
       typeArguments?: Types.MoveType[],
       isRaw?: boolean
@@ -192,7 +192,7 @@ export class Obelisk {
 
   #exec = async (
     meta: MoveModuleFuncType,
-    sender?: HexString,
+    sender?: HexString | string,
     params?: any[],
     typeArguments?: Types.MoveType[],
     isRaw?: boolean
@@ -326,12 +326,16 @@ export class Obelisk {
 
   async signAndSendTxnWithPayload(
     payload: Types.EntryFunctionPayload,
-    sender?: HexString,
+    sender?: HexString | string,
     derivePathParams?: DerivePathParams
   ) {
     const signer = this.getSigner(derivePathParams);
     if (sender === undefined) {
       sender = signer.address();
+    }
+
+    if (typeof sender === 'string') {
+      sender = new HexString(sender);
     }
 
     return this.aptosInteractor.sendTxWithPayload(signer, sender, payload);
