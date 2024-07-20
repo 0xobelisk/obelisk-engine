@@ -1,4 +1,4 @@
-import { Network, Types } from 'aptos';
+import { HexString, Network, Types } from 'aptos';
 
 import { MoveModuleFuncType } from '../libs/aptosContractFactory/types';
 
@@ -53,9 +53,12 @@ export interface ContractQuery extends MessageMeta {
 }
 
 export interface ContractTx extends MessageMeta {
-  (params?: any[], typeArguments?: Types.MoveType[], isRaw?: boolean): Promise<
-    Types.PendingTransaction | Types.EntryFunctionPayload
-  >;
+  (
+    sender?: HexString,
+    params?: any[],
+    typeArguments?: Types.MoveType[],
+    isRaw?: boolean
+  ): Promise<Types.PendingTransaction | Types.EntryFunctionPayload>;
 }
 
 export type MapMessageTx = Record<string, ContractTx>;
