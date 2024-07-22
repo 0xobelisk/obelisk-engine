@@ -7,7 +7,6 @@ import {
 } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
-  getFriendSystem,
   renderKeyName,
   renderSetFunc,
   renderContainFunc,
@@ -124,8 +123,8 @@ export function generateSchema(config: ObeliskConfig, srcPrefix: string) {
 
 function renderEphemeralSchema(option: RenderSchemaOptions): string {
   return `module ${option.projectName}::${option.schemaName}_schema {
-    use std::option::none;
-    use ${option.projectName}::events;
+	use std::option::none;
+	use obelisk::events;
     
     const SCHEMA_ID: vector<u8> = b"${option.schemaName}";
     const SCHEMA_TYPE: u8 = 2;
@@ -149,11 +148,11 @@ function renderSingleSchema(option: RenderSchemaOptions): string {
 ${
   option.needImportString ? "\tuse std::ascii::{String,string};\n\t" : "\t"
 }use std::option::none;
-    use sui::tx_context::TxContext;
-    use ${option.projectName}::events;
-    use ${option.projectName}::world::{Self, World, AdminCap};
-    // Systems
-${getFriendSystem(option.projectName, option.systems)}
+    use ${option.projectName}::app_key;
+    use ${option.projectName}::app_key::AppKey;
+    use obelisk::schema;
+    use obelisk::events;
+    use obelisk::world::{World, AdminCap};
 
 \tconst SCHEMA_ID: vector<u8> = b"${option.schemaName}";
 \tconst SCHEMA_TYPE: u8 = 1;
@@ -185,13 +184,12 @@ function renderSchema(option: RenderSchemaOptions) {
 ${
   option.needImportString ? "\tuse std::ascii::String;\n\t" : "\t"
 }use std::option::some;
-    use sui::tx_context::TxContext;
+    use ${option.projectName}::app_key;
+    use ${option.projectName}::app_key::AppKey;
     use sui::table::{Self, Table};
-    use ${option.projectName}::events;
-    use ${option.projectName}::world::{Self, World, AdminCap};
-
-    // Systems
-${getFriendSystem(option.projectName, option.systems)}
+    use obelisk::schema;
+    use obelisk::events;
+    use obelisk::world::{World, AdminCap};
 
 \t/// Entity does not exist
 \tconst EEntityDoesNotExist: u64 = 0;

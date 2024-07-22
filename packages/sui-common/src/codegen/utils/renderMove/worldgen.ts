@@ -8,6 +8,7 @@ import { generateInit } from "./generateInit";
 import { generateEps } from "./generateEps";
 import { generateSchema } from "./generateSchema";
 import {generateScript} from "./generateScript";
+import {generateAppKey} from "./generateAppKey";
 
 export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   let path = "";
@@ -29,6 +30,6 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
 
   // generate codegen
   generateSchema(config, path);
-  generateEps(config.name, path);
   generateInit(config, path);
+  generateAppKey(config, path);
 }

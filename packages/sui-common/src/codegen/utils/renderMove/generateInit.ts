@@ -7,17 +7,22 @@ import {
 } from "./common";
 
 export function generateInit(config: ObeliskConfig, srcPrefix: string) {
-  let code = `module ${config.name}::init {
+  let code = `#[allow(lint(share_owned))] 
+
+module ${config.name}::init {
     use std::ascii::string;
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
-    use ${config.name}::world;
+    use ${config.name}::app_key::AppKey;
+    use obelisk::access_control;
+    use obelisk::world;
 ${getUseSchema(config.name, config.schemas).join("\n")}
 
     fun init(ctx: &mut TxContext) {
-        let (_obelisk_world, admin_cap) = world::create(string(b"${capitalizeFirstLetter(
+        let (mut _obelisk_world, admin_cap) = world::create(string(b"${capitalizeFirstLetter(
           config.name
         )}"), string(b"${capitalizeFirstLetter(config.description)}"),ctx);
+        
+        // Authorize this application to access protected features of the World.
+        access_control::authorize_app<AppKey>(&admin_cap, &mut _obelisk_world);
 
         // Add Schema
 ${getRegisterSchema(config.schemas).join("\n")}

@@ -72,12 +72,12 @@ export function getRegisterSchema(
  *
  * @param name
  * @param values
- * @return [ friend name::name_system, friend name::info_system ]
+ * @return [ package name::name_system, package name::info_system ]
  */
-export function getFriendSystem(name: string, values: string[]): string {
+export function getpackageSystem(name: string, values: string[]): string {
   return (
-    values.map((key) => `\tfriend ${name}::${key};`).join("\n") +
-    `\n\tfriend ${name}::deploy_hook;`
+    values.map((key) => `\tpackage ${name}::${key};`).join("\n") +
+    `\n\tpackage ${name}::deploy_hook;`
   );
 }
 
@@ -278,7 +278,7 @@ export function renderStruct(
   values: Record<string, string> | string,
   isEphemeral: boolean = false
 ): string {
-  return `\tstruct ${structName} has copy, drop ${
+  return `\tpublic struct ${structName} has copy, drop ${
     isEphemeral ? "" : ", store"
   } {
 ${getStructAttrsWithType(values, "\t\t").join(",\n")}
@@ -300,7 +300,7 @@ ${getStructAttrs(values, "\t\t\t").join(", \n")}
 
 export function renderRegisterFunc(structName: string): string {
   return `\tpublic fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, ctx: &mut TxContext) {
-\t\tworld::add_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID, table::new<address, ${structName}>(ctx), admin_cap);
+\t\tschema::add<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID, table::new<address, ${structName}>(ctx), admin_cap);
 \t}`;
 }
 
@@ -308,11 +308,11 @@ export function renderSetFunc(
   structName: string,
   values: Record<string, string> | string
 ): string {
-  return `\tpublic(friend) fun set(_obelisk_world: &mut World, _obelisk_entity_key: address, ${getStructAttrsWithType(
+  return `\tpublic(package) fun set(_obelisk_world: &mut World, _obelisk_entity_key: address, ${getStructAttrsWithType(
     values,
     " "
   )}) {
-\t\tlet _obelisk_schema = world::get_mut_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_schema = schema::get_mut<Table<address,${structName}>, AppKey>(app_key::new(), _obelisk_world, SCHEMA_ID);
 \t\tlet _obelisk_data = new(${getStructAttrs(values, " ")});
 \t\tif(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key)) {
 \t\t\t*table::borrow_mut<address, ${structName}>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
@@ -325,8 +325,8 @@ export function renderSetFunc(
 }
 
 export function renderRemoveFunc(structName: string): string {
-  return `\tpublic(friend) fun remove(_obelisk_world: &mut World, _obelisk_entity_key: address) {
-\t\tlet _obelisk_schema = world::get_mut_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+  return `\tpublic(package) fun remove(_obelisk_world: &mut World, _obelisk_entity_key: address) {
+\t\tlet _obelisk_schema = schema::get_mut<Table<address,${structName}>, AppKey>(app_key::new(),_obelisk_world, SCHEMA_ID);
 \t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 \t\ttable::remove(_obelisk_schema, _obelisk_entity_key);
 \t\tevents::emit_remove(SCHEMA_ID, _obelisk_entity_key)
@@ -344,8 +344,8 @@ export function renderSetAttrsFunc(
         Object.entries(struct)
           .map(
             ([key, type]) =>
-              `\tpublic(friend) fun set_${key}(_obelisk_world: &mut World, _obelisk_entity_key: address, ${key}: ${type}) {
-\t\tlet _obelisk_schema = world::get_mut_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+              `\tpublic(package) fun set_${key}(_obelisk_world: &mut World, _obelisk_entity_key: address, ${key}: ${type}) {
+\t\tlet _obelisk_schema = schema::get_mut<Table<address,${structName}>, AppKey>(app_key::new(),_obelisk_world, SCHEMA_ID);
 \t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 \t\tlet _obelisk_data = table::borrow_mut<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
 \t\t_obelisk_data.${key} = ${key};
@@ -363,7 +363,7 @@ export function renderGetAllFunc(
   return `\tpublic fun get(_obelisk_world: &World, _obelisk_entity_key: address): ${getStructTypes(
     struct
   )} {
-\t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_schema = schema::get<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
 \t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 \t\tlet _obelisk_data = table::borrow<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
 \t\t(
@@ -386,7 +386,7 @@ export function renderGetAttrsFunc(
               key,
               type,
             ]) => `\tpublic fun get_${key}(_obelisk_world: &World, _obelisk_entity_key: address): ${type} {
-\t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_schema = schema::get<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
 \t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
 \t\tlet _obelisk_data = table::borrow<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
 \t\t_obelisk_data.${key}
@@ -398,7 +398,7 @@ export function renderGetAttrsFunc(
 
 export function renderContainFunc(structName: string): string {
   return `\tpublic fun contains(_obelisk_world: &World, _obelisk_entity_key: address): bool {
-\t\tlet _obelisk_schema = world::get_schema<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_schema = schema::get<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
 \t\ttable::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key)
 \t}`;
 }
@@ -410,7 +410,7 @@ export function renderRegisterFuncWithInit(
 ): string {
   return `\tpublic fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, _ctx: &mut TxContext) {
 \t\tlet _obelisk_schema = new(${getStructInitValue(valueType, defaultValue)});
-\t\tworld::add_schema<${structName}>(_obelisk_world, SCHEMA_ID, _obelisk_schema, admin_cap);
+\t\tschema::add<${structName}>(_obelisk_world, SCHEMA_ID, _obelisk_schema, admin_cap);
 \t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), _obelisk_schema);
 \t}`;
 }
@@ -419,11 +419,11 @@ export function renderSingleSetFunc(
   structName: string,
   values: Record<string, string> | string
 ): string {
-  return `\tpublic(friend) fun set(_obelisk_world: &mut World, ${getStructAttrsWithType(
+  return `\tpublic(package) fun set(_obelisk_world: &mut World, ${getStructAttrsWithType(
     values,
     " "
   )}) {
-\t\tlet _obelisk_schema = world::get_mut_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_schema = schema::get_mut<${structName}, AppKey>(app_key::new(),_obelisk_world, SCHEMA_ID);
 ${
   typeof values === "string"
     ? `\t\t_obelisk_schema.value = value;`
@@ -444,8 +444,8 @@ export function renderSingleSetAttrsFunc(
         Object.entries(struct)
           .map(
             ([key, type]) => `
-\tpublic(friend) fun set_${key}(_obelisk_world: &mut World, ${key}: ${type}) {
-\t\tlet _obelisk_schema = world::get_mut_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+\tpublic(package) fun set_${key}(_obelisk_world: &mut World, ${key}: ${type}) {
+\t\tlet _obelisk_schema = schema::get_mut<${structName}, AppKey>(app_key::new(),_obelisk_world, SCHEMA_ID);
 \t\t_obelisk_schema.${key} = ${key};
 \t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), *_obelisk_schema)
 \t}`
@@ -458,7 +458,7 @@ export function renderSingleGetAllFunc(
   values: MoveType | Record<string, MoveType>
 ): string {
   return `\tpublic fun get(_obelisk_world: &World): ${getStructTypes(values)} {
-\t\tlet _obelisk_schema = world::get_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_schema = schema::get<${structName}>(_obelisk_world, SCHEMA_ID);
 \t\t(
 ${
   typeof values === "string"
@@ -482,7 +482,7 @@ export function renderSingleGetAttrsFunc(
           .map(
             ([key, type]) => `
 \tpublic fun get_${key}(_obelisk_world: &World): ${type} {
-\t\tlet _obelisk_schema = world::get_schema<${structName}>(_obelisk_world, SCHEMA_ID);
+\t\tlet _obelisk_schema = schema::get<${structName}>(_obelisk_world, SCHEMA_ID);
 \t\t_obelisk_schema.${key}
 \t}`
           )
