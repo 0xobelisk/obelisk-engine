@@ -7,6 +7,7 @@ import {
   IndexerClient,
   Network,
   Types,
+  HexString,
 } from 'aptos';
 import { getDefaultURL } from './defaultConfig';
 import { delay } from './util';
@@ -104,16 +105,14 @@ export class AptosInteractor {
   }
 
   async sendTxWithPayload(
-    sender: AptosAccount,
+    signer: AptosAccount,
+    sender: HexString,
     payload: Types.EntryFunctionPayload
   ): Promise<Types.PendingTransaction> {
     for (const provider of this.providers) {
       try {
-        const rawTxn = await provider.generateTransaction(
-          sender.address(),
-          payload
-        );
-        const bcsTxn = AptosClient.generateBCSTransaction(sender, rawTxn);
+        const rawTxn = await provider.generateTransaction(sender, payload);
+        const bcsTxn = AptosClient.generateBCSTransaction(signer, rawTxn);
         const txnHash = await provider.submitSignedBCSTransaction(bcsTxn);
         return txnHash;
       } catch (err) {
