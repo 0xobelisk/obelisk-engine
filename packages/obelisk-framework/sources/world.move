@@ -17,7 +17,9 @@ module obelisk::world {
         /// Schema names of the world
         schema_names: vector<String>,
         /// admin of the world
-        admin: ID
+        admin: ID,
+        /// version of the world
+        version: u64
     }
 
     public fun create(name: String, description: String, ctx: &mut TxContext): (World, AdminCap) {
@@ -30,13 +32,23 @@ module obelisk::world {
             description,
             schemas: bag::new(ctx),
             schema_names: vector::empty(),
-            admin: object::id(&admin_cap)
+            admin: object::id(&admin_cap),
+            version: 1,
         };
         (world, admin_cap)
     }
     
     public fun admin(world: &World): ID {
         world.admin
+    }
+
+    public fun version(world: &World): u64 {
+        world.version
+    }
+
+    public fun mut_version(world: &mut World, admin_cap: &AdminCap): &mut u64 {
+        assert!(world.admin() == object::id(admin_cap), 0);
+        &mut world.version
     }
 
     public fun info(world: &World): (String, String) {

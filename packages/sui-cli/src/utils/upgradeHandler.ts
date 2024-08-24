@@ -88,7 +88,7 @@ in your contracts directory to use the default sui private key.`
 			arguments: [
 				tx.object(upgradeCap),
 				tx.pure.u8(UpgradePolicy.COMPATIBLE),
-				tx.object(digest),
+				tx.pure.vector('u8', digest),
 			],
 		});
 
@@ -106,7 +106,7 @@ in your contracts directory to use the default sui private key.`
 
 		tx.transferObjects(
 			[tx.object(upgradeCap)],
-			tx.pure(keypair.getPublicKey().toSuiAddress())
+			keypair.toSuiAddress()
 		);
 
 		const result = await client.signAndExecuteTransaction({
@@ -165,7 +165,7 @@ in your contracts directory to use the default sui private key.`
 
 		const migrateTx = new Transaction();
 		migrateTx.moveCall({
-			target: `${newPackageId}::world::migrate`,
+			target: `${newPackageId}::migrate::run`,
 			arguments: [migrateTx.object(worldId), migrateTx.object(adminCap)],
 		});
 

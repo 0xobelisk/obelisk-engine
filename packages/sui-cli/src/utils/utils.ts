@@ -42,7 +42,7 @@ export async function updateVersionInFile(
 	newVersion: string
 ) {
 	try {
-		const filePath = `${projectPath}/sources/codegen/eps/world.move`;
+		const filePath = `${projectPath}/sources/script/migrate.move`;
 		const data = await fsAsync.readFile(filePath, 'utf8');
 
 		// update version data

@@ -42,8 +42,6 @@ in your contracts directory to use the default sui private key.`
 		url: getFullnodeUrl(network),
 	});
 
-	// Set version 1
-	await updateVersionInFile(projectPath, '1');
 	let modules: any, dependencies: any;
 	try {
 		const {
@@ -74,7 +72,7 @@ in your contracts directory to use the default sui private key.`
 	});
 	tx.transferObjects(
 		[upgradeCap],
-		tx.pure(keypair.getPublicKey().toSuiAddress())
+		keypair.toSuiAddress()
 	);
 
 	let result: SuiTransactionBlockResponse;

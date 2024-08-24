@@ -7,7 +7,7 @@ import { generateEntityKey } from "./generateEntityKey";
 import { generateInit } from "./generateInit";
 import { generateEps } from "./generateEps";
 import { generateSchema } from "./generateSchema";
-import {generateScript} from "./generateScript";
+import {generateDeployHook, generateMigrate} from "./generateScript";
 import {generateAppKey} from "./generateAppKey";
 
 export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
@@ -26,7 +26,8 @@ export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
   }
 
   generateSystem(config, path);
-  generateScript(config, path);
+  generateDeployHook(config, path);
+  generateMigrate(config, path);
 
   // generate codegen
   generateSchema(config, path);

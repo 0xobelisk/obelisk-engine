@@ -426,10 +426,11 @@ export function renderSingleSetFunc(
 \t\tlet _obelisk_schema = schema::get_mut<${structName}, AppKey>(app_key::new(),_obelisk_world, SCHEMA_ID);
 ${
   typeof values === "string"
-    ? `\t\t_obelisk_schema.value = value;`
-    : Object.entries(values)
-        .map(([key, _]) => `\t\t_obelisk_schema.${key} = ${key};`)
-        .join("\n")
+    ? `\t\t_obelisk_schema.value = value;
+        events::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), _obelisk_schema.value);`
+    : `\t\tlet _obelisk_data = new(${getStructAttrs(values, " ")});
+        *_obelisk_schema = _obelisk_data;
+        events::emit_set(SCHEMA_ID, SCHEMA_TYPE, none(), _obelisk_data);`
 }
 \t}`;
 }
