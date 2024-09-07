@@ -21,6 +21,7 @@ const Home = () => {
     });
 
     const payload = (await obelisk.tx.counter_system.increase(
+      obelisk.getAddress(),
       undefined, // params
       undefined, // typeArguments
       true,

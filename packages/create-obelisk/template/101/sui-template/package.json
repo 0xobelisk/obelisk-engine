@@ -5,8 +5,9 @@
   "author": "team@0xobelisk.com",
   "license": "MIT",
   "scripts": {
+    "dev": "pnpm start-template",
+    "dev:next": "next",
     "start-template": "pnpm generateAccount && pnpm faucet && pnpm world-publish && pnpm storeConfig && next",
-    "dev": "next",
     "faucet": "pnpm obelisk faucet --network testnet",
     "schemagen": "pnpm obelisk schemagen obelisk.config.ts",
     "world-publish": "pnpm obelisk publish --network testnet --configPath ./obelisk.config.ts && ts-node scripts/storeConfig.ts testnet",

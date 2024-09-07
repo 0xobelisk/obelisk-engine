@@ -35,6 +35,7 @@ const Home = () => {
     });
 
     const f_payload = (await obelisk.tx.counter_system.increase(
+        account?.address,
         undefined,
         undefined,
         true,
