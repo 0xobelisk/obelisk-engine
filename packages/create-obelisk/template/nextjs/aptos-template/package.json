@@ -35,7 +35,7 @@
   "dependencies": {
     "@0xobelisk/aptos-common": "^0.0.6",
     "@0xobelisk/aptos-client": "^0.0.11",
-    "@0xobelisk/aptos-cli": "^0.0.8",
+    "@0xobelisk/aptos-cli": "^0.0.9",
     "@aptos-labs/wallet-adapter-mui-design": "^1.0.7",
     "@aptos-labs/wallet-adapter-react": "^1.4.0",
     "aptos": "^1.20.0",
