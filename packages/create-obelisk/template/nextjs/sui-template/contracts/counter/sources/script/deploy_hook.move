@@ -1,12 +1,11 @@
 module counter::deploy_hook {
-    use counter::world::{World, AdminCap, get_admin};
-    use sui::object;
+    use obelisk::world::{World, AdminCap};
 
     /// Not the right admin for this world
     const ENotAdmin: u64 = 0;
 
     public entry fun run(world: &mut World, admin_cap: &AdminCap) {
-        assert!( get_admin(world) == object::id(admin_cap), ENotAdmin);
+         assert!(world.admin() == object::id(admin_cap), ENotAdmin);
         
         // Logic that needs to be automated once the contract is deployed
         

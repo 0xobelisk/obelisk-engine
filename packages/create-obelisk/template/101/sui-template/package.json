@@ -5,7 +5,7 @@
   "author": "team@0xobelisk.com",
   "license": "MIT",
   "scripts": {
-    "dev": "pnpm start-template",
+    "dev": "pnpm obelisk hello && pnpm start-template",
     "dev:next": "next",
     "start-template": "pnpm generateAccount && pnpm faucet && pnpm world-publish && pnpm storeConfig && next",
     "faucet": "pnpm obelisk faucet --network testnet",

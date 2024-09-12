@@ -1,12 +1,17 @@
+#[allow(lint(share_owned))] 
+
 module counter::init {
     use std::ascii::string;
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
-    use counter::world;
+    use counter::app_key::AppKey;
+    use obelisk::access_control;
+    use obelisk::world;
 	use counter::counter_schema;
 
     fun init(ctx: &mut TxContext) {
-        let (_obelisk_world, admin_cap) = world::create(string(b"Counter"), string(b"Counter"),ctx);
+        let (mut _obelisk_world, admin_cap) = world::create(string(b"Counter"), string(b"Counter"),ctx);
+        
+        // Authorize this application to access protected features of the World.
+        access_control::authorize_app<AppKey>(&admin_cap, &mut _obelisk_world);
 
         // Add Schema
 		counter_schema::register(&mut _obelisk_world, &admin_cap, ctx);
