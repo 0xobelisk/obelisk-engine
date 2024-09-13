@@ -5080,9 +5080,9 @@ var Obelisk = class {
   async getEntity(worldId, schemaName, entityId) {
     const schemaModuleName = `${schemaName}_schema`;
     const tx = new _transactions.Transaction();
-    const params = [tx.pure.address(worldId)];
+    const params = [tx.object(worldId)];
     if (entityId !== void 0) {
-      params.push(tx.pure.address(entityId));
+      params.push(tx.object(entityId));
     }
     const dryResult = await this.query[schemaModuleName].get(tx, params);
     return this.view(dryResult);
@@ -5090,9 +5090,9 @@ var Obelisk = class {
   async containEntity(worldId, schemaName, entityId) {
     const schemaModuleName = `${schemaName}_schema`;
     const tx = new _transactions.Transaction();
-    const params = [tx.pure.address(worldId)];
+    const params = [tx.object(worldId)];
     if (entityId !== void 0) {
-      params.push(tx.pure.address(entityId));
+      params.push(tx.object(entityId));
     }
     const dryResult = await this.query[schemaModuleName].contains(tx, params);
     return this.view(dryResult);
