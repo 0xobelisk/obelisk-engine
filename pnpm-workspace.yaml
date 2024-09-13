@@ -1,3 +1,3 @@
 packages:
-    - packages/*
-    # - packages/create-obelisk/* # just for test
+  - packages/*
+  - packages/create-obelisk/template/nextjs/sui-template # just for test

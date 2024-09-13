@@ -832,17 +832,16 @@ export class Obelisk {
   ): Promise<any[] | undefined> {
     const schemaModuleName = `${schemaName}_schema`;
     const tx = new Transaction();
-    const params = [tx.pure.address(worldId)] as TransactionArgument[];
+    const params = [tx.object(worldId)] as TransactionArgument[];
 
     if (entityId !== undefined) {
-      params.push(tx.pure.address(entityId));
+      params.push(tx.object(entityId));
     }
 
     const dryResult = (await this.query[schemaModuleName].get(
       tx,
       params
     )) as DevInspectResults;
-
     // "success" | "failure";
     return this.view(dryResult);
   }
@@ -854,10 +853,10 @@ export class Obelisk {
   ): Promise<boolean | undefined> {
     const schemaModuleName = `${schemaName}_schema`;
     const tx = new Transaction();
-    const params = [tx.pure.address(worldId)] as TransactionArgument[];
+    const params = [tx.object(worldId)] as TransactionArgument[];
 
     if (entityId !== undefined) {
-      params.push(tx.pure.address(entityId));
+      params.push(tx.object(entityId));
     }
 
     const dryResult = (await this.query[schemaModuleName].contains(
