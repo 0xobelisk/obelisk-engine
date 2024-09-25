@@ -1,0 +1,43 @@
+module obelisk::wrapper_system {
+    use std::string::String;
+    use obelisk::assets_functions;
+    use sui::balance;
+    use sui::balance::Balance;
+    use sui::coin;
+    use sui::coin::Coin;
+    use sui::transfer;
+    use obelisk::assets_asset_id::AssetsAssetId;
+    use obelisk::wrapper_coin;
+    use obelisk::wrapper_coin::WrapperCoin;
+    use obelisk::assets_schema::Assets;
+    use obelisk::wrapper_schema::Wrapper;
+
+    public entry fun register<T>(wrapper: &mut Wrapper, assets: &mut Assets, name: String, symbol: String, description: String, decimals: u8, url: String, info: String, ctx: &mut TxContext) {
+        let asset_id = assets.asset_id().get();
+        wrapper.asset_ids().add<WrapperCoin<T>, AssetsAssetId>(wrapper_coin::new(), asset_id);
+        wrapper.coins().add<AssetsAssetId, WrapperCoin<T>>(asset_id , wrapper_coin::new());
+        wrapper.pools().add<AssetsAssetId, Balance<T>>(asset_id, balance::zero<T>());
+        assets_functions::do_create(assets, ctx.sender(), name, symbol, description, decimals, url, info);
+    }
+
+    public entry fun wrap<T>(wrapper: &mut Wrapper, assets: &mut Assets, coin: Coin<T>, beneficiary: address, _ctx: &mut TxContext) {
+        let wrapper_coin = wrapper_coin::new<T>();
+        assert!(wrapper.asset_ids().contains(wrapper_coin), 0);
+        let asset_id = *wrapper.asset_ids().borrow<WrapperCoin<T>, AssetsAssetId>(wrapper_coin);
+        let pool_balance = wrapper.pools().borrow_mut<AssetsAssetId, Balance<T>>(asset_id);
+        let amount = pool_balance.join(coin.into_balance());
+
+        assets_functions::increase_balance(asset_id, beneficiary, amount as u64, assets);
+    }
+
+    public entry fun unwrap<T>(wrapper: &mut Wrapper, assets: &mut Assets, amount: u64, beneficiary: address, ctx: &mut TxContext) {
+        let wrapper_coin = wrapper_coin::new<T>();
+        assert!(wrapper.asset_ids().contains(wrapper_coin), 0);
+        let asset_id = *wrapper.asset_ids().borrow<WrapperCoin<T>, AssetsAssetId>(wrapper_coin);
+        assets_functions::decrease_balance(asset_id, ctx.sender(), amount, assets);
+
+        let pool_balance = wrapper.pools().borrow_mut<AssetsAssetId, Balance<T>>(asset_id);
+        let coin =  coin::from_balance<T>(pool_balance.split(amount), ctx);
+        transfer::public_transfer(coin, beneficiary);
+    }
+}
