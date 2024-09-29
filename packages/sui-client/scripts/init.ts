@@ -27,7 +27,7 @@ async function init() {
   });
 
   console.log(obelisk.getAddress());
-  await obelisk.requestFaucet();
+  // await obelisk.requestFaucet();
   let balance = await obelisk.getBalance();
   console.log('balance', balance);
 

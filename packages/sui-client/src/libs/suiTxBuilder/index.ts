@@ -2,6 +2,7 @@ import { Transaction } from '@mysten/sui/transactions';
 import { SUI_SYSTEM_STATE_OBJECT_ID } from '@mysten/sui/utils';
 import type { SuiClient, SuiObjectRef } from '@mysten/sui/client';
 import type {
+  TransactionArgument,
   TransactionObjectArgument,
   TransactionObjectInput,
 } from '@mysten/sui/transactions';
@@ -43,20 +44,21 @@ export class SuiTx {
   get blockData() {
     return this.tx.blockData;
   }
-
-  autoPure(value: SuiTxArg, type?: string) {
-    if (type === undefined) {
-      return convertArgs(this.tx, [value]);
-    }
-
-    return;
-  }
-
   address(value: string) {
     return this.tx.pure.address(value);
   }
-  get pure() {
-    return this.tx.pure.bind(this.tx);
+  get pure(): {
+    <T extends TransactionArgument>(value: T): TransactionArgument;
+    address(value: string): TransactionArgument;
+    u8(value: number | bigint): TransactionArgument;
+    u16(value: number | bigint): TransactionArgument;
+    u32(value: number | bigint): TransactionArgument;
+    u64(value: number | bigint): TransactionArgument;
+    u128(value: number | bigint): TransactionArgument;
+    u256(value: number | bigint): TransactionArgument;
+    bool(value: boolean): TransactionArgument;
+  } {
+    return this.tx.pure;
   }
   object(value: string | TransactionObjectInput) {
     return this.tx.object(value);
@@ -140,10 +142,10 @@ export class SuiTx {
     );
   }
 
-  splitCoins(coin: SuiObjectArg, amounts: SuiTxArg[]) {
+  splitCoins(coin: SuiObjectArg, amounts: SuiAmountsArg[]) {
     const res = this.tx.splitCoins(
       convertObjArg(this.tx, coin),
-      convertArgs(this.tx, amounts)
+      convertAmounts(this.tx, amounts)
     );
     return amounts.map((_, i) => res[i]);
   }
@@ -225,16 +227,15 @@ export class SuiTx {
     if (coins.length > 1) {
       this.tx.mergeCoins(mergedCoin, coinObjects.slice(1));
     }
-    const [sendCoin] = this.tx.splitCoins(mergedCoin, [
-      typeof amount === 'number' || typeof amount === 'bigint'
-        ? amount
-        : convertArgs(this.tx, [amount])[0],
-    ]);
+    const [sendCoin] = this.tx.splitCoins(
+      mergedCoin,
+      convertAmounts(this.tx, [amount])
+    );
     return [sendCoin, mergedCoin];
   }
 
-  splitSUIFromGas(amounts: SuiTxArg[]) {
-    return this.tx.splitCoins(this.tx.gas, convertArgs(this.tx, amounts));
+  splitSUIFromGas(amounts: SuiAmountsArg[]) {
+    return this.tx.splitCoins(this.tx.gas, convertAmounts(this.tx, amounts));
   }
 
   splitMultiCoins(coins: SuiObjectArg[], amounts: SuiAmountsArg[]) {
@@ -281,7 +282,7 @@ export class SuiTx {
     coins: SuiObjectArg[],
     sender: SuiAddressArg,
     recipient: SuiAddressArg,
-    amount: SuiTxArg
+    amount: SuiAmountsArg
   ) {
     return this.transferCoinToMany(coins, sender, [recipient], [amount]);
   }
