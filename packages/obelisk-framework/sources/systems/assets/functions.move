@@ -151,4 +151,22 @@ module obelisk::assets_functions {
         amount
     }
 
+    public fun balance_of(assets: &mut Assets, asset_id: AssetsAssetId, who: address): u64 {
+        let maybe_account = assets.account().try_get(&asset_id, &who);
+        if (maybe_account.is_none()) {
+            return 0;
+        };
+        let account = maybe_account.borrow();
+        account.get_balance()
+    }
+
+    public fun supply_of(assets: &mut Assets, asset_id: AssetsAssetId): u64 {
+        let maybe_assets_details = assets.details().try_get(&asset_id);
+        if (maybe_assets_details.is_none()) {
+            return 0;
+        };
+        let assets_details = maybe_assets_details.borrow();
+        assets_details.get_supply()
+    }
+
 }
