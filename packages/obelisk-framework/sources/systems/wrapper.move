@@ -1,5 +1,6 @@
 module obelisk::wrapper_system {
     use std::string::String;
+    use obelisk::assets_asset_id;
     use obelisk::assets_functions;
     use sui::balance;
     use sui::balance::Balance;
@@ -39,5 +40,18 @@ module obelisk::wrapper_system {
         let pool_balance = wrapper.pools().borrow_mut<AssetsAssetId, Balance<T>>(asset_id);
         let coin =  coin::from_balance<T>(pool_balance.split(amount), ctx);
         transfer::public_transfer(coin, beneficiary);
+    }
+
+    public fun wrapped_assets(wrapper: &mut Wrapper, assets: &mut Assets): vector<u32> {
+        let mut wrapped_assets = vector[];
+        let mut asset_id = assets.asset_id().get().get();
+        let mut i = 0;
+        while (i  < asset_id) {
+            if (wrapper.coins().contains(assets_asset_id::new(i))) {
+                wrapped_assets.push_back(i);
+            };
+            i = i + 1;
+        };
+        wrapped_assets
     }
 }

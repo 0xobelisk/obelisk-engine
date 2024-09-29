@@ -26,4 +26,16 @@ module obelisk::assets_metadata {
             info
         }
     }
+
+    public fun get(self: &AssetsMetadata): (String, String, String, u8, String, String) {
+        (self.name, self.symbol, self.description, self.decimals, self.url, self.info)
+    }
+
+    public fun get_name(self: AssetsMetadata): String {
+        self.name
+    }
+
+    public fun get_symbol(self: AssetsMetadata): String {
+        self.symbol
+    }
 }

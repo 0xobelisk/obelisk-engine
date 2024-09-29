@@ -50,16 +50,20 @@ module obelisk::assets_tests {
         let info = string::utf8(b"Obelisk Coin");
         let decimals = 9;
         create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);
+        create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);
 
         let metadata = assets.metadata().get(&assets_asset_id::new(0));
         assert!(metadata == assets_metadata::new(name, symbol, description, decimals, url, info), 0);
-        assert!(assets_asset_id::new(1) == assets.asset_id().get(), 0);
+        assert!(assets_asset_id::new(2) == assets.asset_id().get(), 0);
 
         let ctx = test_scenario::ctx(&mut scenario);
         assets_system::mint(&mut assets, 0, ctx.sender(), 100, ctx);
+        assets_system::mint(&mut assets, 1, ctx.sender(), 100, ctx);
         assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 100, 0);
         assert!(assets_system::supply_of(&mut assets, 0) == 100, 0);
+        assert!(assets_system::owned_assets(&mut assets, ctx.sender()) == vector[0, 1], 0);
 
+        debug::print(&assets_system::owned_assets(&mut assets, ctx.sender()));
         assets_system::transfer(&mut assets, 0, @0x0002, 50, ctx);
         assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 50, 0);
         assert!(assets_system::balance_of(&mut assets, 0, @0x0002) == 50, 0);

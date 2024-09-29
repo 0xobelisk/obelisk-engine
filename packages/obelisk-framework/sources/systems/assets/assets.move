@@ -1,4 +1,5 @@
 module obelisk::assets_system {
+    use std::string;
     use std::string::String;
     use obelisk::assets_functions;
     use obelisk::assets_account;
@@ -139,21 +140,36 @@ module obelisk::assets_system {
 
     public fun balance_of(assets: &mut Assets, asset_id: u32, who: address): u64 {
         let asset_id = assets_asset_id::new(asset_id);
-        let maybe_account = assets.account().try_get(&asset_id, &who);
-        if (maybe_account.is_none()) {
-            return 0;
-        };
-        let account = maybe_account.borrow();
-        account.get_balance()
+        assets_functions::balance_of(assets, asset_id, who)
     }
 
     public fun supply_of(assets: &mut Assets, asset_id: u32): u64 {
         let asset_id = assets_asset_id::new(asset_id);
-        let maybe_assets_details = assets.details().try_get(&asset_id);
-        if (maybe_assets_details.is_none()) {
-            return 0;
+        assets_functions::supply_of(assets, asset_id)
+    }
+
+    public fun metadata_of(assets: &mut Assets, asset_id: u32): (String, String, String, u8, String) {
+        let asset_id = assets_asset_id::new(asset_id);
+        let maybe_metadata = assets.metadata().try_get(&asset_id);
+        if (maybe_metadata.is_none()) {
+            return (string::utf8(b""), string::utf8(b""), string::utf8(b""), 0, string::utf8(b""));
         };
-        let assets_details = maybe_assets_details.borrow();
-        assets_details.get_supply()
+        let metadata = maybe_metadata.borrow();
+        let (name, symbol, description, decimals, url, _) = metadata.get();
+        (name, symbol, description, decimals, url)
+    }
+
+    public fun owned_assets(assets: &mut Assets, owner: address): vector<u32> {
+        let mut owned_assets = vector[];
+        let mut asset_id = assets.asset_id().get().get();
+
+        let mut i = 0;
+        while (i  < asset_id) {
+            if (assets.account().contains(&assets_asset_id::new(i), &owner)) {
+                owned_assets.push_back(i);
+            };
+            i = i + 1;
+        };
+        owned_assets
     }
 }
