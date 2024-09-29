@@ -13,7 +13,12 @@ import type {
 import { SuiAccountManager } from './libs/suiAccountManager';
 import { SuiTx } from './libs/suiTxBuilder';
 import { SuiInteractor } from './libs/suiInteractor';
-import { MapObjectStruct, MoveStructType, ObeliskObjectContent } from './types';
+import {
+  MapObjectStruct,
+  MoveStructType,
+  ObeliskObjectContent,
+  SuiObeliskReturnType,
+} from './types';
 import { SuiContractFactory } from './libs/suiContractFactory';
 import {
   SuiMoveMoudleFuncType,
@@ -29,6 +34,7 @@ import {
   ObeliskParams,
   SuiTxArg,
   // SuiTxArgument,
+  SuiObjectArg,
   SuiVecTxArg,
 } from './types';
 import { normalizeHexAddress, numberToAddressHex } from './utils';
@@ -727,7 +733,7 @@ export class Obelisk {
   }
 
   async transferObjects(
-    objects: string[],
+    objects: SuiObjectArg[],
     recipient: string,
     derivePathParams?: DerivePathParams
   ) {

@@ -18,8 +18,7 @@ import type {
   SuiMoveNormalizedType,
   MoveStruct,
 } from '@mysten/sui/client';
-import { bcs } from '@mysten/sui/bcs';
-import { bcs as BCS } from '@mysten/bcs';
+import { SuiTx } from '../libs/suiTxBuilder';
 
 import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
 
@@ -275,3 +274,7 @@ export type ObjectContent = {
   hasPublicTransfer: boolean;
   dataType: string;
 };
+
+export type SuiObeliskReturnType<T extends boolean> = T extends true
+  ? SuiTransactionBlockResponse
+  : SuiTx;

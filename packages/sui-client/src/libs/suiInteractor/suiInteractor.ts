@@ -254,6 +254,7 @@ export class SuiInteractor {
       objectId: string;
       digest: string;
       version: string;
+      balance: string;
     }[] = [];
     let totalAmount = 0;
     let hasNext = true,
@@ -271,6 +272,7 @@ export class SuiInteractor {
           objectId: coinData.coinObjectId,
           digest: coinData.digest,
           version: coinData.version,
+          balance: coinData.balance,
         });
         totalAmount = totalAmount + parseInt(coinData.balance);
         if (totalAmount >= amount) {

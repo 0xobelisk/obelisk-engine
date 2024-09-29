@@ -17,6 +17,7 @@ import type {
   SuiTxArg,
   SuiVecTxArg,
   SuiInputTypes,
+  SuiAmountsArg,
 } from 'src/types';
 
 export const getDefaultSuiInputType = (
@@ -191,10 +192,7 @@ export function convertObjArg(
   throw new Error('Invalid argument type');
 }
 
-export function convertAmounts(
-  txBlock: Transaction,
-  amounts: (SuiTxArg | number | bigint)[]
-): (TransactionArgument | number | bigint)[] {
+export function convertAmounts(txBlock: Transaction, amounts: SuiAmountsArg[]) {
   return amounts.map((amount) => {
     if (typeof amount === 'number' || typeof amount === 'bigint') {
       return amount;
