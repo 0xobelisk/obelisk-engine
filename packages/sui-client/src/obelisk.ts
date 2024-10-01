@@ -127,6 +127,7 @@ export class Obelisk {
     u256: bcs.u256(),
     bool: bcs.bool(),
     '0x1::ascii::String': bcs.string(),
+    '0x1::string::String': bcs.string(),
     '0x1::option::Option<address>': bcs.option(
       bcs.bytes(32).transform({
         // To change the input type, you need to provide a type definition for the input
@@ -872,40 +873,6 @@ export class Obelisk {
 
     return this.view(dryResult) as boolean | undefined;
   }
-
-  // async getEntities(
-  //   worldId: string,
-  //   schemaName: string,
-  //   cursor?: string,
-  //   limit?: number
-  // ) {
-  //   let schemaModuleName = `${schemaName}_schema`;
-
-  //   const tx = new TransactionBlock();
-  //   let params = [tx.pure(worldId)] as SuiTxArgument[];
-
-  //   const tableResult = (await this.query[schemaonentModuleName].entities(
-  //     tx,
-  //     params
-  //   )) as DevInspectResults;
-  //   const entities = tableResult.results as SuiReturnValues;
-  //   const bcs = new BCS(getSuiMoveConfig());
-
-  //   let value = Uint8Array.from(entities[0].returnValues[0][0]);
-  //   let tableId = '0x' + bcs.de('address', value);
-  //   let dynamicFields = await this.suiInteractor.getDynamicFields(
-  //     tableId,
-  //     cursor,
-  //     limit
-  //   );
-  //   let objectIds = dynamicFields.data.map((field) => field.objectId);
-  //   let objectDatas = await this.suiInteractor.getEntitiesObjects(objectIds);
-  //   return {
-  //     data: objectDatas,
-  //     nextCursor: dynamicFields.nextCursor,
-  //     hasNextPage: dynamicFields.hasNextPage,
-  //   };
-  // }
 
   async getOwnedObjects(owner: string, cursor?: string, limit?: number) {
     const ownedObjects = await this.suiInteractor.getOwnedObjects(
