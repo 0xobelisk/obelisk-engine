@@ -12,19 +12,19 @@ module obelisk::assets_tests {
     use sui::test_scenario::Scenario;
 
     public fun init_test(): Scenario {
-        let mut scenario = test_scenario::begin(@0x0001);
+        let mut scenario = test_scenario::begin(@0xA);
         {
             let ctx = test_scenario::ctx(&mut scenario);
             assets_schema::init_assets_for_testing(ctx);
         };
-        test_scenario::next_tx(&mut scenario,@0x0001);
+        test_scenario::next_tx(&mut scenario,@0xA);
         scenario
     }
 
     public fun create_assets(assets: &mut Assets, name: String, symbol: String, description: String, decimals: u8, url: String, info: String, scenario: &mut Scenario) {
         let ctx = test_scenario::ctx(scenario);
         assets_system::create(assets, name, symbol, description, decimals, url, info, ctx);
-        test_scenario::next_tx(scenario,@0x0001);
+        test_scenario::next_tx(scenario,@0xA);
     }
 
     #[test]
@@ -60,6 +60,7 @@ module obelisk::assets_tests {
         assets_system::mint(&mut assets, 0, ctx.sender(), 100, ctx);
         assets_system::mint(&mut assets, 1, ctx.sender(), 100, ctx);
         assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 100, 0);
+        assert!(assets_system::balance_of(&mut assets, 0, @0x10000) == 0, 0);
         assert!(assets_system::supply_of(&mut assets, 0) == 100, 0);
         assert!(assets_system::owned_assets(&mut assets, ctx.sender()) == vector[0, 1], 0);
 

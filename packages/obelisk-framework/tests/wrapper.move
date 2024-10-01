@@ -23,20 +23,20 @@ module obelisk::wrapper_tests {
     public struct USDT has drop {}
 
     public fun init_test(): Scenario {
-        let mut scenario = test_scenario::begin(@0x0001);
+        let mut scenario = test_scenario::begin(@0xA);
         {
             let ctx = test_scenario::ctx(&mut scenario);
             assets_schema::init_assets_for_testing(ctx);
             wrapper_schema::init_wrap_for_testing(ctx);
         };
-        test_scenario::next_tx(&mut scenario,@0x0001);
+        test_scenario::next_tx(&mut scenario,@0xA);
         scenario
     }
 
     public fun wrapper_register<T>(wrapper: &mut Wrapper, assets: &mut Assets, name: String, symbol: String, description: String, decimals: u8, url: String, info: String, scenario: &mut Scenario) {
         let ctx = test_scenario::ctx(scenario);
         wrapper_system::register<T>(wrapper, assets, name, symbol, description, decimals, url, info, ctx);
-        test_scenario::next_tx(scenario,@0x0001);
+        test_scenario::next_tx(scenario,@0xA);
     }
 
     #[test]
