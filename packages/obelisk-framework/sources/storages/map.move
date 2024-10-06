@@ -3,9 +3,6 @@
 
 module obelisk::storage_map {
 
-    // This key already exists in the map
-    const EKeyAlreadyExists: u64 = 0;
-
     // This key does not exist in the map
     const EKeyDoesNotExist: u64 = 1;
 

@@ -1,8 +1,5 @@
 module obelisk::dex_system {
-    use std::debug;
     use std::string;
-    use std::string::String;
-    use obelisk::assets_system;
     use obelisk::dex_pool_id;
     use sui::address;
     use obelisk::dex_pools;
@@ -11,12 +8,11 @@ module obelisk::dex_system {
     use obelisk::assets_schema::Assets;
     use obelisk::dex_schema::Dex;
     use obelisk::assets_asset_id;
-    use obelisk::assets_asset_id::AssetsAssetId;
 
     const LP_ASSET_DESCRIPTION: vector<u8> = b"Obelisk LP Asset";
 
-    public entry fun create_pool(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, ctx: &mut TxContext) {
-        let sender = ctx.sender();
+    public entry fun create_pool(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, _ctx: &mut TxContext) {
+        // let sender = ctx.sender();
         assert!(asset1 != asset2, 0);
 
         let mut asset_id1 = assets_asset_id::new(asset1);
@@ -84,8 +80,8 @@ module obelisk::dex_system {
 
         let reserve1 = assets_functions::balance_of(assets, asset_id1, pool.get_pool_address());
         let reserve2 = assets_functions::balance_of(assets, asset_id2, pool.get_pool_address());
-        let mut amount1;
-        let mut amount2;
+        let amount1;
+        let amount2;
         if(reserve1 == 0 || reserve2 == 0) {
             amount1 = amount1_desired;
             amount2 = amount2_desired;
@@ -108,7 +104,7 @@ module obelisk::dex_system {
         assets_functions::do_transfer(asset_id2, sender, pool.get_pool_address(), amount2, assets);
 
         let total_supply = assets_functions::supply_of(assets, pool.get_lp_asset_id());
-        let mut lp_token_amount;
+        let lp_token_amount;
         if (total_supply == 0) {
             lp_token_amount = dex_functions::mul_sqrt(amount1, amount2);
         } else {
@@ -167,5 +163,7 @@ module obelisk::dex_system {
         let sender = ctx.sender();
         dex_functions::do_swap_exact_tokens_for_tokens(dex, assets, sender, path, amount_in, amount_out_min, to);
     }
+
+
 
 }

@@ -4,7 +4,6 @@ module obelisk::assets_system {
     use obelisk::assets_functions;
     use obelisk::assets_account;
     use obelisk::assets_asset_id;
-    use obelisk::assets_metadata;
     use obelisk::assets_detail;
     use obelisk::assets_schema::Assets;
 
@@ -152,7 +151,7 @@ module obelisk::assets_system {
         let asset_id = assets_asset_id::new(asset_id);
         let maybe_metadata = assets.metadata().try_get(&asset_id);
         if (maybe_metadata.is_none()) {
-            return (string::utf8(b""), string::utf8(b""), string::utf8(b""), 0, string::utf8(b""));
+            return (string::utf8(b""), string::utf8(b""), string::utf8(b""), 0, string::utf8(b""))
         };
         let metadata = maybe_metadata.borrow();
         let (name, symbol, description, decimals, url, _) = metadata.get();
@@ -161,7 +160,7 @@ module obelisk::assets_system {
 
     public fun owned_assets(assets: &mut Assets, owner: address): vector<u32> {
         let mut owned_assets = vector[];
-        let mut asset_id = assets.asset_id().get().get();
+        let asset_id = assets.asset_id().get().get();
 
         let mut i = 0;
         while (i  < asset_id) {

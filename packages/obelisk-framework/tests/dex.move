@@ -2,7 +2,6 @@
 module obelisk::dex_tests {
     use std::debug;
     use std::string;
-    use std::string::String;
     use obelisk::dex_pools;
     use obelisk::dex_system;
     use obelisk::dex_schema::Dex;

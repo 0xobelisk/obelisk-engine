@@ -6,7 +6,6 @@ module obelisk::wrapper_system {
     use sui::balance::Balance;
     use sui::coin;
     use sui::coin::Coin;
-    use sui::transfer;
     use obelisk::assets_asset_id::AssetsAssetId;
     use obelisk::wrapper_coin;
     use obelisk::wrapper_coin::WrapperCoin;
@@ -44,7 +43,7 @@ module obelisk::wrapper_system {
 
     public fun wrapped_assets(wrapper: &mut Wrapper, assets: &mut Assets): vector<u32> {
         let mut wrapped_assets = vector[];
-        let mut asset_id = assets.asset_id().get().get();
+        let asset_id = assets.asset_id().get().get();
         let mut i = 0;
         while (i  < asset_id) {
             if (wrapper.coins().contains(assets_asset_id::new(i))) {

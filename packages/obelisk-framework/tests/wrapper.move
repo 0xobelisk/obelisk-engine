@@ -1,12 +1,9 @@
 #[test_only]
 module obelisk::wrapper_tests {
-    use std::debug;
     use std::string;
     use std::string::String;
     use obelisk::wrapper_schema;
-    use obelisk::assets_asset_id;
     use obelisk::assets_system;
-    use obelisk::assets_metadata;
     use obelisk::assets_schema::Assets;
     use obelisk::assets_schema;
     use obelisk::wrapper_system;
@@ -14,11 +11,6 @@ module obelisk::wrapper_tests {
     use sui::test_scenario;
     use sui::test_scenario::Scenario;
     use sui::coin;
-    use sui::coin::Coin;
-    use sui::balance;
-    use sui::balance::Balance;
-    use sui::transfer;
-    use sui::transfer::public_transfer;
 
     public struct USDT has drop {}
 

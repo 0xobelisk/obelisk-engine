@@ -18,9 +18,6 @@
 /// ```
 module obelisk::storage_immutable_value {
     use sui::dynamic_field as field;
-
-    // Attempted to destroy a non-empty StorageImmutableValue
-    const EStorageValueNotEmpty: u64 = 0;
     
     const KEY: vector<u8> = b"StorageImmutableValue";
 

@@ -24,7 +24,7 @@ module obelisk::dex_functions {
 
     public(package) fun pool_asset_symbol(asset1_metadata: AssetsMetadata, asset2_metadata: AssetsMetadata): String {
         let asset1_symbol = asset1_metadata.get_symbol();
-        let asset2_symbol = asset1_metadata.get_symbol();
+        let asset2_symbol = asset2_metadata.get_symbol();
         let mut lp_asset_symbol = string::utf8(b"");
         lp_asset_symbol.append(asset1_symbol);
         lp_asset_symbol.append_utf8(b"-");
@@ -106,7 +106,7 @@ module obelisk::dex_functions {
     public(package) fun balance_path_from_amount_in(amount_in: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): vector<BalancePathElement> {
         let mut amount_out = amount_in;
         let mut balance_path = vector[];
-        let mut len = path.length();
+        let len = path.length();
 
         let mut i = 0;
         while (i < len) {
@@ -118,7 +118,7 @@ module obelisk::dex_functions {
                 amount_out = get_amount_out(amount_out, reserve_in, reserve_out);
             } else {
                 balance_path.push_back(BalancePathElement { asset_id: asset1, balance: amount_out });
-                break;
+                break
             };
             i = i + 1;
         };
@@ -132,7 +132,7 @@ module obelisk::dex_functions {
         let mut return_asset_id = 0;
         while (pos < len) {
             let asset1_id = path[pos].asset_id;
-            let amount_in = path[pos].balance;
+            // let amount_in = path[pos].balance;
 
             if(pos + 1 < len) {
                 let asset2_id = path[pos + 1].asset_id;
@@ -154,7 +154,7 @@ module obelisk::dex_functions {
                     assets_functions::decrease_balance(assets_asset_id::new(asset2_id), pool_from_address, amount_out, assets);
                     return_asset_id = asset2_id;
                     return_balance = amount_out;
-                    break;
+                    break
                 };
             };
 
