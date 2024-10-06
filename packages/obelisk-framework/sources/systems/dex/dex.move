@@ -159,11 +159,21 @@ module obelisk::dex_system {
         assets_functions::do_transfer(asset_id2, pool.get_pool_address(), sender, amount2, assets);
     }
 
+    /// Swap the exact amount of `asset1` into `asset2`.
+    /// `amount_out_min` param allows you to specify the min amount of the `asset2`
+    /// you're happy to receive.
+    ///
     public entry fun swap_exact_tokens_for_tokens(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_in: u64, amount_out_min: u64, to: address, ctx: &mut TxContext) {
         let sender = ctx.sender();
         dex_functions::do_swap_exact_tokens_for_tokens(dex, assets, sender, path, amount_in, amount_out_min, to);
     }
 
-
-
+    /// Swap any amount of `asset1` to get the exact amount of `asset2`.
+    /// `amount_in_max` param allows to specify the max amount of the `asset1`
+    /// you're happy to provide.
+    ///
+    public entry fun swap_tokens_for_exact_tokens(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64, amount_in_max: u64, to: address, ctx: &mut TxContext) {
+        let sender = ctx.sender();
+        dex_functions::do_swap_tokens_for_exact_tokens(dex, assets, sender, path, amount_out, amount_in_max, to);
+    }
 }

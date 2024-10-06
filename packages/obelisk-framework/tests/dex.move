@@ -161,6 +161,15 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&mut assets, 2, ctx.sender()) == 900000 + 7005, 0);
 
 
+        dex_system::swap_tokens_for_exact_tokens(&mut dex, &mut assets, vector[1, 0], 10000, 20000, ctx.sender(), ctx);
+        assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 900000 - 10000 - 10000 + 10000, 0);
+        assert!(assets_system::balance_of(&mut assets, 1, ctx.sender()) == 800000 + 9066 - 7603, 0);
+
+        assert!(assets_system::balance_of(&mut assets, 0, @0x0) == 100000 + 10000 + 10000 - 10000, 0);
+        assert!(assets_system::balance_of(&mut assets, 1, @0x0) == 100000 - 9066 - 7556 + 7603, 0);
+
+        dex_system::swap_tokens_for_exact_tokens(&mut dex, &mut assets, vector[1, 0, 1, 2], 10000, 20000, ctx.sender(), ctx);
+
         test_scenario::return_shared<Assets>(assets);
         test_scenario::return_shared<Dex>(dex);
         test_scenario::end(scenario);

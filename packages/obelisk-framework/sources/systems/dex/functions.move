@@ -3,6 +3,7 @@ module obelisk::dex_functions {
     use std::debug::print;
     use std::string;
     use std::string::String;
+    use obelisk::dex_pool_id::DexPoolId;
     use obelisk::assets_functions;
     use obelisk::assets_asset_id;
     use obelisk::assets_schema::Assets;
@@ -20,6 +21,14 @@ module obelisk::dex_functions {
         } else {
             (asset2, asset1)
         }
+    }
+
+    public(package) fun get_pool_id(asset1: u32, asset2: u32, dex: &mut Dex): DexPoolId {
+        let (asset1, asset2) = sort_assets(asset1, asset2);
+        let asset1_id = assets_asset_id::new(asset1);
+        let asset2_id = assets_asset_id::new(asset2);
+        assert!(dex.pool_id().contains(&asset1_id, &asset2_id), 0);
+        dex.pool_id().get(&asset1_id, &asset2_id)
     }
 
     public(package) fun pool_asset_symbol(asset1_metadata: AssetsMetadata, asset2_metadata: AssetsMetadata): String {
@@ -72,19 +81,12 @@ module obelisk::dex_functions {
     }
 
     public(package) fun get_reserves(asset1: u32, asset2: u32, dex: &mut Dex, assets: &mut Assets): (u64, u64) {
-        let mut asset1_id = assets_asset_id::new(asset1);
-        let mut asset2_id = assets_asset_id::new(asset2);
-        if (asset1 > asset2) {
-            asset1_id = assets_asset_id::new(asset2);
-            asset2_id = assets_asset_id::new(asset1);
-        };
-        assert!(dex.pool_id().contains(&asset1_id, &asset2_id), 0);
-        let pool_id = dex.pool_id().get(&asset1_id, &asset2_id);
+        let pool_id = get_pool_id(asset1, asset2, dex);
         assert!(dex.pools().contains(&pool_id), 0);
         let pool = dex.pools().get(&pool_id);
 
-        let balance1 = assets_functions::balance_of(assets, asset1_id, pool.get_pool_address());
-        let balance2 = assets_functions::balance_of(assets, asset2_id, pool.get_pool_address());
+        let balance1 = assets_functions::balance_of(assets, assets_asset_id::new(asset1), pool.get_pool_address());
+        let balance2 = assets_functions::balance_of(assets, assets_asset_id::new(asset2), pool.get_pool_address());
         (balance1, balance2)
     }
 
@@ -101,6 +103,18 @@ module obelisk::dex_functions {
         debug::print(&numerator);
         debug::print(&denominator);
         numerator / denominator
+    }
+
+    // Calculates amount out.
+    //
+    // Given an input amount of an asset and pair reserves, returns the maximum output amount
+    // of the other asset.
+    // TODO: Dynamic fee
+    public(package) fun get_amount_in(amount_out: u64, reserve_in: u64, reserve_out: u64): u64 {
+        assert!(reserve_in > 0 && reserve_out > 0, 0);
+        let numerator = reserve_in * amount_out * 1000;
+        let denominator = (reserve_out - amount_out) * 997;
+        numerator / denominator + 1
     }
 
     public(package) fun balance_path_from_amount_in(amount_in: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): vector<BalancePathElement> {
@@ -122,6 +136,32 @@ module obelisk::dex_functions {
             };
             i = i + 1;
         };
+        balance_path
+    }
+
+    public(package) fun balance_path_from_amount_out(amount_out: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): vector<BalancePathElement> {
+        let mut amount_in = amount_out;
+        let mut path = path;
+        path.reverse();
+        let len = path.length();
+
+        let mut balance_path = vector[];
+
+        let mut i = 0;
+        while (i < len) {
+            let asset2 = path[i];
+            if (i + 1 < len) {
+                let asset1 = path[i + 1];
+                let (reserve_in, reserve_out) = get_reserves(asset1, asset2, dex, assets);
+                balance_path.push_back(BalancePathElement { asset_id: asset2, balance: amount_in });
+                amount_in = get_amount_in(amount_in, reserve_in, reserve_out);
+            } else {
+                balance_path.push_back(BalancePathElement { asset_id: asset2, balance: amount_in });
+                break
+            };
+            i = i + 1;
+        };
+        balance_path.reverse();
         balance_path
     }
 
@@ -202,6 +242,39 @@ module obelisk::dex_functions {
         let amount_out = path[len - 1].balance;
         print(&path);
         assert!(amount_out >= amount_out_min, 0);
+
+        swap(sender, path, to, dex, assets);
+    }
+
+    /// Take the `path[0]` asset and swap some amount for `amount_out` of the `path[1]`. If an
+    /// `amount_in_max` is specified, it will return an error if acquiring `amount_out` would be
+    /// too costly.
+    ///
+    /// Withdraws `path[0]` asset from `sender`, deposits the `path[1]` asset to `send_to`,
+    /// respecting `keep_alive`.
+    ///
+    /// If successful returns the amount of the `path[0]` taken to provide `path[1]`.
+    ///
+    /// WARNING: This may return an error after a partial storage mutation. It should be used
+    /// only inside a transactional storage context and an Err result must imply a storage
+    /// rollback.
+    public(package) fun do_swap_tokens_for_exact_tokens(
+        dex: &mut Dex,
+        assets: &mut Assets,
+        sender: address,
+        path: vector<u32>,
+        amount_out: u64,
+        amount_in_max: u64,
+        to: address) {
+        assert!(amount_out > 0, 0);
+        assert!(amount_in_max > 0, 0);
+
+        validate_swap_path(dex, path);
+        let path = balance_path_from_amount_out(amount_out, path, dex, assets);
+
+        let amount_in = path[0].balance;
+        print(&path);
+        assert!(amount_in <= amount_in_max, 0);
 
         swap(sender, path, to, dex, assets);
     }
