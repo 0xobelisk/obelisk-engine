@@ -3,7 +3,6 @@ module obelisk::assets_system {
     use std::string::String;
     use obelisk::assets_functions;
     use obelisk::assets_account;
-    use obelisk::assets_asset_id;
     use obelisk::assets_detail;
     use obelisk::assets_schema::Assets;
 
@@ -15,20 +14,17 @@ module obelisk::assets_system {
     }
 
     public entry fun mint(assets: &mut Assets, asset_id: u32, to: address, amount: u64, ctx: &mut TxContext) {
-        let asset_id = assets_asset_id::new(asset_id);
         let issuer = ctx.sender();
         assets_functions::do_mint(asset_id, to, amount, issuer, assets);
     }
 
     public entry fun burn(assets: &mut Assets, asset_id: u32, who: address, amount: u64, ctx: &mut TxContext) {
-        let asset_id = assets_asset_id::new(asset_id);
         let burner = ctx.sender();
         assets_functions::do_burn(asset_id, who, amount, burner, assets);
     }
 
     public entry fun transfer(assets: &mut Assets, asset_id: u32, to: address, amount: u64, ctx: &mut TxContext) {
         let from = ctx.sender();
-        let asset_id = assets_asset_id::new(asset_id);
         assets_functions::do_transfer(asset_id, from, to, amount, assets);
     }
 
@@ -36,13 +32,11 @@ module obelisk::assets_system {
         let from = ctx.sender();
         let balance = balance_of(assets, asset_id, from);
 
-        let asset_id = assets_asset_id::new(asset_id);
         assets_functions::do_transfer(asset_id, from, to, balance, assets);
     }
 
     public entry fun frozen(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
         let freezer = ctx.sender();
-        let asset_id = assets_asset_id::new(asset_id);
 
         let maybe_assets_details = assets.details().try_get(&asset_id);
         assert!(maybe_assets_details.is_some(), 5);
@@ -60,7 +54,6 @@ module obelisk::assets_system {
 
     public entry fun unfrozen(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
         let unfreezer = ctx.sender();
-        let asset_id = assets_asset_id::new(asset_id);
 
         let maybe_assets_details = assets.details().try_get(&asset_id);
         assert!(maybe_assets_details.is_some(), 5);
@@ -79,7 +72,6 @@ module obelisk::assets_system {
     public entry fun frozen_assets(assets: &mut Assets, asset_id: u32, ctx: &mut TxContext) {
         let freezer = ctx.sender();
 
-        let asset_id = assets_asset_id::new(asset_id);
         let mut maybe_assets_details = assets.details().try_get(&asset_id);
         assert!(maybe_assets_details.is_some(), 5);
         let mut assets_details = maybe_assets_details.extract();
@@ -94,7 +86,6 @@ module obelisk::assets_system {
     public entry fun unfrozen_assets(assets: &mut Assets, asset_id: u32, ctx: &mut TxContext) {
         let unfreezer = ctx.sender();
 
-        let asset_id = assets_asset_id::new(asset_id);
         let mut maybe_assets_details = assets.details().try_get(&asset_id);
         assert!(maybe_assets_details.is_some(), 5);
         let mut assets_details = maybe_assets_details.extract();
@@ -108,7 +99,6 @@ module obelisk::assets_system {
 
     public entry fun block(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
         let blocker = ctx.sender();
-        let asset_id = assets_asset_id::new(asset_id);
 
         let maybe_assets_details = assets.details().try_get(&asset_id);
         assert!(maybe_assets_details.is_some(), 5);
@@ -125,7 +115,6 @@ module obelisk::assets_system {
 
     public entry fun transfer_ownership(assets: &mut Assets, asset_id: u32, to: address, ctx: &mut TxContext) {
         let owner = ctx.sender();
-        let asset_id = assets_asset_id::new(asset_id);
 
         let mut maybe_assets_details = assets.details().try_get(&asset_id);
         assert!(maybe_assets_details.is_some(), 5);
@@ -138,17 +127,14 @@ module obelisk::assets_system {
     }
 
     public fun balance_of(assets: &mut Assets, asset_id: u32, who: address): u64 {
-        let asset_id = assets_asset_id::new(asset_id);
         assets_functions::balance_of(assets, asset_id, who)
     }
 
     public fun supply_of(assets: &mut Assets, asset_id: u32): u64 {
-        let asset_id = assets_asset_id::new(asset_id);
         assets_functions::supply_of(assets, asset_id)
     }
 
     public fun metadata_of(assets: &mut Assets, asset_id: u32): (String, String, String, u8, String) {
-        let asset_id = assets_asset_id::new(asset_id);
         let maybe_metadata = assets.metadata().try_get(&asset_id);
         if (maybe_metadata.is_none()) {
             return (string::utf8(b""), string::utf8(b""), string::utf8(b""), 0, string::utf8(b""))
@@ -160,11 +146,11 @@ module obelisk::assets_system {
 
     public fun owned_assets(assets: &mut Assets, owner: address): vector<u32> {
         let mut owned_assets = vector[];
-        let asset_id = assets.asset_id().get().get();
+        let asset_id = assets.next_asset_id().get();
 
         let mut i = 0;
         while (i  < asset_id) {
-            if (assets.account().contains(&assets_asset_id::new(i), &owner)) {
+            if (assets.account().contains(&i, &owner)) {
                 owned_assets.push_back(i);
             };
             i = i + 1;

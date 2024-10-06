@@ -1,15 +1,13 @@
 module obelisk::assets_functions {
     use std::string::String;
-    use obelisk::assets_functions;
     use obelisk::assets_metadata;
     use obelisk::assets_schema::Assets;
     use obelisk::assets_account::AssetsAccount;
     use obelisk::assets_account;
     use obelisk::assets_detail;
-    use obelisk::assets_asset_id::AssetsAssetId;
 
     public(package) fun do_create(assets: &mut Assets, owner: address, name: String, symbol: String, description: String, decimals: u8, url: String, info: String) {
-        let mut asset_id = assets.asset_id().get();
+        let asset_id = assets.next_asset_id().get();
 
         // set the assets details
         let assets_details = assets_detail::new(
@@ -26,16 +24,10 @@ module obelisk::assets_functions {
         assets.metadata().insert(asset_id, assets_metadata);
 
         // Increment the asset ID
-        assets_functions::increase_asset_id(&mut asset_id);
-        assets.asset_id().set(asset_id);
+        assets.next_asset_id().set(asset_id + 1);
     }
 
-    public(package) fun increase_asset_id(asset_id: &mut AssetsAssetId) {
-        let old_asset_id = asset_id.get();
-        asset_id.set(old_asset_id + 1);
-    }
-
-    public(package) fun can_increase(asset_id: AssetsAssetId, beneficiary: address, amount: u64, increase_supply: bool, assets: &mut Assets) {
+    public(package) fun can_increase(asset_id: u32, beneficiary: address, amount: u64, increase_supply: bool, assets: &mut Assets) {
         let maybe_details = assets.details().try_get(&asset_id);
         assert!(maybe_details.is_some(), 1);
         let details = maybe_details.borrow();
@@ -55,7 +47,7 @@ module obelisk::assets_functions {
         };
     }
 
-    public fun can_decrease(asset_id: AssetsAssetId, who: address, amount: u64, assets: &mut Assets) {
+    public fun can_decrease(asset_id: u32, who: address, amount: u64, assets: &mut Assets) {
         let maybe_details = assets.details().try_get(&asset_id);
         assert!(maybe_details.is_some(), 1);
         let details = maybe_details.borrow();
@@ -72,7 +64,7 @@ module obelisk::assets_functions {
         assert!(status != assets_account::get_account_status_blocked(), 5);
     }
 
-    public (package) fun increase_balance(asset_id: AssetsAssetId, beneficiary: address, amount: u64, assets: &mut Assets) {
+    public (package) fun increase_balance(asset_id: u32, beneficiary: address, amount: u64, assets: &mut Assets) {
         // Ensure that the asset can be increased
         can_increase(asset_id, beneficiary, amount, true, assets);
 
@@ -103,7 +95,7 @@ module obelisk::assets_functions {
     }
 
 
-    public(package) fun decrease_balance(asset_id: AssetsAssetId, who: address, amount: u64, assets: &mut Assets) {
+    public(package) fun decrease_balance(asset_id: u32, who: address, amount: u64, assets: &mut Assets) {
         can_decrease(asset_id, who, amount, assets);
 
         let mut assets_details = assets.details().get(&asset_id);
@@ -128,21 +120,21 @@ module obelisk::assets_functions {
         assets.details().insert(asset_id, assets_details);
     }
 
-    public(package) fun do_mint(asset_id: AssetsAssetId, to: address, amount: u64, issuer: address, assets: &mut Assets) {
+    public(package) fun do_mint(asset_id: u32, to: address, amount: u64, issuer: address, assets: &mut Assets) {
         let assets_details = assets.details().get(&asset_id);
         assert!(assets_details.get_owner() == issuer, 6);
 
         increase_balance(asset_id, to, amount, assets);
     }
 
-    public(package) fun do_burn(asset_id: AssetsAssetId, who: address, amount: u64, burner: address, assets: &mut Assets) {
+    public(package) fun do_burn(asset_id: u32, who: address, amount: u64, burner: address, assets: &mut Assets) {
         let assets_details = assets.details().get(&asset_id);
         assert!(assets_details.get_owner() == burner, 6);
 
         decrease_balance(asset_id, who, amount, assets);
     }
 
-    public(package) fun do_transfer(asset_id: AssetsAssetId, from: address, to: address, amount: u64, assets: &mut Assets): u64 {
+    public(package) fun do_transfer(asset_id: u32, from: address, to: address, amount: u64, assets: &mut Assets): u64 {
         if (from == to || amount == 0) {
             return amount
         };
@@ -151,7 +143,7 @@ module obelisk::assets_functions {
         amount
     }
 
-    public fun balance_of(assets: &mut Assets, asset_id: AssetsAssetId, who: address): u64 {
+    public fun balance_of(assets: &mut Assets, asset_id: u32, who: address): u64 {
         let maybe_account = assets.account().try_get(&asset_id, &who);
         if (maybe_account.is_none()) {
             return 0
@@ -160,7 +152,7 @@ module obelisk::assets_functions {
         account.get_balance()
     }
 
-    public fun supply_of(assets: &mut Assets, asset_id: AssetsAssetId): u64 {
+    public fun supply_of(assets: &mut Assets, asset_id: u32): u64 {
         let maybe_assets_details = assets.details().try_get(&asset_id);
         if (maybe_assets_details.is_none()) {
             return 0

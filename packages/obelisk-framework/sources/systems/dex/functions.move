@@ -3,9 +3,7 @@ module obelisk::dex_functions {
     use std::debug::print;
     use std::string;
     use std::string::String;
-    use obelisk::dex_pool_id::DexPoolId;
     use obelisk::assets_functions;
-    use obelisk::assets_asset_id;
     use obelisk::assets_schema::Assets;
     use obelisk::dex_schema::Dex;
     use obelisk::assets_metadata::AssetsMetadata;
@@ -16,6 +14,8 @@ module obelisk::dex_functions {
     }
 
     public(package) fun sort_assets(asset1: u32, asset2: u32): (u32, u32) {
+        assert!(asset1 != asset2, 0);
+        
         if (asset1 < asset2) {
             (asset1, asset2)
         } else {
@@ -23,12 +23,10 @@ module obelisk::dex_functions {
         }
     }
 
-    public(package) fun get_pool_id(asset1: u32, asset2: u32, dex: &mut Dex): DexPoolId {
+    public(package) fun get_pool_id(asset1: u32, asset2: u32, dex: &mut Dex): u32 {
         let (asset1, asset2) = sort_assets(asset1, asset2);
-        let asset1_id = assets_asset_id::new(asset1);
-        let asset2_id = assets_asset_id::new(asset2);
-        assert!(dex.pool_id().contains(&asset1_id, &asset2_id), 0);
-        dex.pool_id().get(&asset1_id, &asset2_id)
+        assert!(dex.pool_id().contains(&asset1, &asset2), 0);
+        dex.pool_id().get(&asset1, &asset2)
     }
 
     public(package) fun pool_asset_symbol(asset1_metadata: AssetsMetadata, asset2_metadata: AssetsMetadata): String {
@@ -67,15 +65,9 @@ module obelisk::dex_functions {
         while (len > 1) {
             let asset1 = path[len - 2];
             let asset2 = path[len - 1];
-            assert!(asset1 != asset2, 0);
-
-            let mut asset1_id = assets_asset_id::new(asset1);
-            let mut asset2_id = assets_asset_id::new(asset2);
-            if (asset1 > asset2) {
-                asset1_id = assets_asset_id::new(asset2);
-                asset2_id = assets_asset_id::new(asset1);
-            };
-            assert!(dex.pool_id().contains(&asset1_id, &asset2_id), 0);
+       
+            let (asset1, asset2) = sort_assets(asset1, asset2);
+            assert!(dex.pool_id().contains(&asset1, &asset2), 0);
             len = len - 1;
         }
     }
@@ -85,8 +77,8 @@ module obelisk::dex_functions {
         assert!(dex.pools().contains(&pool_id), 0);
         let pool = dex.pools().get(&pool_id);
 
-        let balance1 = assets_functions::balance_of(assets, assets_asset_id::new(asset1), pool.get_pool_address());
-        let balance2 = assets_functions::balance_of(assets, assets_asset_id::new(asset2), pool.get_pool_address());
+        let balance1 = assets_functions::balance_of(assets, asset1, pool.get_pool_address());
+        let balance2 = assets_functions::balance_of(assets, asset2, pool.get_pool_address());
         (balance1, balance2)
     }
 
@@ -171,28 +163,25 @@ module obelisk::dex_functions {
         let mut return_balance = 0;
         let mut return_asset_id = 0;
         while (pos < len) {
-            let asset1_id = path[pos].asset_id;
-            // let amount_in = path[pos].balance;
+            let asset1 = path[pos].asset_id;
 
             if(pos + 1 < len) {
-                let asset2_id = path[pos + 1].asset_id;
+                let asset2 = path[pos + 1].asset_id;
                 let amount_out = path[pos + 1].balance;
-
-                let (sorted_asset1_id, sorted_asset2_id) = sort_assets(asset1_id, asset2_id);
-                let dex_pool_id = dex.pool_id().get(&assets_asset_id::new(sorted_asset1_id), &assets_asset_id::new(sorted_asset2_id));
+                let dex_pool_id = get_pool_id(asset1, asset2, dex);
                 let pool = dex.pools().get(&dex_pool_id);
                 let pool_from_address = pool.get_pool_address();
 
                 if (pos + 2 < len) {
-                    let asset3_id = path[pos + 2].asset_id;
-                    let (sorted_asset2_id, sorted_asset3_id) = sort_assets(asset2_id, asset3_id);
-                    let dex_pool_id = dex.pool_id().get(&assets_asset_id::new(sorted_asset2_id), &assets_asset_id::new(sorted_asset3_id));
+                    let asset3 = path[pos + 2].asset_id;
+                    let dex_pool_id = get_pool_id(asset2, asset3, dex);
+                    
                     let pool = dex.pools().get(&dex_pool_id);
                     let pool_to_address = pool.get_pool_address();
-                    assets_functions::do_transfer(assets_asset_id::new(asset2_id), pool_from_address, pool_to_address, amount_out, assets);
+                    assets_functions::do_transfer(asset2, pool_from_address, pool_to_address, amount_out, assets);
                 } else {
-                    assets_functions::decrease_balance(assets_asset_id::new(asset2_id), pool_from_address, amount_out, assets);
-                    return_asset_id = asset2_id;
+                    assets_functions::decrease_balance(asset2, pool_from_address, amount_out, assets);
+                    return_asset_id = asset2;
                     return_balance = amount_out;
                     break
                 };
@@ -201,14 +190,15 @@ module obelisk::dex_functions {
             pos = pos + 1;
         };
 
-        let asset1_id = path[0].asset_id;
+        let asset1 = path[0].asset_id;
         let amount_in = path[0].balance;
-        let asset2_id = path[1].asset_id;
-        let (sorted_asset1_id, sorted_asset2_id) = sort_assets(asset1_id, asset2_id);
-        let dex_pool_id = dex.pool_id().get(&assets_asset_id::new(sorted_asset1_id), &assets_asset_id::new(sorted_asset2_id));
+        let asset2 = path[1].asset_id;
+
+        let dex_pool_id = get_pool_id(asset1, asset2, dex);
+        
         let pool = dex.pools().get(&dex_pool_id);
         let pool_to_address = pool.get_pool_address();
-        assets_functions::increase_balance(assets_asset_id::new(asset1_id), pool_to_address, amount_in, assets);
+        assets_functions::increase_balance(asset1, pool_to_address, amount_in, assets);
         (return_asset_id, return_balance)
     }
 
@@ -218,10 +208,10 @@ module obelisk::dex_functions {
         let asset_in = path[0].asset_id;
         let amount_in = path[0].balance;
         // Withdraw the first asset from the sender
-        assets_functions::decrease_balance(assets_asset_id::new(asset_in), sender, amount_in, assets);
+        assets_functions::decrease_balance(asset_in, sender, amount_in, assets);
         let (asset_id, balance) = credit_swap(path, dex, assets);
         // Deposit the last asset to the send_to
-        assets_functions::increase_balance(assets_asset_id::new(asset_id), send_to, balance, assets);
+        assets_functions::increase_balance(asset_id, send_to, balance, assets);
     }
 
     public(package) fun do_swap_exact_tokens_for_tokens(

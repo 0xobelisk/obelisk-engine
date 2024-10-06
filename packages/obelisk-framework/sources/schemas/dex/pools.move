@@ -1,12 +1,11 @@
 module obelisk::dex_pools {
-    use obelisk::assets_asset_id::AssetsAssetId;
 
     public struct DexPools has drop, copy, store  {
         pool_address: address,
-        lp_asset_id: AssetsAssetId,
+        lp_asset_id: u32,
     }
 
-    public fun new(pool_address: address, lp_asset_id: AssetsAssetId): DexPools {
+    public fun new(pool_address: address, lp_asset_id: u32): DexPools {
         DexPools {
             pool_address,
             lp_asset_id
@@ -17,7 +16,7 @@ module obelisk::dex_pools {
         dex_pools.pool_address
     }
 
-    public fun get_lp_asset_id(dex_pools: &DexPools): AssetsAssetId {
+    public fun get_lp_asset_id(dex_pools: &DexPools): u32 {
         dex_pools.lp_asset_id
     }
 }

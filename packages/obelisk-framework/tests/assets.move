@@ -3,7 +3,6 @@ module obelisk::assets_tests {
     use std::debug;
     use std::string;
     use std::string::String;
-    use obelisk::assets_asset_id;
     use obelisk::assets_system;
     use obelisk::assets_metadata;
     use obelisk::assets_schema::Assets;
@@ -52,9 +51,9 @@ module obelisk::assets_tests {
         create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);
         create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);
 
-        let metadata = assets.metadata().get(&assets_asset_id::new(0));
+        let metadata = assets.metadata().get(&0);
         assert!(metadata == assets_metadata::new(name, symbol, description, decimals, url, info), 0);
-        assert!(assets_asset_id::new(2) == assets.asset_id().get(), 0);
+        assert!(2 == assets.next_asset_id().get(), 0);
 
         let ctx = test_scenario::ctx(&mut scenario);
         assets_system::mint(&mut assets, 0, ctx.sender(), 100, ctx);

@@ -7,7 +7,6 @@ module obelisk::dex_tests {
     use obelisk::dex_schema::Dex;
     use obelisk::assets_tests;
     use obelisk::dex_schema;
-    use obelisk::assets_asset_id;
     use obelisk::assets_system;
     use obelisk::assets_schema::Assets;
     use obelisk::assets_schema;
@@ -49,16 +48,16 @@ module obelisk::dex_tests {
 
         let ctx =  test_scenario::ctx(&mut scenario);
         dex_system::create_pool(&mut dex, &mut assets, 0, 1, ctx);
-        assert!(dex.pool_id().contains(&assets_asset_id::new(0), &assets_asset_id::new(1)), 0);
-        assert!(dex.next_pool_id().get().get() == 1, 0);
-        let pool_id = dex.pool_id().get(&assets_asset_id::new(0), &assets_asset_id::new(1));
-        assert!(dex.pools().get(&pool_id) == dex_pools::new(@0x0, assets_asset_id::new(3)), 0);
+        assert!(dex.pool_id().contains(&0, &1), 0);
+        assert!(dex.next_pool_id().get() == 1, 0);
+        let pool_id = dex.pool_id().get(&0, &1);
+        assert!(dex.pools().get(&pool_id) == dex_pools::new(@0x0, 3), 0);
 
         dex_system::create_pool(&mut dex, &mut assets, 1, 2, ctx);
-        assert!(dex.pool_id().contains(&assets_asset_id::new(1), &assets_asset_id::new(2)), 0);
-        assert!(dex.next_pool_id().get().get() == 2, 0);
-        let pool_id = dex.pool_id().get(&assets_asset_id::new(1), &assets_asset_id::new(2));
-        assert!(dex.pools().get(&pool_id) == dex_pools::new(@0x1, assets_asset_id::new(4)), 0);
+        assert!(dex.pool_id().contains(&1, &2), 0);
+        assert!(dex.next_pool_id().get() == 2, 0);
+        let pool_id = dex.pool_id().get(&1, &2);
+        assert!(dex.pools().get(&pool_id) == dex_pools::new(@0x1, 4), 0);
 
         test_scenario::return_shared<Assets>(assets);
         test_scenario::return_shared<Dex>(dex);

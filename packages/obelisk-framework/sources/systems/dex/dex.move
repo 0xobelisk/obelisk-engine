@@ -1,41 +1,33 @@
 module obelisk::dex_system {
     use std::string;
-    use obelisk::dex_pool_id;
+    use obelisk::dex_functions::{sort_assets, get_pool_id};
     use sui::address;
     use obelisk::dex_pools;
     use obelisk::assets_functions;
     use obelisk::dex_functions;
     use obelisk::assets_schema::Assets;
     use obelisk::dex_schema::Dex;
-    use obelisk::assets_asset_id;
 
     const LP_ASSET_DESCRIPTION: vector<u8> = b"Obelisk LP Asset";
 
     public entry fun create_pool(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, _ctx: &mut TxContext) {
         // let sender = ctx.sender();
-        assert!(asset1 != asset2, 0);
 
-        let mut asset_id1 = assets_asset_id::new(asset1);
-        let mut asset_id2= assets_asset_id::new(asset2);
+        let (asset1, asset2) = sort_assets(asset1, asset2);
 
-        if (asset1 > asset2) {
-            asset_id1 = assets_asset_id::new(asset2);
-            asset_id2 = assets_asset_id::new(asset1);
-        };
-
-        assert!(assets.metadata().contains(&asset_id1), 0);
-        assert!(assets.metadata().contains(&asset_id2), 0);
-        assert!(!dex.pool_id().contains(&asset_id1, &asset_id2), 0);
+        assert!(assets.metadata().contains(&asset1), 0);
+        assert!(assets.metadata().contains(&asset2), 0);
+        assert!(!dex.pool_id().contains(&asset1, &asset2), 0);
 
         let pool_id = dex.next_pool_id().get();
         assert!(!dex.pools().contains(&pool_id), 0);
 
-        let asset1_metadata = assets.metadata().get(&asset_id1);
-        let asset2_metadata = assets.metadata().get(&asset_id2);
+        let asset1_metadata = assets.metadata().get(&asset1);
+        let asset2_metadata = assets.metadata().get(&asset2);
         let lp_asset_symbol = dex_functions::pool_asset_symbol(asset1_metadata, asset2_metadata);
 
-        let pool_address = address::from_u256((pool_id.get() as u256));
-        let lp_asset_id = assets.asset_id().get();
+        let pool_address = address::from_u256((pool_id as u256));
+        let lp_asset_id = assets.next_asset_id().get();
 
         assets_functions::do_create(
             assets,
@@ -48,38 +40,20 @@ module obelisk::dex_system {
             string::utf8(b""),
         );
 
-        dex.pool_id().insert(asset_id1, asset_id2, pool_id);
+        dex.pool_id().insert(asset1, asset2, pool_id);
         dex.pools().insert(pool_id, dex_pools::new(pool_address, lp_asset_id));
-        dex.next_pool_id().set(dex_pool_id::new(pool_id.get() + 1));
+        dex.next_pool_id().set(pool_id + 1);
     }
 
     public entry fun add_liquidity(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, amount1_desired: u64, amount2_desired: u64, amount1_min: u64, amount2_min: u64, ctx: &mut TxContext) {
         let sender = ctx.sender();
-        assert!(asset1 != asset2, 0);
 
-        let mut asset_id1 = assets_asset_id::new(asset1);
-        let mut asset_id2= assets_asset_id::new(asset2);
-        let mut amount1_desired = amount1_desired;
-        let mut amount2_desired = amount2_desired;
-        let mut amount1_min = amount1_min;
-        let mut amount2_min = amount2_min;
-
-        if (asset1 > asset2) {
-            asset_id1 = assets_asset_id::new(asset2);
-            asset_id2 = assets_asset_id::new(asset1);
-            amount1_desired = amount2_desired;
-            amount2_desired = amount1_desired;
-            amount1_min = amount2_min;
-            amount2_min = amount1_min;
-        };
-
-        assert!(dex.pool_id().contains(&asset_id1, &asset_id2), 0);
-        let pool_id = dex.pool_id().get(&asset_id1, &asset_id2);
+        let pool_id = get_pool_id(asset1, asset2, dex);
         assert!(dex.pools().contains(&pool_id), 0);
         let pool = dex.pools().get(&pool_id);
 
-        let reserve1 = assets_functions::balance_of(assets, asset_id1, pool.get_pool_address());
-        let reserve2 = assets_functions::balance_of(assets, asset_id2, pool.get_pool_address());
+        let reserve1 = assets_functions::balance_of(assets, asset1, pool.get_pool_address());
+        let reserve2 = assets_functions::balance_of(assets, asset2, pool.get_pool_address());
         let amount1;
         let amount2;
         if(reserve1 == 0 || reserve2 == 0) {
@@ -100,8 +74,8 @@ module obelisk::dex_system {
             }
         };
 
-        assets_functions::do_transfer(asset_id1, sender, pool.get_pool_address(), amount1, assets);
-        assets_functions::do_transfer(asset_id2, sender, pool.get_pool_address(), amount2, assets);
+        assets_functions::do_transfer(asset1, sender, pool.get_pool_address(), amount1, assets);
+        assets_functions::do_transfer(asset2, sender, pool.get_pool_address(), amount2, assets);
 
         let total_supply = assets_functions::supply_of(assets, pool.get_lp_asset_id());
         let lp_token_amount;
@@ -118,27 +92,13 @@ module obelisk::dex_system {
 
     public entry fun remove_liquidity(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, lp_token_burn: u64, amount1_min_receive: u64, amount2_min_receive: u64, ctx: &mut TxContext) {
         let sender = ctx.sender();
-        assert!(asset1 != asset2, 0);
 
-        let mut asset_id1 = assets_asset_id::new(asset1);
-        let mut asset_id2= assets_asset_id::new(asset2);
-        let mut amount1_min_receive = amount1_min_receive;
-        let mut amount2_min_receive = amount2_min_receive;
-
-        if (asset1 > asset2) {
-            asset_id1 = assets_asset_id::new(asset2);
-            asset_id2 = assets_asset_id::new(asset1);
-            amount1_min_receive = amount2_min_receive;
-            amount2_min_receive = amount1_min_receive;
-        };
-
-        assert!(dex.pool_id().contains(&asset_id1, &asset_id2), 0);
-        let pool_id = dex.pool_id().get(&asset_id1, &asset_id2);
+        let pool_id = get_pool_id(asset1, asset2, dex);
         assert!(dex.pools().contains(&pool_id), 0);
         let pool = dex.pools().get(&pool_id);
 
-        let reserve1 = assets_functions::balance_of(assets, asset_id1, pool.get_pool_address());
-        let reserve2 = assets_functions::balance_of(assets, asset_id2, pool.get_pool_address());
+        let reserve1 = assets_functions::balance_of(assets, asset1, pool.get_pool_address());
+        let reserve2 = assets_functions::balance_of(assets, asset2, pool.get_pool_address());
 
         let total_supply = assets_functions::supply_of(assets, pool.get_lp_asset_id());
         assert!(total_supply >= lp_token_burn, 0);
@@ -147,16 +107,14 @@ module obelisk::dex_system {
         let amount1 = dex_functions::mul_div(lp_token_burn, reserve1, total_supply);
         let amount2 = dex_functions::mul_div(lp_token_burn, reserve2, total_supply);
 
-        assert!(amount1 > 0, 0);
-        assert!(amount2 > 0, 0);
-        assert!(amount1 >= amount1_min_receive, 0);
-        assert!(amount2 >= amount2_min_receive, 0);
+        assert!(amount1 > 0 && amount1 >= amount1_min_receive, 0);
+        assert!(amount2 > 0 && amount2 >= amount2_min_receive, 0);
 
         // burn the provided lp token amount that includes the fee
         assets_functions::decrease_balance(pool.get_lp_asset_id(), sender, lp_token_burn, assets);
 
-        assets_functions::do_transfer(asset_id1, pool.get_pool_address(), sender, amount1, assets);
-        assets_functions::do_transfer(asset_id2, pool.get_pool_address(), sender, amount2, assets);
+        assets_functions::do_transfer(asset1, pool.get_pool_address(), sender, amount1, assets);
+        assets_functions::do_transfer(asset2, pool.get_pool_address(), sender, amount2, assets);
     }
 
     /// Swap the exact amount of `asset1` into `asset2`.
