@@ -22,7 +22,7 @@ module obelisk::assets_tests {
 
     public fun create_assets(assets: &mut Assets, name: String, symbol: String, description: String, decimals: u8, url: String, info: String, scenario: &mut Scenario) {
         let ctx = test_scenario::ctx(scenario);
-        assets_system::create(assets, name, symbol, description, decimals, url, info, ctx);
+        assets_system::create(assets, name, symbol, description, decimals, url, info, 0, @0xA, @0xA, true, true, true,  ctx);
         test_scenario::next_tx(scenario,@0xA);
     }
 

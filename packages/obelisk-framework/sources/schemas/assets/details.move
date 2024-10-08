@@ -34,15 +34,24 @@ module obelisk::assets_detail {
         approvals: u32,
         // The status of the asset
         status: AssetsStatus,
+        // Whether the asset is mintable.
+        is_mintable: bool,
+        // Whether the asset is burnable.
+        is_burnable: bool,
+        // Whether the asset is freezable.
+        is_freezable: bool,
     }
 
-    public fun new(owner: address, supply: u64, accounts: u32, approvals: u32, status: AssetsStatus): AssetsDetails {
+    public fun new(owner: address, supply: u64, accounts: u32, approvals: u32, status: AssetsStatus, is_mintable: bool, is_burnable: bool, is_freezable: bool): AssetsDetails {
         AssetsDetails {
             owner,
             supply,
             accounts,
             approvals,
-            status
+            status,
+            is_mintable,
+            is_burnable,
+            is_freezable,
         }
     }
 
@@ -68,6 +77,18 @@ module obelisk::assets_detail {
 
     public fun get_status(accounts_details: &AssetsDetails): AssetsStatus {
         accounts_details.status
+    }
+
+    public fun get_is_mintable(accounts_details: &AssetsDetails): bool {
+        accounts_details.is_mintable
+    }
+
+    public fun get_is_burnable(accounts_details: &AssetsDetails): bool {
+        accounts_details.is_burnable
+    }
+
+    public fun get_is_freezable(accounts_details: &AssetsDetails): bool {
+        accounts_details.is_freezable
     }
 
     public fun set(accounts_details: &mut AssetsDetails, owner: address, supply: u64, accounts: u32, approvals: u32, status: AssetsStatus) {
@@ -96,5 +117,17 @@ module obelisk::assets_detail {
 
     public fun set_status(accounts_details: &mut AssetsDetails, status: AssetsStatus) {
         accounts_details.status = status;
+    }
+
+    public fun set_is_mintable(accounts_details: &mut AssetsDetails, is_mintable: bool) {
+        accounts_details.is_mintable = is_mintable;
+    }
+
+    public fun set_is_burnable(accounts_details: &mut AssetsDetails, is_burnable: bool) {
+        accounts_details.is_burnable = is_burnable;
+    }
+
+    public fun set_is_freezable(accounts_details: &mut AssetsDetails, is_freezable: bool) {
+        accounts_details.is_freezable = is_freezable;
     }
 }

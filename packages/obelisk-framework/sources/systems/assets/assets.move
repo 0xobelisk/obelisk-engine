@@ -6,28 +6,60 @@ module obelisk::assets_system {
     use obelisk::assets_detail;
     use obelisk::assets_schema::Assets;
 
-    public entry fun create(assets: &mut Assets, name: String, symbol: String, description: String, decimals: u8, url: String, info: String, ctx: &mut TxContext) {
+    public entry fun create(
+        assets: &mut Assets,
+        name: String,
+        symbol: String,
+        description: String,
+        decimals: u8,
+        icon_url: String,
+        info: String,
+        initial_supply: u64,
+        send_to: address,
+        owner: address,
+        is_mintable: bool,
+        is_burnable: bool,
+        is_freezable: bool,
+        _ctx: &mut TxContext
+    ) {
         // TODO: Charge a fee for creating an asset
 
         // Create a new asset
-        assets_functions::do_create(assets, ctx.sender(), name, symbol, description, decimals, url, info);
+        let asset_id = assets_functions::do_create(assets, is_mintable, is_burnable, is_freezable, owner, name, symbol, description, decimals, icon_url, info);
+
+        if (initial_supply > 0) {
+            // Mint the initial supply
+            assets_functions::do_mint(asset_id, send_to, initial_supply, assets);
+        }
     }
 
+    /// Mint `amount` of asset `id` to `who`.
     public entry fun mint(assets: &mut Assets, asset_id: u32, to: address, amount: u64, ctx: &mut TxContext) {
         let issuer = ctx.sender();
-        assets_functions::do_mint(asset_id, to, amount, issuer, assets);
+        let assets_details = assets.details().get(&asset_id);
+        assert!(assets_details.get_owner() == issuer, 5);
+        assert!(assets_details.get_is_mintable(), 6);
+
+        assets_functions::do_mint(asset_id, to, amount, assets);
     }
 
+    /// Reduce the balance of `who` by as much as possible up to `amount` assets of `id`.
     public entry fun burn(assets: &mut Assets, asset_id: u32, who: address, amount: u64, ctx: &mut TxContext) {
         let burner = ctx.sender();
-        assets_functions::do_burn(asset_id, who, amount, burner, assets);
+        let assets_details = assets.details().get(&asset_id);
+        assert!(assets_details.get_owner() == burner, 5);
+        assert!(assets_details.get_is_burnable(), 6);
+
+        assets_functions::do_burn(asset_id, who, amount, assets);
     }
 
+    /// Move some assets from the sender account to another.
     public entry fun transfer(assets: &mut Assets, asset_id: u32, to: address, amount: u64, ctx: &mut TxContext) {
         let from = ctx.sender();
         assets_functions::do_transfer(asset_id, from, to, amount, assets);
     }
 
+    /// Transfer the entire transferable balance from the caller asset account.
     public entry fun transfer_all(assets: &mut Assets, asset_id: u32, to: address, ctx: &mut TxContext) {
         let from = ctx.sender();
         let balance = balance_of(assets, asset_id, from);
@@ -35,95 +67,81 @@ module obelisk::assets_system {
         assets_functions::do_transfer(asset_id, from, to, balance, assets);
     }
 
-    public entry fun frozen(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
+    /// Disallow further unprivileged transfers of an asset `id` from an account `who`.
+    /// `who` must already exist as an entry in `Account`s of the asset.
+    public entry fun freeze_address(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
         let freezer = ctx.sender();
 
-        let maybe_assets_details = assets.details().try_get(&asset_id);
-        assert!(maybe_assets_details.is_some(), 5);
-        let assets_details = maybe_assets_details.borrow();
-
+        assert!(assets.details().contains(&asset_id), 5);
+        let assets_details = assets.details().get(&asset_id);
         assert!(assets_details.get_status() != assets_detail::get_assets_status_destroying(), 5);
         assert!(assets_details.get_owner() == freezer, 6);
 
-        let mut maybe_account = assets.account().try_get(&asset_id, &who);
-        assert!(maybe_account.is_some(), 7);
-        let mut account = maybe_account.extract();
+        assert!(assets.account().contains(&asset_id, &who), 5);
+        let account = assets.account().get_mut(&asset_id, &who);
         account.set_status(assets_account::get_account_status_frozen());
-        assets.account().insert(asset_id, who, account);
     }
 
-    public entry fun unfrozen(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
+    /// Disallow further unprivileged transfers of an asset `id` to and from an account `who`.
+    public entry fun block_address(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
+        let blocker = ctx.sender();
+
+        assert!(assets.details().contains(&asset_id), 5);
+        let assets_details = assets.details().get(&asset_id);
+        assert!(assets_details.get_owner() == blocker, 6);
+
+        assert!(assets.account().contains(&asset_id, &who), 5);
+        let account = assets.account().get_mut(&asset_id, &who);
+        account.set_status(assets_account::get_account_status_blocked());
+    }
+
+    /// Allow unprivileged transfers to and from an account again.
+    public entry fun thaw_address(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
         let unfreezer = ctx.sender();
 
-        let maybe_assets_details = assets.details().try_get(&asset_id);
-        assert!(maybe_assets_details.is_some(), 5);
-        let assets_details = maybe_assets_details.borrow();
-
+        assert!(assets.details().contains(&asset_id), 5);
+        let assets_details = assets.details().get(&asset_id);
         assert!(assets_details.get_status() != assets_detail::get_assets_status_destroying(), 5);
         assert!(assets_details.get_owner() == unfreezer, 6);
 
-        let mut maybe_account = assets.account().try_get(&asset_id, &who);
-        assert!(maybe_account.is_some(), 7);
-        let mut account = maybe_account.extract();
+        assert!(assets.account().contains(&asset_id, &who), 5);
+        let account = assets.account().get_mut(&asset_id, &who);
         account.set_status(assets_account::get_account_status_liquid());
-        assets.account().insert(asset_id, who, account);
     }
 
-    public entry fun frozen_assets(assets: &mut Assets, asset_id: u32, ctx: &mut TxContext) {
+    /// Disallow further unprivileged transfers for the asset class.
+    public entry fun freeze_asset(assets: &mut Assets, asset_id: u32, ctx: &mut TxContext) {
         let freezer = ctx.sender();
 
-        let mut maybe_assets_details = assets.details().try_get(&asset_id);
-        assert!(maybe_assets_details.is_some(), 5);
-        let mut assets_details = maybe_assets_details.extract();
-
+        assert!(assets.details().contains(&asset_id), 5);
+        let assets_details = assets.details().get_mut(&asset_id);
         assert!(assets_details.get_status() == assets_detail::get_assets_status_live(), 5);
         assert!(assets_details.get_owner() == freezer, 6);
 
         assets_details.set_status(assets_detail::get_assets_status_frozen());
-        assets.details().insert(asset_id, assets_details);
     }
 
-    public entry fun unfrozen_assets(assets: &mut Assets, asset_id: u32, ctx: &mut TxContext) {
+    /// Allow unprivileged transfers for the asset again.
+    public entry fun thaw_asset(assets: &mut Assets, asset_id: u32, ctx: &mut TxContext) {
         let unfreezer = ctx.sender();
 
-        let mut maybe_assets_details = assets.details().try_get(&asset_id);
-        assert!(maybe_assets_details.is_some(), 5);
-        let mut assets_details = maybe_assets_details.extract();
-
+        assert!(assets.details().contains(&asset_id), 5);
+        let assets_details = assets.details().get_mut(&asset_id);
         assert!(assets_details.get_status() == assets_detail::get_assets_status_frozen(), 5);
         assert!(assets_details.get_owner() == unfreezer, 6);
 
         assets_details.set_status(assets_detail::get_assets_status_live());
-        assets.details().insert(asset_id, assets_details);
     }
 
-    public entry fun block(assets: &mut Assets, asset_id: u32, who: address, ctx: &mut TxContext) {
-        let blocker = ctx.sender();
-
-        let maybe_assets_details = assets.details().try_get(&asset_id);
-        assert!(maybe_assets_details.is_some(), 5);
-        let assets_details = maybe_assets_details.borrow();
-
-        assert!(assets_details.get_owner() == blocker, 6);
-
-        let mut maybe_account = assets.account().try_get(&asset_id, &who);
-        assert!(maybe_account.is_some(), 7);
-        let mut account = maybe_account.extract();
-        account.set_status(assets_account::get_account_status_blocked());
-        assets.account().insert(asset_id, who, account);
-    }
-
+    /// Change the Owner of an asset.
     public entry fun transfer_ownership(assets: &mut Assets, asset_id: u32, to: address, ctx: &mut TxContext) {
         let owner = ctx.sender();
 
-        let mut maybe_assets_details = assets.details().try_get(&asset_id);
-        assert!(maybe_assets_details.is_some(), 5);
-        let mut assets_details = maybe_assets_details.extract();
-
+        assert!(assets.details().contains(&asset_id), 5);
+        let assets_details = assets.details().get_mut(&asset_id);
         assert!(assets_details.get_owner() == owner, 6);
 
         assets_details.set_owner(to);
-        assets.details().insert(asset_id, assets_details);
     }
 
     public fun balance_of(assets: &mut Assets, asset_id: u32, who: address): u64 {

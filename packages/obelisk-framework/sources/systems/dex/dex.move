@@ -31,6 +31,9 @@ module obelisk::dex_system {
 
         assets_functions::do_create(
             assets,
+            false,
+            false,
+            true,
             @obelisk,
             lp_asset_symbol,
             lp_asset_symbol,
@@ -87,7 +90,7 @@ module obelisk::dex_system {
             lp_token_amount = side1.min(side2);
         };
 
-        assets_functions::increase_balance(pool.get_lp_asset_id(), sender, lp_token_amount, assets);
+        assets_functions::do_mint(pool.get_lp_asset_id(), sender, lp_token_amount, assets);
     }
 
     public entry fun remove_liquidity(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, lp_token_burn: u64, amount1_min_receive: u64, amount2_min_receive: u64, ctx: &mut TxContext) {
@@ -111,7 +114,7 @@ module obelisk::dex_system {
         assert!(amount2 > 0 && amount2 >= amount2_min_receive, 0);
 
         // burn the provided lp token amount that includes the fee
-        assets_functions::decrease_balance(pool.get_lp_asset_id(), sender, lp_token_burn, assets);
+        assets_functions::do_burn(pool.get_lp_asset_id(), sender, lp_token_burn, assets);
 
         assets_functions::do_transfer(asset1, pool.get_pool_address(), sender, amount1, assets);
         assets_functions::do_transfer(asset2, pool.get_pool_address(), sender, amount2, assets);
@@ -133,5 +136,13 @@ module obelisk::dex_system {
     public entry fun swap_tokens_for_exact_tokens(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64, amount_in_max: u64, to: address, ctx: &mut TxContext) {
         let sender = ctx.sender();
         dex_functions::do_swap_tokens_for_exact_tokens(dex, assets, sender, path, amount_out, amount_in_max, to);
+    }
+
+    public fun get_amount_out(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_in: u64): u64 {
+        dex_functions::get_final_amount_out(dex, assets, path, amount_in)
+    }
+
+    public fun get_amount_in(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64): u64 {
+        dex_functions::get_final_amount_in(dex, assets, path, amount_out)
     }
 }

@@ -15,7 +15,7 @@ module obelisk::wrapper_system {
         wrapper.asset_ids().add<WrapperCoin<T>, u32>(wrapper_coin::new(), asset_id);
         wrapper.coins().add<u32, WrapperCoin<T>>(asset_id , wrapper_coin::new());
         wrapper.pools().add<u32, Balance<T>>(asset_id, balance::zero<T>());
-        assets_functions::do_create(assets, ctx.sender(), name, symbol, description, decimals, url, info);
+        assets_functions::do_create(assets, false, false, true, ctx.sender(), name, symbol, description, decimals, url, info);
     }
 
     public entry fun wrap<T>(wrapper: &mut Wrapper, assets: &mut Assets, coin: Coin<T>, beneficiary: address, _ctx: &mut TxContext) {
@@ -25,14 +25,14 @@ module obelisk::wrapper_system {
         let pool_balance = wrapper.pools().borrow_mut<u32, Balance<T>>(asset_id);
         let amount = pool_balance.join(coin.into_balance());
 
-        assets_functions::increase_balance(asset_id, beneficiary, amount as u64, assets);
+        assets_functions::do_mint(asset_id, beneficiary, amount, assets);
     }
 
     public entry fun unwrap<T>(wrapper: &mut Wrapper, assets: &mut Assets, amount: u64, beneficiary: address, ctx: &mut TxContext) {
         let wrapper_coin = wrapper_coin::new<T>();
         assert!(wrapper.asset_ids().contains(wrapper_coin), 0);
         let asset_id = *wrapper.asset_ids().borrow<WrapperCoin<T>, u32>(wrapper_coin);
-        assets_functions::decrease_balance(asset_id, ctx.sender(), amount, assets);
+        assets_functions::do_burn(asset_id, ctx.sender(), amount, assets);
 
         let pool_balance = wrapper.pools().borrow_mut<u32, Balance<T>>(asset_id);
         let coin =  coin::from_balance<T>(pool_balance.split(amount), ctx);

@@ -15,7 +15,7 @@ module obelisk::dex_functions {
 
     public(package) fun sort_assets(asset1: u32, asset2: u32): (u32, u32) {
         assert!(asset1 != asset2, 0);
-        
+
         if (asset1 < asset2) {
             (asset1, asset2)
         } else {
@@ -65,7 +65,7 @@ module obelisk::dex_functions {
         while (len > 1) {
             let asset1 = path[len - 2];
             let asset2 = path[len - 1];
-       
+
             let (asset1, asset2) = sort_assets(asset1, asset2);
             assert!(dex.pool_id().contains(&asset1, &asset2), 0);
             len = len - 1;
@@ -175,12 +175,12 @@ module obelisk::dex_functions {
                 if (pos + 2 < len) {
                     let asset3 = path[pos + 2].asset_id;
                     let dex_pool_id = get_pool_id(asset2, asset3, dex);
-                    
+
                     let pool = dex.pools().get(&dex_pool_id);
                     let pool_to_address = pool.get_pool_address();
                     assets_functions::do_transfer(asset2, pool_from_address, pool_to_address, amount_out, assets);
                 } else {
-                    assets_functions::decrease_balance(asset2, pool_from_address, amount_out, assets);
+                    assets_functions::do_burn(asset2, pool_from_address, amount_out, assets);
                     return_asset_id = asset2;
                     return_balance = amount_out;
                     break
@@ -195,10 +195,10 @@ module obelisk::dex_functions {
         let asset2 = path[1].asset_id;
 
         let dex_pool_id = get_pool_id(asset1, asset2, dex);
-        
+
         let pool = dex.pools().get(&dex_pool_id);
         let pool_to_address = pool.get_pool_address();
-        assets_functions::increase_balance(asset1, pool_to_address, amount_in, assets);
+        assets_functions::do_mint(asset1, pool_to_address, amount_in, assets);
         (return_asset_id, return_balance)
     }
 
@@ -208,10 +208,10 @@ module obelisk::dex_functions {
         let asset_in = path[0].asset_id;
         let amount_in = path[0].balance;
         // Withdraw the first asset from the sender
-        assets_functions::decrease_balance(asset_in, sender, amount_in, assets);
+        assets_functions::do_burn(asset_in, sender, amount_in, assets);
         let (asset_id, balance) = credit_swap(path, dex, assets);
         // Deposit the last asset to the send_to
-        assets_functions::increase_balance(asset_id, send_to, balance, assets);
+        assets_functions::do_mint(asset_id, send_to, balance, assets);
     }
 
     public(package) fun do_swap_exact_tokens_for_tokens(
@@ -267,6 +267,23 @@ module obelisk::dex_functions {
         assert!(amount_in <= amount_in_max, 0);
 
         swap(sender, path, to, dex, assets);
+    }
+
+    public(package) fun get_final_amount_out(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_in: u64): u64 {
+        assert!(amount_in > 0, 0);
+        validate_swap_path(dex, path);
+        let path = balance_path_from_amount_in(amount_in, path, dex, assets);
+        let len = path.length();
+        let amount_out = path[len - 1].balance;
+        amount_out
+    }
+
+    public(package) fun get_final_amount_in(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64): u64 {
+        assert!(amount_out > 0, 0);
+        validate_swap_path(dex, path);
+        let path = balance_path_from_amount_out(amount_out, path, dex, assets);
+        let amount_in = path[0].balance;
+        amount_in
     }
 
 }
