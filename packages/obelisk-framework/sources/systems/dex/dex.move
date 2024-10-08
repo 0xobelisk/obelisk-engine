@@ -139,10 +139,16 @@ module obelisk::dex_system {
     }
 
     public fun get_amount_out(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_in: u64): u64 {
-        dex_functions::get_final_amount_out(dex, assets, path, amount_in)
+        assert!(amount_in > 0, 0);
+        dex_functions::validate_swap_path(dex, path);
+        let (_, amount_out) = dex_functions::balance_path_from_amount_in(amount_in, path, dex, assets);
+        amount_out
     }
 
     public fun get_amount_in(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64): u64 {
-        dex_functions::get_final_amount_in(dex, assets, path, amount_out)
+        assert!(amount_out > 0, 0);
+        dex_functions::validate_swap_path(dex, path);
+        let (_, amount_in) = dex_functions::balance_path_from_amount_out(amount_out, path, dex, assets);
+        amount_in
     }
 }

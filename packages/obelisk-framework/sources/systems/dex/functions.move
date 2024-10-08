@@ -109,7 +109,7 @@ module obelisk::dex_functions {
         numerator / denominator + 1
     }
 
-    public(package) fun balance_path_from_amount_in(amount_in: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): vector<BalancePathElement> {
+    public(package) fun balance_path_from_amount_in(amount_in: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): (vector<BalancePathElement>, u64) {
         let mut amount_out = amount_in;
         let mut balance_path = vector[];
         let len = path.length();
@@ -128,10 +128,10 @@ module obelisk::dex_functions {
             };
             i = i + 1;
         };
-        balance_path
+        (balance_path, balance_path[len - 1].balance)
     }
 
-    public(package) fun balance_path_from_amount_out(amount_out: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): vector<BalancePathElement> {
+    public(package) fun balance_path_from_amount_out(amount_out: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): (vector<BalancePathElement>, u64) {
         let mut amount_in = amount_out;
         let mut path = path;
         path.reverse();
@@ -154,7 +154,7 @@ module obelisk::dex_functions {
             i = i + 1;
         };
         balance_path.reverse();
-        balance_path
+        (balance_path, balance_path[0].balance)
     }
 
     public(package) fun credit_swap(path: vector<BalancePathElement>, dex: &mut Dex, assets: &mut Assets): (u32, u64) {
@@ -227,9 +227,7 @@ module obelisk::dex_functions {
         assert!(amount_out_min >= 0, 0);
 
         validate_swap_path(dex, path);
-        let path = balance_path_from_amount_in(amount_in, path, dex, assets);
-        let len = path.length();
-        let amount_out = path[len - 1].balance;
+        let (path, amount_out) = balance_path_from_amount_in(amount_in, path, dex, assets);
         print(&path);
         assert!(amount_out >= amount_out_min, 0);
 
@@ -260,30 +258,11 @@ module obelisk::dex_functions {
         assert!(amount_in_max > 0, 0);
 
         validate_swap_path(dex, path);
-        let path = balance_path_from_amount_out(amount_out, path, dex, assets);
+        let (path, amount_in) = balance_path_from_amount_out(amount_out, path, dex, assets);
 
-        let amount_in = path[0].balance;
         print(&path);
         assert!(amount_in <= amount_in_max, 0);
 
         swap(sender, path, to, dex, assets);
     }
-
-    public(package) fun get_final_amount_out(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_in: u64): u64 {
-        assert!(amount_in > 0, 0);
-        validate_swap_path(dex, path);
-        let path = balance_path_from_amount_in(amount_in, path, dex, assets);
-        let len = path.length();
-        let amount_out = path[len - 1].balance;
-        amount_out
-    }
-
-    public(package) fun get_final_amount_in(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64): u64 {
-        assert!(amount_out > 0, 0);
-        validate_swap_path(dex, path);
-        let path = balance_path_from_amount_out(amount_out, path, dex, assets);
-        let amount_in = path[0].balance;
-        amount_in
-    }
-
 }
