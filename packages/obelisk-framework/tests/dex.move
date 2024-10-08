@@ -138,6 +138,8 @@ module obelisk::dex_tests {
         dex_system::add_liquidity(&mut dex, &mut assets, 0, 1, 100000, 100000, 100000, 100000, ctx);
         dex_system::add_liquidity(&mut dex, &mut assets, 1, 2, 100000, 100000, 100000, 100000, ctx);
 
+
+        assert!(dex_system::get_amount_out(&mut dex, &mut assets, vector[0, 1], 10000) == 9066, 0);
         dex_system::swap_exact_tokens_for_tokens(&mut dex, &mut assets, vector[0, 1], 10000, 0, ctx.sender(), ctx);
         assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 900000 - 10000, 0);
         assert!(assets_system::balance_of(&mut assets, 1, ctx.sender()) == 800000 + 9066, 0);
@@ -145,6 +147,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&mut assets, 0, @0x0) == 100000 + 10000, 0);
         assert!(assets_system::balance_of(&mut assets, 1, @0x0) == 100000 - 9066, 0);
 
+        assert!(dex_system::get_amount_out(&mut dex, &mut assets, vector[0, 1, 2], 10000) == 7005, 0);
         dex_system::swap_exact_tokens_for_tokens(&mut dex, &mut assets, vector[0, 1, 2], 10000, 0, ctx.sender(), ctx);
         assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 900000 - 10000 - 10000, 0);
         assert!(assets_system::balance_of(&mut assets, 1, ctx.sender()) == 800000 + 9066, 0);
@@ -160,6 +163,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&mut assets, 2, ctx.sender()) == 900000 + 7005, 0);
 
 
+        assert!(dex_system::get_amount_in(&mut dex, &mut assets, vector[1, 0], 10000) == 7603, 0);
         dex_system::swap_tokens_for_exact_tokens(&mut dex, &mut assets, vector[1, 0], 10000, 20000, ctx.sender(), ctx);
         assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 900000 - 10000 - 10000 + 10000, 0);
         assert!(assets_system::balance_of(&mut assets, 1, ctx.sender()) == 800000 + 9066 - 7603, 0);
@@ -167,6 +171,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&mut assets, 0, @0x0) == 100000 + 10000 + 10000 - 10000, 0);
         assert!(assets_system::balance_of(&mut assets, 1, @0x0) == 100000 - 9066 - 7556 + 7603, 0);
 
+        assert!(dex_system::get_amount_in(&mut dex, &mut assets, vector[1, 0, 1, 2], 10000) == 18322, 0);
         dex_system::swap_tokens_for_exact_tokens(&mut dex, &mut assets, vector[1, 0, 1, 2], 10000, 20000, ctx.sender(), ctx);
 
         test_scenario::return_shared<Assets>(assets);
