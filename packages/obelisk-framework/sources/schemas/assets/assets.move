@@ -18,29 +18,45 @@ module obelisk::assets_schema {
         account: StorageDoubleMap<u32, address, AssetsAccount>
     }
 
-    public(package) fun next_asset_id(self: &mut Assets): &mut StorageValue<u32> {
+    public(package) fun borrow_mut_next_asset_id(self: &mut Assets): &mut StorageValue<u32> {
         &mut self.next_asset_id
     }
 
-    public(package) fun metadata(self: &mut Assets): &mut StorageMap<u32, AssetsMetadata> {
+    public(package) fun borrow_mut_metadata(self: &mut Assets): &mut StorageMap<u32, AssetsMetadata> {
         &mut self.metadata
     }
 
-    public(package) fun details(self: &mut Assets): &mut StorageMap<u32, AssetsDetails> {
+    public(package) fun borrow_mut_details(self: &mut Assets): &mut StorageMap<u32, AssetsDetails> {
         &mut self.details
     }
 
-    public(package) fun account(self: &mut Assets): &mut StorageDoubleMap<u32, address, AssetsAccount> {
+    public(package) fun borrow_mut_account(self: &mut Assets): &mut StorageDoubleMap<u32, address, AssetsAccount> {
         &mut self.account
+    }
+
+    public(package) fun borrow_next_asset_id(self: &Assets): &StorageValue<u32> {
+        &self.next_asset_id
+    }
+
+    public(package) fun borrow_metadata(self: &Assets): &StorageMap<u32, AssetsMetadata> {
+        &self.metadata
+    }
+
+    public(package) fun borrow_details(self: &Assets): &StorageMap<u32, AssetsDetails> {
+        &self.details
+    }
+
+    public(package) fun borrow_account(self: &Assets): &StorageDoubleMap<u32, address, AssetsAccount> {
+        &self.account
     }
 
     fun init(ctx: &mut TxContext) {
         let assets = Assets {
             id: object::new(ctx),
             next_asset_id: storage_value::new(0),
-            metadata: storage_map::empty(),
-            details: storage_map::empty(),
-            account: storage_double_map::empty()
+            metadata: storage_map::new(),
+            details: storage_map::new(),
+            account: storage_double_map::new()
         };
         public_share_object(assets);
     }

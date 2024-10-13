@@ -3,87 +3,44 @@
 
 module obelisk::storage_value {
 
-    // /// This key already exists in the map
-    // const EKeyAlreadyExists: u64 = 0;
-    //
-    // /// This key does not exist in the map
-    // const EKeyDoesNotExist: u64 = 1;
-
-    /// A set data structure backed by a vector. The set is guaranteed not to
-    /// contain duplicate keys. All operations are O(N) in the size of the set
-    /// - the intention of this data structure is only to provide the convenience
-    /// of programming against a set API. Sets that need sorted iteration rather
-    /// than insertion order iteration should be handwritten.
-    public struct StorageValue<K: copy + drop> has copy, drop, store {
-        contents: vector<K>,
+    /// A storable handler for values in general. Is used in the `StorageValue`
+    public struct StorageValue<Value: store> has store {
+        value: Value,
     }
 
-    /// Create an empty `StorageValue`
-    public fun empty<K: copy + drop>(): StorageValue<K> {
-        StorageValue { contents: vector[] }
+    /// Creates a new, empty StorageValue
+    public fun new<Value: store>(value: Value): StorageValue<Value> {
+        StorageValue { value }
     }
 
-    /// Create a singleton `StorageValue` that only contains one element.
-    public fun new<K: copy + drop>(key: K): StorageValue<K> {
-        StorageValue { contents: vector[key] }
+    /// Gets the value of the StorageValue `self: &StorageValue<Value>`.
+    public fun borrow<Value: store>(self: &StorageValue<Value>): &Value {
+        &self.value
     }
 
-    /// Insert a `key` into self.
-    /// Aborts if `key` is already present in `self`.
-    public fun set<K: copy + drop>(self: &mut StorageValue<K>, key: K) {
-        // assert!(!self.contains(&key), EKeyAlreadyExists);
-        if (self.contains()) {
-            self.remove();
-        };
-        self.contents.push_back(key);
+    /// Gets the value of the StorageValue `self: &mut StorageValue<Value>`.
+    public fun borrow_mut<Value: store>(self: &mut StorageValue<Value>): &mut Value {
+        &mut self.value
     }
 
-    /// Remove the entry `key` from self. Aborts if `key` is not present in `self`.
-    public fun remove<K: copy + drop>(self: &mut StorageValue<K>) {
-        self.contents.remove(0);
+    /// Update the `value` of the `StorageValue`.
+    public macro fun mutate<$Value: store>($self: &mut StorageValue<$Value>, $f: |&mut $Value|) {
+        let self = $self;
+        $f(borrow_mut(self));
     }
 
-    /// Return true if `self` contains an entry for `key`, false otherwise
-    public fun contains<K: copy + drop>(self: &StorageValue<K>): bool {
-        self.contents.length() > 0
+
+    // ======================================= Value: drop + copy + store =======================================
+
+    /// Set the `value` of the `StorageValue`.
+    public fun set<V: copy + drop + store>(self: &mut StorageValue<V>, value: V) {
+        self.value = value;
     }
 
-    /// Return true if `self` has 0 elements, false otherwise
-    public fun is_empty<K: copy + drop>(self: &StorageValue<K>): bool {
-        self.contents.length() == 0
+    /// Get the `value` of the `StorageValue`.
+    public fun get<V: copy + drop + store>(self: &StorageValue<V>): V {
+        self.value
     }
 
-    /// Unpack `self` into vectors of keys.
-    /// The output keys are stored in insertion order, *not* sorted.
-    public fun into_value<K: copy + drop>(self: StorageValue<K>): K {
-        let StorageValue { contents } = self;
-        contents[0]
-    }
-
-    /// Construct a new `StorageValue` from a vector of keys.
-    /// The keys are stored in insertion order (the original `keys` ordering)
-    /// and are *not* sorted.
-    public fun from_value<K: copy + drop>(key: K): StorageValue<K> {
-        let mut storage = empty();
-        storage.set(key);
-        storage
-    }
-
-    /// Borrow the `contents` of the `StorageValue` to access content by index
-    /// without unpacking. The contents are stored in insertion order,
-    /// *not* sorted.
-    public fun get<K: copy + drop>(self: &StorageValue<K>): K {
-        self.contents[0]
-    }
-
-    /// Safely try borrow a value bound to `key` in `self`.
-    /// Return Some(V) if the value exists, None otherwise.
-    /// Only works for a "copyable" value as references cannot be stored in `vector`.
-    public fun try_get<K: copy + drop>(self: &StorageValue<K>): Option<K> {
-        if (self.contains()) {
-            option::some(self.get())
-        } else {
-            option::none()
-        }
-    }
+    // ============================================================================================
 }

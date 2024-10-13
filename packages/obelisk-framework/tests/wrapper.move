@@ -52,30 +52,30 @@ module obelisk::wrapper_tests {
         let usdt = coin::mint_for_testing<USDT>(amount, ctx);
         let beneficiary = ctx.sender();
         wrapper_system::wrap(&mut wrapper, &mut assets, usdt, beneficiary, ctx);
-        assert!(assets_system::balance_of(&mut assets,0, beneficiary) == amount, 0);
-        assert!(assets_system::supply_of(&mut assets,0) == amount, 1);
-        assert!(wrapper_system::wrapped_assets(&mut wrapper, &mut assets) == vector[0], 2);
+        assert!(assets_system::balance_of(&assets,0, beneficiary) == amount, 0);
+        assert!(assets_system::supply_of(&assets,0) == amount, 1);
+        assert!(wrapper_system::wrapped_assets(&wrapper, &assets) == vector[0], 2);
 
         wrapper_system::unwrap<USDT>(&mut wrapper, &mut assets, amount, beneficiary, ctx);
-        assert!(assets_system::balance_of(&mut assets, 0, beneficiary) == 0, 1);
+        assert!(assets_system::balance_of(&assets, 0, beneficiary) == 0, 1);
 
         let usdt = coin::mint_for_testing<USDT>(amount, ctx);
         wrapper_system::wrap(&mut wrapper, &mut assets, usdt, beneficiary, ctx);
-        assert!(assets_system::balance_of(&mut assets,0, beneficiary) == amount, 0);
-        assert!(assets_system::supply_of(&mut assets,0) == amount, 1);
-        assert!(wrapper_system::wrapped_assets(&mut wrapper, &mut assets) == vector[0], 2);
+        assert!(assets_system::balance_of(&assets,0, beneficiary) == amount, 0);
+        assert!(assets_system::supply_of(&assets,0) == amount, 1);
+        assert!(wrapper_system::wrapped_assets(&wrapper, &assets) == vector[0], 2);
 
         let usdt = coin::mint_for_testing<USDT>(amount, ctx);
         wrapper_system::wrap(&mut wrapper, &mut assets, usdt, beneficiary, ctx);
-        assert!(assets_system::balance_of(&mut assets,0, beneficiary) == amount * 2, 0);
-        assert!(assets_system::supply_of(&mut assets,0) == amount * 2, 1);
-        assert!(wrapper_system::wrapped_assets(&mut wrapper, &mut assets) == vector[0], 2);
+        assert!(assets_system::balance_of(&assets,0, beneficiary) == amount * 2, 0);
+        assert!(assets_system::supply_of(&assets,0) == amount * 2, 1);
+        assert!(wrapper_system::wrapped_assets(&wrapper, &assets) == vector[0], 2);
 
         let usdt = coin::mint_for_testing<USDT>(amount, ctx);
         wrapper_system::wrap(&mut wrapper, &mut assets, usdt, beneficiary, ctx);
-        assert!(assets_system::balance_of(&mut assets,0, beneficiary) == amount * 3, 0);
-        assert!(assets_system::supply_of(&mut assets,0) == amount * 3, 1);
-        assert!(wrapper_system::wrapped_assets(&mut wrapper, &mut assets) == vector[0], 2);
+        assert!(assets_system::balance_of(&assets,0, beneficiary) == amount * 3, 0);
+        assert!(assets_system::supply_of(&assets,0) == amount * 3, 1);
+        assert!(wrapper_system::wrapped_assets(&wrapper, &assets) == vector[0], 2);
 
         test_scenario::return_shared<Wrapper>(wrapper);
         test_scenario::return_shared<Assets>(assets);

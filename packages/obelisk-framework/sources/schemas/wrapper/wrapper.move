@@ -10,16 +10,28 @@ module obelisk::wrapper_schema {
         coins: Bag,
     }
 
-    public(package) fun asset_ids(self: &mut Wrapper): &mut Bag {
+    public(package) fun borrow_mut_asset_ids(self: &mut Wrapper): &mut Bag {
         &mut self.asset_ids
     }
 
-    public(package) fun pools(self: &mut Wrapper): &mut Bag {
+    public(package) fun borrow_mut_pools(self: &mut Wrapper): &mut Bag {
         &mut self.pools
     }
 
-    public(package) fun coins(self: &mut Wrapper): &mut Bag {
+    public(package) fun borrow_mut_coins(self: &mut Wrapper): &mut Bag {
         &mut self.coins
+    }
+
+    public(package) fun borrow_asset_ids(self: &Wrapper): &Bag {
+        &self.asset_ids
+    }
+
+    public(package) fun borrow_pools(self: &Wrapper): &Bag {
+        &self.pools
+    }
+
+    public(package) fun borrow_coins(self: &Wrapper): &Bag {
+        &self.coins
     }
 
     fun init(ctx: &mut TxContext) {

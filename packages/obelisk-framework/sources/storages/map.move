@@ -1,159 +1,83 @@
 // Copyright (c) Mysten Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+#[allow(unused_variable)]
 module obelisk::storage_map {
 
-    // This key does not exist in the map
+    /// This key already exists in the map
+    const EKeyAlreadyExists: u64 = 0;
+
+    /// This key does not exist in the map
     const EKeyDoesNotExist: u64 = 1;
 
-    // Trying to destroy a map that is not empty
-    const EMapNotEmpty: u64 = 2;
+    /// An entry in the map
+    public struct Entry<K: copy + drop + store, V: store> has copy, drop, store {
+        key: K,
+        value: V,
+    }
 
-    // Trying to access an element of the map at an invalid index
-    const EIndexOutOfBounds: u64 = 3;
-
-    // Trying to pop from a map that is empty
-    const EMapEmpty: u64 = 4;
-
-    // Trying to construct a map from keys and values of different lengths
-    const EUnequalLengths: u64 = 5;
-
-    // A map data structure backed by a vector. The map is guaranteed not to contain duplicate keys, but entries
-    // are *not* sorted by key--entries are included in insertion order.
-    // All operations are O(N) in the size of the map--the intention of this data structure is only to provide
-    // the convenience of programming against a map API.
-    // Large maps should use handwritten parent/child relationships instead.
-    // Maps that need sorted iteration rather than insertion order iteration should also be handwritten.
-    public struct StorageMap<K: copy + drop, V: copy + drop> has copy, drop, store {
+    /// A map data structure backed by a vector. The map is guaranteed not to contain duplicate keys, but entries
+    /// are *not* sorted by key--entries are included in insertion order.
+    /// All operations are O(N) in the size of the map--the intention of this data structure is only to provide
+    /// the convenience of programming against a map API.
+    /// Large maps should use handwritten parent/child relationships instead.
+    /// Maps that need sorted iteration rather than insertion order iteration should also be handwritten.
+    public struct StorageMap<K: copy + drop + store, V: store> has store {
         contents: vector<Entry<K, V>>,
     }
 
-    // An entry in the map
-    public struct Entry<K: copy + drop, V: copy + drop> has copy, drop, store {
-        key: K,
-        value: V
-    }
-
-    // Create an empty `StorageMap`
-    public fun empty<K: copy + drop, V: copy + drop>(): StorageMap<K,V> {
+    /// Create an empty `StorageMap`
+    public fun new<K: copy + drop + store, V: store>(): StorageMap<K, V> {
         StorageMap { contents: vector[] }
     }
 
-    // Insert the entry `key` |-> `value` into `self`.
-    // Aborts if `key` is already bound in `self`.
-    public fun insert<K: copy + drop, V: copy + drop>(self: &mut StorageMap<K,V>, key: K, value: V) {
-        if (self.contains(&key)) {
-            self.remove(&key);
-        };
-        self.contents.push_back(Entry { key, value })
+    /// Return true if `self` contains_key an entry for `key`, false otherwise
+    public fun contains_key<K: copy + drop + store, V: store>(self: &StorageMap<K, V>, key: K): bool {
+        get_idx_opt(self, key).is_some()
     }
 
-    // Remove the entry `key` |-> `value` from self. Aborts if `key` is not bound in `self`.
-    public fun remove<K: copy + drop, V: copy + drop>(self: &mut StorageMap<K,V>, key: &K): (K, V) {
+    /// Return the number of entries in `self`
+    public fun length<K: copy + drop + store, V: store>(self: &StorageMap<K,V>): u64 {
+        self.contents.length()
+    }
+
+    /// Get a reference to the value bound to `key` in `self`.
+    /// Aborts if `key` is not bound in `self`.
+    public fun borrow<K: copy + drop + store, V: store>(self: &StorageMap<K,V>, key: K): &V {
         let idx = self.get_idx(key);
-        let Entry { key, value } = self.contents.remove(idx);
-        (key, value)
+        let entry = &self.contents[idx];
+        &entry.value
     }
 
-    // Pop the most recently inserted entry from the map. Aborts if the map is empty.
-    public fun pop<K: copy + drop, V: copy + drop>(self: &mut StorageMap<K,V>): (K, V) {
-        assert!(!self.contents.is_empty(), EMapEmpty);
-        let Entry { key, value } = self.contents.pop_back();
-        (key, value)
-    }
 
-    #[syntax(index)]
-    // Get a mutable reference to the value bound to `key` in `self`.
-    // Aborts if `key` is not bound in `self`.
-    public fun get_mut<K: copy + drop, V: copy + drop>(self: &mut StorageMap<K,V>, key: &K): &mut V {
+    /// Get a mutable reference to the value bound to `key` in `self`.
+    /// Aborts if `key` is not bound in `self`.
+    public fun borrow_mut<K: copy + drop + store, V: store>(self: &mut StorageMap<K,V>, key: K): &mut V {
         let idx = self.get_idx(key);
         let entry = &mut self.contents[idx];
         &mut entry.value
     }
 
-    // Get a reference to the value bound to `key` in `self`.
-    // Aborts if `key` is not bound in `self`.
-    public fun get<K: copy + drop, V: copy + drop>(self: &StorageMap<K,V>, key: &K): V {
+    /// Remove the entry `key` |-> `value` from self. Aborts if `key` is not bound in `self`.
+    public fun take<K: copy + drop + store, V: store>(self: &mut StorageMap<K,V>, key: K): V {
         let idx = self.get_idx(key);
-        let entry = &self.contents[idx];
-        entry.value
+        let Entry { key, value } = self.contents.remove(idx);
+        value
     }
 
-    // Safely try borrow a value bound to `key` in `self`.
-    // Return Some(V) if the value exists, None otherwise.
-    // Only works for a "copyable" value as references cannot be stored in `vector`.
-    public fun try_get<K: copy + drop, V: copy + drop>(self: &StorageMap<K,V>, key: &K): Option<V> {
-        if (self.contains(key)) {
-            option::some(get(self, key))
-        } else {
-            option::none()
-        }
+    public macro fun mutate<$K: copy + drop + store, $V: store>(
+        $self: &mut StorageMap<$K, $V>,
+        $key: $K,
+        $f: |&mut $V|
+    ) {
+        let self = $self;
+        let key = $key;
+        $f(borrow_mut(self, key));
     }
 
-    // Return true if `self` contains an entry for `key`, false otherwise
-    public fun contains<K: copy + drop, V: copy + drop>(self: &StorageMap<K, V>, key: &K): bool {
-        get_idx_opt(self, key).is_some()
-    }
-
-    // Return the number of entries in `self`
-    public fun size<K: copy + drop, V: copy + drop>(self: &StorageMap<K,V>): u64 {
-        self.contents.length()
-    }
-
-    // Return true if `self` has 0 elements, false otherwise
-    public fun is_empty<K: copy + drop, V: copy + drop>(self: &StorageMap<K,V>): bool {
-        self.size() == 0
-    }
-
-    // Destroy an empty map. Aborts if `self` is not empty
-    public fun destroy_empty<K: copy + drop, V: copy + drop>(self: StorageMap<K, V>) {
-        let StorageMap { contents } = self;
-        assert!(contents.is_empty(), EMapNotEmpty);
-        contents.destroy_empty()
-    }
-
-    // Unpack `self` into vectors of its keys and values.
-    // The output keys and values are stored in insertion order, *not* sorted by key.
-    public fun into_keys_values<K: copy + drop, V: copy + drop>(self: StorageMap<K, V>): (vector<K>, vector<V>) {
-        let StorageMap { mut contents } = self;
-        // reverse the vector so the output keys and values will appear in insertion order
-        contents.reverse();
-        let mut i = 0;
-        let n = contents.length();
-        let mut keys = vector[];
-        let mut values = vector[];
-        while (i < n) {
-            let Entry { key, value } = contents.pop_back();
-            keys.push_back(key);
-            values.push_back(value);
-            i = i + 1;
-        };
-        contents.destroy_empty();
-        (keys, values)
-    }
-
-    // Construct a new `StorageMap` from two vectors, one for keys and one for values.
-    // The key value pairs are associated via their indices in the vectors, e.g. the key at index i
-    // in `keys` is associated with the value at index i in `values`.
-    // The key value pairs are stored in insertion order (the original vectors ordering)
-    // and are *not* sorted.
-    public fun from_keys_values<K: copy + drop, V: copy + drop>(
-        mut keys: vector<K>,
-        mut values: vector<V>,
-    ): StorageMap<K, V> {
-        assert!(keys.length() == values.length(), EUnequalLengths);
-        keys.reverse();
-        values.reverse();
-        let mut map = empty();
-        while (!keys.is_empty()) map.insert(keys.pop_back(), values.pop_back());
-        keys.destroy_empty();
-        values.destroy_empty();
-        map
-    }
-
-    // Returns a list of keys in the map.
-    // Do not assume any particular ordering.
-    public fun keys<K: copy + drop, V: copy + drop>(self: &StorageMap<K, V>): vector<K> {
+    /// Returns a list of keys in the map.
+    /// Do not assume any particular ordering.
+    public fun keys<K: copy + drop + store, V: store>(self: &StorageMap<K, V>): vector<K> {
         let mut i = 0;
         let n = self.contents.length();
         let mut keys = vector[];
@@ -165,51 +89,71 @@ module obelisk::storage_map {
         keys
     }
 
-    // Find the index of `key` in `self`. Return `None` if `key` is not in `self`.
-    // Note that map entries are stored in insertion order, *not* sorted by key.
-    public fun get_idx_opt<K: copy + drop, V: copy + drop>(self: &StorageMap<K,V>, key: &K): Option<u64> {
-        let mut i = 0;
-        let n = size(self);
-        while (i < n) {
-            if (&self.contents[i].key == key) {
-                return option::some(i)
-            };
-            i = i + 1;
-        };
-        option::none()
+    /// Find the index of `key` in `self`. Return `None` if `key` is not in `self`.
+    /// Note that map entries are stored in insertion order, *not* sorted by key.
+    public fun get_idx_opt<K: copy + drop + store, V: store>(self: &StorageMap<K,V>, key: K): Option<u64> {
+        self.contents.find_index!(|entry| { entry.key == key})
     }
 
-    // Find the index of `key` in `self`. Aborts if `key` is not in `self`.
-    // Note that map entries are stored in insertion order, *not* sorted by key.
-    public fun get_idx<K: copy + drop, V: copy + drop>(self: &StorageMap<K,V>, key: &K): u64 {
+    /// Find the index of `key` in `self`. Aborts if `key` is not in `self`.
+    /// Note that map entries are stored in insertion order, *not* sorted by key.
+    public fun get_idx<K: copy + drop + store, V: store>(self: &StorageMap<K,V>, key: K): u64 {
         let idx_opt = self.get_idx_opt(key);
         assert!(idx_opt.is_some(), EKeyDoesNotExist);
         idx_opt.destroy_some()
     }
 
-    // Return a reference to the `idx`th entry of `self`. This gives direct access into the backing array of the map--use with caution.
-    // Note that map entries are stored in insertion order, *not* sorted by key.
-    // Aborts if `idx` is greater than or equal to `size(self)`
-    public fun get_entry_by_idx<K: copy + drop, V: copy + drop>(self: &StorageMap<K, V>, idx: u64): (&K, &V) {
-        assert!(idx < size(self), EIndexOutOfBounds);
+    /// Insert the entry `key` |-> `value` into `self`.
+    /// Aborts if `key` is already bound in `self`.
+    public fun insert<K: copy + drop + store, V: store>(self: &mut StorageMap<K,V>, key: K, value: V) {
+        assert!(!self.contains_key(key), EKeyAlreadyExists);
+        self.contents.push_back(Entry { key, value })
+    }
+
+    // =======================================Value: drop + copy + store=======================================
+
+    /// Adds a key-value pair to the self `self: &mut StorageMap<K, V>`
+    /// Aborts with `sui::dynamic_field::EFieldAlreadyExists` if the self already has an entry with
+    /// that key `k: K`.
+    public fun set<K: copy + drop + store, V: copy + drop + store>(self: &mut StorageMap<K, V>, key: K, value: V) {
+        let idx = self.get_idx_opt(key);
+        if (idx.is_some()) {
+            self.contents[idx.destroy_some()].value = value;
+        } else {
+            self.contents.push_back(Entry { key, value })
+        }
+    }
+
+    /// Get a reference to the value bound to `key` in `self`.
+    /// Aborts if `key` is not bound in `self`.
+    public fun get<K: copy + drop + store, V: copy + drop + store>(self: &StorageMap<K,V>, key: K): V {
+        let idx = self.get_idx(key);
         let entry = &self.contents[idx];
-        (&entry.key, &entry.value)
+        entry.value
     }
 
-    // Return a mutable reference to the `idx`th entry of `self`. This gives direct access into the backing array of the map--use with caution.
-    // Note that map entries are stored in insertion order, *not* sorted by key.
-    // Aborts if `idx` is greater than or equal to `size(self)`
-    public fun get_entry_by_idx_mut<K: copy + drop, V: copy + drop>(self: &mut StorageMap<K, V>, idx: u64): (&K, &mut V) {
-        assert!(idx < size(self), EIndexOutOfBounds);
-        let entry = &mut self.contents[idx];
-        (&entry.key, &mut entry.value)
+    /// Safely try borrow a value bound to `key` in `self`.
+    /// Return Some(V) if the value exists, None otherwise.
+    /// Only works for a "copyable" value as references cannot be stored in `vector`.
+    public fun try_get<K: copy + drop + store, V: copy + drop + store>(self: &StorageMap<K,V>, key: K): Option<V> {
+        if (self.contains_key(key)) {
+            option::some(get(self, key))
+        } else {
+            option::none()
+        }
     }
 
-    // Remove the entry at index `idx` from self.
-    // Aborts if `idx` is greater than or equal to `size(self)`
-    public fun remove_entry_by_idx<K: copy + drop, V: copy + drop>(self: &mut StorageMap<K, V>, idx: u64): (K, V) {
-        assert!(idx < size(self), EIndexOutOfBounds);
-        let Entry { key, value } = self.contents.remove(idx);
-        (key, value)
+    /// Remove the entry `key` |-> `value` from self. Aborts if `key` is not bound in `self`.
+    public fun remove<K: copy + drop + store, V: copy + drop + store>(self: &mut StorageMap<K,V>, key: K) {
+        let idx = self.get_idx_opt(key);
+        if (idx.is_some()) {
+            self.contents.remove(idx.destroy_some());
+        }
+    }
+
+    // Returns a list of values in the map.
+    // Do not assume any particular ordering.
+    public fun values<K: copy + drop + store, V: copy + drop + store>(self: &StorageMap<K, V>): vector<V> {
+        self.contents.map!(|entry| entry.value)
     }
 }

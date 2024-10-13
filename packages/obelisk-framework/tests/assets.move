@@ -51,27 +51,27 @@ module obelisk::assets_tests {
         create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);
         create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);
 
-        let metadata = assets.metadata().get(&0);
+        let metadata = assets.borrow_mut_metadata().get(0);
         assert!(metadata == assets_metadata::new(name, symbol, description, decimals, url, info), 0);
-        assert!(2 == assets.next_asset_id().get(), 0);
+        assert!(2 == assets.borrow_mut_next_asset_id().get(), 0);
 
         let ctx = test_scenario::ctx(&mut scenario);
         assets_system::mint(&mut assets, 0, ctx.sender(), 100, ctx);
         assets_system::mint(&mut assets, 1, ctx.sender(), 100, ctx);
-        assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 100, 0);
-        assert!(assets_system::balance_of(&mut assets, 0, @0x10000) == 0, 0);
-        assert!(assets_system::supply_of(&mut assets, 0) == 100, 0);
-        assert!(assets_system::owned_assets(&mut assets, ctx.sender()) == vector[0, 1], 0);
+        assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 100, 0);
+        assert!(assets_system::balance_of(&assets, 0, @0x10000) == 0, 0);
+        assert!(assets_system::supply_of(&assets, 0) == 100, 0);
+        assert!(assets_system::owned_assets(&assets, ctx.sender()) == vector[0, 1], 0);
 
-        debug::print(&assets_system::owned_assets(&mut assets, ctx.sender()));
+        debug::print(&assets_system::owned_assets(&assets, ctx.sender()));
         assets_system::transfer(&mut assets, 0, @0x0002, 50, ctx);
-        assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 50, 0);
-        assert!(assets_system::balance_of(&mut assets, 0, @0x0002) == 50, 0);
-        assert!(assets_system::supply_of(&mut assets, 0) == 100, 0);
+        assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 50, 0);
+        assert!(assets_system::balance_of(&assets, 0, @0x0002) == 50, 0);
+        assert!(assets_system::supply_of(&assets, 0) == 100, 0);
 
         assets_system::burn(&mut assets, 0, ctx.sender(), 50, ctx);
-        assert!(assets_system::balance_of(&mut assets, 0, ctx.sender()) == 0, 0);
-        assert!(assets_system::supply_of(&mut assets, 0) == 50, 0);
+        assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 0, 0);
+        assert!(assets_system::supply_of(&assets, 0) == 50, 0);
 
         test_scenario::return_shared<Assets>(assets);
         test_scenario::end(scenario);

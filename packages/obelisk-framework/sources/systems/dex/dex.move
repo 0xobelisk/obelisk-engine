@@ -15,19 +15,19 @@ module obelisk::dex_system {
 
         let (asset1, asset2) = sort_assets(asset1, asset2);
 
-        assert!(assets.metadata().contains(&asset1), 0);
-        assert!(assets.metadata().contains(&asset2), 0);
-        assert!(!dex.pool_id().contains(&asset1, &asset2), 0);
+        assert!(assets.borrow_mut_metadata().contains_key(asset1), 0);
+        assert!(assets.borrow_mut_metadata().contains_key(asset2), 0);
+        assert!(!dex.borrow_mut_pool_id().contains_key(asset1, asset2), 0);
 
-        let pool_id = dex.next_pool_id().get();
-        assert!(!dex.pools().contains(&pool_id), 0);
+        let pool_id = dex.borrow_mut_next_pool_id().get();
+        assert!(!dex.borrow_mut_pools().contains_key(pool_id), 0);
 
-        let asset1_metadata = assets.metadata().get(&asset1);
-        let asset2_metadata = assets.metadata().get(&asset2);
+        let asset1_metadata = assets.borrow_mut_metadata().get(asset1);
+        let asset2_metadata = assets.borrow_mut_metadata().get(asset2);
         let lp_asset_symbol = dex_functions::pool_asset_symbol(asset1_metadata, asset2_metadata);
 
         let pool_address = address::from_u256((pool_id as u256));
-        let lp_asset_id = assets.next_asset_id().get();
+        let lp_asset_id = assets.borrow_mut_next_asset_id().get();
 
         assets_functions::do_create(
             assets,
@@ -43,17 +43,17 @@ module obelisk::dex_system {
             string::utf8(b""),
         );
 
-        dex.pool_id().insert(asset1, asset2, pool_id);
-        dex.pools().insert(pool_id, dex_pools::new(pool_address, lp_asset_id));
-        dex.next_pool_id().set(pool_id + 1);
+        dex.borrow_mut_pool_id().set(asset1, asset2, pool_id);
+        dex.borrow_mut_pools().set(pool_id, dex_pools::new(pool_address, lp_asset_id));
+        dex.borrow_mut_next_pool_id().set(pool_id + 1);
     }
 
     public entry fun add_liquidity(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, amount1_desired: u64, amount2_desired: u64, amount1_min: u64, amount2_min: u64, ctx: &mut TxContext) {
         let sender = ctx.sender();
 
         let pool_id = get_pool_id(asset1, asset2, dex);
-        assert!(dex.pools().contains(&pool_id), 0);
-        let pool = dex.pools().get(&pool_id);
+        assert!(dex.borrow_mut_pools().contains_key(pool_id), 0);
+        let pool = dex.borrow_mut_pools().get(pool_id);
 
         let reserve1 = assets_functions::balance_of(assets, asset1, pool.get_pool_address());
         let reserve2 = assets_functions::balance_of(assets, asset2, pool.get_pool_address());
@@ -97,8 +97,8 @@ module obelisk::dex_system {
         let sender = ctx.sender();
 
         let pool_id = get_pool_id(asset1, asset2, dex);
-        assert!(dex.pools().contains(&pool_id), 0);
-        let pool = dex.pools().get(&pool_id);
+        assert!(dex.borrow_mut_pools().contains_key(pool_id), 0);
+        let pool = dex.borrow_mut_pools().get(pool_id);
 
         let reserve1 = assets_functions::balance_of(assets, asset1, pool.get_pool_address());
         let reserve2 = assets_functions::balance_of(assets, asset2, pool.get_pool_address());
@@ -138,14 +138,14 @@ module obelisk::dex_system {
         dex_functions::do_swap_tokens_for_exact_tokens(dex, assets, sender, path, amount_out, amount_in_max, to);
     }
 
-    public fun get_amount_out(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_in: u64): u64 {
+    public fun get_amount_out(dex: &Dex, assets: &Assets, path: vector<u32>, amount_in: u64): u64 {
         assert!(amount_in > 0, 0);
         dex_functions::validate_swap_path(dex, path);
         let (_, amount_out) = dex_functions::balance_path_from_amount_in(amount_in, path, dex, assets);
         amount_out
     }
 
-    public fun get_amount_in(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64): u64 {
+    public fun get_amount_in(dex: &Dex, assets: &Assets, path: vector<u32>, amount_out: u64): u64 {
         assert!(amount_out > 0, 0);
         dex_functions::validate_swap_path(dex, path);
         let (_, amount_in) = dex_functions::balance_path_from_amount_out(amount_out, path, dex, assets);

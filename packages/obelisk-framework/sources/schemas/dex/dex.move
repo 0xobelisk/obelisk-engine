@@ -15,24 +15,36 @@ module obelisk::dex_schema {
         pools: StorageMap<u32, DexPools>,
     }
     
-    public(package) fun next_pool_id(self: &mut Dex): &mut StorageValue<u32> {
+    public(package) fun borrow_mut_next_pool_id(self: &mut Dex): &mut StorageValue<u32> {
         &mut self.next_pool_id
     }
 
-    public(package) fun pool_id(self: &mut Dex): &mut StorageDoubleMap<u32, u32, u32> {
+    public(package) fun borrow_mut_pool_id(self: &mut Dex): &mut StorageDoubleMap<u32, u32, u32> {
         &mut self.pool_id
     }
     
-    public(package) fun pools(self: &mut Dex): &mut StorageMap<u32, DexPools> {
+    public(package) fun borrow_mut_pools(self: &mut Dex): &mut StorageMap<u32, DexPools> {
         &mut self.pools
+    }
+
+    public(package) fun borrow_next_pool_id(self: &Dex): &StorageValue<u32> {
+        &self.next_pool_id
+    }
+
+    public(package) fun borrow_pool_id(self: &Dex): &StorageDoubleMap<u32, u32, u32> {
+        &self.pool_id
+    }
+
+    public(package) fun borrow_pools(self: &Dex): &StorageMap<u32, DexPools> {
+        &self.pools
     }
     
     fun init(ctx: &mut TxContext) {
         let dex = Dex {
             id: object::new(ctx),
             next_pool_id: storage_value::new(0),
-            pool_id: storage_double_map::empty(),
-            pools: storage_map::empty(),
+            pool_id: storage_double_map::new(),
+            pools: storage_map::new(),
         };
         public_share_object(dex);
     }

@@ -23,10 +23,10 @@ module obelisk::dex_functions {
         }
     }
 
-    public(package) fun get_pool_id(asset1: u32, asset2: u32, dex: &mut Dex): u32 {
+    public(package) fun get_pool_id(asset1: u32, asset2: u32, dex: &Dex): u32 {
         let (asset1, asset2) = sort_assets(asset1, asset2);
-        assert!(dex.pool_id().contains(&asset1, &asset2), 0);
-        dex.pool_id().get(&asset1, &asset2)
+        assert!(dex.borrow_pool_id().contains_key(asset1, asset2), 0);
+        dex.borrow_pool_id().get(asset1, asset2)
     }
 
     public(package) fun pool_asset_symbol(asset1_metadata: AssetsMetadata, asset2_metadata: AssetsMetadata): String {
@@ -58,7 +58,7 @@ module obelisk::dex_functions {
     }
 
     /// Ensure that a path is valid.
-    public(package) fun validate_swap_path(dex: &mut Dex, path: vector<u32>) {
+    public(package) fun validate_swap_path(dex: &Dex, path: vector<u32>) {
         let mut len = path.length();
         assert!(len >= 2, 0);
         // TODO: Check MaxSwapPathLength
@@ -67,15 +67,15 @@ module obelisk::dex_functions {
             let asset2 = path[len - 1];
 
             let (asset1, asset2) = sort_assets(asset1, asset2);
-            assert!(dex.pool_id().contains(&asset1, &asset2), 0);
+            assert!(dex.borrow_pool_id().contains_key(asset1, asset2), 0);
             len = len - 1;
         }
     }
 
-    public(package) fun get_reserves(asset1: u32, asset2: u32, dex: &mut Dex, assets: &mut Assets): (u64, u64) {
+    public(package) fun get_reserves(asset1: u32, asset2: u32, dex: &Dex, assets: &Assets): (u64, u64) {
         let pool_id = get_pool_id(asset1, asset2, dex);
-        assert!(dex.pools().contains(&pool_id), 0);
-        let pool = dex.pools().get(&pool_id);
+        assert!(dex.borrow_pools().contains_key(pool_id), 0);
+        let pool = dex.borrow_pools().get(pool_id);
 
         let balance1 = assets_functions::balance_of(assets, asset1, pool.get_pool_address());
         let balance2 = assets_functions::balance_of(assets, asset2, pool.get_pool_address());
@@ -109,7 +109,7 @@ module obelisk::dex_functions {
         numerator / denominator + 1
     }
 
-    public(package) fun balance_path_from_amount_in(amount_in: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): (vector<BalancePathElement>, u64) {
+    public(package) fun balance_path_from_amount_in(amount_in: u64, path: vector<u32>, dex: &Dex, assets: &Assets): (vector<BalancePathElement>, u64) {
         let mut amount_out = amount_in;
         let mut balance_path = vector[];
         let len = path.length();
@@ -131,7 +131,7 @@ module obelisk::dex_functions {
         (balance_path, balance_path[len - 1].balance)
     }
 
-    public(package) fun balance_path_from_amount_out(amount_out: u64, path: vector<u32>, dex: &mut Dex, assets: &mut Assets): (vector<BalancePathElement>, u64) {
+    public(package) fun balance_path_from_amount_out(amount_out: u64, path: vector<u32>, dex: &Dex, assets: &Assets): (vector<BalancePathElement>, u64) {
         let mut amount_in = amount_out;
         let mut path = path;
         path.reverse();
@@ -169,14 +169,14 @@ module obelisk::dex_functions {
                 let asset2 = path[pos + 1].asset_id;
                 let amount_out = path[pos + 1].balance;
                 let dex_pool_id = get_pool_id(asset1, asset2, dex);
-                let pool = dex.pools().get(&dex_pool_id);
+                let pool = dex.borrow_mut_pools().get(dex_pool_id);
                 let pool_from_address = pool.get_pool_address();
 
                 if (pos + 2 < len) {
                     let asset3 = path[pos + 2].asset_id;
                     let dex_pool_id = get_pool_id(asset2, asset3, dex);
 
-                    let pool = dex.pools().get(&dex_pool_id);
+                    let pool = dex.borrow_mut_pools().get(dex_pool_id);
                     let pool_to_address = pool.get_pool_address();
                     assets_functions::do_transfer(asset2, pool_from_address, pool_to_address, amount_out, assets);
                 } else {
@@ -196,7 +196,7 @@ module obelisk::dex_functions {
 
         let dex_pool_id = get_pool_id(asset1, asset2, dex);
 
-        let pool = dex.pools().get(&dex_pool_id);
+        let pool = dex.borrow_mut_pools().get(dex_pool_id);
         let pool_to_address = pool.get_pool_address();
         assets_functions::do_mint(asset1, pool_to_address, amount_in, assets);
         (return_asset_id, return_balance)
