@@ -22,8 +22,9 @@ module obelisk::wrapper_system {
         let wrapper_coin = wrapper_coin::new<T>();
         assert!(wrapper.asset_ids().contains(wrapper_coin), 0);
         let asset_id = *wrapper.asset_ids().borrow<WrapperCoin<T>, u32>(wrapper_coin);
+        let amount = coin.value();
         let pool_balance = wrapper.pools().borrow_mut<u32, Balance<T>>(asset_id);
-        let amount = pool_balance.join(coin.into_balance());
+        pool_balance.join(coin.into_balance());
 
         assets_functions::do_mint(asset_id, beneficiary, amount, assets);
     }
