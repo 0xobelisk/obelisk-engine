@@ -157,7 +157,7 @@ module obelisk::dex_functions {
         (balance_path, balance_path[0].balance)
     }
 
-    public(package) fun credit_swap(path: vector<BalancePathElement>, dex: &mut Dex, assets: &mut Assets): (u32, u64) {
+    public(package) fun credit_swap(path: vector<BalancePathElement>, dex: &Dex, assets: &mut Assets): (u32, u64) {
         let len = path.length();
         let mut pos = 0;
         let mut return_balance = 0;
@@ -169,14 +169,14 @@ module obelisk::dex_functions {
                 let asset2 = path[pos + 1].asset_id;
                 let amount_out = path[pos + 1].balance;
                 let dex_pool_id = get_pool_id(asset1, asset2, dex);
-                let pool = dex.borrow_mut_pools().get(dex_pool_id);
+                let pool = dex.borrow_pools().get(dex_pool_id);
                 let pool_from_address = pool.get_pool_address();
 
                 if (pos + 2 < len) {
                     let asset3 = path[pos + 2].asset_id;
                     let dex_pool_id = get_pool_id(asset2, asset3, dex);
 
-                    let pool = dex.borrow_mut_pools().get(dex_pool_id);
+                    let pool = dex.borrow_pools().get(dex_pool_id);
                     let pool_to_address = pool.get_pool_address();
                     assets_functions::do_transfer(asset2, pool_from_address, pool_to_address, amount_out, assets);
                 } else {
@@ -196,7 +196,7 @@ module obelisk::dex_functions {
 
         let dex_pool_id = get_pool_id(asset1, asset2, dex);
 
-        let pool = dex.borrow_mut_pools().get(dex_pool_id);
+        let pool = dex.borrow_pools().get(dex_pool_id);
         let pool_to_address = pool.get_pool_address();
         assets_functions::do_mint(asset1, pool_to_address, amount_in, assets);
         (return_asset_id, return_balance)
@@ -204,7 +204,7 @@ module obelisk::dex_functions {
 
     // Swap assets along the `path`, withdrawing from `sender` and depositing in `send_to`.
     // Note: It's assumed that the provided `path` is valid.
-    public(package) fun swap(sender: address, path: vector<BalancePathElement>, send_to: address, dex: &mut Dex, assets: &mut Assets) {
+    public(package) fun swap(sender: address, path: vector<BalancePathElement>, send_to: address, dex: &Dex, assets: &mut Assets) {
         let asset_in = path[0].asset_id;
         let amount_in = path[0].balance;
         // Withdraw the first asset from the sender
@@ -215,7 +215,7 @@ module obelisk::dex_functions {
     }
 
     public(package) fun do_swap_exact_tokens_for_tokens(
-        dex: &mut Dex,
+        dex: &Dex,
         assets: &mut Assets,
         sender: address,
         path: vector<u32>,
@@ -247,7 +247,7 @@ module obelisk::dex_functions {
     /// only inside a transactional storage context and an Err result must imply a storage
     /// rollback.
     public(package) fun do_swap_tokens_for_exact_tokens(
-        dex: &mut Dex,
+        dex: &Dex,
         assets: &mut Assets,
         sender: address,
         path: vector<u32>,

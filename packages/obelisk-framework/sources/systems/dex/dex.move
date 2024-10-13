@@ -48,12 +48,12 @@ module obelisk::dex_system {
         dex.borrow_mut_next_pool_id().set(pool_id + 1);
     }
 
-    public entry fun add_liquidity(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, amount1_desired: u64, amount2_desired: u64, amount1_min: u64, amount2_min: u64, ctx: &mut TxContext) {
+    public entry fun add_liquidity(dex: &Dex, assets: &mut Assets, asset1: u32, asset2: u32, amount1_desired: u64, amount2_desired: u64, amount1_min: u64, amount2_min: u64, ctx: &mut TxContext) {
         let sender = ctx.sender();
 
         let pool_id = get_pool_id(asset1, asset2, dex);
-        assert!(dex.borrow_mut_pools().contains_key(pool_id), 0);
-        let pool = dex.borrow_mut_pools().get(pool_id);
+        assert!(dex.borrow_pools().contains_key(pool_id), 0);
+        let pool = dex.borrow_pools().get(pool_id);
 
         let reserve1 = assets_functions::balance_of(assets, asset1, pool.get_pool_address());
         let reserve2 = assets_functions::balance_of(assets, asset2, pool.get_pool_address());
@@ -93,12 +93,12 @@ module obelisk::dex_system {
         assets_functions::do_mint(pool.get_lp_asset_id(), sender, lp_token_amount, assets);
     }
 
-    public entry fun remove_liquidity(dex: &mut Dex, assets: &mut Assets, asset1: u32, asset2: u32, lp_token_burn: u64, amount1_min_receive: u64, amount2_min_receive: u64, ctx: &mut TxContext) {
+    public entry fun remove_liquidity(dex: &Dex, assets: &mut Assets, asset1: u32, asset2: u32, lp_token_burn: u64, amount1_min_receive: u64, amount2_min_receive: u64, ctx: &mut TxContext) {
         let sender = ctx.sender();
 
         let pool_id = get_pool_id(asset1, asset2, dex);
-        assert!(dex.borrow_mut_pools().contains_key(pool_id), 0);
-        let pool = dex.borrow_mut_pools().get(pool_id);
+        assert!(dex.borrow_pools().contains_key(pool_id), 0);
+        let pool = dex.borrow_pools().get(pool_id);
 
         let reserve1 = assets_functions::balance_of(assets, asset1, pool.get_pool_address());
         let reserve2 = assets_functions::balance_of(assets, asset2, pool.get_pool_address());
@@ -124,7 +124,7 @@ module obelisk::dex_system {
     /// `amount_out_min` param allows you to specify the min amount of the `asset2`
     /// you're happy to receive.
     ///
-    public entry fun swap_exact_tokens_for_tokens(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_in: u64, amount_out_min: u64, to: address, ctx: &mut TxContext) {
+    public entry fun swap_exact_tokens_for_tokens(dex: &Dex, assets: &mut Assets, path: vector<u32>, amount_in: u64, amount_out_min: u64, to: address, ctx: &mut TxContext) {
         let sender = ctx.sender();
         dex_functions::do_swap_exact_tokens_for_tokens(dex, assets, sender, path, amount_in, amount_out_min, to);
     }
@@ -133,7 +133,7 @@ module obelisk::dex_system {
     /// `amount_in_max` param allows to specify the max amount of the `asset1`
     /// you're happy to provide.
     ///
-    public entry fun swap_tokens_for_exact_tokens(dex: &mut Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64, amount_in_max: u64, to: address, ctx: &mut TxContext) {
+    public entry fun swap_tokens_for_exact_tokens(dex: &Dex, assets: &mut Assets, path: vector<u32>, amount_out: u64, amount_in_max: u64, to: address, ctx: &mut TxContext) {
         let sender = ctx.sender();
         dex_functions::do_swap_tokens_for_exact_tokens(dex, assets, sender, path, amount_out, amount_in_max, to);
     }

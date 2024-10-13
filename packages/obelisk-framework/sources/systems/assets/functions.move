@@ -81,16 +81,19 @@ module obelisk::assets_functions {
         // Ensure that the asset can be increased
         can_increase(asset_id, beneficiary, amount, assets);
 
-        if (assets.borrow_mut_account().contains_key(asset_id, beneficiary)) {
+        if (assets.borrow_account().contains_key(asset_id, beneficiary)) {
             // Increase the balance
-            let account = assets.borrow_mut_account().borrow_mut(asset_id, beneficiary);
-            let balance = account.get_balance();
-            account.set_balance(balance + amount);
+            assets.borrow_mut_account().mutate!(asset_id, beneficiary, |account| {
+                let balance = account.get_balance();
+                account.set_balance(balance + amount);
+            });
         } else {
             // If the account does not exist, increment the number of accounts
-            let assets_details = assets.borrow_mut_details().borrow_mut(asset_id);
-            let accounts = assets_details.get_accounts() + 1;
-            assets_details.set_accounts(accounts);
+            assets.borrow_mut_details().mutate!(asset_id, |assets_details| {
+                let accounts = assets_details.get_accounts() + 1;
+                assets_details.set_accounts(accounts);
+            });
+
             let account = assets_account::new(amount, assets_account::get_account_status_liquid());
             assets.borrow_mut_account().set(asset_id, beneficiary, account);
         };
@@ -100,34 +103,38 @@ module obelisk::assets_functions {
     public(package) fun decrease_balance(asset_id: u32, who: address, amount: u64, assets: &mut Assets) {
         can_decrease(asset_id, who, amount, assets);
 
-        let account = assets.borrow_mut_account().borrow_mut(asset_id, who);
+        assets.borrow_mut_account().mutate!(asset_id, who, |account| {
+            let balance = account.get_balance();
 
-        // Decrease the balance
-        if (account.get_balance() == amount) {
-            let details = assets.borrow_mut_details().borrow_mut(asset_id);
-            let accounts = details.get_accounts() - 1;
-            details.set_accounts(accounts);
-            assets.borrow_mut_account().remove(asset_id, who);
-        } else {
-            let balance = account.get_balance() - amount;
-            account.set_balance(balance);
-        };
+            // Decrease the balance
+            if (balance == amount) {
+                assets.borrow_mut_details().mutate!(asset_id, |assets_details| {
+                    let accounts = assets_details.get_accounts() - 1;
+                    assets_details.set_accounts(accounts);
+                });
+                assets.borrow_mut_account().remove(asset_id, who);
+            } else {
+                account.set_balance(balance - amount);
+            };
+        });
     }
 
     public(package) fun do_mint(asset_id: u32, to: address, amount: u64, assets: &mut Assets) {
         increase_balance(asset_id, to, amount, assets);
 
-        let assets_details = assets.borrow_mut_details().borrow_mut(asset_id);
-        let supply = assets_details.get_supply() + amount;
-        assets_details.set_supply(supply);
+        assets.borrow_mut_details().mutate!(asset_id, |assets_details| {
+            let supply = assets_details.get_supply() + amount;
+            assets_details.set_supply(supply);
+        });
     }
 
     public(package) fun do_burn(asset_id: u32, who: address, amount: u64, assets: &mut Assets) {
         decrease_balance(asset_id, who, amount, assets);
 
-        let assets_details = assets.borrow_mut_details().borrow_mut(asset_id);
-        let supply = assets_details.get_supply() - amount;
-        assets_details.set_supply(supply);
+        assets.borrow_mut_details().mutate!(asset_id, |assets_details| {
+            let supply = assets_details.get_supply() - amount;
+            assets_details.set_supply(supply);
+        });
     }
 
     public(package) fun do_transfer(asset_id: u32, from: address, to: address, amount: u64, assets: &mut Assets): u64 {

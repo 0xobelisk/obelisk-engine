@@ -73,7 +73,7 @@ module obelisk::dex_tests {
         dex_system::create_pool(&mut dex, &mut assets, 0, 1, ctx);
         dex_system::create_pool(&mut dex, &mut assets, 1, 2, ctx);
 
-        dex_system::add_liquidity(&mut dex, &mut assets, 0, 1, 100000, 100000, 100000, 100000, ctx);
+        dex_system::add_liquidity(&dex, &mut assets, 0, 1, 100000, 100000, 100000, 100000, ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 900000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 900000, 0);
         assert!(assets_system::balance_of(&assets, 3, ctx.sender()) == 100000, 0);
@@ -81,7 +81,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&assets, 0, @0x0) == 100000, 0);
         assert!(assets_system::balance_of(&assets, 1, @0x0) == 100000, 0);
 
-        dex_system::add_liquidity(&mut dex, &mut assets, 0, 1, 100000, 100000, 100000, 100000, ctx);
+        dex_system::add_liquidity(&dex, &mut assets, 0, 1, 100000, 100000, 100000, 100000, ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 800000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 800000, 0);
         assert!(assets_system::balance_of(&assets, 3, ctx.sender()) == 200000, 0);
@@ -89,7 +89,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&assets, 0, @0x0) == 200000, 0);
         assert!(assets_system::balance_of(&assets, 1, @0x0) == 200000, 0);
 
-        dex_system::add_liquidity(&mut dex, &mut assets, 0, 1, 200000, 100000, 100000, 100000, ctx);
+        dex_system::add_liquidity(&dex, &mut assets, 0, 1, 200000, 100000, 100000, 100000, ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 700000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 700000, 0);
         assert!(assets_system::balance_of(&assets, 3, ctx.sender()) == 300000, 0);
@@ -97,7 +97,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&assets, 0, @0x0) == 300000, 0);
         assert!(assets_system::balance_of(&assets, 1, @0x0) == 300000, 0);
 
-        dex_system::add_liquidity(&mut dex, &mut assets, 0, 1, 100000, 200000, 100000, 100000, ctx);
+        dex_system::add_liquidity(&dex, &mut assets, 0, 1, 100000, 200000, 100000, 100000, ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 600000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 600000, 0);
         assert!(assets_system::balance_of(&assets, 3, ctx.sender()) == 400000, 0);
@@ -105,7 +105,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&assets, 0, @0x0) == 400000, 0);
         assert!(assets_system::balance_of(&assets, 1, @0x0) == 400000, 0);
 
-        dex_system::remove_liquidity(&mut dex, &mut assets, 0, 1, 100000, 100000, 100000, ctx);
+        dex_system::remove_liquidity(&dex, &mut assets, 0, 1, 100000, 100000, 100000, ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 700000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 700000, 0);
         assert!(assets_system::balance_of(&assets, 3, ctx.sender()) == 300000, 0);
@@ -113,7 +113,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&assets, 0, @0x0) == 300000, 0);
         assert!(assets_system::balance_of(&assets, 1, @0x0) == 300000, 0);
 
-        dex_system::remove_liquidity(&mut dex, &mut assets, 1, 0, 100000, 100000, 100000, ctx);
+        dex_system::remove_liquidity(&dex, &mut assets, 1, 0, 100000, 100000, 100000, ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 800000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 800000, 0);
         assert!(assets_system::balance_of(&assets, 3, ctx.sender()) == 200000, 0);
@@ -135,12 +135,12 @@ module obelisk::dex_tests {
         dex_system::create_pool(&mut dex, &mut assets, 0, 1, ctx);
         dex_system::create_pool(&mut dex, &mut assets, 1, 2, ctx);
 
-        dex_system::add_liquidity(&mut dex, &mut assets, 0, 1, 100000, 100000, 100000, 100000, ctx);
-        dex_system::add_liquidity(&mut dex, &mut assets, 1, 2, 100000, 100000, 100000, 100000, ctx);
+        dex_system::add_liquidity(&dex, &mut assets, 0, 1, 100000, 100000, 100000, 100000, ctx);
+        dex_system::add_liquidity(&dex, &mut assets, 1, 2, 100000, 100000, 100000, 100000, ctx);
 
 
         assert!(dex_system::get_amount_out(&dex, &assets, vector[0, 1], 10000) == 9066, 0);
-        dex_system::swap_exact_tokens_for_tokens(&mut dex, &mut assets, vector[0, 1], 10000, 0, ctx.sender(), ctx);
+        dex_system::swap_exact_tokens_for_tokens(&dex, &mut assets, vector[0, 1], 10000, 0, ctx.sender(), ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 900000 - 10000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 800000 + 9066, 0);
 
@@ -148,7 +148,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&assets, 1, @0x0) == 100000 - 9066, 0);
 
         assert!(dex_system::get_amount_out(&dex, &assets, vector[0, 1, 2], 10000) == 7005, 0);
-        dex_system::swap_exact_tokens_for_tokens(&mut dex, &mut assets, vector[0, 1, 2], 10000, 0, ctx.sender(), ctx);
+        dex_system::swap_exact_tokens_for_tokens(&dex, &mut assets, vector[0, 1, 2], 10000, 0, ctx.sender(), ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 900000 - 10000 - 10000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 800000 + 9066, 0);
 
@@ -164,7 +164,7 @@ module obelisk::dex_tests {
 
 
         assert!(dex_system::get_amount_in(&dex, &assets, vector[1, 0], 10000) == 7603, 0);
-        dex_system::swap_tokens_for_exact_tokens(&mut dex, &mut assets, vector[1, 0], 10000, 20000, ctx.sender(), ctx);
+        dex_system::swap_tokens_for_exact_tokens(&dex, &mut assets, vector[1, 0], 10000, 20000, ctx.sender(), ctx);
         assert!(assets_system::balance_of(&assets, 0, ctx.sender()) == 900000 - 10000 - 10000 + 10000, 0);
         assert!(assets_system::balance_of(&assets, 1, ctx.sender()) == 800000 + 9066 - 7603, 0);
 
@@ -172,7 +172,7 @@ module obelisk::dex_tests {
         assert!(assets_system::balance_of(&assets, 1, @0x0) == 100000 - 9066 - 7556 + 7603, 0);
 
         assert!(dex_system::get_amount_in(&dex, &assets, vector[1, 0, 1, 2], 10000) == 18322, 0);
-        dex_system::swap_tokens_for_exact_tokens(&mut dex, &mut assets, vector[1, 0, 1, 2], 10000, 20000, ctx.sender(), ctx);
+        dex_system::swap_tokens_for_exact_tokens(&dex, &mut assets, vector[1, 0, 1, 2], 10000, 20000, ctx.sender(), ctx);
 
         test_scenario::return_shared<Assets>(assets);
         test_scenario::return_shared<Dex>(dex);
