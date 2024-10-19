@@ -1,5 +1,5 @@
 module obelisk::dex_system {
-    use std::string;
+    use std::ascii;
     use obelisk::dex_functions::{sort_assets, get_pool_id};
     use sui::address;
     use obelisk::dex_pools;
@@ -37,10 +37,10 @@ module obelisk::dex_system {
             @obelisk,
             lp_asset_symbol,
             lp_asset_symbol,
-            string::utf8(LP_ASSET_DESCRIPTION),
+            ascii::string(LP_ASSET_DESCRIPTION),
             9,
-            string::utf8(b""),
-            string::utf8(b""),
+            ascii::string(b""),
+            ascii::string(b""),
         );
 
         dex.borrow_mut_pool_id().set(asset1, asset2, pool_id);

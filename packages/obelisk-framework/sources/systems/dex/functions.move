@@ -1,8 +1,8 @@
 module obelisk::dex_functions {
     use std::debug;
     use std::debug::print;
-    use std::string;
-    use std::string::String;
+    use std::ascii;
+    use std::ascii::String;
     use obelisk::assets_functions;
     use obelisk::assets_schema::Assets;
     use obelisk::dex_schema::Dex;
@@ -32,9 +32,9 @@ module obelisk::dex_functions {
     public(package) fun pool_asset_symbol(asset1_metadata: AssetsMetadata, asset2_metadata: AssetsMetadata): String {
         let asset1_symbol = asset1_metadata.get_symbol();
         let asset2_symbol = asset2_metadata.get_symbol();
-        let mut lp_asset_symbol = string::utf8(b"");
+        let mut lp_asset_symbol = ascii::string(b"");
         lp_asset_symbol.append(asset1_symbol);
-        lp_asset_symbol.append_utf8(b"-");
+        lp_asset_symbol.append(ascii::string(b"-"));
         lp_asset_symbol.append(asset2_symbol);
         lp_asset_symbol
     }

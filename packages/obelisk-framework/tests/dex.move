@@ -1,7 +1,7 @@
 #[test_only]
 module obelisk::dex_tests {
     use std::debug;
-    use std::string;
+    use std::ascii;
     use obelisk::dex_pools;
     use obelisk::dex_system;
     use obelisk::dex_schema::Dex;
@@ -23,11 +23,11 @@ module obelisk::dex_tests {
         test_scenario::next_tx(&mut scenario,@0xA);
 
         let mut assets = test_scenario::take_shared<Assets>(&scenario);
-        let name = string::utf8(b"Poils Coin");
-        let symbol = string::utf8(b"POL");
-        let description = string::utf8(b"");
-        let url = string::utf8(b"");
-        let info = string::utf8(b"");
+        let name = ascii::string(b"Poils Coin");
+        let symbol = ascii::string(b"POL");
+        let description = ascii::string(b"");
+        let url = ascii::string(b"");
+        let info = ascii::string(b"");
         let decimals = 9;
         assets_tests::create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);
         assets_tests::create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);

@@ -1,5 +1,5 @@
 module obelisk::assets_functions {
-    use std::string::String;
+    use std::ascii::String;
     use obelisk::assets_metadata;
     use obelisk::assets_schema::Assets;
     use obelisk::assets_account;

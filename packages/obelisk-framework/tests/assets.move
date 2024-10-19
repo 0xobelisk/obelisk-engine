@@ -1,8 +1,8 @@
 #[test_only]
 module obelisk::assets_tests {
     use std::debug;
-    use std::string;
-    use std::string::String;
+    use std::ascii;
+    use std::ascii::String;
     use obelisk::assets_system;
     use obelisk::assets_metadata;
     use obelisk::assets_schema::Assets;
@@ -42,11 +42,11 @@ module obelisk::assets_tests {
 
         let mut assets = test_scenario::take_shared<Assets>(&scenario);
 
-        let name = string::utf8(b"Obelisk Coin");
-        let symbol = string::utf8(b"OBJ");
-        let description = string::utf8(b"Obelisk Coin");
-        let url = string::utf8(b"");
-        let info = string::utf8(b"Obelisk Coin");
+        let name = ascii::string(b"Obelisk Coin");
+        let symbol = ascii::string(b"OBJ");
+        let description = ascii::string(b"Obelisk Coin");
+        let url = ascii::string(b"");
+        let info = ascii::string(b"Obelisk Coin");
         let decimals = 9;
         create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);
         create_assets(&mut assets, name, symbol, description, decimals, url, info, &mut scenario);

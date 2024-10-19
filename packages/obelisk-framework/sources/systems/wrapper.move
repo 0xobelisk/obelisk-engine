@@ -1,5 +1,5 @@
 module obelisk::wrapper_system {
-    use std::string::String;
+    use std::ascii::String;
     use obelisk::assets_functions;
     use sui::balance;
     use sui::balance::Balance;

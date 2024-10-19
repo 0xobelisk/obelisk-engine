@@ -1,7 +1,7 @@
 #[test_only]
 module obelisk::wrapper_tests {
-    use std::string;
-    use std::string::String;
+    use std::ascii;
+    use std::ascii::String;
     use obelisk::wrapper_schema;
     use obelisk::assets_system;
     use obelisk::assets_schema::Assets;
@@ -38,11 +38,11 @@ module obelisk::wrapper_tests {
         let mut wrapper = test_scenario::take_shared<Wrapper>(&scenario);
         let mut assets = test_scenario::take_shared<Assets>(&scenario);
 
-        let name = string::utf8(b"USDT");
-        let symbol = string::utf8(b"USDT");
-        let description = string::utf8(b"USDT");
-        let url = string::utf8(b"");
-        let info = string::utf8(b"USDT");
+        let name = ascii::string(b"USDT");
+        let symbol = ascii::string(b"USDT");
+        let description = ascii::string(b"USDT");
+        let url = ascii::string(b"");
+        let info = ascii::string(b"USDT");
         let decimals = 6;
         wrapper_register<USDT>(&mut wrapper, &mut assets, name, symbol, description, decimals, url, info, &mut scenario);
 

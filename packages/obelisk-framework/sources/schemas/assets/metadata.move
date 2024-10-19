@@ -1,5 +1,5 @@
 module obelisk::assets_metadata {
-    use std::string::String;
+    use std::ascii::String;
 
     public struct AssetsMetadata has drop, copy, store {
         // The user friendly name of this asset. Limited in length by `StringLimit`.

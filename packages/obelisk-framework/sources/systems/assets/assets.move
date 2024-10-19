@@ -1,6 +1,6 @@
 module obelisk::assets_system {
-    use std::string;
-    use std::string::String;
+    use std::ascii;
+    use std::ascii::String;
     use obelisk::assets_functions;
     use obelisk::assets_account;
     use obelisk::assets_detail;
@@ -155,7 +155,7 @@ module obelisk::assets_system {
     public fun metadata_of(assets: &Assets, asset_id: u32): (String, String, String, u8, String) {
         let maybe_metadata = assets.borrow_metadata().try_get(asset_id);
         if (maybe_metadata.is_none()) {
-            return (string::utf8(b""), string::utf8(b""), string::utf8(b""), 0, string::utf8(b""))
+            return (ascii::string(b""), ascii::string(b""), ascii::string(b""), 0, ascii::string(b""))
         };
         let metadata = maybe_metadata.borrow();
         let (name, symbol, description, decimals, url, _) = metadata.get();
