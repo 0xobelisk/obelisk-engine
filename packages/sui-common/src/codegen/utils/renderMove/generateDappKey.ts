@@ -6,19 +6,19 @@ import {
   capitalizeFirstLetter,
 } from "./common";
 
-export function generateAppKey(config: ObeliskConfig, srcPrefix: string) {
-  let code = `module ${config.name}::app_key {
+export function generateDappKey(config: ObeliskConfig, srcPrefix: string) {
+  let code = `module ${config.name}::dapp_key {
   /// Authorization token for the app.
-    public struct AppKey has drop {}
+    public struct DappKey has drop {}
 
-    public(package) fun new(): AppKey {
-        AppKey {  }
+    public(package) fun new(): DappKey {
+        DappKey {  }
     }
 }
 `;
   formatAndWriteMove(
     code,
-    `${srcPrefix}/contracts/${config.name}/sources/codegen/app_key.move`,
+    `${srcPrefix}/contracts/${config.name}/sources/codegen/dapp_key.move`,
     "formatAndWriteMove"
   );
 }

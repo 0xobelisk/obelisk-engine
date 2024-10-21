@@ -1,6 +1,6 @@
 export type BaseType =
-  | "string"
-  | "vector<string>"
+  | "String"
+  | "vector<String>"
   | "address"
   | "bool"
   | "u8"
@@ -12,6 +12,19 @@ export type BaseType =
   | "vector<vector<u8>>"
   | "vector<u64>"
   | "vector<u128>";
+
+export type StorageType =
+    | StorageValueType
+    | StorageMapType;
+
+export type StorageValueType =
+    | "Value"
+
+export type StorageMapType =
+    | "Map"
+    | "DoubleMap"
+    | "Bag"
+    | "Table";
 
 type Address = string;
 type Bool = boolean;
@@ -34,19 +47,25 @@ export type BaseValueType =
   | Vector<U64>
   | Vector<U128>;
 
-export interface ValueType {
+export interface SchemaValueType {
+  storageType: StorageValueType;
   valueType: BaseType | Record<string, BaseType>;
-  ephemeral?: boolean;
-  defaultValue?: BaseValueType | Record<string, BaseValueType>;
+  defaultValue: BaseValueType | Record<string, BaseValueType>;
 }
 
-export type SchemaMapType = BaseType | ValueType;
+export interface SchemaMapType {
+  storageType: StorageMapType;
+  keyType: BaseType | Record<string, BaseType>;
+  valueType: BaseType | Record<string, BaseType>;
+}
+
+export type SchemaType = BaseType | SchemaValueType | SchemaMapType;
 
 export type ObeliskConfig = {
   name: string;
   description: string;
   systems: string[];
-  schemas: Record<string, SchemaMapType>;
+  schemas: Record<string, Record<string, SchemaType>>;
 };
 
 export type MoveType =
@@ -65,18 +84,3 @@ export type MoveType =
   | "vector<vector<u8>>"
   | "vector<u64>"
   | "vector<u128>";
-
-export interface RenderSchemaOptions {
-  projectName: string;
-  systems: string[];
-  schemaName: string;
-  structName: string;
-  ephemeral: boolean;
-  singleton: boolean;
-  valueType: MoveType | Record<string, MoveType>; // move type
-  realType: BaseType | Record<string, BaseType>; // ts type
-  // structAttrs: string[];
-  // structTypes: string[];
-  defaultValue: BaseValueType | Record<string, BaseValueType> | undefined;
-  needImportString: boolean;
-}

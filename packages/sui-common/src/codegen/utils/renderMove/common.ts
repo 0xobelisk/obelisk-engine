@@ -1,4 +1,4 @@
-import { BaseType, SchemaMapType, BaseValueType, MoveType } from "../../types";
+import { BaseType, SchemaType, BaseValueType, MoveType } from "../../types";
 import fs from "fs";
 
 export function deleteFolderRecursive(path: string) {
@@ -37,7 +37,7 @@ export function convertToCamelCase(str: string): string {
  */
 export function getUseSchema(
   name: string,
-  values: Record<string, SchemaMapType>
+  values: Record<string, SchemaType>
 ): string[] {
   let schema: string[] = [];
   Object.entries(values).forEach(([key, value]) => {
@@ -54,7 +54,7 @@ export function getUseSchema(
  * @return [ name_schema::register(&mut _obelisk_world, ctx) ,info_schema::register(&mut _obelisk_world, ctx) ]
  */
 export function getRegisterSchema(
-  values: Record<string, SchemaMapType>
+  values: Record<string, SchemaType>
 ): string[] {
   let registers: string[] = [];
   Object.entries(values).forEach(([key, value]) => {
@@ -230,7 +230,7 @@ export function getStructInitValue(
  * @param values
  * @return ( bool , u64 , u64)
  */
-// export function getStructTypes(values: SchemaMapType): string {
+// export function getStructTypes(values: SchemaType): string {
 export function getStructTypes(
   values: MoveType | Record<string, MoveType>
 ): string {
@@ -245,7 +245,7 @@ export function getStructTypes(
  * @return Attributes and types of the struct. [ name: string, age: u64 ]
  */
 export function getStructAttrsWithType(
-  values: Record<string, string> | string,
+  values: BaseType | Record<string, BaseType>,
   prefix: string
 ): string[] {
   return typeof values === "string"
@@ -263,9 +263,9 @@ export function getStructAttrsQuery(
   prefixArgs: string
 ): string[] {
   return typeof values === "string"
-    ? [`${prefixArgs}_obelisk_data.value`]
+    ? [`${prefixArgs}self.value`]
     : Object.entries(values).map(
-        ([key, _]) => `${prefixArgs}_obelisk_data.${key}`
+        ([key, _]) => `${prefixArgs}self.${key}`
       );
 }
 
@@ -302,26 +302,6 @@ export function renderRegisterFunc(structName: string): string {
   return `\tpublic fun register(_obelisk_world: &mut World, admin_cap: &AdminCap, ctx: &mut TxContext) {
 \t\tschema::add<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID, table::new<address, ${structName}>(ctx), admin_cap);
 \t}`;
-}
-
-export function renderSetFunc(
-  structName: string,
-  values: Record<string, string> | string
-): string {
-  return `\tpublic(package) fun set(_obelisk_world: &mut World, _obelisk_entity_key: address, ${getStructAttrsWithType(
-    values,
-    " "
-  )}) {
-\t\tlet _obelisk_schema = schema::get_mut<Table<address,${structName}>, AppKey>(app_key::new(), _obelisk_world, SCHEMA_ID);
-\t\tlet _obelisk_data = new(${getStructAttrs(values, " ")});
-\t\tif(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key)) {
-\t\t\t*table::borrow_mut<address, ${structName}>(_obelisk_schema, _obelisk_entity_key) = _obelisk_data;
-\t\t} else {
-\t\t\ttable::add(_obelisk_schema, _obelisk_entity_key, _obelisk_data);
-\t\t};
-\t\tevents::emit_set(SCHEMA_ID, SCHEMA_TYPE, some(_obelisk_entity_key), _obelisk_data)
-\t}
-`;
 }
 
 export function renderRemoveFunc(structName: string): string {
@@ -371,29 +351,6 @@ ${getStructAttrsQuery(struct, "\t\t\t").join(",\n")}
 \t\t)
 \t}
 `;
-}
-
-export function renderGetAttrsFunc(
-  structName: string,
-  struct: MoveType | Record<string, MoveType>
-): string {
-  return typeof struct === "string"
-    ? ""
-    : "\n" +
-        Object.entries(struct)
-          .map(
-            ([
-              key,
-              type,
-            ]) => `\tpublic fun get_${key}(_obelisk_world: &World, _obelisk_entity_key: address): ${type} {
-\t\tlet _obelisk_schema = schema::get<Table<address,${structName}>>(_obelisk_world, SCHEMA_ID);
-\t\tassert!(table::contains<address, ${structName}>(_obelisk_schema, _obelisk_entity_key), EEntityDoesNotExist);
-\t\tlet _obelisk_data = table::borrow<address, ${structName}>(_obelisk_schema, _obelisk_entity_key);
-\t\t_obelisk_data.${key}
-\t}
-`
-          )
-          .join("\n");
 }
 
 export function renderContainFunc(structName: string): string {
