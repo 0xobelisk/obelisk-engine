@@ -20,7 +20,7 @@ const commandModule: CommandModule<Options, Options> = {
   async handler({ configPath }) {
     try {
       const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
-      worldgen(obeliskConfig);
+      await worldgen(obeliskConfig);
       process.exit(0);
     } catch (error: any) {
       console.log(chalk.red("Schemagen failed!"));

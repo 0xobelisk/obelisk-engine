@@ -22,9 +22,11 @@ export type StorageValueType =
 
 export type StorageMapType =
     | "Map"
-    | "DoubleMap"
     | "Bag"
     | "Table";
+
+export type StorageDoubleMapType =
+    | "DoubleMap";
 
 type Address = string;
 type Bool = boolean;
@@ -47,25 +49,21 @@ export type BaseValueType =
   | Vector<U64>
   | Vector<U128>;
 
-export interface SchemaValueType {
-  storageType: StorageValueType;
-  valueType: BaseType | Record<string, BaseType>;
-  defaultValue: BaseValueType | Record<string, BaseValueType>;
+export type SchemaData =  {
+  name: string;
+  fields: Record<string, BaseType>;
 }
 
-export interface SchemaMapType {
-  storageType: StorageMapType;
-  keyType: BaseType | Record<string, BaseType>;
-  valueType: BaseType | Record<string, BaseType>;
+export type SchemaType =  {
+  data?: SchemaData[];
+  structure: Record<string, string>;
 }
-
-export type SchemaType = BaseType | SchemaValueType | SchemaMapType;
 
 export type ObeliskConfig = {
   name: string;
   description: string;
   systems: string[];
-  schemas: Record<string, Record<string, SchemaType>>;
+  schemas: Record<string, SchemaType>;
 };
 
 export type MoveType =
