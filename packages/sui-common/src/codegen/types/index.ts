@@ -11,22 +11,17 @@ export type BaseType =
   | "vector<u8>"
   | "vector<vector<u8>>"
   | "vector<u64>"
-  | "vector<u128>";
+  | "vector<u128>"
+  | string;
 
-export type StorageType =
-    | StorageValueType
-    | StorageMapType;
-
-export type StorageValueType =
-    | "Value"
+export type StorageDataType =
+    | "Struct"
+    | "Enum";
 
 export type StorageMapType =
     | "Map"
     | "Bag"
     | "Table";
-
-export type StorageDoubleMapType =
-    | "DoubleMap";
 
 type Address = string;
 type Bool = boolean;
@@ -49,9 +44,11 @@ export type BaseValueType =
   | Vector<U64>
   | Vector<U128>;
 
+
 export type SchemaData =  {
   name: string;
-  fields: Record<string, BaseType>;
+  type?: StorageDataType;
+  fields: Record<string, BaseType> | string[];
 }
 
 export type SchemaType =  {

@@ -18,7 +18,6 @@ export async function formatMove(
       tabWidth: 2,
       useTabs: false,
       bracketSpacing: true,
-
       ...config,
     });
   } catch (error) {

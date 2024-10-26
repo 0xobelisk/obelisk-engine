@@ -11,31 +11,51 @@ export function generateDeployHook(config: ObeliskConfig, srcPrefix: string) {
         let code = `module ${config.name}::deploy_hook {
     use obelisk::dapps_schema::Dapps;
     use obelisk::dapps_system;
-    use examples::dapp_key::DappKey;
+    use ${config.name}::dapp_key::DappKey;
     use std::ascii;
     use sui::clock::Clock;
+    #[test_only]
+      use obelisk::dapps_schema;
+      #[test_only]
+      use sui::clock;
+      #[test_only]
+      use sui::test_scenario;
+      #[test_only]
+      use sui::test_scenario::Scenario;
 
     public entry fun run(dapps: &mut Dapps, clock: &Clock, ctx: &mut TxContext) {
         // Register the dapp to obelisk.
         dapps_system::register<DappKey>(
             dapps,
-            ascii::string(b"example"),
-            ascii::string(b"example"),
+            ascii::string(b"${config.name}"),
+            ascii::string(b"${config.description}"),
             clock,
             ctx
         );
-
+        ${Object.keys(config.schemas).map(schemaName => {
+            return `${config.name}::${schemaName}_schema::register(dapps, ctx);`
+        }).join("\n")}
+        
         // Logic that needs to be automated once the contract is deployed
 
     }
 
     #[test_only]
-    public fun deploy_hook_for_testing(dapp: &mut Dapps, clock: &Clock, ctx: &mut TxContext){
-        ${Object.keys(config.schemas).map(schemaName => {
-            return `examples::${schemaName}_schema::init_${schemaName}_for_testing(ctx);`
-        }).join("\n")}
-        run(dapp, clock, ctx)
-    }
+    public fun deploy_hook_for_testing(): (Scenario, Dapps) {
+      let mut scenario = test_scenario::begin(@0xA);
+      {
+          let ctx = test_scenario::ctx(&mut scenario);
+          dapps_schema::init_dapps_for_testing(ctx);
+          test_scenario::next_tx(&mut scenario,@0xA);
+      };
+      let mut dapps = test_scenario::take_shared<Dapps>(&scenario);
+      let ctx = test_scenario::ctx(&mut scenario);
+      let clock = clock::create_for_testing(ctx);
+      run(&mut dapps, &clock, ctx);
+      clock::destroy_for_testing(clock);
+      test_scenario::next_tx(&mut scenario,@0xA);
+      (scenario, dapps)
+  }
 }
 `;
         formatAndWriteMove(
