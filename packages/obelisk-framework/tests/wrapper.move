@@ -37,6 +37,7 @@ module obelisk::wrapper_tests {
 
         let mut wrapper = test_scenario::take_shared<Wrapper>(&scenario);
         let mut assets = test_scenario::take_shared<Assets>(&scenario);
+        assets.borrow_mut_next_asset_id().set(0);
 
         let name = ascii::string(b"USDT");
         let symbol = ascii::string(b"USDT");

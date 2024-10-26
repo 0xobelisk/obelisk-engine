@@ -53,7 +53,7 @@ module obelisk::assets_schema {
     fun init(ctx: &mut TxContext) {
         let assets = Assets {
             id: object::new(ctx),
-            next_asset_id: storage_value::new(0),
+            next_asset_id: storage_value::new(),
             metadata: storage_map::new(),
             details: storage_map::new(),
             account: storage_double_map::new()

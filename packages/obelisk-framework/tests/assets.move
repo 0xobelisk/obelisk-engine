@@ -41,6 +41,7 @@ module obelisk::assets_tests {
         let mut scenario = init_test();
 
         let mut assets = test_scenario::take_shared<Assets>(&scenario);
+        assets.borrow_mut_next_asset_id().set(0);
 
         let name = ascii::string(b"Obelisk Coin");
         let symbol = ascii::string(b"OBJ");

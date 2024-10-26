@@ -45,6 +45,30 @@ module obelisk::dapp_metadata {
         self.partners = partners;
     }
 
+    public fun set_name(self: &mut DappMetadata, name: String) {
+        self.name = name;
+    }
+
+    public fun set_description(self: &mut DappMetadata, description: String) {
+        self.description = description;
+    }
+
+    public fun set_icon_url(self: &mut DappMetadata, icon_url: String) {
+        self.icon_url = icon_url;
+    }
+
+    public fun set_website_url(self: &mut DappMetadata, website_url: String) {
+        self.website_url = website_url;
+    }
+
+    public fun set_created_at(self: &mut DappMetadata, created_at: u64) {
+        self.created_at = created_at;
+    }
+
+    public fun set_partners(self: &mut DappMetadata, partners: vector<String>) {
+        self.partners = partners;
+    }
+
     public fun get_name(self: DappMetadata): String {
         self.name
     }
@@ -69,23 +93,4 @@ module obelisk::dapp_metadata {
         self.partners
     }
 
-    public fun borrow_mut_name(self: &mut DappMetadata): &mut String {
-        &mut self.name
-    }
-
-    public fun borrow_mut_description(self: &mut DappMetadata): &mut String {
-        &mut self.description
-    }
-
-    public fun borrow_mut_icon_url(self: &mut DappMetadata): &mut String {
-        &mut self.icon_url
-    }
-
-    public fun borrow_mut_website_url(self: &mut DappMetadata): &mut String {
-        &mut self.website_url
-    }
-
-    public fun borrow_mut_partners(self: &mut DappMetadata): &mut vector<String> {
-        &mut self.partners
-    }
 }

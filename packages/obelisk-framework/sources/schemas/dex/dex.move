@@ -42,7 +42,7 @@ module obelisk::dex_schema {
     fun init(ctx: &mut TxContext) {
         let dex = Dex {
             id: object::new(ctx),
-            next_pool_id: storage_value::new(0),
+            next_pool_id: storage_value::new(),
             pool_id: storage_double_map::new(),
             pools: storage_map::new(),
         };

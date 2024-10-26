@@ -23,6 +23,7 @@ module obelisk::dex_tests {
         test_scenario::next_tx(&mut scenario,@0xA);
 
         let mut assets = test_scenario::take_shared<Assets>(&scenario);
+        assets.borrow_mut_next_asset_id().set(0);
         let name = ascii::string(b"Poils Coin");
         let symbol = ascii::string(b"POL");
         let description = ascii::string(b"");
@@ -46,6 +47,8 @@ module obelisk::dex_tests {
         let (mut assets, mut scenario) = init_test();
         let mut dex = test_scenario::take_shared<Dex>(&scenario);
 
+        dex.borrow_mut_next_pool_id().set(0);
+
         let ctx =  test_scenario::ctx(&mut scenario);
         dex_system::create_pool(&mut dex, &mut assets, 0, 1, ctx);
         assert!(dex.borrow_mut_pool_id().contains_key(0, 1), 0);
@@ -68,6 +71,8 @@ module obelisk::dex_tests {
     public fun liquidity_test() {
         let (mut assets, mut scenario) = init_test();
         let mut dex = test_scenario::take_shared<Dex>(&scenario);
+
+        dex.borrow_mut_next_pool_id().set(0);
 
         let ctx =  test_scenario::ctx(&mut scenario);
         dex_system::create_pool(&mut dex, &mut assets, 0, 1, ctx);
@@ -130,6 +135,8 @@ module obelisk::dex_tests {
     public fun swap_test() {
         let (mut assets, mut scenario) = init_test();
         let mut dex = test_scenario::take_shared<Dex>(&scenario);
+
+        dex.borrow_mut_next_pool_id().set(0);
 
         let ctx =  test_scenario::ctx(&mut scenario);
         dex_system::create_pool(&mut dex, &mut assets, 0, 1, ctx);

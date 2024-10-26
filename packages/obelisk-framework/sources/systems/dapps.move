@@ -1,4 +1,4 @@
-module obelisk::dapp_system {
+module obelisk::dapps_system {
     use std::ascii::String;
     use std::ascii;
     use std::type_name;

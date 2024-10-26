@@ -30,19 +30,19 @@ module obelisk::dapps_schema {
         &mut self.schemas
     }
 
-    public(package) fun borrow_admin(self: &Dapps): &StorageMap<address, address> {
+    public fun borrow_admin(self: &Dapps): &StorageMap<address, address> {
         &self.admin
     }
 
-    public(package) fun borrow_version(self: &Dapps): &StorageMap<address, u32> {
+    public fun borrow_version(self: &Dapps): &StorageMap<address, u32> {
         &self.version
     }
 
-    public(package) fun borrow_metadata(self: &Dapps): &StorageMap<address, DappMetadata> {
+    public fun borrow_metadata(self: &Dapps): &StorageMap<address, DappMetadata> {
         &self.metadata
     }
 
-    public(package) fun borrow_schemas(self: &Dapps): &StorageMap<address, vector<String>> {
+    public fun borrow_schemas(self: &Dapps): &StorageMap<address, vector<String>> {
         &self.schemas
     }
 
@@ -53,11 +53,11 @@ module obelisk::dapps_schema {
             version: storage_map::new(),
             metadata: storage_map::new(),
             schemas: storage_map::new(),
-        })
+        });
     }
 
     #[test_only]
-    public fun init_dapp_for_testing(ctx: &mut TxContext){
+    public fun init_dapps_for_testing(ctx: &mut TxContext){
         init(ctx)
     }
 }

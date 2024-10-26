@@ -130,8 +130,8 @@ module obelisk::storage_tests {
 
         public_share_object(TestObject {
             id: object::new(ctx),
-            value: storage_value::new(TestValue { value: 1 }),
-            immutable_value: storage_value::new(TestStoreValue { value: 1 }),
+            value: storage_value::new(),
+            immutable_value: storage_value::new(),
             map: storage_map::new(),
             immutable_map: storage_map::new(),
             double_map,
@@ -146,7 +146,8 @@ module obelisk::storage_tests {
         let mut scenario = test_scenario::begin(@0x0001);
         let ctx = test_scenario::ctx(&mut scenario);
 
-        let mut value = storage_value::new(TestValue { value: 1 });
+        let mut value = storage_value::new();
+        value.set(TestValue { value: 1 });
         assert!(value.get() == TestValue { value: 1 });
         assert!(*value.borrow() == TestValue { value: 1 });
         assert!(*value.borrow_mut() == TestValue { value: 1 });
@@ -163,7 +164,8 @@ module obelisk::storage_tests {
         assert!(value.get() == TestValue { value: 4 });
 
 
-        let mut immutable_value = storage_value::new(TestStoreValue { value: 1 });
+        let mut immutable_value = storage_value::new();
+        immutable_value.put(TestStoreValue { value: 1 });
         assert!(immutable_value.borrow().value == 1);
 
         immutable_value.mutate!(|store_value| {
@@ -269,8 +271,8 @@ module obelisk::storage_tests {
 
         public_share_object(TestObject {
             id: object::new(ctx),
-            value: storage_value::new(TestValue { value: 1 }),
-            immutable_value: storage_value::new(TestStoreValue { value: 1 }),
+            value: storage_value::new(),
+            immutable_value: storage_value::new(),
             map,
             immutable_map: storage_map::new(),
             double_map: storage_double_map::new(),
@@ -323,8 +325,8 @@ module obelisk::storage_tests {
 
         public_share_object(TestObject {
             id: object::new(ctx),
-            value: storage_value::new(TestValue { value: 1 }),
-            immutable_value: storage_value::new(TestStoreValue { value: 1 }),
+            value: storage_value::new(),
+            immutable_value: storage_value::new(),
             map: storage_map::new(),
             immutable_map,
             double_map: storage_double_map::new(),
