@@ -1,6 +1,6 @@
 {
 	"name": "@0xobelisk/sui-common",
-	"version": "0.5.9",
+	"version": "0.5.10",
 	"description": "Common low level logic shared between packages",
 	"keywords": [
 		"sui",
@@ -44,9 +44,9 @@
 		"test": "vitest"
 	},
 	"dependencies": {
-		"debug": "^4.3.4",
 		"@mysten/sui": "^1.7.0",
 		"chalk": "^5.0.1",
+		"debug": "^4.3.4",
 		"dotenv": "^16.0.3",
 		"ejs": "^3.1.8",
 		"esbuild": "^0.17.15",
