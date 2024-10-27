@@ -11,6 +11,7 @@ module obelisk::dapps_schema {
         version: StorageMap<address, u32>,
         metadata: StorageMap<address, DappMetadata>,
         schemas: StorageMap<address, vector<String>>,
+        safe_mode: StorageMap<address, bool>
     }
 
 
@@ -30,6 +31,10 @@ module obelisk::dapps_schema {
         &mut self.schemas
     }
 
+    public(package) fun borrow_mut_safe_mode(self: &mut Dapps): &mut StorageMap<address, bool> {
+        &mut self.safe_mode
+    }
+
     public fun borrow_admin(self: &Dapps): &StorageMap<address, address> {
         &self.admin
     }
@@ -46,6 +51,10 @@ module obelisk::dapps_schema {
         &self.schemas
     }
 
+    public fun borrow_safe_mode(self: &Dapps): &StorageMap<address, bool> {
+        &self.safe_mode
+    }
+
     fun init(ctx: &mut TxContext) {
         public_share_object(Dapps {
             id: object::new(ctx),
@@ -53,6 +62,7 @@ module obelisk::dapps_schema {
             version: storage_map::new(),
             metadata: storage_map::new(),
             schemas: storage_map::new(),
+            safe_mode: storage_map::new()
         });
     }
 

@@ -36,6 +36,7 @@ module obelisk::dapps_system {
         dapps.borrow_mut_admin().set(dapp_package_id, ctx.sender());
         dapps.borrow_mut_version().set(dapp_package_id, 0);
         dapps.borrow_mut_schemas().set(dapp_package_id, vector[]);
+        dapps.borrow_mut_safe_mode().set(dapp_package_id, false);
     }
 
     public entry fun set_metadata(
@@ -65,4 +66,25 @@ module obelisk::dapps_system {
             schemas.push_back(schema);
         });
     }
+
+    public entry fun transfer_ownership(
+        dapps: &mut Dapps,
+        package_id: address,
+        new_admin: address,
+        ctx: &mut TxContext
+    ) {
+        assert!(dapps.borrow_admin().get(package_id) == ctx.sender(), 0);
+        dapps.borrow_mut_admin().set(package_id, new_admin);
+    }
+
+    public fun assert_admin<T: drop>(dapps: &Dapps, ctx: &TxContext) {
+        let package_id = current_package_id<T>();
+        assert!(dapps.borrow_admin().get(package_id) == ctx.sender(), 0);
+    }
+
+    public fun assert_is_safe_mode<T: drop>(dapps: &Dapps) {
+        let package_id = current_package_id<T>();
+        assert!(!dapps.borrow_safe_mode().get(package_id), 0);
+    }
+
 }

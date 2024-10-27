@@ -1,7 +1,7 @@
 [package]
 name = "Obelisk"
 edition = "2024.alpha" # edition = "legacy" to use legacy (pre-2024) Move
-#published-at = "0xa462935a4a79039e263e6b022ace0bf3947eb3946705e930e2c64f2846de4bc4"
+published-at = "0x3dc2d6239eed38c9798444afbf4bada0998ec98edc365713864405fe64203256"
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"
 # authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
 
@@ -20,8 +20,8 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 # Override = { local = "../conflicting/version", override = true }
 
 [addresses]
-#obelisk = "0xa462935a4a79039e263e6b022ace0bf3947eb3946705e930e2c64f2846de4bc4"
-obelisk = "0x0"
+obelisk = "0x3dc2d6239eed38c9798444afbf4bada0998ec98edc365713864405fe64203256"
+#obelisk = "0x0"
 
 # Named addresses will be accessible in Move as `@name`. They're also exported:
 # for example, `std = "0x1"` is exported by the Standard Library.
