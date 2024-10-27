@@ -2,7 +2,7 @@ import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import { existsSync } from "fs";
 
-export function generateDeployHook(config: ObeliskConfig, srcPrefix: string) {
+export async function generateDeployHook(config: ObeliskConfig, srcPrefix: string) {
     if (
         !existsSync(
             `${srcPrefix}/contracts/${config.name}/sources/script/deploy_hook.move`
@@ -58,7 +58,7 @@ export function generateDeployHook(config: ObeliskConfig, srcPrefix: string) {
   }
 }
 `;
-        formatAndWriteMove(
+        await formatAndWriteMove(
             code,
             `${srcPrefix}/contracts/${config.name}/sources/script/deploy_hook.move`,
             "formatAndWriteMove"

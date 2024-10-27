@@ -2,22 +2,22 @@ import { ObeliskConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import { existsSync } from "fs";
 
-export function generateSystem(config: ObeliskConfig, srcPrefix: string) {
-  config.systems.map((systemName) => {
+export async function generateSystem(config: ObeliskConfig, srcPrefix: string) {
+  config.systems.map(async (systemName) => {
     if (
       !existsSync(
         `${srcPrefix}/contracts/${config.name}/sources/system/${systemName}.move`
       )
     ) {
-      let code = `module ${config.name}::${systemName} {
+        let code = `module ${config.name}::${systemName}_system {
 
 }
 `;
-      formatAndWriteMove(
-        code,
-        `${srcPrefix}/contracts/${config.name}/sources/system/${systemName}.move`,
-        "formatAndWriteMove"
-      );
+            await formatAndWriteMove(
+                code,
+                `${srcPrefix}/contracts/${config.name}/sources/system/${systemName}.move`,
+                "formatAndWriteMove"
+            );
     }
   });
 }

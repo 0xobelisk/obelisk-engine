@@ -17,13 +17,17 @@ export async function worldgen(config: ObeliskConfig, srcPrefix?: string) {
 
   if (existsSync(`${path}/contracts/${config.name}`)) {
     deleteFolderRecursive(`${path}/contracts/${config.name}/sources/codegen`);
-  } else {
-    generateToml(config, path);
   }
 
-  generateSystem(config, path);
-  generateDeployHook(config, path);
+  if (!existsSync(`${path}/contracts/${config.name}/Move.toml`)) {
+    await generateToml(config, path);
+  }
 
+  if (!existsSync(`${path}/contracts/${config.name}/sources/script/deploy_hook.move`)) {
+    await generateDeployHook(config, path);
+  }
+
+  await generateSystem(config, path);
   await generateSchemaData(config.name, config.schemas, path);
   await generateSchemaStructure(config.name, config.schemas, path);
   await generateDappKey(config, path);

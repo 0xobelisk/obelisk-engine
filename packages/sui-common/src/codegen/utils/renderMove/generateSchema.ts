@@ -73,13 +73,9 @@ function convertToSnakeCase(input: string): string {
 
 export async function generateSchemaData(projectName: string, schemas: Record<string, SchemaType>, path: string) {
     for (const schemaName in schemas) {
-        console.log(`Schema: ${schemaName}`);
         const schema = schemas[schemaName];
         if (schema.data) {
             for (const item of schema.data) {
-                console.log(`Name: ${item.name}`);
-                console.log(`Fields: ${item.fields}`);
-
                 let code = "";
 
                 const enumNames = schema.data
