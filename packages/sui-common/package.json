@@ -1,6 +1,6 @@
 {
 	"name": "@0xobelisk/sui-common",
-	"version": "0.5.11",
+	"version": "0.5.12",
 	"description": "Common low level logic shared between packages",
 	"keywords": [
 		"sui",
@@ -55,7 +55,7 @@
 		"glob": "^8.0.3",
 		"path": "^0.12.7",
 		"prettier": "^3.1.1",
-		"prettier-plugin-move": "link:/Volumes/project/sui/external-crates/move/crates/move-analyzer/prettier-plugin",
+		"prettier-plugin-move": "^0.0.53",
 		"prettier-plugin-rust": "^0.1.9",
 		"prettier-plugin-solidity": "^1.1.2",
 		"typescript": "5.1.6",
