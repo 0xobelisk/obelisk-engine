@@ -361,7 +361,7 @@ importers:
         specifier: ^0.5.23
         version: link:../sui-client
       '@0xobelisk/sui-common':
-        specifier: workspace:*
+        specifier: ^0.5.13
         version: link:../sui-common
       '@mysten/sui':
         specifier: ^1.7.0
