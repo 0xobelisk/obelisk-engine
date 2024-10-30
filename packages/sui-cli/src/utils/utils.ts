@@ -4,13 +4,17 @@ import { dirname } from 'path';
 import { SUI_PRIVATE_KEY_PREFIX } from '@mysten/sui/cryptography';
 import { FsIibError } from './errors';
 
+export type schema = {
+	name: string,
+	objectId: string
+}
+
 export type DeploymentJsonType = {
 	projectName: string;
 	network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
 	packageId: string;
-	worldId: string;
+	schemas: schema[]
 	upgradeCap: string;
-	adminCap: string;
 	version: number;
 };
 
@@ -94,14 +98,6 @@ export async function getOldPackageId(
 	return deployment.packageId;
 }
 
-export async function getWorldId(
-	projectPath: string,
-	network: string
-): Promise<string> {
-	const deployment = await getDeploymentJson(projectPath, network);
-	return deployment.worldId;
-}
-
 export async function getUpgradeCap(
 	projectPath: string,
 	network: string
@@ -110,30 +106,29 @@ export async function getUpgradeCap(
 	return deployment.upgradeCap;
 }
 
-export async function getAdminCap(
+export async function getObjectIdBySchemaName(
 	projectPath: string,
-	network: string
-): Promise<string> {
+	network: string,
+	schemaName: string
+): Promise<string | undefined> {
 	const deployment = await getDeploymentJson(projectPath, network);
-	return deployment.adminCap;
+	return deployment.schemas.find((schema) => schema.name.includes(schemaName))?.objectId;
 }
 
 export function saveContractData(
 	projectName: string,
 	network: 'mainnet' | 'testnet' | 'devnet' | 'localnet',
 	packageId: string,
-	worldId: string,
+	schemas: schema[],
 	upgradeCap: string,
-	adminCap: string,
 	version: number
 ) {
 	const DeploymentData: DeploymentJsonType = {
 		projectName,
 		network,
 		packageId,
-		worldId,
+		schemas,
 		upgradeCap,
-		adminCap,
 		version,
 	};
 

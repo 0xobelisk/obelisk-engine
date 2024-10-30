@@ -11,8 +11,9 @@ import { ObeliskCliError } from './errors';
 import {
 	updateVersionInFile,
 	saveContractData,
-	validatePrivateKey,
+	validatePrivateKey, schema,
 } from './utils';
+import {log} from "node:util";
 
 export async function publishHandler(
 	name: string,
@@ -97,20 +98,12 @@ in your contracts directory to use the default sui private key.`
 
 	let version = 1;
 	let packageId = '';
-	let worldId = '';
+	let schemas: schema[] = [];
 	let upgradeCapId = '';
-	let adminCapId = '';
 	result.objectChanges!.map(object => {
 		if (object.type === 'published') {
 			console.log(chalk.blue(`${name} PackageId: ${object.packageId}`));
 			packageId = object.packageId;
-		}
-		if (
-			object.type === 'created' &&
-			object.objectType.endsWith('::world::World')
-		) {
-			console.log(chalk.blue(`${name} WorldId: ${object.objectId}`));
-			worldId = object.objectId;
 		}
 		if (
 			object.type === 'created' &&
@@ -119,26 +112,9 @@ in your contracts directory to use the default sui private key.`
 			console.log(chalk.blue(`${name} UpgradeCap: ${object.objectId}`));
 			upgradeCapId = object.objectId;
 		}
-		if (
-			object.type === 'created' &&
-			object.objectType.endsWith('::world::AdminCap')
-		) {
-			console.log(chalk.blue(`${name} AdminCapId: ${object.objectId}`));
-			adminCapId = object.objectId;
-		}
 	});
 
 	console.log(chalk.green(`Publish transaction digest: ${result.digest}`));
-
-	saveContractData(
-		name,
-		network,
-		packageId,
-		worldId,
-		upgradeCapId,
-		adminCapId,
-		version
-	);
 
 	console.log('Executing the deployHook: ');
 	const delay = (ms: number) =>
@@ -150,8 +126,8 @@ in your contracts directory to use the default sui private key.`
 	deployHookTx.moveCall({
 		target: `${packageId}::deploy_hook::run`,
 		arguments: [
-			deployHookTx.object(worldId),
-			deployHookTx.object(adminCapId),
+			deployHookTx.object("0xa66942c08d9fc318a70ab9d0cfd7e75f1a2dd1ac31aff12fde008d25bfa9604b"),
+			deployHookTx.object("0x6"),
 		],
 	});
 
@@ -162,6 +138,7 @@ in your contracts directory to use the default sui private key.`
 			transaction: deployHookTx,
 			options: {
 				showEffects: true,
+				showObjectChanges: true
 			},
 		});
 	} catch (error: any) {
@@ -179,6 +156,26 @@ in your contracts directory to use the default sui private key.`
 			chalk.green(
 				`Successful auto-execution of deployHook, please check the transaction digest: ${deployHookResult.digest}`
 			)
+		);
+		deployHookResult.objectChanges?.map(object => {
+			if (
+				object.type === 'created' && object.objectType.includes("schema")
+			) {
+				console.log(chalk.blue(`${name} Schema Object id: ${object.objectId}`));
+				console.log(chalk.blue(`${name} Schema Object type: ${object.objectType}`));
+				schemas.push({
+					name: object.objectType,
+					objectId: object.objectId,
+				});
+			}
+		});
+		saveContractData(
+			name,
+			network,
+			packageId,
+			schemas,
+			upgradeCapId,
+			version
 		);
 	} else {
 		console.log(

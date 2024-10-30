@@ -13,7 +13,11 @@ const commandModule: CommandModule<Options, Options> = {
 
   builder(yargs) {
     return yargs.options({
-      configPath: { type: "string", desc: "Path to the config file" },
+      configPath: {
+        type: "string",
+        default: "obelisk.config.ts",
+        desc: "Path to the config file"
+      },
     });
   },
 

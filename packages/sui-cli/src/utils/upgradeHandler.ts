@@ -8,11 +8,9 @@ import {
 	updateVersionInFile,
 	getOldPackageId,
 	getVersion,
-	getWorldId,
 	getUpgradeCap,
 	saveContractData,
 	validatePrivateKey,
-	getAdminCap,
 } from './utils';
 
 type ObjectContent = {
