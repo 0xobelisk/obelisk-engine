@@ -4,11 +4,16 @@ import { exit } from 'process';
 import { obeliskConfig } from '../obelisk.config';
 import { dirname } from 'path';
 
+export type schema = {
+  name: string,
+  objectId: string
+}
+
 type DeploymentJsonType = {
   projectName: string;
   network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
   packageId: string;
-  worldId: string;
+  schemas: schema[];
   upgradeCap: string;
   version: number;
 };
@@ -23,19 +28,14 @@ async function getDeploymentJson(projectPath: string, network: string) {
   }
 }
 
-function storeConfig(network: string, packageId: string, worldId: string) {
+function storeConfig(network: string, packageId: string, schemas: schema[]) {
   let code = `type NetworkType = 'testnet' | 'mainnet' | 'devnet' | 'localnet';
 
-const NETWORK: NetworkType = '${network}';
+export const NETWORK: NetworkType = '${network}';
 
-const PACKAGE_ID = '${packageId}'
-const WORLD_ID = '${worldId}'
+export const PACKAGE_ID = '${packageId}'
 
-export {
-    NETWORK,
-    PACKAGE_ID,
-    WORLD_ID,
-}
+${schemas.map((schema) => `export const ${schema.name.split('::')[2]}_Object_Id = '${schema.objectId}'`).join('\n')}
 `;
   const path = process.cwd();
   writeOutput(code, `${path}/src/chain/config.ts`, 'storeConfig');
@@ -55,7 +55,7 @@ async function main() {
   const network = process.argv[2];
   const contractPath = `${path}/contracts/${obeliskConfig.name}`;
   const deployment = await getDeploymentJson(contractPath, network);
-  storeConfig(deployment.network, deployment.packageId, deployment.worldId);
+  storeConfig(deployment.network, deployment.packageId, deployment.schemas);
 }
 
 main();

@@ -7,10 +7,10 @@
   "scripts": {
     "dev": "pnpm obelisk hello && pnpm start-template",
     "dev:next": "next",
-    "start-template": "pnpm generateAccount && pnpm faucet && pnpm publish && pnpm storeConfig && next",
+    "start-template": "pnpm generateAccount && pnpm faucet && pnpm dapp-publish && next",
     "faucet": "pnpm obelisk faucet --network testnet",
     "schemagen": "pnpm obelisk schemagen obelisk.config.ts",
-    "publish": "pnpm obelisk publish --network testnet --configPath ./obelisk.config.ts && ts-node scripts/storeConfig.ts testnet",
+    "dapp-publish": "pnpm obelisk publish --network testnet --configPath ./obelisk.config.ts && ts-node scripts/storeConfig.ts testnet",
     "upgrade": "pnpm obelisk upgrade --network testnet && ts-node scripts/storeConfig.ts testnet",
     "storeConfig": "ts-node scripts/storeConfig.ts testnet",
     "generateAccount": "ts-node scripts/generateAccount.ts",

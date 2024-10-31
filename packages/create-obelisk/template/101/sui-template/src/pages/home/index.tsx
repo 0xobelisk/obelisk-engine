@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
 import { useRouter } from 'next/router';
-import { NETWORK, PACKAGE_ID, WORLD_ID } from '../../chain/config';
+import { Counter_Object_Id, NETWORK, PACKAGE_ID } from '../../chain/config';
 import { PRIVATEKEY } from '../../chain/key';
 
 const Home = () => {
@@ -18,14 +18,12 @@ const Home = () => {
       metadata: metadata,
     });
     const tx = new Transaction();
-    const world = tx.object(WORLD_ID)
-    const params = [
-      world,
-    ]
-    const query_value = await obelisk.query.counter_schema.get(tx, params);
-    console.log(bcs.u64().parse(Uint8Array.from(query_value["results"][0]["returnValues"][0][0])));
-    const value = bcs.u64().parse(Uint8Array.from(query_value["results"][0]["returnValues"][0][0]))
-    setValue(value);
+    console.log("counterObjectId:", Counter_Object_Id);
+    const query_value = await obelisk.query.counter_system.get(tx, [
+      tx.object(Counter_Object_Id)
+    ]);
+    console.log(obelisk.view(query_value)[0]);
+    setValue(obelisk.view(query_value)[0]);
   };
 
   const counter = async () => {
@@ -37,9 +35,9 @@ const Home = () => {
       secretKey: PRIVATEKEY,
     });
     const tx = new Transaction();
-    const world = tx.object(WORLD_ID);
-    const params = [world];
-    (await obelisk.tx.counter_system.inc(tx, params, undefined, true)) as TransactionResult;
+    (await obelisk.tx.counter_system.inc(tx, [
+      tx.object(Counter_Object_Id)
+    ], undefined, true)) as TransactionResult;
     const response = await obelisk.signAndSendTxn(tx);
     if (response.effects.status.status == 'success') {
       query_counter_value();

@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
 import { useRouter } from 'next/router';
-import { NETWORK, PACKAGE_ID, WORLD_ID } from '../../chain/config';
+import { Counter_Object_Id, NETWORK, PACKAGE_ID, WORLD_ID } from '../../chain/config';
 import { obeliskConfig } from '../../../obelisk.config';
 import {
   ConnectButton,
@@ -34,9 +34,13 @@ const Home = () => {
       packageId: PACKAGE_ID,
       metadata: metadata,
     });
-    const component_name = Object.keys(obeliskConfig.schemas)[0];
-    const component_value = await obelisk.getEntity(WORLD_ID, component_name);
-    setValue(component_value.toString());
+    const tx = new Transaction();
+    console.log("counterObjectId:", Counter_Object_Id);
+    const query_value = await obelisk.query.counter_system.get(tx, [
+      tx.object(Counter_Object_Id)
+    ]);
+    console.log(obelisk.view(query_value)[0]);
+    setValue(obelisk.view(query_value)[0]);
   };
 
   const counter = async () => {
@@ -47,9 +51,12 @@ const Home = () => {
       metadata: metadata,
     });
     const tx = new Transaction();
-    const world = tx.object(WORLD_ID);
-    const params = [world];
-    await obelisk.tx.counter_system.inc(tx, params, undefined, true);
+    await obelisk.tx.counter_system.inc(
+      tx,
+      [tx.object(Counter_Object_Id)],
+      undefined,
+      true
+    );
     await signAndExecuteTransaction(
       {
         transaction: tx.serialize(),
