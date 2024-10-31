@@ -1,26 +1,10 @@
-import { loadMetadata, Obelisk, Transaction, bcs, DevInspectResults } from '@0xobelisk/sui-client';
+import { loadMetadata, Obelisk, Transaction, DevInspectResults } from '@0xobelisk/sui-client';
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
 import { useRouter } from 'next/router';
-import { Counter_Object_Id, NETWORK, PACKAGE_ID, WORLD_ID } from '../../chain/config';
-import { obeliskConfig } from '../../../obelisk.config';
-import {
-  ConnectButton,
-  useConnectWallet,
-  useCurrentAccount,
-  useCurrentWallet,
-  useSignAndExecuteTransaction,
-  useSignTransaction,
-  useSuiClient,
-} from '@mysten/dapp-kit';
-
-type data = {
-  type: string;
-  fields: Record<string, any>;
-  hasPublicTransfer: boolean;
-  dataType: 'moveObject';
-};
+import { Counter_Object_Id, NETWORK, PACKAGE_ID } from '../../chain/config';
+import { ConnectButton, useCurrentWallet, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 
 const Home = () => {
   const router = useRouter();
@@ -35,10 +19,10 @@ const Home = () => {
       metadata: metadata,
     });
     const tx = new Transaction();
-    console.log("counterObjectId:", Counter_Object_Id);
-    const query_value = await obelisk.query.counter_system.get(tx, [
-      tx.object(Counter_Object_Id)
-    ]);
+    console.log('counterObjectId:', Counter_Object_Id);
+    const query_value = (await obelisk.query.counter_system.get(tx, [
+      tx.object(Counter_Object_Id),
+    ])) as DevInspectResults;
     console.log(obelisk.view(query_value)[0]);
     setValue(obelisk.view(query_value)[0]);
   };
@@ -51,12 +35,7 @@ const Home = () => {
       metadata: metadata,
     });
     const tx = new Transaction();
-    await obelisk.tx.counter_system.inc(
-      tx,
-      [tx.object(Counter_Object_Id)],
-      undefined,
-      true
-    );
+    await obelisk.tx.counter_system.inc(tx, [tx.object(Counter_Object_Id)], undefined, true);
     await signAndExecuteTransaction(
       {
         transaction: tx.serialize(),

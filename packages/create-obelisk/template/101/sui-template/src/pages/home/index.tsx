@@ -1,4 +1,4 @@
-import {bcs, loadMetadata, Obelisk, Transaction, TransactionResult} from '@0xobelisk/sui-client';
+import { loadMetadata, Obelisk, Transaction, TransactionResult, DevInspectResults } from '@0xobelisk/sui-client';
 import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
@@ -18,10 +18,10 @@ const Home = () => {
       metadata: metadata,
     });
     const tx = new Transaction();
-    console.log("counterObjectId:", Counter_Object_Id);
-    const query_value = await obelisk.query.counter_system.get(tx, [
-      tx.object(Counter_Object_Id)
-    ]);
+    console.log('counterObjectId:', Counter_Object_Id);
+    const query_value = (await obelisk.query.counter_system.get(tx, [
+      tx.object(Counter_Object_Id),
+    ])) as DevInspectResults;
     console.log(obelisk.view(query_value)[0]);
     setValue(obelisk.view(query_value)[0]);
   };
@@ -35,9 +35,7 @@ const Home = () => {
       secretKey: PRIVATEKEY,
     });
     const tx = new Transaction();
-    (await obelisk.tx.counter_system.inc(tx, [
-      tx.object(Counter_Object_Id)
-    ], undefined, true)) as TransactionResult;
+    (await obelisk.tx.counter_system.inc(tx, [tx.object(Counter_Object_Id)], undefined, true)) as TransactionResult;
     const response = await obelisk.signAndSendTxn(tx);
     if (response.effects.status.status == 'success') {
       query_counter_value();
