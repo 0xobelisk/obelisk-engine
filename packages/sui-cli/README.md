@@ -6,8 +6,8 @@ It comes with
 
 
 1. `schemagen <configPath>`: Autogenerate Obelisk schemas based on the store schemas config file
-2. `publish`: Deploy your own world project on the specified sui network.
-3. `upgrade`: Upgrade your own world project on the specified sui network.
+2. `publish`: Deploy your own project on the specified sui network.
+3. `upgrade`: Upgrade your own project on the specified sui network.
 4. `localnode`: Start a local Sui node for development
 5. `faucet`: An interface to the Devnet/Localnet faucet. It makes it easy to fund addresses on the Devnet/localnet
 
@@ -15,7 +15,7 @@ It comes with
 
 We don’t recommend installing the CLI globally.
 
-Instead, you should add the CLI as a dev dependency to your project (done automatically if you start from a starter kit using `pnpm create obelisk-world`), and use it with `pnpm build` inside your project directory.
+Instead, you should add the CLI as a dev dependency to your project (done automatically if you start from a starter kit using `pnpm create obelisk`), and use it with `pnpm build` inside your project directory.
 
 ## Using the CLI
 
@@ -36,9 +36,9 @@ obelisk schemagen obelisk.config.ts
 
 ### `publish`
 
-Deploy a Obelisk contract project with the World framework.
+Deploy a Obelisk contract project with the obelisk framework.
 
-This tool will use the `obelisk.config.ts` to detect all systems, schemas and projectName in the World and will deploy them to the chain specified.
+This tool will use the `obelisk.config.ts` to detect all systems, schemas and projectName in the project and will deploy them to the chain specified.
 
 When using the deployer, you must set the private key of the deployer using the `PRIVATE_KEY` environment variable. You can make this easier by using [`dotenv`](https://www.npmjs.com/package/dotenv) before running `obelisk publish` in your deployment script.
 

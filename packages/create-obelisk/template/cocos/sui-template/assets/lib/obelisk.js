@@ -2849,7 +2849,7 @@ var o = function (e) {
   e[e.Enum = 7] = "Enum";
   return e;
 }(o || {});
-var u = /\\/g;
+var u = /\\/;
 function value(e) {
   var r;
   var a;
@@ -3317,23 +3317,23 @@ function visit(e, r) {
         n.push(s);
         var f = e[s];
         if (Array.isArray(f)) {
-          var m = [];
-          for (var g = 0; g < f.length; g++) {
-            if (null != f[g] && "string" == typeof f[g].kind) {
+          var g = [];
+          for (var m = 0; m < f.length; m++) {
+            if (null != f[m] && "string" == typeof f[m].kind) {
               i.push(e);
-              n.push(g);
-              d = traverse(f[g], g, f);
+              n.push(m);
+              d = traverse(f[m], m, f);
               n.pop();
               i.pop();
               if (null == d) {
                 l = !0;
               } else {
-                l = l || d !== f[g];
-                m.push(d);
+                l = l || d !== f[m];
+                g.push(d);
               }
             }
           }
-          f = m;
+          f = g;
         } else if (null != f && "string" == typeof f.kind) {
           if (void 0 !== (d = traverse(f, s, e))) {
             l = l || f !== d;
@@ -3385,7 +3385,7 @@ function printBlockString(e) {
   return '"""\n' + e.replace(/"""/g, '\\"""') + '\n"""';
 }
 var f = "\n";
-var m = {
+var g = {
   OperationDefinition(e) {
     var r = e.operation;
     if (e.name) {
@@ -3395,38 +3395,38 @@ var m = {
       if (!e.name) {
         r += " ";
       }
-      r += "(" + mapJoin(e.variableDefinitions, ", ", m.VariableDefinition) + ")";
+      r += "(" + mapJoin(e.variableDefinitions, ", ", g.VariableDefinition) + ")";
     }
     if (e.directives && e.directives.length) {
-      r += " " + mapJoin(e.directives, " ", m.Directive);
+      r += " " + mapJoin(e.directives, " ", g.Directive);
     }
-    return "query" !== r ? r + " " + m.SelectionSet(e.selectionSet) : m.SelectionSet(e.selectionSet);
+    return "query" !== r ? r + " " + g.SelectionSet(e.selectionSet) : g.SelectionSet(e.selectionSet);
   },
   VariableDefinition(e) {
-    var r = m.Variable(e.variable) + ": " + _print(e.type);
+    var r = g.Variable(e.variable) + ": " + _print(e.type);
     if (e.defaultValue) {
       r += " = " + _print(e.defaultValue);
     }
     if (e.directives && e.directives.length) {
-      r += " " + mapJoin(e.directives, " ", m.Directive);
+      r += " " + mapJoin(e.directives, " ", g.Directive);
     }
     return r;
   },
   Field(e) {
     var r = e.alias ? e.alias.value + ": " + e.name.value : e.name.value;
     if (e.arguments && e.arguments.length) {
-      var i = mapJoin(e.arguments, ", ", m.Argument);
+      var i = mapJoin(e.arguments, ", ", g.Argument);
       if (r.length + i.length + 2 > 80) {
-        r += "(" + (f += "  ") + mapJoin(e.arguments, f, m.Argument) + (f = f.slice(0, -2)) + ")";
+        r += "(" + (f += "  ") + mapJoin(e.arguments, f, g.Argument) + (f = f.slice(0, -2)) + ")";
       } else {
         r += "(" + i + ")";
       }
     }
     if (e.directives && e.directives.length) {
-      r += " " + mapJoin(e.directives, " ", m.Directive);
+      r += " " + mapJoin(e.directives, " ", g.Directive);
     }
     if (e.selectionSet) {
-      r += " " + m.SelectionSet(e.selectionSet);
+      r += " " + g.SelectionSet(e.selectionSet);
     }
     return r;
   },
@@ -3445,7 +3445,7 @@ var m = {
   Name: e => e.value,
   Variable: e => "$" + e.name.value,
   ListValue: e => "[" + mapJoin(e.values, ", ", _print) + "]",
-  ObjectValue: e => "{" + mapJoin(e.fields, ", ", m.ObjectField) + "}",
+  ObjectValue: e => "{" + mapJoin(e.fields, ", ", g.ObjectField) + "}",
   ObjectField: e => e.name.value + ": " + _print(e.value),
   Document(e) {
     if (!e.definitions || !e.definitions.length) {
@@ -3458,7 +3458,7 @@ var m = {
   FragmentSpread(e) {
     var r = "..." + e.name.value;
     if (e.directives && e.directives.length) {
-      r += " " + mapJoin(e.directives, " ", m.Directive);
+      r += " " + mapJoin(e.directives, " ", g.Directive);
     }
     return r;
   },
@@ -3468,22 +3468,22 @@ var m = {
       r += " on " + e.typeCondition.name.value;
     }
     if (e.directives && e.directives.length) {
-      r += " " + mapJoin(e.directives, " ", m.Directive);
+      r += " " + mapJoin(e.directives, " ", g.Directive);
     }
-    return r += " " + m.SelectionSet(e.selectionSet);
+    return r += " " + g.SelectionSet(e.selectionSet);
   },
   FragmentDefinition(e) {
     var r = "fragment " + e.name.value;
     r += " on " + e.typeCondition.name.value;
     if (e.directives && e.directives.length) {
-      r += " " + mapJoin(e.directives, " ", m.Directive);
+      r += " " + mapJoin(e.directives, " ", g.Directive);
     }
-    return r + " " + m.SelectionSet(e.selectionSet);
+    return r + " " + g.SelectionSet(e.selectionSet);
   },
   Directive(e) {
     var r = "@" + e.name.value;
     if (e.arguments && e.arguments.length) {
-      r += "(" + mapJoin(e.arguments, ", ", m.Argument) + ")";
+      r += "(" + mapJoin(e.arguments, ", ", g.Argument) + ")";
     }
     return r;
   },
@@ -3491,10 +3491,10 @@ var m = {
   ListType: e => "[" + _print(e.type) + "]",
   NonNullType: e => _print(e.type) + "!"
 };
-var _print = e => m[e.kind](e);
+var _print = e => g[e.kind](e);
 function print(e) {
   f = "\n";
-  return m[e.kind] ? m[e.kind](e) : "";
+  return g[e.kind] ? g[e.kind](e) : "";
 }
 function valueFromASTUntyped(e, r) {
   switch (e.kind) {
@@ -3510,16 +3510,17 @@ function valueFromASTUntyped(e, r) {
       return e.value;
     case "ListValue":
       var i = [];
-      for (var n of e.values) {
-        i.push(valueFromASTUntyped(n, r));
+      for (var n = 0, a = e.values.length; n < a; n++) {
+        i.push(valueFromASTUntyped(e.values[n], r));
       }
       return i;
     case "ObjectValue":
-      var a = Object.create(null);
-      for (var t of e.fields) {
-        a[t.name.value] = valueFromASTUntyped(t.value, r);
+      var t = Object.create(null);
+      for (var l = 0, o = e.fields.length; l < o; l++) {
+        var u = e.fields[l];
+        t[u.name.value] = valueFromASTUntyped(u.value, r);
       }
-      return a;
+      return t;
     case "Variable":
       return r && r[e.name.value];
   }
@@ -3534,12 +3535,12 @@ function valueFromTypeNode(e, r, i) {
   } else if ("ListType" === r.kind) {
     if ("ListValue" === e.kind) {
       var n = [];
-      for (var a of e.values) {
-        var t = valueFromTypeNode(a, r.type, i);
-        if (void 0 === t) {
+      for (var a = 0, t = e.values.length; a < t; a++) {
+        var l = valueFromTypeNode(e.values[a], r.type, i);
+        if (void 0 === l) {
           return;
         } else {
-          n.push(t);
+          n.push(l);
         }
       }
       return n;
@@ -3939,17 +3940,11 @@ var SuiTx = class {
   get blockData() {
     return this.tx.blockData;
   }
-  autoPure(value, type) {
-    if (type === void 0) {
-      return convertArgs(this.tx, [value]);
-    }
-    return;
-  }
   address(value) {
     return this.tx.pure.address(value);
   }
   get pure() {
-    return this.tx.pure.bind(this.tx);
+    return this.tx.pure;
   }
   object(value) {
     return this.tx.object(value);
@@ -4019,7 +4014,7 @@ var SuiTx = class {
     return this.tx.transferObjects(objects.map(object => convertObjArg(this.tx, object)), convertAddressArg(this.tx, address));
   }
   splitCoins(coin, amounts) {
-    const res = this.tx.splitCoins(convertObjArg(this.tx, coin), convertArgs(this.tx, amounts));
+    const res = this.tx.splitCoins(convertObjArg(this.tx, coin), convertAmounts(this.tx, amounts));
     return amounts.map((_, i) => res[i]);
   }
   mergeCoins(destination, sources) {
@@ -4065,11 +4060,11 @@ var SuiTx = class {
     if (coins.length > 1) {
       this.tx.mergeCoins(mergedCoin, coinObjects.slice(1));
     }
-    const [sendCoin] = this.tx.splitCoins(mergedCoin, [typeof amount === "number" || typeof amount === "bigint" ? amount : convertArgs(this.tx, [amount])[0]]);
+    const [sendCoin] = this.tx.splitCoins(mergedCoin, convertAmounts(this.tx, [amount]));
     return [sendCoin, mergedCoin];
   }
   splitSUIFromGas(amounts) {
-    return this.tx.splitCoins(this.tx.gas, convertArgs(this.tx, amounts));
+    return this.tx.splitCoins(this.tx.gas, convertAmounts(this.tx, amounts));
   }
   splitMultiCoins(coins, amounts) {
     const coinObjects = coins.map(coin => convertObjArg(this.tx, coin));
@@ -4377,7 +4372,8 @@ var SuiInteractor = class {
         selectedCoins.push({
           objectId: coinData.coinObjectId,
           digest: coinData.digest,
-          version: coinData.version
+          version: coinData.version,
+          balance: coinData.balance
         });
         totalAmount = totalAmount + parseInt(coinData.balance);
         if (totalAmount >= amount) {
@@ -4579,6 +4575,7 @@ var Obelisk = class {
       u256: _bcs3.bcs.u256(),
       bool: _bcs3.bcs.bool(),
       "0x1::ascii::String": _bcs3.bcs.string(),
+      "0x1::string::String": _bcs3.bcs.string(),
       "0x1::option::Option<address>": _bcs3.bcs.option(_bcs3.bcs.bytes(32).transform({
         // To change the input type, you need to provide a type definition for the input
         input: val => (0, _bcs3.fromHEX)(val),
@@ -5097,36 +5094,6 @@ var Obelisk = class {
     const dryResult = await this.query[schemaModuleName].contains(tx, params);
     return this.view(dryResult);
   }
-  // async getEntities(
-  //   worldId: string,
-  //   schemaName: string,
-  //   cursor?: string,
-  //   limit?: number
-  // ) {
-  //   let schemaModuleName = `${schemaName}_schema`;
-  //   const tx = new TransactionBlock();
-  //   let params = [tx.pure(worldId)] as SuiTxArgument[];
-  //   const tableResult = (await this.query[schemaonentModuleName].entities(
-  //     tx,
-  //     params
-  //   )) as DevInspectResults;
-  //   const entities = tableResult.results as SuiReturnValues;
-  //   const bcs = new BCS(getSuiMoveConfig());
-  //   let value = Uint8Array.from(entities[0].returnValues[0][0]);
-  //   let tableId = '0x' + bcs.de('address', value);
-  //   let dynamicFields = await this.suiInteractor.getDynamicFields(
-  //     tableId,
-  //     cursor,
-  //     limit
-  //   );
-  //   let objectIds = dynamicFields.data.map((field) => field.objectId);
-  //   let objectDatas = await this.suiInteractor.getEntitiesObjects(objectIds);
-  //   return {
-  //     data: objectDatas,
-  //     nextCursor: dynamicFields.nextCursor,
-  //     hasNextPage: dynamicFields.hasNextPage,
-  //   };
-  // }
   async getOwnedObjects(owner, cursor, limit) {
     const ownedObjects = await this.suiInteractor.getOwnedObjects(owner, cursor, limit);
     const ownedObjectsRes = [];
@@ -5249,33 +5216,37 @@ async function loadMetadata(networkType, packageId) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"@mysten/bcs":13,"@mysten/sui/bcs":20,"@mysten/sui/client":25,"@mysten/sui/cryptography":35,"@mysten/sui/faucet":43,"@mysten/sui/keypairs/ed25519":48,"@mysten/sui/keypairs/secp256k1":51,"@mysten/sui/keypairs/secp256r1":54,"@mysten/sui/multisig":57,"@mysten/sui/transactions":73,"@mysten/sui/utils":81,"@scure/bip39":128,"@scure/bip39/wordlists/english":129,"buffer":2,"keccak256":281}],8:[function(require,module,exports){
+},{"@mysten/bcs":13,"@mysten/sui/bcs":20,"@mysten/sui/client":25,"@mysten/sui/cryptography":35,"@mysten/sui/faucet":43,"@mysten/sui/keypairs/ed25519":48,"@mysten/sui/keypairs/secp256k1":51,"@mysten/sui/keypairs/secp256r1":54,"@mysten/sui/multisig":57,"@mysten/sui/transactions":74,"@mysten/sui/utils":86,"@scure/bip39":144,"@scure/bip39/wordlists/english":145,"buffer":2,"keccak256":296}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.toB58 = exports.fromB58 = void 0;
+exports.toBase58 = exports.toB58 = exports.fromBase58 = exports.fromB58 = void 0;
 var _bs = _interopRequireDefault(require("bs58"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-const toB58 = buffer => _bs.default.encode(buffer);
-exports.toB58 = toB58;
-const fromB58 = str => _bs.default.decode(str);
-exports.fromB58 = fromB58;
+const toBase58 = buffer => _bs.default.encode(buffer);
+exports.toBase58 = toBase58;
+const fromBase58 = str => _bs.default.decode(str);
+exports.fromBase58 = fromBase58;
+const toB58 = exports.toB58 = toBase58;
+const fromB58 = exports.fromB58 = fromBase58;
 
-},{"bs58":134}],9:[function(require,module,exports){
+},{"bs58":107}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.fromB64 = fromB64;
-exports.toB64 = toB64;
-function fromB64(base64String) {
+exports.fromB64 = void 0;
+exports.fromBase64 = fromBase64;
+exports.toB64 = void 0;
+exports.toBase64 = toBase64;
+function fromBase64(base64String) {
   return Uint8Array.from(atob(base64String), char => char.charCodeAt(0));
 }
 const CHUNK_SIZE = 8192;
-function toB64(bytes) {
+function toBase64(bytes) {
   if (bytes.length < CHUNK_SIZE) {
     return btoa(String.fromCharCode(...bytes));
   }
@@ -5286,6 +5257,8 @@ function toB64(bytes) {
   }
   return btoa(output);
 }
+const toB64 = exports.toB64 = toBase64;
+const fromB64 = exports.fromB64 = fromBase64;
 
 },{}],10:[function(require,module,exports){
 "use strict";
@@ -5307,27 +5280,18 @@ var _hex = require("./hex.js");
 var _reader = require("./reader.js");
 var _uleb = require("./uleb.js");
 var _writer = require("./writer.js");
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj)) throw TypeError("Cannot " + msg);
+var __typeError = msg => {
+  throw TypeError(msg);
 };
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj)) throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var _write, _serialize, _schema, _bytes;
-const _BcsType = class {
+const _BcsType = class _BcsType {
   constructor(options) {
-    __privateAdd(this, _write, void 0);
-    __privateAdd(this, _serialize, void 0);
+    __privateAdd(this, _write);
+    __privateAdd(this, _serialize);
     this.name = options.name;
     this.read = options.read;
     this.serializedSize = options.serializedSize ?? (() => null);
@@ -5355,13 +5319,13 @@ const _BcsType = class {
     return this.read(reader);
   }
   fromHex(hex) {
-    return this.parse((0, _hex.fromHEX)(hex));
+    return this.parse((0, _hex.fromHex)(hex));
   }
   fromBase58(b64) {
-    return this.parse((0, _b.fromB58)(b64));
+    return this.parse((0, _b.fromBase58)(b64));
   }
   fromBase64(b64) {
-    return this.parse((0, _b2.fromB64)(b64));
+    return this.parse((0, _b2.fromBase64)(b64));
   }
   transform({
     name,
@@ -5382,17 +5346,17 @@ const _BcsType = class {
     });
   }
 };
-let BcsType = exports.BcsType = _BcsType;
 _write = new WeakMap();
 _serialize = new WeakMap();
+let BcsType = exports.BcsType = _BcsType;
 const SERIALIZED_BCS_BRAND = Symbol.for("@mysten/serialized-bcs");
 function isSerializedBcs(obj) {
   return !!obj && typeof obj === "object" && obj[SERIALIZED_BCS_BRAND] === true;
 }
 class SerializedBcs {
   constructor(type, schema) {
-    __privateAdd(this, _schema, void 0);
-    __privateAdd(this, _bytes, void 0);
+    __privateAdd(this, _schema);
+    __privateAdd(this, _bytes);
     __privateSet(this, _schema, type);
     __privateSet(this, _bytes, schema);
   }
@@ -5405,13 +5369,13 @@ class SerializedBcs {
     return __privateGet(this, _bytes);
   }
   toHex() {
-    return (0, _hex.toHEX)(__privateGet(this, _bytes));
+    return (0, _hex.toHex)(__privateGet(this, _bytes));
   }
   toBase64() {
-    return (0, _b2.toB64)(__privateGet(this, _bytes));
+    return (0, _b2.toBase64)(__privateGet(this, _bytes));
   }
   toBase58() {
-    return (0, _b.toB58)(__privateGet(this, _bytes));
+    return (0, _b.toBase58)(__privateGet(this, _bytes));
   }
   parse() {
     return __privateGet(this, _schema).parse(__privateGet(this, _bytes));
@@ -5920,10 +5884,14 @@ const bcs = exports.bcs = {
       name,
       read: reader => {
         const index = reader.readULEB();
-        const [name2, type] = canonicalOrder[index];
+        const enumEntry = canonicalOrder[index];
+        if (!enumEntry) {
+          throw new TypeError(`Unknown value ${index} for enum ${name}`);
+        }
+        const [kind, type] = enumEntry;
         return {
-          [name2]: type?.read(reader) ?? true,
-          $kind: name2
+          [kind]: type?.read(reader) ?? true,
+          $kind: kind
         };
       },
       write: (value, writer) => {
@@ -5992,17 +5960,21 @@ const bcs = exports.bcs = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.fromHEX = fromHEX;
-exports.toHEX = toHEX;
-function fromHEX(hexStr) {
+exports.fromHEX = void 0;
+exports.fromHex = fromHex;
+exports.toHEX = void 0;
+exports.toHex = toHex;
+function fromHex(hexStr) {
   const normalized = hexStr.startsWith("0x") ? hexStr.slice(2) : hexStr;
   const padded = normalized.length % 2 === 0 ? normalized : `0${normalized}}`;
   const intArr = padded.match(/.{2}/g)?.map(byte => parseInt(byte, 16)) ?? [];
   return Uint8Array.from(intArr);
 }
-function toHEX(bytes) {
+function toHex(bytes) {
   return bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
 }
+const toHEX = exports.toHEX = toHex;
+const fromHEX = exports.fromHEX = fromHex;
 
 },{}],13:[function(require,module,exports){
 "use strict";
@@ -6064,10 +6036,28 @@ Object.defineProperty(exports, "fromB64", {
     return _b2.fromB64;
   }
 });
+Object.defineProperty(exports, "fromBase58", {
+  enumerable: true,
+  get: function () {
+    return _b.fromBase58;
+  }
+});
+Object.defineProperty(exports, "fromBase64", {
+  enumerable: true,
+  get: function () {
+    return _b2.fromBase64;
+  }
+});
 Object.defineProperty(exports, "fromHEX", {
   enumerable: true,
   get: function () {
     return _hex.fromHEX;
+  }
+});
+Object.defineProperty(exports, "fromHex", {
+  enumerable: true,
+  get: function () {
+    return _hex.fromHex;
   }
 });
 Object.defineProperty(exports, "isSerializedBcs", {
@@ -6094,10 +6084,28 @@ Object.defineProperty(exports, "toB64", {
     return _b2.toB64;
   }
 });
+Object.defineProperty(exports, "toBase58", {
+  enumerable: true,
+  get: function () {
+    return _b.toBase58;
+  }
+});
+Object.defineProperty(exports, "toBase64", {
+  enumerable: true,
+  get: function () {
+    return _b2.toBase64;
+  }
+});
 Object.defineProperty(exports, "toHEX", {
   enumerable: true,
   get: function () {
     return _hex.toHEX;
+  }
+});
+Object.defineProperty(exports, "toHex", {
+  enumerable: true,
+  get: function () {
+    return _hex.toHex;
   }
 });
 var _b = require("./b58.js");
@@ -6290,11 +6298,11 @@ var _hex = require("./hex.js");
 function encodeStr(data, encoding) {
   switch (encoding) {
     case "base58":
-      return (0, _b.toB58)(data);
+      return (0, _b.toBase58)(data);
     case "base64":
-      return (0, _b2.toB64)(data);
+      return (0, _b2.toBase64)(data);
     case "hex":
-      return (0, _hex.toHEX)(data);
+      return (0, _hex.toHex)(data);
     default:
       throw new Error("Unsupported encoding, supported values are: base64, hex");
   }
@@ -6302,11 +6310,11 @@ function encodeStr(data, encoding) {
 function decodeStr(data, encoding) {
   switch (encoding) {
     case "base58":
-      return (0, _b.fromB58)(data);
+      return (0, _b.fromBase58)(data);
     case "base64":
-      return (0, _b2.fromB64)(data);
+      return (0, _b2.fromBase64)(data);
     case "hex":
-      return (0, _hex.fromHEX)(data);
+      return (0, _hex.fromHex)(data);
     default:
       throw new Error("Unsupported encoding, supported values are: base64, hex");
   }
@@ -6577,20 +6585,20 @@ function optionEnum(type) {
 }
 const Address = import_bcs.bcs.bytes(import_sui_types.SUI_ADDRESS_LENGTH).transform({
   validate: val => {
-    const address = typeof val === "string" ? val : (0, import_bcs.toHEX)(val);
+    const address = typeof val === "string" ? val : (0, import_bcs.toHex)(val);
     if (!address || !(0, import_sui_types.isValidSuiAddress)((0, import_sui_types.normalizeSuiAddress)(address))) {
       throw new Error(`Invalid Sui address ${address}`);
     }
   },
-  input: val => typeof val === "string" ? (0, import_bcs.fromHEX)((0, import_sui_types.normalizeSuiAddress)(val)) : val,
-  output: val => (0, import_sui_types.normalizeSuiAddress)((0, import_bcs.toHEX)(val))
+  input: val => typeof val === "string" ? (0, import_bcs.fromHex)((0, import_sui_types.normalizeSuiAddress)(val)) : val,
+  output: val => (0, import_sui_types.normalizeSuiAddress)((0, import_bcs.toHex)(val))
 });
 const ObjectDigest = import_bcs.bcs.vector(import_bcs.bcs.u8()).transform({
   name: "ObjectDigest",
-  input: value => (0, import_bcs.fromB58)(value),
-  output: value => (0, import_bcs.toB58)(new Uint8Array(value)),
+  input: value => (0, import_bcs.fromBase58)(value),
+  output: value => (0, import_bcs.toBase58)(new Uint8Array(value)),
   validate: value => {
-    if ((0, import_bcs.fromB58)(value).length !== 32) {
+    if ((0, import_bcs.fromBase58)(value).length !== 32) {
       throw new Error("ObjectDigest must be 32 bytes");
     }
   }
@@ -6613,8 +6621,8 @@ const ObjectArg = import_bcs.bcs.enum("ObjectArg", {
 const CallArg = import_bcs.bcs.enum("CallArg", {
   Pure: import_bcs.bcs.struct("Pure", {
     bytes: import_bcs.bcs.vector(import_bcs.bcs.u8()).transform({
-      input: val => typeof val === "string" ? (0, import_bcs.fromB64)(val) : val,
-      output: val => (0, import_bcs.toB64)(new Uint8Array(val))
+      input: val => typeof val === "string" ? (0, import_bcs.fromBase64)(val) : val,
+      output: val => (0, import_bcs.toBase64)(new Uint8Array(val))
     })
   }),
   Object: ObjectArg
@@ -6682,8 +6690,8 @@ const Command = import_bcs.bcs.enum("Command", {
   //  */
   Publish: import_bcs.bcs.struct("Publish", {
     modules: import_bcs.bcs.vector(import_bcs.bcs.vector(import_bcs.bcs.u8()).transform({
-      input: val => typeof val === "string" ? (0, import_bcs.fromB64)(val) : val,
-      output: val => (0, import_bcs.toB64)(new Uint8Array(val))
+      input: val => typeof val === "string" ? (0, import_bcs.fromBase64)(val) : val,
+      output: val => (0, import_bcs.toBase64)(new Uint8Array(val))
     })),
     dependencies: import_bcs.bcs.vector(Address)
   }),
@@ -6705,8 +6713,8 @@ const Command = import_bcs.bcs.enum("Command", {
   }),
   Upgrade: import_bcs.bcs.struct("Upgrade", {
     modules: import_bcs.bcs.vector(import_bcs.bcs.vector(import_bcs.bcs.u8()).transform({
-      input: val => typeof val === "string" ? (0, import_bcs.fromB64)(val) : val,
-      output: val => (0, import_bcs.toB64)(new Uint8Array(val))
+      input: val => typeof val === "string" ? (0, import_bcs.fromBase64)(val) : val,
+      output: val => (0, import_bcs.toBase64)(new Uint8Array(val))
     })),
     dependencies: import_bcs.bcs.vector(Address),
     package: Address,
@@ -6797,8 +6805,8 @@ const MultiSig = import_bcs.bcs.struct("MultiSig", {
   multisig_pk: MultiSigPublicKey
 });
 const base64String = import_bcs.bcs.vector(import_bcs.bcs.u8()).transform({
-  input: val => typeof val === "string" ? (0, import_bcs.fromB64)(val) : val,
-  output: val => (0, import_bcs.toB64)(new Uint8Array(val))
+  input: val => typeof val === "string" ? (0, import_bcs.fromBase64)(val) : val,
+  output: val => (0, import_bcs.toBase64)(new Uint8Array(val))
 });
 const SenderSignedTransaction = import_bcs.bcs.struct("SenderSignedTransaction", {
   intentMessage: IntentMessage(TransactionData),
@@ -6808,7 +6816,7 @@ const SenderSignedData = import_bcs.bcs.vector(SenderSignedTransaction, {
   name: "SenderSignedData"
 });
 
-},{"../utils/sui-types.js":82,"./type-tag-serializer.js":21,"@mysten/bcs":13}],19:[function(require,module,exports){
+},{"../utils/sui-types.js":88,"./type-tag-serializer.js":21,"@mysten/bcs":13}],19:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -6929,7 +6937,19 @@ const ExecutionFailureStatus = import_bcs.bcs.enum("ExecutionFailureStatus", {
   CertificateDenied: null,
   SuiMoveVerificationTimedout: null,
   SharedObjectOperationNotAllowed: null,
-  InputObjectDeleted: null
+  InputObjectDeleted: null,
+  ExecutionCancelledDueToSharedObjectCongestion: import_bcs.bcs.struct(
+    "ExecutionCancelledDueToSharedObjectCongestion",
+    {
+      congestedObjects: import_bcs.bcs.vector(import_bcs2.Address)
+    }
+  ),
+  AddressDeniedForCoin: import_bcs.bcs.struct("AddressDeniedForCoin", {
+    address: import_bcs2.Address,
+    coinType: import_bcs.bcs.string()
+  }),
+  CoinTypeGlobalPause: import_bcs.bcs.struct("CoinTypeGlobalPause", { coinType: import_bcs.bcs.string() }),
+  ExecutionCancelledDueToRandomnessUnavailable: null
 });
 const ExecutionStatus = import_bcs.bcs.enum("ExecutionStatus", {
   Success: null,
@@ -6992,7 +7012,9 @@ const EffectsObjectChange = import_bcs.bcs.struct("EffectsObjectChange", {
 const UnchangedSharedKind = import_bcs.bcs.enum("UnchangedSharedKind", {
   ReadOnlyRoot: VersionDigest,
   MutateDeleted: import_bcs.bcs.u64(),
-  ReadDeleted: import_bcs.bcs.u64()
+  ReadDeleted: import_bcs.bcs.u64(),
+  Cancelled: import_bcs.bcs.u64(),
+  PerEpochConfig: null
 });
 const TransactionEffectsV2 = import_bcs.bcs.struct("TransactionEffectsV2", {
   status: ExecutionStatus,
@@ -7203,7 +7225,7 @@ class TypeTagSerializer {
 }
 
 
-},{"../utils/sui-types.js":82,"@mysten/bcs":13}],22:[function(require,module,exports){
+},{"../utils/sui-types.js":88,"@mysten/bcs":13}],22:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7470,16 +7492,29 @@ class SuiClient {
       params: [input.digests, input.options]
     });
   }
-  async executeTransactionBlock(input) {
-    return await this.transport.request({
+  async executeTransactionBlock({
+    transactionBlock,
+    signature,
+    options,
+    requestType
+  }) {
+    const result = await this.transport.request({
       method: "sui_executeTransactionBlock",
       params: [
-        typeof input.transactionBlock === "string" ? input.transactionBlock : (0, import_bcs.toB64)(input.transactionBlock),
-        Array.isArray(input.signature) ? input.signature : [input.signature],
-        input.options,
-        input.requestType
+        typeof transactionBlock === "string" ? transactionBlock : (0, import_bcs.toBase64)(transactionBlock),
+        Array.isArray(signature) ? signature : [signature],
+        options
       ]
     });
+    if (requestType === "WaitForLocalExecution") {
+      try {
+        await this.waitForTransaction({
+          digest: result.digest
+        });
+      } catch (_) {
+      }
+    }
+    return result;
   }
   async signAndExecuteTransaction({
     transaction,
@@ -7565,6 +7600,8 @@ class SuiClient {
   }
   /**
    * Subscribe to get notifications whenever an event matching the filter occurs
+   *
+   * @deprecated
    */
   async subscribeEvent(input) {
     return this.transport.subscribe({
@@ -7574,6 +7611,9 @@ class SuiClient {
       onMessage: input.onMessage
     });
   }
+  /**
+   * @deprecated
+   */
   async subscribeTransaction(input) {
     return this.transport.subscribe({
       method: "suix_subscribeTransaction",
@@ -7591,7 +7631,7 @@ class SuiClient {
     let devInspectTxBytes;
     if ((0, import_transactions.isTransaction)(input.transactionBlock)) {
       input.transactionBlock.setSenderIfNotSet(input.sender);
-      devInspectTxBytes = (0, import_bcs.toB64)(
+      devInspectTxBytes = (0, import_bcs.toBase64)(
         await input.transactionBlock.build({
           client: this,
           onlyTransactionKind: true
@@ -7600,7 +7640,7 @@ class SuiClient {
     } else if (typeof input.transactionBlock === "string") {
       devInspectTxBytes = input.transactionBlock;
     } else if (input.transactionBlock instanceof Uint8Array) {
-      devInspectTxBytes = (0, import_bcs.toB64)(input.transactionBlock);
+      devInspectTxBytes = (0, import_bcs.toBase64)(input.transactionBlock);
     } else {
       throw new Error("Unknown transaction block format.");
     }
@@ -7616,7 +7656,7 @@ class SuiClient {
     return await this.transport.request({
       method: "sui_dryRunTransactionBlock",
       params: [
-        typeof input.transactionBlock === "string" ? input.transactionBlock : (0, import_bcs.toB64)(input.transactionBlock)
+        typeof input.transactionBlock === "string" ? input.transactionBlock : (0, import_bcs.toBase64)(input.transactionBlock)
       ]
     });
   }
@@ -7723,8 +7763,8 @@ class SuiClient {
   // TODO: Migrate this to `sui_getChainIdentifier` once it is widely available.
   async getChainIdentifier() {
     const checkpoint = await this.getCheckpoint({ id: "0" });
-    const bytes = (0, import_bcs.fromB58)(checkpoint.digest);
-    return (0, import_bcs.toHEX)(bytes.slice(0, 4));
+    const bytes = (0, import_bcs.fromBase58)(checkpoint.digest);
+    return (0, import_bcs.toHex)(bytes.slice(0, 4));
   }
   async resolveNameServiceAddress(input) {
     return await this.transport.request({
@@ -7787,7 +7827,7 @@ class SuiClient {
 }
 
 
-},{"../transactions/index.js":73,"../utils/sui-types.js":82,"../utils/suins.js":83,"./http-transport.js":24,"@mysten/bcs":13}],23:[function(require,module,exports){
+},{"../transactions/index.js":74,"../utils/sui-types.js":88,"../utils/suins.js":89,"./http-transport.js":24,"@mysten/bcs":13}],23:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -7855,6 +7895,9 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -7868,28 +7911,11 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-var __privateMethod = (obj, member, method) => {
-  __accessCheck(obj, member, "access private method");
-  return method;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 var http_transport_exports = {};
 __export(http_transport_exports, {
   SuiHTTPTransport: () => SuiHTTPTransport
@@ -7898,13 +7924,13 @@ module.exports = __toCommonJS(http_transport_exports);
 var import_version = require("../version.js");
 var import_errors = require("./errors.js");
 var import_rpc_websocket_client = require("./rpc-websocket-client.js");
-var _requestId, _options, _websocketClient, _getWebsocketClient, getWebsocketClient_fn;
+var _requestId, _options, _websocketClient, _SuiHTTPTransport_instances, getWebsocketClient_fn;
 class SuiHTTPTransport {
   constructor(options) {
-    __privateAdd(this, _getWebsocketClient);
+    __privateAdd(this, _SuiHTTPTransport_instances);
     __privateAdd(this, _requestId, 0);
-    __privateAdd(this, _options, void 0);
-    __privateAdd(this, _websocketClient, void 0);
+    __privateAdd(this, _options);
+    __privateAdd(this, _websocketClient);
     __privateSet(this, _options, options);
   }
   fetch(input, init) {
@@ -7948,14 +7974,14 @@ class SuiHTTPTransport {
     return data.result;
   }
   async subscribe(input) {
-    const unsubscribe = await __privateMethod(this, _getWebsocketClient, getWebsocketClient_fn).call(this).subscribe(input);
+    const unsubscribe = await __privateMethod(this, _SuiHTTPTransport_instances, getWebsocketClient_fn).call(this).subscribe(input);
     return async () => !!await unsubscribe();
   }
 }
 _requestId = new WeakMap();
 _options = new WeakMap();
 _websocketClient = new WeakMap();
-_getWebsocketClient = new WeakSet();
+_SuiHTTPTransport_instances = new WeakSet();
 getWebsocketClient_fn = function() {
   if (!__privateGet(this, _websocketClient)) {
     const WebSocketConstructor = __privateGet(this, _options).WebSocketConstructor ?? WebSocket;
@@ -7976,7 +8002,7 @@ getWebsocketClient_fn = function() {
 };
 
 
-},{"../version.js":86,"./errors.js":23,"./rpc-websocket-client.js":27}],25:[function(require,module,exports){
+},{"../version.js":92,"./errors.js":23,"./rpc-websocket-client.js":27}],25:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8060,6 +8086,9 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -8073,24 +8102,11 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 var __privateWrapper = (obj, member, setter, getter) => ({
   set _(value) {
     __privateSet(obj, member, value, setter);
@@ -8099,10 +8115,6 @@ var __privateWrapper = (obj, member, setter, getter) => ({
     return __privateGet(obj, member, getter);
   }
 });
-var __privateMethod = (obj, member, method) => {
-  __accessCheck(obj, member, "access private method");
-  return method;
-};
 var rpc_websocket_client_exports = {};
 __export(rpc_websocket_client_exports, {
   DEFAULT_CLIENT_OPTIONS: () => DEFAULT_CLIENT_OPTIONS,
@@ -8110,7 +8122,7 @@ __export(rpc_websocket_client_exports, {
 });
 module.exports = __toCommonJS(rpc_websocket_client_exports);
 var import_errors = require("./errors.js");
-var _requestId, _disconnects, _webSocket, _connectionPromise, _subscriptions, _pendingRequests, _setupWebSocket, setupWebSocket_fn, _reconnect, reconnect_fn;
+var _requestId, _disconnects, _webSocket, _connectionPromise, _subscriptions, _pendingRequests, _WebsocketClient_instances, setupWebSocket_fn, reconnect_fn;
 function getWebsocketUrl(httpUrl) {
   const url = new URL(httpUrl);
   url.protocol = url.protocol.replace("http", "ws");
@@ -8125,8 +8137,7 @@ const DEFAULT_CLIENT_OPTIONS = {
 };
 class WebsocketClient {
   constructor(endpoint, options = {}) {
-    __privateAdd(this, _setupWebSocket);
-    __privateAdd(this, _reconnect);
+    __privateAdd(this, _WebsocketClient_instances);
     __privateAdd(this, _requestId, 0);
     __privateAdd(this, _disconnects, 0);
     __privateAdd(this, _webSocket, null);
@@ -8143,7 +8154,7 @@ class WebsocketClient {
     }
   }
   async makeRequest(method, params) {
-    const webSocket = await __privateMethod(this, _setupWebSocket, setupWebSocket_fn).call(this);
+    const webSocket = await __privateMethod(this, _WebsocketClient_instances, setupWebSocket_fn).call(this);
     return new Promise((resolve, reject) => {
       __privateSet(this, _requestId, __privateGet(this, _requestId) + 1);
       __privateGet(this, _pendingRequests).set(__privateGet(this, _requestId), {
@@ -8175,7 +8186,7 @@ _webSocket = new WeakMap();
 _connectionPromise = new WeakMap();
 _subscriptions = new WeakMap();
 _pendingRequests = new WeakMap();
-_setupWebSocket = new WeakSet();
+_WebsocketClient_instances = new WeakSet();
 setupWebSocket_fn = function() {
   if (__privateGet(this, _connectionPromise)) {
     return __privateGet(this, _connectionPromise);
@@ -8191,7 +8202,7 @@ setupWebSocket_fn = function() {
       __privateWrapper(this, _disconnects)._++;
       if (__privateGet(this, _disconnects) <= this.options.maxReconnects) {
         setTimeout(() => {
-          __privateMethod(this, _reconnect, reconnect_fn).call(this);
+          __privateMethod(this, _WebsocketClient_instances, reconnect_fn).call(this);
         }, this.options.reconnectTimeout);
       }
     });
@@ -8221,7 +8232,6 @@ setupWebSocket_fn = function() {
   }));
   return __privateGet(this, _connectionPromise);
 };
-_reconnect = new WeakSet();
 reconnect_fn = async function() {
   __privateGet(this, _webSocket)?.close();
   __privateSet(this, _connectionPromise, null);
@@ -8243,8 +8253,7 @@ class RpcSubscription {
   async unsubscribe(client) {
     const { subscriptionId } = this;
     this.subscribed = false;
-    if (subscriptionId == null)
-      return false;
+    if (subscriptionId == null) return false;
     this.subscriptionId = null;
     return client.makeRequest(this.input.unsubscribe, [subscriptionId]);
   }
@@ -8542,7 +8551,7 @@ class Signer {
     });
     return {
       signature,
-      bytes: (0, import_bcs.toB64)(bytes)
+      bytes: (0, import_bcs.toBase64)(bytes)
     };
   }
   /**
@@ -8560,7 +8569,7 @@ class Signer {
       "PersonalMessage"
     );
     return {
-      bytes: (0, import_bcs.toB64)(bytes),
+      bytes: (0, import_bcs.toBase64)(bytes),
       signature
     };
   }
@@ -8595,7 +8604,7 @@ function encodeSuiPrivateKey(bytes, scheme) {
 }
 
 
-},{"./intent.js":36,"./signature-scheme.js":40,"./signature.js":41,"@mysten/bcs":13,"@noble/hashes/blake2b":110,"bech32":131}],38:[function(require,module,exports){
+},{"./intent.js":36,"./signature-scheme.js":40,"./signature.js":41,"@mysten/bcs":13,"@noble/hashes/blake2b":126,"bech32":146}],38:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8640,11 +8649,11 @@ function mnemonicToSeed(mnemonics) {
   return (0, import_bip39.mnemonicToSeedSync)(mnemonics, "");
 }
 function mnemonicToSeedHex(mnemonics) {
-  return (0, import_bcs.toHEX)(mnemonicToSeed(mnemonics));
+  return (0, import_bcs.toHex)(mnemonicToSeed(mnemonics));
 }
 
 
-},{"@mysten/bcs":13,"@scure/bip39":128}],39:[function(require,module,exports){
+},{"@mysten/bcs":13,"@scure/bip39":144}],39:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8676,8 +8685,7 @@ var import_bcs2 = require("../bcs/index.js");
 var import_sui_types = require("../utils/sui-types.js");
 var import_intent = require("./intent.js");
 function bytesEqual(a, b) {
-  if (a === b)
-    return true;
+  if (a === b) return true;
   if (a.length !== b.length) {
     return false;
   }
@@ -8699,7 +8707,7 @@ class PublicKey {
    * Return the base-64 representation of the public key
    */
   toBase64() {
-    return (0, import_bcs.toB64)(this.toRawBytes());
+    return (0, import_bcs.toBase64)(this.toRawBytes());
   }
   toString() {
     throw new Error(
@@ -8713,7 +8721,7 @@ class PublicKey {
    */
   toSuiPublicKey() {
     const bytes = this.toSuiBytes();
-    return (0, import_bcs.toB64)(bytes);
+    return (0, import_bcs.toBase64)(bytes);
   }
   verifyWithIntent(bytes, signature, intent) {
     const intentMessage = (0, import_intent.messageWithIntent)(intent, bytes);
@@ -8758,7 +8766,7 @@ class PublicKey {
 }
 
 
-},{"../bcs/index.js":20,"../utils/sui-types.js":82,"./intent.js":36,"@mysten/bcs":13,"@noble/hashes/blake2b":110,"@noble/hashes/utils":116}],40:[function(require,module,exports){
+},{"../bcs/index.js":20,"../utils/sui-types.js":88,"./intent.js":36,"@mysten/bcs":13,"@noble/hashes/blake2b":126,"@noble/hashes/utils":132}],40:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -8847,10 +8855,10 @@ function toSerializedSignature({
   serializedSignature.set([import_signature_scheme.SIGNATURE_SCHEME_TO_FLAG[signatureScheme]]);
   serializedSignature.set(signature, 1);
   serializedSignature.set(pubKeyBytes, 1 + signature.length);
-  return (0, import_bcs.toB64)(serializedSignature);
+  return (0, import_bcs.toBase64)(serializedSignature);
 }
 function parseSerializedSignature(serializedSignature) {
-  const bytes = (0, import_bcs.fromB64)(serializedSignature);
+  const bytes = (0, import_bcs.fromBase64)(serializedSignature);
   const signatureScheme = import_signature_scheme.SIGNATURE_FLAG_TO_SCHEME[bytes[0]];
   switch (signatureScheme) {
     case "MultiSig":
@@ -8882,7 +8890,7 @@ function parseSerializedSignature(serializedSignature) {
 }
 
 
-},{"../bcs/index.js":20,"../zklogin/publickey.js":89,"./signature-scheme.js":40,"@mysten/bcs":13}],42:[function(require,module,exports){
+},{"../bcs/index.js":20,"../zklogin/publickey.js":95,"./signature-scheme.js":40,"@mysten/bcs":13}],42:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9024,6 +9032,9 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -9037,24 +9048,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var client_exports = {};
 __export(client_exports, {
   SuiGraphQLClient: () => SuiGraphQLClient,
@@ -9072,10 +9069,10 @@ class SuiGraphQLClient {
     headers = {},
     queries = {}
   }) {
-    __privateAdd(this, _url, void 0);
-    __privateAdd(this, _queries, void 0);
-    __privateAdd(this, _headers, void 0);
-    __privateAdd(this, _fetch, void 0);
+    __privateAdd(this, _url);
+    __privateAdd(this, _queries);
+    __privateAdd(this, _headers);
+    __privateAdd(this, _fetch);
     __privateSet(this, _url, url);
     __privateSet(this, _queries, queries);
     __privateSet(this, _headers, headers);
@@ -9113,7 +9110,7 @@ _headers = new WeakMap();
 _fetch = new WeakMap();
 
 
-},{"graphql":147}],45:[function(require,module,exports){
+},{"graphql":161}],45:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9146,7 +9143,7 @@ var import_gql2 = require("gql.tada");
 const graphql = (0, import_gql.initGraphQLTada)();
 
 
-},{"../../types.js":46,"gql.tada":135}],46:[function(require,module,exports){
+},{"../../types.js":46,"gql.tada":149}],46:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9214,7 +9211,7 @@ const pathRegex = new RegExp("^m(\\/[0-9]+')+$");
 const replaceDerive = (val) => val.replace("'", "");
 const getMasterKeyFromSeed = (seed) => {
   const h = import_hmac.hmac.create(import_sha512.sha512, ED25519_CURVE);
-  const I = h.update((0, import_bcs.fromHEX)(seed)).digest();
+  const I = h.update((0, import_bcs.fromHex)(seed)).digest();
   const IL = I.slice(0, 32);
   const IR = I.slice(32);
   return {
@@ -9268,7 +9265,7 @@ const derivePath = (path, seed, offset = HARDENED_OFFSET) => {
 };
 
 
-},{"@mysten/bcs":13,"@noble/hashes/hmac":112,"@noble/hashes/sha512":115,"tweetnacl":284}],48:[function(require,module,exports){
+},{"@mysten/bcs":13,"@noble/hashes/hmac":128,"@noble/hashes/sha512":131,"tweetnacl":299}],48:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9373,10 +9370,17 @@ class Ed25519Keypair extends import_keypair.Keypair {
    *
    * @throws error if the provided secret key is invalid and validation is not skipped.
    *
-   * @param secretKey secret key byte array
+   * @param secretKey secret key as a byte array or Bech32 secret key string
    * @param options: skip secret key validation
    */
   static fromSecretKey(secretKey, options) {
+    if (typeof secretKey === "string") {
+      const decoded = (0, import_keypair.decodeSuiPrivateKey)(secretKey);
+      if (decoded.schema !== "ED25519") {
+        throw new Error(`Expected a ED25519 keypair, got ${decoded.schema}`);
+      }
+      return this.fromSecretKey(decoded.secretKey, options);
+    }
     const secretKeyLength = secretKey.length;
     if (secretKeyLength !== import_keypair.PRIVATE_KEY_SIZE) {
       throw new Error(
@@ -9451,7 +9455,7 @@ class Ed25519Keypair extends import_keypair.Keypair {
 }
 
 
-},{"../../cryptography/keypair.js":37,"../../cryptography/mnemonics.js":38,"./ed25519-hd-key.js":47,"./publickey.js":50,"tweetnacl":284}],50:[function(require,module,exports){
+},{"../../cryptography/keypair.js":37,"../../cryptography/mnemonics.js":38,"./ed25519-hd-key.js":47,"./publickey.js":50,"tweetnacl":299}],50:[function(require,module,exports){
 "use strict";
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -9499,7 +9503,7 @@ class Ed25519PublicKey extends import_publickey.PublicKey {
   constructor(value) {
     super();
     if (typeof value === "string") {
-      this.data = (0, import_bcs.fromB64)(value);
+      this.data = (0, import_bcs.fromBase64)(value);
     } else if (value instanceof Uint8Array) {
       this.data = value;
     } else {
@@ -9552,7 +9556,7 @@ class Ed25519PublicKey extends import_publickey.PublicKey {
 Ed25519PublicKey.SIZE = PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":39,"../../cryptography/signature-scheme.js":40,"../../cryptography/signature.js":41,"@mysten/bcs":13,"tweetnacl":284}],51:[function(require,module,exports){
+},{"../../cryptography/publickey.js":39,"../../cryptography/signature-scheme.js":40,"../../cryptography/signature.js":41,"@mysten/bcs":13,"tweetnacl":299}],51:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9654,10 +9658,17 @@ class Secp256k1Keypair extends import_keypair.Keypair {
    *
    * @throws error if the provided secret key is invalid and validation is not skipped.
    *
-   * @param secretKey secret key byte array
+   * @param secretKey secret key byte array  or Bech32 secret key string
    * @param options: skip secret key validation
    */
   static fromSecretKey(secretKey, options) {
+    if (typeof secretKey === "string") {
+      const decoded = (0, import_keypair.decodeSuiPrivateKey)(secretKey);
+      if (decoded.schema !== "Secp256k1") {
+        throw new Error(`Expected a Secp256k1 keypair, got ${decoded.schema}`);
+      }
+      return this.fromSecretKey(decoded.secretKey, options);
+    }
     const publicKey = import_secp256k1.secp256k1.getPublicKey(secretKey, true);
     if (!options || !options.skipValidation) {
       const encoder = new TextEncoder();
@@ -9727,7 +9738,7 @@ class Secp256k1Keypair extends import_keypair.Keypair {
 }
 
 
-},{"../../cryptography/keypair.js":37,"../../cryptography/mnemonics.js":38,"./publickey.js":53,"@noble/curves/secp256k1":105,"@noble/hashes/blake2b":110,"@noble/hashes/sha256":114,"@noble/hashes/utils":116,"@scure/bip32":118}],53:[function(require,module,exports){
+},{"../../cryptography/keypair.js":37,"../../cryptography/mnemonics.js":38,"./publickey.js":53,"@noble/curves/secp256k1":105,"@noble/hashes/blake2b":126,"@noble/hashes/sha256":130,"@noble/hashes/utils":132,"@scure/bip32":134}],53:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9766,7 +9777,7 @@ class Secp256k1PublicKey extends import_publickey.PublicKey {
   constructor(value) {
     super();
     if (typeof value === "string") {
-      this.data = (0, import_bcs.fromB64)(value);
+      this.data = (0, import_bcs.fromBase64)(value);
     } else if (value instanceof Uint8Array) {
       this.data = value;
     } else {
@@ -9823,7 +9834,7 @@ class Secp256k1PublicKey extends import_publickey.PublicKey {
 Secp256k1PublicKey.SIZE = SECP256K1_PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":39,"../../cryptography/signature-scheme.js":40,"../../cryptography/signature.js":41,"@mysten/bcs":13,"@noble/curves/secp256k1":105,"@noble/hashes/sha256":114}],54:[function(require,module,exports){
+},{"../../cryptography/publickey.js":39,"../../cryptography/signature-scheme.js":40,"../../cryptography/signature.js":41,"@mysten/bcs":13,"@noble/curves/secp256k1":105,"@noble/hashes/sha256":130}],54:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -9925,10 +9936,17 @@ class Secp256r1Keypair extends import_keypair.Keypair {
    *
    * @throws error if the provided secret key is invalid and validation is not skipped.
    *
-   * @param secretKey secret key byte array
+   * @param secretKey secret key byte array or Bech32 secret key string
    * @param options: skip secret key validation
    */
   static fromSecretKey(secretKey, options) {
+    if (typeof secretKey === "string") {
+      const decoded = (0, import_keypair.decodeSuiPrivateKey)(secretKey);
+      if (decoded.schema !== "Secp256r1") {
+        throw new Error(`Expected a Secp256r1 keypair, got ${decoded.schema}`);
+      }
+      return this.fromSecretKey(decoded.secretKey, options);
+    }
     const publicKey = import_p256.secp256r1.getPublicKey(secretKey, true);
     if (!options || !options.skipValidation) {
       const encoder = new TextEncoder();
@@ -9992,7 +10010,7 @@ class Secp256r1Keypair extends import_keypair.Keypair {
 }
 
 
-},{"../../cryptography/keypair.js":37,"../../cryptography/mnemonics.js":38,"./publickey.js":56,"@noble/curves/p256":104,"@noble/hashes/blake2b":110,"@noble/hashes/sha256":114,"@noble/hashes/utils":116,"@scure/bip32":118}],56:[function(require,module,exports){
+},{"../../cryptography/keypair.js":37,"../../cryptography/mnemonics.js":38,"./publickey.js":56,"@noble/curves/p256":104,"@noble/hashes/blake2b":126,"@noble/hashes/sha256":130,"@noble/hashes/utils":132,"@scure/bip32":134}],56:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10031,7 +10049,7 @@ class Secp256r1PublicKey extends import_publickey.PublicKey {
   constructor(value) {
     super();
     if (typeof value === "string") {
-      this.data = (0, import_bcs.fromB64)(value);
+      this.data = (0, import_bcs.fromBase64)(value);
     } else if (value instanceof Uint8Array) {
       this.data = value;
     } else {
@@ -10088,7 +10106,7 @@ class Secp256r1PublicKey extends import_publickey.PublicKey {
 Secp256r1PublicKey.SIZE = SECP256R1_PUBLIC_KEY_SIZE;
 
 
-},{"../../cryptography/publickey.js":39,"../../cryptography/signature-scheme.js":40,"../../cryptography/signature.js":41,"@mysten/bcs":13,"@noble/curves/p256":104,"@noble/hashes/sha256":114}],57:[function(require,module,exports){
+},{"../../cryptography/publickey.js":39,"../../cryptography/signature-scheme.js":40,"../../cryptography/signature.js":41,"@mysten/bcs":13,"@noble/curves/p256":104,"@noble/hashes/sha256":130}],57:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10165,7 +10183,7 @@ class MultiSigPublicKey extends import_publickey.PublicKey {
   constructor(value, options = {}) {
     super();
     if (typeof value === "string") {
-      this.rawBytes = (0, import_bcs.fromB64)(value);
+      this.rawBytes = (0, import_bcs.fromBase64)(value);
       this.multisigPublicKey = import_bcs2.bcs.MultiSigPublicKey.parse(this.rawBytes);
     } else if (value instanceof Uint8Array) {
       this.rawBytes = value;
@@ -10341,7 +10359,7 @@ class MultiSigPublicKey extends import_publickey.PublicKey {
     let tmp = new Uint8Array(bytes.length + 1);
     tmp.set([import_signature_scheme.SIGNATURE_SCHEME_TO_FLAG["MultiSig"]]);
     tmp.set(bytes, 1);
-    return (0, import_bcs.toB64)(tmp);
+    return (0, import_bcs.toBase64)(tmp);
   }
 }
 function parsePartialSignatures(multisig, options = {}) {
@@ -10380,12 +10398,15 @@ function asIndices(bitmap) {
 }
 
 
-},{"../bcs/index.js":20,"../cryptography/publickey.js":39,"../cryptography/signature-scheme.js":40,"../cryptography/signature.js":41,"../utils/sui-types.js":82,"../verify/index.js":84,"../zklogin/publickey.js":89,"./signer.js":59,"@mysten/bcs":13,"@noble/hashes/blake2b":110,"@noble/hashes/utils":116}],59:[function(require,module,exports){
+},{"../bcs/index.js":20,"../cryptography/publickey.js":39,"../cryptography/signature-scheme.js":40,"../cryptography/signature.js":41,"../utils/sui-types.js":88,"../verify/index.js":90,"../zklogin/publickey.js":95,"./signer.js":59,"@mysten/bcs":13,"@noble/hashes/blake2b":126,"@noble/hashes/utils":132}],59:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -10399,24 +10420,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var signer_exports = {};
 __export(signer_exports, {
   MultiSigSigner: () => MultiSigSigner
@@ -10428,8 +10435,8 @@ var _pubkey, _signers;
 class MultiSigSigner extends import_cryptography.Signer {
   constructor(pubkey, signers = []) {
     super();
-    __privateAdd(this, _pubkey, void 0);
-    __privateAdd(this, _signers, void 0);
+    __privateAdd(this, _pubkey);
+    __privateAdd(this, _signers);
     __privateSet(this, _pubkey, pubkey);
     __privateSet(this, _signers, signers);
     let uniqueKeys = /* @__PURE__ */ new Set();
@@ -10478,7 +10485,7 @@ class MultiSigSigner extends import_cryptography.Signer {
     );
     return {
       signature,
-      bytes: (0, import_bcs.toB64)(bytes)
+      bytes: (0, import_bcs.toBase64)(bytes)
     };
   }
   async signPersonalMessage(bytes) {
@@ -10489,7 +10496,7 @@ class MultiSigSigner extends import_cryptography.Signer {
     );
     return {
       signature,
-      bytes: (0, import_bcs.toB64)(bytes)
+      bytes: (0, import_bcs.toBase64)(bytes)
     };
   }
 }
@@ -10498,6 +10505,43 @@ _signers = new WeakMap();
 
 
 },{"../cryptography/index.js":35,"@mysten/bcs":13}],60:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var Arguments_exports = {};
+__export(Arguments_exports, {
+  Arguments: () => Arguments
+});
+module.exports = __toCommonJS(Arguments_exports);
+var import_object = require("./object.js");
+var import_pure = require("./pure.js");
+const Arguments = {
+  pure: (0, import_pure.createPure)((value) => (tx) => tx.pure(value)),
+  object: (0, import_object.createObjectMethods)(
+    (value) => (tx) => tx.object(value)
+  ),
+  sharedObjectRef: (...args) => (tx) => tx.sharedObjectRef(...args),
+  objectRef: (...args) => (tx) => tx.objectRef(...args),
+  receivingRef: (...args) => (tx) => tx.receivingRef(...args)
+};
+
+
+},{"./object.js":77,"./pure.js":80}],61:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10581,7 +10625,7 @@ const Commands = {
       $kind: "Publish",
       Publish: {
         modules: modules.map(
-          (module2) => typeof module2 === "string" ? module2 : (0, import_bcs.toB64)(new Uint8Array(module2))
+          (module2) => typeof module2 === "string" ? module2 : (0, import_bcs.toBase64)(new Uint8Array(module2))
         ),
         dependencies: dependencies.map((dep) => (0, import_sui_types.normalizeSuiObjectId)(dep))
       }
@@ -10597,7 +10641,7 @@ const Commands = {
       $kind: "Upgrade",
       Upgrade: {
         modules: modules.map(
-          (module2) => typeof module2 === "string" ? module2 : (0, import_bcs.toB64)(new Uint8Array(module2))
+          (module2) => typeof module2 === "string" ? module2 : (0, import_bcs.toBase64)(new Uint8Array(module2))
         ),
         dependencies: dependencies.map((dep) => (0, import_sui_types.normalizeSuiObjectId)(dep)),
         package: packageId,
@@ -10639,7 +10683,7 @@ const Commands = {
 };
 
 
-},{"../utils/sui-types.js":82,"./data/internal.js":65,"@mysten/bcs":13,"valibot":286}],61:[function(require,module,exports){
+},{"../utils/sui-types.js":88,"./data/internal.js":66,"@mysten/bcs":13,"valibot":108}],62:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -10669,7 +10713,7 @@ function Pure(data) {
   return {
     $kind: "Pure",
     Pure: {
-      bytes: data instanceof Uint8Array ? (0, import_bcs.toB64)(data) : data.toBase64()
+      bytes: data instanceof Uint8Array ? (0, import_bcs.toBase64)(data) : data.toBase64()
     }
   };
 }
@@ -10721,12 +10765,15 @@ const Inputs = {
 };
 
 
-},{"../utils/sui-types.js":82,"@mysten/bcs":13}],62:[function(require,module,exports){
+},{"../utils/sui-types.js":88,"@mysten/bcs":13}],63:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -10740,24 +10787,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var ObjectCache_exports = {};
 __export(ObjectCache_exports, {
   AsyncCache: () => AsyncCache,
@@ -10855,7 +10888,7 @@ class InMemoryCache extends AsyncCache {
 _caches = new WeakMap();
 class ObjectCache {
   constructor({ cache = new InMemoryCache() }) {
-    __privateAdd(this, _cache, void 0);
+    __privateAdd(this, _cache);
     __privateSet(this, _cache, cache);
   }
   asPlugin() {
@@ -10875,12 +10908,13 @@ class ObjectCache {
         }
         if (cached2.initialSharedVersion && !input.UnresolvedObject.initialSharedVersion) {
           input.UnresolvedObject.initialSharedVersion = cached2.initialSharedVersion;
-        }
-        if (cached2.version && !input.UnresolvedObject.version) {
-          input.UnresolvedObject.version = cached2.version;
-        }
-        if (cached2.digest && !input.UnresolvedObject.digest) {
-          input.UnresolvedObject.digest = cached2.digest;
+        } else {
+          if (cached2.version && !input.UnresolvedObject.version) {
+            input.UnresolvedObject.version = cached2.version;
+          }
+          if (cached2.digest && !input.UnresolvedObject.digest) {
+            input.UnresolvedObject.digest = cached2.digest;
+          }
         }
       }
       await Promise.all(
@@ -10969,12 +11003,15 @@ class ObjectCache {
 _cache = new WeakMap();
 
 
-},{"../utils/sui-types.js":82}],63:[function(require,module,exports){
+},{"../utils/sui-types.js":88}],64:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -10988,28 +11025,11 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-var __privateMethod = (obj, member, method) => {
-  __accessCheck(obj, member, "access private method");
-  return method;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 var Transaction_exports = {};
 __export(Transaction_exports, {
   Transaction: () => Transaction,
@@ -11025,10 +11045,11 @@ var import_v1 = require("./data/v1.js");
 var import_v2 = require("./data/v2.js");
 var import_Inputs = require("./Inputs.js");
 var import_json_rpc_resolver = require("./json-rpc-resolver.js");
+var import_object = require("./object.js");
 var import_pure = require("./pure.js");
 var import_TransactionData = require("./TransactionData.js");
 var import_utils = require("./utils.js");
-var _serializationPlugins, _buildPlugins, _intentResolvers, _data, _normalizeTransactionArgument, normalizeTransactionArgument_fn, _resolveArgument, resolveArgument_fn, _prepareBuild, prepareBuild_fn, _runPlugins, runPlugins_fn;
+var _serializationPlugins, _buildPlugins, _intentResolvers, _data, _Transaction_instances, normalizeTransactionArgument_fn, resolveArgument_fn, prepareBuild_fn, runPlugins_fn;
 function createTransactionResult(index) {
   const baseResult = { $kind: "Result", Result: index };
   const nestedResults = [];
@@ -11058,11 +11079,9 @@ function createTransactionResult(index) {
           }
         };
       }
-      if (typeof property === "symbol")
-        return;
+      if (typeof property === "symbol") return;
       const resultIndex = parseInt(property, 10);
-      if (Number.isNaN(resultIndex) || resultIndex < 0)
-        return;
+      if (Number.isNaN(resultIndex) || resultIndex < 0) return;
       return nestedResultFor(resultIndex);
     }
   });
@@ -11071,21 +11090,58 @@ const TRANSACTION_BRAND = Symbol.for("@mysten/transaction");
 function isTransaction(obj) {
   return !!obj && typeof obj === "object" && obj[TRANSACTION_BRAND] === true;
 }
-const _Transaction = class {
+const modulePluginRegistry = {
+  buildPlugins: /* @__PURE__ */ new Map(),
+  serializationPlugins: /* @__PURE__ */ new Map()
+};
+const TRANSACTION_REGISTRY_KEY = Symbol.for("@mysten/transaction/registry");
+function getGlobalPluginRegistry() {
+  try {
+    const target = globalThis;
+    if (!target[TRANSACTION_REGISTRY_KEY]) {
+      target[TRANSACTION_REGISTRY_KEY] = modulePluginRegistry;
+    }
+    return target[TRANSACTION_REGISTRY_KEY];
+  } catch (e) {
+    return modulePluginRegistry;
+  }
+}
+const _Transaction = class _Transaction {
   constructor() {
-    __privateAdd(this, _normalizeTransactionArgument);
-    __privateAdd(this, _resolveArgument);
-    /**
-     * Prepare the transaction by validating the transaction data and resolving all inputs
-     * so that it can be built into bytes.
-     */
-    __privateAdd(this, _prepareBuild);
-    __privateAdd(this, _runPlugins);
-    __privateAdd(this, _serializationPlugins, []);
-    __privateAdd(this, _buildPlugins, []);
+    __privateAdd(this, _Transaction_instances);
+    __privateAdd(this, _serializationPlugins);
+    __privateAdd(this, _buildPlugins);
     __privateAdd(this, _intentResolvers, /* @__PURE__ */ new Map());
-    __privateAdd(this, _data, void 0);
+    __privateAdd(this, _data);
+    /**
+     * Add a new object input to the transaction.
+     */
+    this.object = (0, import_object.createObjectMethods)(
+      (value) => {
+        if (typeof value === "function") {
+          return this.object(value(this));
+        }
+        if (typeof value === "object" && (0, import_valibot.is)(import_internal.Argument, value)) {
+          return value;
+        }
+        const id = (0, import_utils.getIdFromCallArg)(value);
+        const inserted = __privateGet(this, _data).inputs.find((i) => id === (0, import_utils.getIdFromCallArg)(i));
+        if (inserted?.Object?.SharedObject && typeof value === "object" && value.Object?.SharedObject) {
+          inserted.Object.SharedObject.mutable = inserted.Object.SharedObject.mutable || value.Object.SharedObject.mutable;
+        }
+        return inserted ? { $kind: "Input", Input: __privateGet(this, _data).inputs.indexOf(inserted), type: "object" } : __privateGet(this, _data).addInput(
+          "object",
+          typeof value === "string" ? {
+            $kind: "UnresolvedObject",
+            UnresolvedObject: { objectId: (0, import_sui_types.normalizeSuiAddress)(value) }
+          } : value
+        );
+      }
+    );
+    const globalPlugins = getGlobalPluginRegistry();
     __privateSet(this, _data, new import_TransactionData.TransactionDataBuilder());
+    __privateSet(this, _buildPlugins, [...globalPlugins.buildPlugins.values()]);
+    __privateSet(this, _serializationPlugins, [...globalPlugins.serializationPlugins.values()]);
   }
   /**
    * Converts from a serialize transaction kind (built with `build({ onlyTransactionKind: true })`) to a `Transaction` class.
@@ -11094,7 +11150,7 @@ const _Transaction = class {
   static fromKind(serialized) {
     const tx = new _Transaction();
     __privateSet(tx, _data, import_TransactionData.TransactionDataBuilder.fromKindBytes(
-      typeof serialized === "string" ? (0, import_bcs.fromB64)(serialized) : serialized
+      typeof serialized === "string" ? (0, import_bcs.fromBase64)(serialized) : serialized
     ));
     return tx;
   }
@@ -11110,12 +11166,30 @@ const _Transaction = class {
       __privateSet(newTransaction, _data, new import_TransactionData.TransactionDataBuilder(transaction.getData()));
     } else if (typeof transaction !== "string" || !transaction.startsWith("{")) {
       __privateSet(newTransaction, _data, import_TransactionData.TransactionDataBuilder.fromBytes(
-        typeof transaction === "string" ? (0, import_bcs.fromB64)(transaction) : transaction
+        typeof transaction === "string" ? (0, import_bcs.fromBase64)(transaction) : transaction
       ));
     } else {
       __privateSet(newTransaction, _data, import_TransactionData.TransactionDataBuilder.restore(JSON.parse(transaction)));
     }
     return newTransaction;
+  }
+  static registerGlobalSerializationPlugin(stepOrStep, step) {
+    getGlobalPluginRegistry().serializationPlugins.set(
+      stepOrStep,
+      step ?? stepOrStep
+    );
+  }
+  static unregisterGlobalSerializationPlugin(name) {
+    getGlobalPluginRegistry().serializationPlugins.delete(name);
+  }
+  static registerGlobalBuildPlugin(stepOrStep, step) {
+    getGlobalPluginRegistry().buildPlugins.set(
+      stepOrStep,
+      step ?? stepOrStep
+    );
+  }
+  static unregisterGlobalBuildPlugin(name) {
+    getGlobalPluginRegistry().buildPlugins.delete(name);
   }
   addSerializationPlugin(step) {
     __privateGet(this, _serializationPlugins).push(step);
@@ -11149,6 +11223,11 @@ const _Transaction = class {
   }
   setGasBudget(budget) {
     __privateGet(this, _data).gasConfig.budget = String(budget);
+  }
+  setGasBudgetIfNotSet(budget) {
+    if (__privateGet(this, _data).gasData.budget == null) {
+      __privateGet(this, _data).gasConfig.budget = String(budget);
+    }
   }
   setGasOwner(owner) {
     __privateGet(this, _data).gasConfig.owner = owner;
@@ -11195,29 +11274,6 @@ const _Transaction = class {
     return { $kind: "GasCoin", GasCoin: true };
   }
   /**
-   * Add a new object input to the transaction.
-   */
-  object(value) {
-    if (typeof value === "function") {
-      return this.object(value(this));
-    }
-    if (typeof value === "object" && (0, import_valibot.is)(import_internal.Argument, value)) {
-      return value;
-    }
-    const id = (0, import_utils.getIdFromCallArg)(value);
-    const inserted = __privateGet(this, _data).inputs.find((i) => id === (0, import_utils.getIdFromCallArg)(i));
-    if (inserted?.Object?.SharedObject && typeof value === "object" && value.Object?.SharedObject) {
-      inserted.Object.SharedObject.mutable = inserted.Object.SharedObject.mutable || value.Object.SharedObject.mutable;
-    }
-    return inserted ? { $kind: "Input", Input: __privateGet(this, _data).inputs.indexOf(inserted), type: "object" } : __privateGet(this, _data).addInput(
-      "object",
-      typeof value === "string" ? {
-        $kind: "UnresolvedObject",
-        UnresolvedObject: { objectId: (0, import_sui_types.normalizeSuiAddress)(value) }
-      } : value
-    );
-  }
-  /**
    * Add a new object input to the transaction using the fully-resolved object reference.
    * If you only have an object ID, use `builder.object(id)` instead.
    */
@@ -11250,9 +11306,9 @@ const _Transaction = class {
   splitCoins(coin, amounts) {
     return this.add(
       import_Commands.Commands.SplitCoins(
-        typeof coin === "string" ? this.object(coin) : __privateMethod(this, _resolveArgument, resolveArgument_fn).call(this, coin),
+        typeof coin === "string" ? this.object(coin) : __privateMethod(this, _Transaction_instances, resolveArgument_fn).call(this, coin),
         amounts.map(
-          (amount) => typeof amount === "number" || typeof amount === "bigint" || typeof amount === "string" ? this.pure.u64(amount) : __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, amount)
+          (amount) => typeof amount === "number" || typeof amount === "bigint" || typeof amount === "string" ? this.pure.u64(amount) : __privateMethod(this, _Transaction_instances, normalizeTransactionArgument_fn).call(this, amount)
         )
       )
     );
@@ -11295,7 +11351,7 @@ const _Transaction = class {
     return this.add(
       import_Commands.Commands.MoveCall({
         ...input,
-        arguments: args?.map((arg) => __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, arg))
+        arguments: args?.map((arg) => __privateMethod(this, _Transaction_instances, normalizeTransactionArgument_fn).call(this, arg))
       })
     );
   }
@@ -11303,7 +11359,7 @@ const _Transaction = class {
     return this.add(
       import_Commands.Commands.TransferObjects(
         objects.map((obj) => this.object(obj)),
-        typeof address === "string" ? this.pure.address(address) : __privateMethod(this, _normalizeTransactionArgument, normalizeTransactionArgument_fn).call(this, address)
+        typeof address === "string" ? this.pure.address(address) : __privateMethod(this, _Transaction_instances, normalizeTransactionArgument_fn).call(this, address)
       )
     );
   }
@@ -11342,14 +11398,14 @@ const _Transaction = class {
   /** Build the transaction to BCS bytes. */
   async build(options = {}) {
     await this.prepareForSerialization(options);
-    await __privateMethod(this, _prepareBuild, prepareBuild_fn).call(this, options);
+    await __privateMethod(this, _Transaction_instances, prepareBuild_fn).call(this, options);
     return __privateGet(this, _data).build({
       onlyTransactionKind: options.onlyTransactionKind
     });
   }
   /** Derive transaction digest */
   async getDigest(options = {}) {
-    await __privateMethod(this, _prepareBuild, prepareBuild_fn).call(this, options);
+    await __privateMethod(this, _Transaction_instances, prepareBuild_fn).call(this, options);
     return __privateGet(this, _data).getDigest();
   }
   async prepareForSerialization(options) {
@@ -11369,36 +11425,32 @@ const _Transaction = class {
       }
       steps.push(__privateGet(this, _intentResolvers).get(intent));
     }
-    await __privateMethod(this, _runPlugins, runPlugins_fn).call(this, steps, options);
+    await __privateMethod(this, _Transaction_instances, runPlugins_fn).call(this, steps, options);
   }
 };
-let Transaction = _Transaction;
 _serializationPlugins = new WeakMap();
 _buildPlugins = new WeakMap();
 _intentResolvers = new WeakMap();
 _data = new WeakMap();
-_normalizeTransactionArgument = new WeakSet();
+_Transaction_instances = new WeakSet();
 normalizeTransactionArgument_fn = function(arg) {
   if ((0, import_bcs.isSerializedBcs)(arg)) {
     return this.pure(arg);
   }
-  return __privateMethod(this, _resolveArgument, resolveArgument_fn).call(this, arg);
+  return __privateMethod(this, _Transaction_instances, resolveArgument_fn).call(this, arg);
 };
-_resolveArgument = new WeakSet();
 resolveArgument_fn = function(arg) {
   if (typeof arg === "function") {
     return (0, import_valibot.parse)(import_internal.Argument, arg(this));
   }
   return (0, import_valibot.parse)(import_internal.Argument, arg);
 };
-_prepareBuild = new WeakSet();
 prepareBuild_fn = async function(options) {
   if (!options.onlyTransactionKind && !__privateGet(this, _data).sender) {
     throw new Error("Missing transaction sender");
   }
-  await __privateMethod(this, _runPlugins, runPlugins_fn).call(this, [...__privateGet(this, _buildPlugins), import_json_rpc_resolver.resolveTransactionData], options);
+  await __privateMethod(this, _Transaction_instances, runPlugins_fn).call(this, [...__privateGet(this, _buildPlugins), import_json_rpc_resolver.resolveTransactionData], options);
 };
-_runPlugins = new WeakSet();
 runPlugins_fn = async function(plugins, options) {
   const createNext = (i) => {
     if (i >= plugins.length) {
@@ -11428,9 +11480,10 @@ runPlugins_fn = async function(plugins, options) {
   };
   await createNext(0)();
 };
+let Transaction = _Transaction;
 
 
-},{"../utils/sui-types.js":82,"./Commands.js":60,"./Inputs.js":61,"./TransactionData.js":64,"./data/internal.js":65,"./data/v1.js":66,"./data/v2.js":67,"./json-rpc-resolver.js":75,"./pure.js":76,"./utils.js":78,"@mysten/bcs":13,"valibot":286}],64:[function(require,module,exports){
+},{"../utils/sui-types.js":88,"./Commands.js":61,"./Inputs.js":62,"./TransactionData.js":65,"./data/internal.js":66,"./data/v1.js":67,"./data/v2.js":68,"./json-rpc-resolver.js":76,"./object.js":77,"./pure.js":80,"./utils.js":82,"@mysten/bcs":13,"valibot":108}],65:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11529,7 +11582,7 @@ class TransactionDataBuilder {
    */
   static getDigestFromBytes(bytes) {
     const hash = (0, import_hash.hashTypedData)("TransactionData", bytes);
-    return (0, import_bcs.toB58)(hash);
+    return (0, import_bcs.toBase58)(hash);
   }
   // @deprecated use gasData instead
   get gasConfig() {
@@ -11681,7 +11734,7 @@ class TransactionDataBuilder {
 }
 
 
-},{"../bcs/index.js":20,"../utils/sui-types.js":82,"./data/internal.js":65,"./data/v1.js":66,"./hash.js":72,"@mysten/bcs":13,"valibot":286}],65:[function(require,module,exports){
+},{"../bcs/index.js":20,"../utils/sui-types.js":88,"./data/internal.js":66,"./data/v1.js":67,"./hash.js":73,"@mysten/bcs":13,"valibot":108}],66:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11725,46 +11778,49 @@ var import_valibot = require("valibot");
 var import_sui_types = require("../../utils/sui-types.js");
 function safeEnum(options) {
   const unionOptions = Object.entries(options).map(([key, value]) => (0, import_valibot.object)({ [key]: value }));
-  return (0, import_valibot.transform)((0, import_valibot.union)(unionOptions), (value) => ({
-    ...value,
-    $kind: Object.keys(value)[0]
-  }));
+  return (0, import_valibot.pipe)(
+    (0, import_valibot.union)(unionOptions),
+    (0, import_valibot.transform)((value) => ({
+      ...value,
+      $kind: Object.keys(value)[0]
+    }))
+  );
 }
-const SuiAddress = (0, import_valibot.transform)((0, import_valibot.string)(), (value) => (0, import_sui_types.normalizeSuiAddress)(value), [
-  (0, import_valibot.custom)(import_sui_types.isValidSuiAddress)
-]);
+const SuiAddress = (0, import_valibot.pipe)(
+  (0, import_valibot.string)(),
+  (0, import_valibot.transform)((value) => (0, import_sui_types.normalizeSuiAddress)(value)),
+  (0, import_valibot.check)(import_sui_types.isValidSuiAddress)
+);
 const ObjectID = SuiAddress;
 const BCSBytes = (0, import_valibot.string)();
-const JsonU64 = (0, import_valibot.union)(
-  [(0, import_valibot.string)(), (0, import_valibot.number)([(0, import_valibot.integer)()])],
-  [
-    (0, import_valibot.custom)((val) => {
-      try {
-        BigInt(val);
-        return BigInt(val) >= 0 && BigInt(val) <= 18446744073709551615n;
-      } catch {
-        return false;
-      }
-    }, "Invalid u64")
-  ]
+const JsonU64 = (0, import_valibot.pipe)(
+  (0, import_valibot.union)([(0, import_valibot.string)(), (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)())]),
+  (0, import_valibot.check)((val) => {
+    try {
+      BigInt(val);
+      return BigInt(val) >= 0 && BigInt(val) <= 18446744073709551615n;
+    } catch {
+      return false;
+    }
+  }, "Invalid u64")
 );
 const ObjectRef = (0, import_valibot.object)({
   objectId: SuiAddress,
   version: JsonU64,
   digest: (0, import_valibot.string)()
 });
-const Argument = (0, import_valibot.transform)(
+const Argument = (0, import_valibot.pipe)(
   (0, import_valibot.union)([
     (0, import_valibot.object)({ GasCoin: (0, import_valibot.literal)(true) }),
-    (0, import_valibot.object)({ Input: (0, import_valibot.number)([(0, import_valibot.integer)()]), type: (0, import_valibot.optional)((0, import_valibot.literal)("pure")) }),
-    (0, import_valibot.object)({ Input: (0, import_valibot.number)([(0, import_valibot.integer)()]), type: (0, import_valibot.optional)((0, import_valibot.literal)("object")) }),
-    (0, import_valibot.object)({ Result: (0, import_valibot.number)([(0, import_valibot.integer)()]) }),
-    (0, import_valibot.object)({ NestedResult: (0, import_valibot.tuple)([(0, import_valibot.number)([(0, import_valibot.integer)()]), (0, import_valibot.number)([(0, import_valibot.integer)()])]) })
+    (0, import_valibot.object)({ Input: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()), type: (0, import_valibot.optional)((0, import_valibot.literal)("pure")) }),
+    (0, import_valibot.object)({ Input: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()), type: (0, import_valibot.optional)((0, import_valibot.literal)("object")) }),
+    (0, import_valibot.object)({ Result: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()) }),
+    (0, import_valibot.object)({ NestedResult: (0, import_valibot.tuple)([(0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()), (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)())]) })
   ]),
-  (value) => ({
+  (0, import_valibot.transform)((value) => ({
     ...value,
     $kind: Object.keys(value)[0]
-  })
+  }))
   // Defined manually to add `type?: 'pure' | 'object'` to Input
 );
 const GasData = (0, import_valibot.object)({
@@ -11789,16 +11845,16 @@ const OpenMoveTypeSignatureBody = (0, import_valibot.union)([
   (0, import_valibot.literal)("u64"),
   (0, import_valibot.literal)("u128"),
   (0, import_valibot.literal)("u256"),
-  (0, import_valibot.object)({ vector: (0, import_valibot.recursive)(() => OpenMoveTypeSignatureBody) }),
+  (0, import_valibot.object)({ vector: (0, import_valibot.lazy)(() => OpenMoveTypeSignatureBody) }),
   (0, import_valibot.object)({
     datatype: (0, import_valibot.object)({
       package: (0, import_valibot.string)(),
       module: (0, import_valibot.string)(),
       type: (0, import_valibot.string)(),
-      typeParameters: (0, import_valibot.array)((0, import_valibot.recursive)(() => OpenMoveTypeSignatureBody))
+      typeParameters: (0, import_valibot.array)((0, import_valibot.lazy)(() => OpenMoveTypeSignatureBody))
     })
   }),
-  (0, import_valibot.object)({ typeParameter: (0, import_valibot.number)([(0, import_valibot.integer)()]) })
+  (0, import_valibot.object)({ typeParameter: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()) })
 ]);
 const OpenMoveTypeSignature = (0, import_valibot.object)({
   ref: (0, import_valibot.nullable)((0, import_valibot.union)([(0, import_valibot.literal)("&"), (0, import_valibot.literal)("&mut")])),
@@ -11893,7 +11949,7 @@ const TransactionData = (0, import_valibot.object)({
 });
 
 
-},{"../../utils/sui-types.js":82,"valibot":286}],66:[function(require,module,exports){
+},{"../../utils/sui-types.js":88,"valibot":108}],67:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -11931,7 +11987,7 @@ var import_internal = require("./internal.js");
 const ObjectRef = (0, import_valibot.object)({
   digest: (0, import_valibot.string)(),
   objectId: (0, import_valibot.string)(),
-  version: (0, import_valibot.union)([(0, import_valibot.number)([(0, import_valibot.integer)()]), (0, import_valibot.string)(), (0, import_valibot.bigint)()])
+  version: (0, import_valibot.union)([(0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()), (0, import_valibot.string)(), (0, import_valibot.bigint)()])
 });
 const ObjectArg = (0, import_internal.safeEnum)({
   ImmOrOwned: ObjectRef,
@@ -11944,40 +12000,37 @@ const ObjectArg = (0, import_internal.safeEnum)({
 });
 const NormalizedCallArg = (0, import_internal.safeEnum)({
   Object: ObjectArg,
-  Pure: (0, import_valibot.array)((0, import_valibot.number)([(0, import_valibot.integer)()]))
+  Pure: (0, import_valibot.array)((0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()))
 });
 const TransactionInput = (0, import_valibot.union)([
   (0, import_valibot.object)({
     kind: (0, import_valibot.literal)("Input"),
-    index: (0, import_valibot.number)([(0, import_valibot.integer)()]),
+    index: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()),
     value: (0, import_valibot.unknown)(),
     type: (0, import_valibot.optional)((0, import_valibot.literal)("object"))
   }),
   (0, import_valibot.object)({
     kind: (0, import_valibot.literal)("Input"),
-    index: (0, import_valibot.number)([(0, import_valibot.integer)()]),
+    index: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()),
     value: (0, import_valibot.unknown)(),
     type: (0, import_valibot.literal)("pure")
   })
 ]);
 const TransactionExpiration = (0, import_valibot.union)([
-  (0, import_valibot.object)({ Epoch: (0, import_valibot.number)([(0, import_valibot.integer)()]) }),
+  (0, import_valibot.object)({ Epoch: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()) }),
   (0, import_valibot.object)({ None: (0, import_valibot.nullable)((0, import_valibot.literal)(true)) })
 ]);
-const StringEncodedBigint = (0, import_valibot.union)(
-  [(0, import_valibot.number)(), (0, import_valibot.string)(), (0, import_valibot.bigint)()],
-  [
-    (0, import_valibot.custom)((val) => {
-      if (!["string", "number", "bigint"].includes(typeof val))
-        return false;
-      try {
-        BigInt(val);
-        return true;
-      } catch {
-        return false;
-      }
-    })
-  ]
+const StringEncodedBigint = (0, import_valibot.pipe)(
+  (0, import_valibot.union)([(0, import_valibot.number)(), (0, import_valibot.string)(), (0, import_valibot.bigint)()]),
+  (0, import_valibot.check)((val) => {
+    if (!["string", "number", "bigint"].includes(typeof val)) return false;
+    try {
+      BigInt(val);
+      return true;
+    } catch {
+      return false;
+    }
+  })
 );
 const TypeTag = (0, import_valibot.union)([
   (0, import_valibot.object)({ bool: (0, import_valibot.nullable)((0, import_valibot.literal)(true)) }),
@@ -11986,8 +12039,8 @@ const TypeTag = (0, import_valibot.union)([
   (0, import_valibot.object)({ u128: (0, import_valibot.nullable)((0, import_valibot.literal)(true)) }),
   (0, import_valibot.object)({ address: (0, import_valibot.nullable)((0, import_valibot.literal)(true)) }),
   (0, import_valibot.object)({ signer: (0, import_valibot.nullable)((0, import_valibot.literal)(true)) }),
-  (0, import_valibot.object)({ vector: (0, import_valibot.recursive)(() => TypeTag) }),
-  (0, import_valibot.object)({ struct: (0, import_valibot.recursive)(() => StructTag) }),
+  (0, import_valibot.object)({ vector: (0, import_valibot.lazy)(() => TypeTag) }),
+  (0, import_valibot.object)({ struct: (0, import_valibot.lazy)(() => StructTag) }),
   (0, import_valibot.object)({ u16: (0, import_valibot.nullable)((0, import_valibot.literal)(true)) }),
   (0, import_valibot.object)({ u32: (0, import_valibot.nullable)((0, import_valibot.literal)(true)) }),
   (0, import_valibot.object)({ u256: (0, import_valibot.nullable)((0, import_valibot.literal)(true)) })
@@ -12007,19 +12060,20 @@ const GasConfig = (0, import_valibot.object)({
 const TransactionArgumentTypes = [
   TransactionInput,
   (0, import_valibot.object)({ kind: (0, import_valibot.literal)("GasCoin") }),
-  (0, import_valibot.object)({ kind: (0, import_valibot.literal)("Result"), index: (0, import_valibot.number)([(0, import_valibot.integer)()]) }),
+  (0, import_valibot.object)({ kind: (0, import_valibot.literal)("Result"), index: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()) }),
   (0, import_valibot.object)({
     kind: (0, import_valibot.literal)("NestedResult"),
-    index: (0, import_valibot.number)([(0, import_valibot.integer)()]),
-    resultIndex: (0, import_valibot.number)([(0, import_valibot.integer)()])
+    index: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()),
+    resultIndex: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)())
   })
 ];
 const TransactionArgument = (0, import_valibot.union)([...TransactionArgumentTypes]);
 const MoveCallTransaction = (0, import_valibot.object)({
   kind: (0, import_valibot.literal)("MoveCall"),
-  target: (0, import_valibot.string)([
-    (0, import_valibot.custom)((target) => target.split("::").length === 3)
-  ]),
+  target: (0, import_valibot.pipe)(
+    (0, import_valibot.string)(),
+    (0, import_valibot.check)((target) => target.split("::").length === 3)
+  ),
   typeArguments: (0, import_valibot.array)((0, import_valibot.string)()),
   arguments: (0, import_valibot.array)(TransactionArgument)
 });
@@ -12045,12 +12099,12 @@ const MakeMoveVecTransaction = (0, import_valibot.object)({
 });
 const PublishTransaction = (0, import_valibot.object)({
   kind: (0, import_valibot.literal)("Publish"),
-  modules: (0, import_valibot.array)((0, import_valibot.array)((0, import_valibot.number)([(0, import_valibot.integer)()]))),
+  modules: (0, import_valibot.array)((0, import_valibot.array)((0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()))),
   dependencies: (0, import_valibot.array)((0, import_valibot.string)())
 });
 const UpgradeTransaction = (0, import_valibot.object)({
   kind: (0, import_valibot.literal)("Upgrade"),
-  modules: (0, import_valibot.array)((0, import_valibot.array)((0, import_valibot.number)([(0, import_valibot.integer)()]))),
+  modules: (0, import_valibot.array)((0, import_valibot.array)((0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()))),
   dependencies: (0, import_valibot.array)((0, import_valibot.string)()),
   packageId: (0, import_valibot.string)(),
   ticket: TransactionArgument
@@ -12074,59 +12128,61 @@ const SerializedTransactionDataV1 = (0, import_valibot.object)({
   transactions: (0, import_valibot.array)(TransactionType)
 });
 function serializeV1TransactionData(transactionData) {
-  const inputs = transactionData.inputs.map((input, index) => {
-    if (input.Object) {
-      return {
-        kind: "Input",
-        index,
-        value: {
-          Object: input.Object.ImmOrOwnedObject ? {
-            ImmOrOwned: input.Object.ImmOrOwnedObject
-          } : input.Object.Receiving ? {
-            Receiving: {
-              digest: input.Object.Receiving.digest,
-              version: input.Object.Receiving.version,
-              objectId: input.Object.Receiving.objectId
+  const inputs = transactionData.inputs.map(
+    (input, index) => {
+      if (input.Object) {
+        return {
+          kind: "Input",
+          index,
+          value: {
+            Object: input.Object.ImmOrOwnedObject ? {
+              ImmOrOwned: input.Object.ImmOrOwnedObject
+            } : input.Object.Receiving ? {
+              Receiving: {
+                digest: input.Object.Receiving.digest,
+                version: input.Object.Receiving.version,
+                objectId: input.Object.Receiving.objectId
+              }
+            } : {
+              Shared: {
+                mutable: input.Object.SharedObject.mutable,
+                initialSharedVersion: input.Object.SharedObject.initialSharedVersion,
+                objectId: input.Object.SharedObject.objectId
+              }
             }
-          } : {
-            Shared: {
-              mutable: input.Object.SharedObject.mutable,
-              initialSharedVersion: input.Object.SharedObject.initialSharedVersion,
-              objectId: input.Object.SharedObject.objectId
-            }
-          }
-        },
-        type: "object"
-      };
+          },
+          type: "object"
+        };
+      }
+      if (input.Pure) {
+        return {
+          kind: "Input",
+          index,
+          value: {
+            Pure: Array.from((0, import_bcs.fromBase64)(input.Pure.bytes))
+          },
+          type: "pure"
+        };
+      }
+      if (input.UnresolvedPure) {
+        return {
+          kind: "Input",
+          type: "pure",
+          index,
+          value: input.UnresolvedPure.value
+        };
+      }
+      if (input.UnresolvedObject) {
+        return {
+          kind: "Input",
+          type: "object",
+          index,
+          value: input.UnresolvedObject.objectId
+        };
+      }
+      throw new Error("Invalid input");
     }
-    if (input.Pure) {
-      return {
-        kind: "Input",
-        index,
-        value: {
-          Pure: Array.from((0, import_bcs.fromB64)(input.Pure.bytes))
-        },
-        type: "pure"
-      };
-    }
-    if (input.UnresolvedPure) {
-      return {
-        kind: "Input",
-        type: "pure",
-        index,
-        value: input.UnresolvedPure.value
-      };
-    }
-    if (input.UnresolvedObject) {
-      return {
-        kind: "Input",
-        type: "object",
-        index,
-        value: input.UnresolvedObject.objectId
-      };
-    }
-    throw new Error("Invalid input");
-  });
+  );
   return {
     version: 1,
     sender: transactionData.sender ?? void 0,
@@ -12168,7 +12224,7 @@ function serializeV1TransactionData(transactionData) {
       if (command.Publish) {
         return {
           kind: "Publish",
-          modules: command.Publish.modules.map((mod) => Array.from((0, import_bcs.fromB64)(mod))),
+          modules: command.Publish.modules.map((mod) => Array.from((0, import_bcs.fromBase64)(mod))),
           dependencies: command.Publish.dependencies
         };
       }
@@ -12191,7 +12247,7 @@ function serializeV1TransactionData(transactionData) {
       if (command.Upgrade) {
         return {
           kind: "Upgrade",
-          modules: command.Upgrade.modules.map((mod) => Array.from((0, import_bcs.fromB64)(mod))),
+          modules: command.Upgrade.modules.map((mod) => Array.from((0, import_bcs.fromBase64)(mod))),
           dependencies: command.Upgrade.dependencies,
           packageId: command.Upgrade.package,
           ticket: convertTransactionArgument(command.Upgrade.ticket, inputs)
@@ -12273,7 +12329,7 @@ function transactionDataFromV1(data) {
           }
           return {
             Pure: {
-              bytes: (0, import_bcs.toB64)(new Uint8Array(value.Pure))
+              bytes: (0, import_bcs.toBase64)(new Uint8Array(value.Pure))
             }
           };
         }
@@ -12324,7 +12380,7 @@ function transactionDataFromV1(data) {
         case "Publish": {
           return {
             Publish: {
-              modules: transaction.modules.map((mod) => (0, import_bcs.toB64)(Uint8Array.from(mod))),
+              modules: transaction.modules.map((mod) => (0, import_bcs.toBase64)(Uint8Array.from(mod))),
               dependencies: transaction.dependencies
             }
           };
@@ -12348,7 +12404,7 @@ function transactionDataFromV1(data) {
         case "Upgrade": {
           return {
             Upgrade: {
-              modules: transaction.modules.map((mod) => (0, import_bcs.toB64)(Uint8Array.from(mod))),
+              modules: transaction.modules.map((mod) => (0, import_bcs.toBase64)(Uint8Array.from(mod))),
               dependencies: transaction.dependencies,
               package: transaction.packageId,
               ticket: parseV1TransactionArgument(transaction.ticket)
@@ -12377,7 +12433,7 @@ function parseV1TransactionArgument(arg) {
 }
 
 
-},{"../../bcs/index.js":20,"./internal.js":65,"@mysten/bcs":13,"valibot":286}],67:[function(require,module,exports){
+},{"../../bcs/index.js":20,"./internal.js":66,"@mysten/bcs":13,"valibot":108}],68:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -12410,9 +12466,9 @@ function enumUnion(options) {
 }
 const Argument = enumUnion({
   GasCoin: (0, import_valibot.literal)(true),
-  Input: (0, import_valibot.number)([(0, import_valibot.integer)()]),
-  Result: (0, import_valibot.number)([(0, import_valibot.integer)()]),
-  NestedResult: (0, import_valibot.tuple)([(0, import_valibot.number)([(0, import_valibot.integer)()]), (0, import_valibot.number)([(0, import_valibot.integer)()])])
+  Input: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()),
+  Result: (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()),
+  NestedResult: (0, import_valibot.tuple)([(0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)()), (0, import_valibot.pipe)((0, import_valibot.number)(), (0, import_valibot.integer)())])
 });
 const GasData = (0, import_valibot.object)({
   budget: (0, import_valibot.nullable)(import_internal.JsonU64),
@@ -12502,12 +12558,15 @@ const SerializedTransactionDataV2 = (0, import_valibot.object)({
 });
 
 
-},{"./internal.js":65,"valibot":286}],68:[function(require,module,exports){
+},{"./internal.js":66,"valibot":108}],69:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -12521,24 +12580,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var caching_exports = {};
 __export(caching_exports, {
   CachingTransactionExecutor: () => CachingTransactionExecutor
@@ -12547,13 +12592,14 @@ module.exports = __toCommonJS(caching_exports);
 var import_bcs = require("../../bcs/index.js");
 var import_ObjectCache = require("../ObjectCache.js");
 var import_Transaction = require("../Transaction.js");
-var _client;
+var _client, _lastDigest;
 class CachingTransactionExecutor {
   constructor({
     client,
     ...options
   }) {
-    __privateAdd(this, _client, void 0);
+    __privateAdd(this, _client);
+    __privateAdd(this, _lastDigest, null);
     __privateSet(this, _client, client);
     this.cache = new import_ObjectCache.ObjectCache(options);
   }
@@ -12562,13 +12608,20 @@ class CachingTransactionExecutor {
    * Immutable objects, Shared objects, and Move function definitions will be preserved
    */
   async reset() {
-    await this.cache.clearOwnedObjects();
-    await this.cache.clearCustom();
+    await Promise.all([
+      this.cache.clearOwnedObjects(),
+      this.cache.clearCustom(),
+      this.waitForLastTransaction()
+    ]);
   }
-  async buildTransaction({ transaction }) {
+  async buildTransaction({
+    transaction,
+    ...options
+  }) {
     transaction.addBuildPlugin(this.cache.asPlugin());
     return transaction.build({
-      client: __privateGet(this, _client)
+      client: __privateGet(this, _client),
+      ...options
     });
   }
   async executeTransaction({
@@ -12607,18 +12660,29 @@ class CachingTransactionExecutor {
     return results;
   }
   async applyEffects(effects) {
+    __privateSet(this, _lastDigest, effects.V2?.transactionDigest ?? null);
     await this.cache.applyEffects(effects);
+  }
+  async waitForLastTransaction() {
+    if (__privateGet(this, _lastDigest)) {
+      await __privateGet(this, _client).waitForTransaction({ digest: __privateGet(this, _lastDigest) });
+      __privateSet(this, _lastDigest, null);
+    }
   }
 }
 _client = new WeakMap();
+_lastDigest = new WeakMap();
 
 
-},{"../../bcs/index.js":20,"../ObjectCache.js":62,"../Transaction.js":63}],69:[function(require,module,exports){
+},{"../../bcs/index.js":20,"../ObjectCache.js":63,"../Transaction.js":64}],70:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -12632,28 +12696,19 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-var __privateMethod = (obj, member, method) => {
-  __accessCheck(obj, member, "access private method");
-  return method;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
+var __privateWrapper = (obj, member, setter, getter) => ({
+  set _(value) {
+    __privateSet(obj, member, value, setter);
+  },
+  get _() {
+    return __privateGet(obj, member, getter);
+  }
+});
 var parallel_exports = {};
 __export(parallel_exports, {
   ParallelTransactionExecutor: () => ParallelTransactionExecutor
@@ -12662,39 +12717,46 @@ module.exports = __toCommonJS(parallel_exports);
 var import_bcs = require("@mysten/bcs");
 var import_bcs2 = require("../../bcs/index.js");
 var import_Transaction = require("../Transaction.js");
+var import_TransactionData = require("../TransactionData.js");
 var import_caching = require("./caching.js");
 var import_queue = require("./queue.js");
 var import_serial = require("./serial.js");
-var _signer, _client, _coinBatchSize, _initialCoinBalance, _minimumCoinBalance, _maxPoolSize, _sourceCoins, _coinPool, _cache, _objectIdQueues, _buildQueue, _executeQueue, _getUsedObjects, getUsedObjects_fn, _execute, execute_fn, _getGasCoin, getGasCoin_fn, _refillCoinPool, refillCoinPool_fn;
+var _signer, _client, _coinBatchSize, _initialCoinBalance, _minimumCoinBalance, _epochBoundaryWindow, _defaultGasBudget, _maxPoolSize, _sourceCoins, _coinPool, _cache, _objectIdQueues, _buildQueue, _executeQueue, _lastDigest, _cacheLock, _pendingTransactions, _gasPrice, _ParallelTransactionExecutor_instances, getUsedObjects_fn, execute_fn, updateCache_fn, waitForLastDigest_fn, getGasCoin_fn, getGasPrice_fn, refillCoinPool_fn;
 const PARALLEL_EXECUTOR_DEFAULTS = {
   coinBatchSize: 20,
   initialCoinBalance: 200000000n,
   minimumCoinBalance: 50000000n,
-  maxPoolSize: 50
+  maxPoolSize: 50,
+  epochBoundaryWindow: 1e3
 };
 class ParallelTransactionExecutor {
   constructor(options) {
-    __privateAdd(this, _getUsedObjects);
-    __privateAdd(this, _execute);
-    __privateAdd(this, _getGasCoin);
-    __privateAdd(this, _refillCoinPool);
-    __privateAdd(this, _signer, void 0);
-    __privateAdd(this, _client, void 0);
-    __privateAdd(this, _coinBatchSize, void 0);
-    __privateAdd(this, _initialCoinBalance, void 0);
-    __privateAdd(this, _minimumCoinBalance, void 0);
-    __privateAdd(this, _maxPoolSize, void 0);
-    __privateAdd(this, _sourceCoins, void 0);
+    __privateAdd(this, _ParallelTransactionExecutor_instances);
+    __privateAdd(this, _signer);
+    __privateAdd(this, _client);
+    __privateAdd(this, _coinBatchSize);
+    __privateAdd(this, _initialCoinBalance);
+    __privateAdd(this, _minimumCoinBalance);
+    __privateAdd(this, _epochBoundaryWindow);
+    __privateAdd(this, _defaultGasBudget);
+    __privateAdd(this, _maxPoolSize);
+    __privateAdd(this, _sourceCoins);
     __privateAdd(this, _coinPool, []);
-    __privateAdd(this, _cache, void 0);
+    __privateAdd(this, _cache);
     __privateAdd(this, _objectIdQueues, /* @__PURE__ */ new Map());
     __privateAdd(this, _buildQueue, new import_queue.SerialQueue());
-    __privateAdd(this, _executeQueue, void 0);
+    __privateAdd(this, _executeQueue);
+    __privateAdd(this, _lastDigest, null);
+    __privateAdd(this, _cacheLock, null);
+    __privateAdd(this, _pendingTransactions, 0);
+    __privateAdd(this, _gasPrice, null);
     __privateSet(this, _signer, options.signer);
     __privateSet(this, _client, options.client);
     __privateSet(this, _coinBatchSize, options.coinBatchSize ?? PARALLEL_EXECUTOR_DEFAULTS.coinBatchSize);
     __privateSet(this, _initialCoinBalance, options.initialCoinBalance ?? PARALLEL_EXECUTOR_DEFAULTS.initialCoinBalance);
     __privateSet(this, _minimumCoinBalance, options.minimumCoinBalance ?? PARALLEL_EXECUTOR_DEFAULTS.minimumCoinBalance);
+    __privateSet(this, _defaultGasBudget, options.defaultGasBudget ?? __privateGet(this, _minimumCoinBalance));
+    __privateSet(this, _epochBoundaryWindow, options.epochBoundaryWindow ?? PARALLEL_EXECUTOR_DEFAULTS.epochBoundaryWindow);
     __privateSet(this, _maxPoolSize, options.maxPoolSize ?? PARALLEL_EXECUTOR_DEFAULTS.maxPoolSize);
     __privateSet(this, _cache, new import_caching.CachingTransactionExecutor({
       client: options.client,
@@ -12704,14 +12766,18 @@ class ParallelTransactionExecutor {
     __privateSet(this, _sourceCoins, options.sourceCoins ? new Map(options.sourceCoins.map((id) => [id, null])) : null);
   }
   resetCache() {
-    return __privateGet(this, _cache).reset();
+    __privateSet(this, _gasPrice, null);
+    return __privateMethod(this, _ParallelTransactionExecutor_instances, updateCache_fn).call(this, () => __privateGet(this, _cache).reset());
   }
-  async executeTransaction(transaction) {
+  async waitForLastTransaction() {
+    await __privateMethod(this, _ParallelTransactionExecutor_instances, updateCache_fn).call(this, () => __privateMethod(this, _ParallelTransactionExecutor_instances, waitForLastDigest_fn).call(this));
+  }
+  async executeTransaction(transaction, options) {
     const { promise, resolve, reject } = promiseWithResolvers();
-    const usedObjects = await __privateMethod(this, _getUsedObjects, getUsedObjects_fn).call(this, transaction);
+    const usedObjects = await __privateMethod(this, _ParallelTransactionExecutor_instances, getUsedObjects_fn).call(this, transaction);
     const execute = () => {
       __privateGet(this, _executeQueue).runTask(() => {
-        const promise2 = __privateMethod(this, _execute, execute_fn).call(this, transaction, usedObjects);
+        const promise2 = __privateMethod(this, _ParallelTransactionExecutor_instances, execute_fn).call(this, transaction, usedObjects, options);
         return promise2.then(resolve, reject);
       });
     };
@@ -12741,6 +12807,8 @@ _client = new WeakMap();
 _coinBatchSize = new WeakMap();
 _initialCoinBalance = new WeakMap();
 _minimumCoinBalance = new WeakMap();
+_epochBoundaryWindow = new WeakMap();
+_defaultGasBudget = new WeakMap();
 _maxPoolSize = new WeakMap();
 _sourceCoins = new WeakMap();
 _coinPool = new WeakMap();
@@ -12748,7 +12816,11 @@ _cache = new WeakMap();
 _objectIdQueues = new WeakMap();
 _buildQueue = new WeakMap();
 _executeQueue = new WeakMap();
-_getUsedObjects = new WeakSet();
+_lastDigest = new WeakMap();
+_cacheLock = new WeakMap();
+_pendingTransactions = new WeakMap();
+_gasPrice = new WeakMap();
+_ParallelTransactionExecutor_instances = new WeakSet();
 getUsedObjects_fn = async function(transaction) {
   const usedObjects = /* @__PURE__ */ new Set();
   let serialized = false;
@@ -12771,12 +12843,19 @@ getUsedObjects_fn = async function(transaction) {
   await transaction.prepareForSerialization({ client: __privateGet(this, _client) });
   return usedObjects;
 };
-_execute = new WeakSet();
-execute_fn = async function(transaction, usedObjects) {
+execute_fn = async function(transaction, usedObjects, options) {
   let gasCoin;
   try {
-    const bytes = await __privateGet(this, _buildQueue).runTask(async () => {
-      gasCoin = await __privateMethod(this, _getGasCoin, getGasCoin_fn).call(this);
+    transaction.setSenderIfNotSet(__privateGet(this, _signer).toSuiAddress());
+    await __privateGet(this, _buildQueue).runTask(async () => {
+      const data = transaction.getData();
+      if (!data.gasData.price) {
+        transaction.setGasPrice(await __privateMethod(this, _ParallelTransactionExecutor_instances, getGasPrice_fn).call(this));
+      }
+      transaction.setGasBudgetIfNotSet(__privateGet(this, _defaultGasBudget));
+      await __privateMethod(this, _ParallelTransactionExecutor_instances, updateCache_fn).call(this);
+      gasCoin = await __privateMethod(this, _ParallelTransactionExecutor_instances, getGasCoin_fn).call(this);
+      __privateWrapper(this, _pendingTransactions)._++;
       transaction.setGasPayment([
         {
           objectId: gasCoin.id,
@@ -12784,14 +12863,15 @@ execute_fn = async function(transaction, usedObjects) {
           digest: gasCoin.digest
         }
       ]);
-      transaction.setSenderIfNotSet(__privateGet(this, _signer).toSuiAddress());
-      return __privateGet(this, _cache).buildTransaction({ transaction });
+      await __privateGet(this, _cache).buildTransaction({ transaction, onlyTransactionKind: true });
     });
+    const bytes = await transaction.build({ client: __privateGet(this, _client) });
     const { signature } = await __privateGet(this, _signer).signTransaction(bytes);
     const results = await __privateGet(this, _cache).executeTransaction({
       transaction: bytes,
       signature,
       options: {
+        ...options,
         showEffects: true
       }
     });
@@ -12801,7 +12881,14 @@ execute_fn = async function(transaction, usedObjects) {
     const gasUsed = effects.V2?.gasUsed;
     if (gasCoin && gasUsed && gasResult.owner === __privateGet(this, _signer).toSuiAddress()) {
       const totalUsed = BigInt(gasUsed.computationCost) + BigInt(gasUsed.storageCost) + BigInt(gasUsed.storageCost) - BigInt(gasUsed.storageRebate);
-      if (gasCoin.balance >= __privateGet(this, _minimumCoinBalance)) {
+      let usesGasCoin = false;
+      new import_TransactionData.TransactionDataBuilder(transaction.getData()).mapArguments((arg) => {
+        if (arg.$kind === "GasCoin") {
+          usesGasCoin = true;
+        }
+        return arg;
+      });
+      if (!usesGasCoin && gasCoin.balance >= __privateGet(this, _minimumCoinBalance)) {
         __privateGet(this, _coinPool).push({
           id: gasResult.ref.objectId,
           version: gasResult.ref.version,
@@ -12815,9 +12902,11 @@ execute_fn = async function(transaction, usedObjects) {
         __privateGet(this, _sourceCoins).set(gasResult.ref.objectId, gasResult.ref);
       }
     }
+    __privateSet(this, _lastDigest, results.digest);
     return {
       digest: results.digest,
-      effects: (0, import_bcs.toB64)(effectsBytes)
+      effects: (0, import_bcs.toBase64)(effectsBytes),
+      data: results
     };
   } catch (error) {
     if (gasCoin) {
@@ -12826,7 +12915,12 @@ execute_fn = async function(transaction, usedObjects) {
       }
       __privateGet(this, _sourceCoins).set(gasCoin.id, null);
     }
-    await __privateGet(this, _cache).cache.deleteObjects([...usedObjects]);
+    await __privateMethod(this, _ParallelTransactionExecutor_instances, updateCache_fn).call(this, async () => {
+      await Promise.all([
+        __privateGet(this, _cache).cache.deleteObjects([...usedObjects]),
+        __privateMethod(this, _ParallelTransactionExecutor_instances, waitForLastDigest_fn).call(this)
+      ]);
+    });
     throw error;
   } finally {
     usedObjects.forEach((objectId) => {
@@ -12837,12 +12931,31 @@ execute_fn = async function(transaction, usedObjects) {
         __privateGet(this, _objectIdQueues).delete(objectId);
       }
     });
+    __privateWrapper(this, _pendingTransactions)._--;
   }
 };
-_getGasCoin = new WeakSet();
+updateCache_fn = async function(fn) {
+  if (__privateGet(this, _cacheLock)) {
+    await __privateGet(this, _cacheLock);
+  }
+  __privateSet(this, _cacheLock, fn?.().then(
+    () => {
+      __privateSet(this, _cacheLock, null);
+    },
+    () => {
+    }
+  ) ?? null);
+};
+waitForLastDigest_fn = async function() {
+  const digest = __privateGet(this, _lastDigest);
+  if (digest) {
+    __privateSet(this, _lastDigest, null);
+    await __privateGet(this, _client).waitForTransaction({ digest });
+  }
+};
 getGasCoin_fn = async function() {
-  if (__privateGet(this, _coinPool).length === 0 && __privateGet(this, _executeQueue).activeTasks <= __privateGet(this, _maxPoolSize)) {
-    await __privateMethod(this, _refillCoinPool, refillCoinPool_fn).call(this);
+  if (__privateGet(this, _coinPool).length === 0 && __privateGet(this, _pendingTransactions) <= __privateGet(this, _maxPoolSize)) {
+    await __privateMethod(this, _ParallelTransactionExecutor_instances, refillCoinPool_fn).call(this);
   }
   if (__privateGet(this, _coinPool).length === 0) {
     throw new Error("No coins available");
@@ -12850,11 +12963,29 @@ getGasCoin_fn = async function() {
   const coin = __privateGet(this, _coinPool).shift();
   return coin;
 };
-_refillCoinPool = new WeakSet();
+getGasPrice_fn = async function() {
+  const remaining = __privateGet(this, _gasPrice) ? __privateGet(this, _gasPrice).expiration - __privateGet(this, _epochBoundaryWindow) - Date.now() : 0;
+  if (remaining > 0) {
+    return __privateGet(this, _gasPrice).price;
+  }
+  if (__privateGet(this, _gasPrice)) {
+    const timeToNextEpoch = Math.max(
+      __privateGet(this, _gasPrice).expiration + __privateGet(this, _epochBoundaryWindow) - Date.now(),
+      1e3
+    );
+    await new Promise((resolve) => setTimeout(resolve, timeToNextEpoch));
+  }
+  const state = await __privateGet(this, _client).getLatestSuiSystemState();
+  __privateSet(this, _gasPrice, {
+    price: BigInt(state.referenceGasPrice),
+    expiration: Number.parseInt(state.epochStartTimestampMs, 10) + Number.parseInt(state.epochDurationMs, 10)
+  });
+  return __privateMethod(this, _ParallelTransactionExecutor_instances, getGasPrice_fn).call(this);
+};
 refillCoinPool_fn = async function() {
   const batchSize = Math.min(
     __privateGet(this, _coinBatchSize),
-    __privateGet(this, _maxPoolSize) - (__privateGet(this, _coinPool).length + __privateGet(this, _executeQueue).activeTasks) + 1
+    __privateGet(this, _maxPoolSize) - (__privateGet(this, _coinPool).length + __privateGet(this, _pendingTransactions)) + 1
   );
   if (batchSize === 0) {
     return;
@@ -12894,6 +13025,7 @@ refillCoinPool_fn = async function() {
     coinResults.push(results[i]);
   }
   txb.transferObjects(coinResults, address);
+  await this.waitForLastTransaction();
   const result = await __privateGet(this, _client).signAndExecuteTransaction({
     transaction: txb,
     signer: __privateGet(this, _signer),
@@ -12931,12 +13063,15 @@ function promiseWithResolvers() {
 }
 
 
-},{"../../bcs/index.js":20,"../Transaction.js":63,"./caching.js":68,"./queue.js":70,"./serial.js":71,"@mysten/bcs":13}],70:[function(require,module,exports){
+},{"../../bcs/index.js":20,"../Transaction.js":64,"../TransactionData.js":65,"./caching.js":69,"./queue.js":71,"./serial.js":72,"@mysten/bcs":13}],71:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -12950,19 +13085,9 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
 var queue_exports = {};
 __export(queue_exports, {
   ParallelQueue: () => ParallelQueue,
@@ -13025,12 +13150,15 @@ class ParallelQueue {
 _queue2 = new WeakMap();
 
 
-},{}],71:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -13044,24 +13172,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var serial_exports = {};
 __export(serial_exports, {
   SerialTransactionExecutor: () => SerialTransactionExecutor,
@@ -13073,15 +13187,17 @@ var import_bcs2 = require("../../bcs/index.js");
 var import_Transaction = require("../Transaction.js");
 var import_caching = require("./caching.js");
 var import_queue = require("./queue.js");
-var _queue, _signer, _cache, _cacheGasCoin, _buildTransaction;
+var _queue, _signer, _cache, _defaultGasBudget, _cacheGasCoin, _buildTransaction;
 class SerialTransactionExecutor {
   constructor({
     signer,
+    defaultGasBudget = 50000000n,
     ...options
   }) {
     __privateAdd(this, _queue, new import_queue.SerialQueue());
-    __privateAdd(this, _signer, void 0);
-    __privateAdd(this, _cache, void 0);
+    __privateAdd(this, _signer);
+    __privateAdd(this, _cache);
+    __privateAdd(this, _defaultGasBudget);
     __privateAdd(this, _cacheGasCoin, async (effects) => {
       if (!effects.V2) {
         return;
@@ -13099,10 +13215,12 @@ class SerialTransactionExecutor {
       if (gasCoin) {
         copy.setGasPayment([gasCoin]);
       }
+      copy.setGasBudgetIfNotSet(__privateGet(this, _defaultGasBudget));
       copy.setSenderIfNotSet(__privateGet(this, _signer).toSuiAddress());
       return __privateGet(this, _cache).buildTransaction({ transaction: copy });
     });
     __privateSet(this, _signer, signer);
+    __privateSet(this, _defaultGasBudget, defaultGasBudget);
     __privateSet(this, _cache, new import_caching.CachingTransactionExecutor({
       client: options.client,
       cache: options.cache
@@ -13117,13 +13235,17 @@ class SerialTransactionExecutor {
   resetCache() {
     return __privateGet(this, _cache).reset();
   }
-  executeTransaction(transaction) {
+  waitForLastTransaction() {
+    return __privateGet(this, _cache).waitForLastTransaction();
+  }
+  executeTransaction(transaction, options) {
     return __privateGet(this, _queue).runTask(async () => {
       const bytes = (0, import_Transaction.isTransaction)(transaction) ? await __privateGet(this, _buildTransaction).call(this, transaction) : transaction;
       const { signature } = await __privateGet(this, _signer).signTransaction(bytes);
       const results = await __privateGet(this, _cache).executeTransaction({
         signature,
-        transaction: bytes
+        transaction: bytes,
+        options
       }).catch(async (error) => {
         await this.resetCache();
         throw error;
@@ -13133,7 +13255,8 @@ class SerialTransactionExecutor {
       await this.applyEffects(effects);
       return {
         digest: results.digest,
-        effects: (0, import_bcs.toB64)(effectsBytes)
+        effects: (0, import_bcs.toBase64)(effectsBytes),
+        data: results
       };
     });
   }
@@ -13141,6 +13264,7 @@ class SerialTransactionExecutor {
 _queue = new WeakMap();
 _signer = new WeakMap();
 _cache = new WeakMap();
+_defaultGasBudget = new WeakMap();
 _cacheGasCoin = new WeakMap();
 _buildTransaction = new WeakMap();
 function getGasCoinFromEffects(effects) {
@@ -13167,7 +13291,7 @@ function getGasCoinFromEffects(effects) {
 }
 
 
-},{"../../bcs/index.js":20,"../Transaction.js":63,"./caching.js":68,"./queue.js":70,"@mysten/bcs":13}],72:[function(require,module,exports){
+},{"../../bcs/index.js":20,"../Transaction.js":64,"./caching.js":69,"./queue.js":71,"@mysten/bcs":13}],73:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -13201,7 +13325,7 @@ function hashTypedData(typeTag, data) {
 }
 
 
-},{"@noble/hashes/blake2b":110}],73:[function(require,module,exports){
+},{"@noble/hashes/blake2b":126}],74:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -13222,6 +13346,7 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var transactions_exports = {};
 __export(transactions_exports, {
+  Arguments: () => import_Arguments.Arguments,
   AsyncCache: () => import_ObjectCache.AsyncCache,
   Commands: () => import_Commands.Commands,
   Inputs: () => import_Inputs.Inputs,
@@ -13234,6 +13359,7 @@ __export(transactions_exports, {
   coinWithBalance: () => import_CoinWithBalance.coinWithBalance,
   getPureBcsSchema: () => import_serializer.getPureBcsSchema,
   isTransaction: () => import_Transaction.isTransaction,
+  namedPackagesPlugin: () => import_NamedPackagesPlugin.namedPackagesPlugin,
   normalizedTypeToMoveTypeSignature: () => import_serializer.normalizedTypeToMoveTypeSignature
 });
 module.exports = __toCommonJS(transactions_exports);
@@ -13241,16 +13367,16 @@ var import_serializer = require("./serializer.js");
 var import_Inputs = require("./Inputs.js");
 var import_Commands = require("./Commands.js");
 var import_Transaction = require("./Transaction.js");
-var import_v2 = require("./data/v2.js");
-var import_v1 = require("./data/v1.js");
 var import_TransactionData = require("./TransactionData.js");
 var import_ObjectCache = require("./ObjectCache.js");
 var import_serial = require("./executor/serial.js");
 var import_parallel = require("./executor/parallel.js");
 var import_CoinWithBalance = require("./intents/CoinWithBalance.js");
+var import_Arguments = require("./Arguments.js");
+var import_NamedPackagesPlugin = require("./plugins/NamedPackagesPlugin.js");
 
 
-},{"./Commands.js":60,"./Inputs.js":61,"./ObjectCache.js":62,"./Transaction.js":63,"./TransactionData.js":64,"./data/v1.js":66,"./data/v2.js":67,"./executor/parallel.js":69,"./executor/serial.js":71,"./intents/CoinWithBalance.js":74,"./serializer.js":77}],74:[function(require,module,exports){
+},{"./Arguments.js":60,"./Commands.js":61,"./Inputs.js":62,"./ObjectCache.js":63,"./Transaction.js":64,"./TransactionData.js":65,"./executor/parallel.js":70,"./executor/serial.js":72,"./intents/CoinWithBalance.js":75,"./plugins/NamedPackagesPlugin.js":78,"./serializer.js":81}],75:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -13420,7 +13546,7 @@ async function getCoinsOfType({
 }
 
 
-},{"../../bcs/index.js":20,"../../utils/sui-types.js":82,"../Commands.js":60,"../Inputs.js":61,"../json-rpc-resolver.js":75,"valibot":286}],75:[function(require,module,exports){
+},{"../../bcs/index.js":20,"../../utils/sui-types.js":88,"../Commands.js":61,"../Inputs.js":62,"../json-rpc-resolver.js":76,"valibot":108}],76:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -13524,7 +13650,7 @@ async function setGasPayment(transactionData, options) {
 }
 async function resolveObjectReferences(transactionData, options) {
   const objectsToResolve = transactionData.inputs.filter((input) => {
-    return input.UnresolvedObject && !input.UnresolvedObject.version || input.UnresolvedObject?.initialSharedVersion;
+    return input.UnresolvedObject && !(input.UnresolvedObject.version || input.UnresolvedObject?.initialSharedVersion);
   });
   const dedupedIds = [
     ...new Set(
@@ -13545,7 +13671,7 @@ async function resolveObjectReferences(transactionData, options) {
       return [id, resolved[index]];
     })
   );
-  const invalidObjects = Array.from(responsesById).filter(([_, obj]) => obj.error).map(([id, _obj]) => id);
+  const invalidObjects = Array.from(responsesById).filter(([_, obj]) => obj.error).map(([_, obj]) => JSON.stringify(obj.error));
   if (invalidObjects.length) {
     throw new Error(`The following input objects are invalid: ${invalidObjects.join(", ")}`);
   }
@@ -13574,10 +13700,10 @@ async function resolveObjectReferences(transactionData, options) {
     let updated;
     const id = (0, import_utils.normalizeSuiAddress)(input.UnresolvedObject.objectId);
     const object = objectsById.get(id);
-    if (object?.initialSharedVersion) {
+    if (input.UnresolvedObject.initialSharedVersion ?? object?.initialSharedVersion) {
       updated = import_Inputs.Inputs.SharedObjectRef({
         objectId: id,
-        initialSharedVersion: object.initialSharedVersion,
+        initialSharedVersion: input.UnresolvedObject.initialSharedVersion || object?.initialSharedVersion,
         mutable: isUsedAsMutable(transactionData, index)
       });
     } else if (isUsedAsReceiving(transactionData, index)) {
@@ -13679,8 +13805,7 @@ async function normalizeInputs(transactionData, options) {
     }
     params.forEach((param, i) => {
       const arg = moveCall.arguments[i];
-      if (arg.$kind !== "Input")
-        return;
+      if (arg.$kind !== "Input") return;
       const input = inputs[arg.Input];
       if (!input.UnresolvedPure && !input.UnresolvedObject) {
         return;
@@ -13740,6 +13865,9 @@ function isUsedAsMutable(transactionData, index) {
       const argIndex = tx.MoveCall.arguments.indexOf(arg);
       usedAsMutable = tx.MoveCall._argumentTypes[argIndex].ref !== "&" || usedAsMutable;
     }
+    if (tx.$kind === "MakeMoveVec" || tx.$kind === "MergeCoins" || tx.$kind === "SplitCoins") {
+      usedAsMutable = true;
+    }
   });
   return usedAsMutable;
 }
@@ -13762,7 +13890,7 @@ function isReceivingType(type) {
 function getClient(options) {
   if (!options.client) {
     throw new Error(
-      `No provider passed to Transaction#build, but transaction data was not sufficient to build offline.`
+      `No sui client passed to Transaction#build, but transaction data was not sufficient to build offline.`
     );
   }
   return options.client;
@@ -13775,7 +13903,240 @@ function chunk(arr, size) {
 }
 
 
-},{"../bcs/index.js":20,"../utils/index.js":81,"./Inputs.js":61,"./data/internal.js":65,"./serializer.js":77,"valibot":286}],76:[function(require,module,exports){
+},{"../bcs/index.js":20,"../utils/index.js":86,"./Inputs.js":62,"./data/internal.js":66,"./serializer.js":81,"valibot":108}],77:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var object_exports = {};
+__export(object_exports, {
+  createObjectMethods: () => createObjectMethods
+});
+module.exports = __toCommonJS(object_exports);
+function createObjectMethods(makeObject) {
+  function object(value) {
+    return makeObject(value);
+  }
+  object.system = () => object("0x5");
+  object.clock = () => object("0x6");
+  object.random = () => object("0x8");
+  object.denyList = () => object("0x403");
+  return object;
+}
+
+
+},{}],78:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var NamedPackagesPlugin_exports = {};
+__export(NamedPackagesPlugin_exports, {
+  namedPackagesPlugin: () => namedPackagesPlugin
+});
+module.exports = __toCommonJS(NamedPackagesPlugin_exports);
+var import_utils = require("./utils.js");
+const namedPackagesPlugin = ({
+  suiGraphQLClient,
+  pageSize = 10,
+  overrides = { packages: {}, types: {} }
+}) => {
+  const cache = {
+    packages: { ...overrides.packages },
+    types: { ...overrides.types }
+  };
+  return async (transactionData, _buildOptions, next) => {
+    const names = (0, import_utils.findTransactionBlockNames)(transactionData);
+    const batches = (0, import_utils.listToRequests)(
+      {
+        packages: names.packages.filter((x) => !cache.packages[x]),
+        types: names.types.filter((x) => !cache.types[x])
+      },
+      pageSize
+    );
+    (await Promise.all(batches.map((batch) => query(suiGraphQLClient, batch)))).forEach((res) => {
+      Object.assign(cache.types, res.types);
+      Object.assign(cache.packages, res.packages);
+    });
+    (0, import_utils.replaceNames)(transactionData, cache);
+    await next();
+  };
+  async function query(client, requests) {
+    const results = { packages: {}, types: {} };
+    if (requests.length === 0) return results;
+    const gqlQuery = `{
+        ${requests.map((req) => {
+      const request = req.type === "package" ? "packageByName" : "typeByName";
+      const fields = req.type === "package" ? "address" : "repr";
+      return `${gqlQueryKey(req.id)}: ${request}(name:"${req.name}") {
+                    ${fields}
+                }`;
+    })}
+    }`;
+    const result = await client.query({
+      query: gqlQuery,
+      variables: void 0
+    });
+    if (result.errors) throw new Error(JSON.stringify({ query: gqlQuery, errors: result.errors }));
+    for (const req of requests) {
+      const key = gqlQueryKey(req.id);
+      if (!result.data || !result.data[key]) throw new Error(`No result found for: ${req.name}`);
+      const data = result.data[key];
+      if (req.type === "package") results.packages[req.name] = data.address;
+      if (req.type === "moveType") results.types[req.name] = data.repr;
+    }
+    return results;
+  }
+};
+const gqlQueryKey = (idx) => `key_${idx}`;
+
+
+},{"./utils.js":79}],79:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var utils_exports = {};
+__export(utils_exports, {
+  findTransactionBlockNames: () => findTransactionBlockNames,
+  listToRequests: () => listToRequests,
+  replaceNames: () => replaceNames
+});
+module.exports = __toCommonJS(utils_exports);
+var import_move_registry = require("../../utils/move-registry.js");
+const NAME_SEPARATOR = "/";
+const findTransactionBlockNames = (builder) => {
+  const packages = /* @__PURE__ */ new Set();
+  const types = /* @__PURE__ */ new Set();
+  for (const command of builder.commands) {
+    if (command.MakeMoveVec?.type) {
+      getNamesFromTypeList([command.MakeMoveVec.type]).forEach((type) => {
+        types.add(type);
+      });
+      continue;
+    }
+    if (!("MoveCall" in command)) continue;
+    const tx = command.MoveCall;
+    if (!tx) continue;
+    const pkg = tx.package.split("::")[0];
+    if (pkg.includes(NAME_SEPARATOR)) {
+      if (!(0, import_move_registry.isValidNamedPackage)(pkg)) throw new Error(`Invalid package name: ${pkg}`);
+      packages.add(pkg);
+    }
+    getNamesFromTypeList(tx.typeArguments ?? []).forEach((type) => {
+      types.add(type);
+    });
+  }
+  return {
+    packages: [...packages],
+    types: [...types]
+  };
+};
+function getNamesFromTypeList(types) {
+  const names = /* @__PURE__ */ new Set();
+  for (const type of types) {
+    if (type.includes(NAME_SEPARATOR)) {
+      if (!(0, import_move_registry.isValidNamedType)(type)) throw new Error(`Invalid type with names: ${type}`);
+      names.add(type);
+    }
+  }
+  return [...names];
+}
+const replaceNames = (builder, cache) => {
+  for (const command of builder.commands) {
+    if (command.MakeMoveVec?.type) {
+      if (!command.MakeMoveVec.type.includes(NAME_SEPARATOR)) continue;
+      if (!cache.types[command.MakeMoveVec.type])
+        throw new Error(`No resolution found for type: ${command.MakeMoveVec.type}`);
+      command.MakeMoveVec.type = cache.types[command.MakeMoveVec.type];
+    }
+    const tx = command.MoveCall;
+    if (!tx) continue;
+    const nameParts = tx.package.split("::");
+    const name = nameParts[0];
+    if (name.includes(NAME_SEPARATOR) && !cache.packages[name])
+      throw new Error(`No address found for package: ${name}`);
+    nameParts[0] = cache.packages[name];
+    tx.package = nameParts.join("::");
+    const types = tx.typeArguments;
+    if (!types) continue;
+    for (let i = 0; i < types.length; i++) {
+      if (!types[i].includes(NAME_SEPARATOR)) continue;
+      if (!cache.types[types[i]]) throw new Error(`No resolution found for type: ${types[i]}`);
+      types[i] = cache.types[types[i]];
+    }
+    tx.typeArguments = types;
+  }
+};
+const listToRequests = (names, batchSize) => {
+  const results = [];
+  const uniqueNames = deduplicate(names.packages);
+  const uniqueTypes = deduplicate(names.types);
+  for (const [idx, name] of uniqueNames.entries()) {
+    results.push({ id: idx, type: "package", name });
+  }
+  for (const [idx, type] of uniqueTypes.entries()) {
+    results.push({
+      id: idx + uniqueNames.length,
+      type: "moveType",
+      name: type
+    });
+  }
+  return batch(results, batchSize);
+};
+const deduplicate = (arr) => [...new Set(arr)];
+const batch = (arr, size) => {
+  const batches = [];
+  for (let i = 0; i < arr.length; i += size) {
+    batches.push(arr.slice(i, i + size));
+  }
+  return batches;
+};
+
+
+},{"../../utils/move-registry.js":87}],80:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -13799,26 +14160,72 @@ __export(pure_exports, {
   createPure: () => createPure
 });
 module.exports = __toCommonJS(pure_exports);
-var import_bcs = require("../bcs/index.js");
+var import_bcs = require("@mysten/bcs");
+var import_bcs2 = require("../bcs/index.js");
 function createPure(makePure) {
-  function pure(value) {
-    return makePure(value);
+  function pure(typeOrSerializedValue, value) {
+    if (typeof typeOrSerializedValue === "string") {
+      return makePure(schemaFromName(typeOrSerializedValue).serialize(value));
+    }
+    if (typeOrSerializedValue instanceof Uint8Array || (0, import_bcs.isSerializedBcs)(typeOrSerializedValue)) {
+      return makePure(typeOrSerializedValue);
+    }
+    throw new Error("tx.pure must be called either a bcs type name, or a serialized bcs value");
   }
-  pure.u8 = (value) => makePure(import_bcs.bcs.U8.serialize(value));
-  pure.u16 = (value) => makePure(import_bcs.bcs.U16.serialize(value));
-  pure.u32 = (value) => makePure(import_bcs.bcs.U32.serialize(value));
-  pure.u64 = (value) => makePure(import_bcs.bcs.U64.serialize(value));
-  pure.u128 = (value) => makePure(import_bcs.bcs.U128.serialize(value));
-  pure.u256 = (value) => makePure(import_bcs.bcs.U256.serialize(value));
-  pure.bool = (value) => makePure(import_bcs.bcs.Bool.serialize(value));
-  pure.string = (value) => makePure(import_bcs.bcs.String.serialize(value));
-  pure.address = (value) => makePure(import_bcs.bcs.Address.serialize(value));
+  pure.u8 = (value) => makePure(import_bcs2.bcs.U8.serialize(value));
+  pure.u16 = (value) => makePure(import_bcs2.bcs.U16.serialize(value));
+  pure.u32 = (value) => makePure(import_bcs2.bcs.U32.serialize(value));
+  pure.u64 = (value) => makePure(import_bcs2.bcs.U64.serialize(value));
+  pure.u128 = (value) => makePure(import_bcs2.bcs.U128.serialize(value));
+  pure.u256 = (value) => makePure(import_bcs2.bcs.U256.serialize(value));
+  pure.bool = (value) => makePure(import_bcs2.bcs.Bool.serialize(value));
+  pure.string = (value) => makePure(import_bcs2.bcs.String.serialize(value));
+  pure.address = (value) => makePure(import_bcs2.bcs.Address.serialize(value));
   pure.id = pure.address;
+  pure.vector = (type, value) => {
+    return makePure(import_bcs2.bcs.vector(schemaFromName(type)).serialize(value));
+  };
+  pure.option = (type, value) => {
+    return makePure(import_bcs2.bcs.option(schemaFromName(type)).serialize(value));
+  };
   return pure;
+}
+function schemaFromName(name) {
+  switch (name) {
+    case "u8":
+      return import_bcs2.bcs.u8();
+    case "u16":
+      return import_bcs2.bcs.u16();
+    case "u32":
+      return import_bcs2.bcs.u32();
+    case "u64":
+      return import_bcs2.bcs.u64();
+    case "u128":
+      return import_bcs2.bcs.u128();
+    case "u256":
+      return import_bcs2.bcs.u256();
+    case "bool":
+      return import_bcs2.bcs.bool();
+    case "string":
+      return import_bcs2.bcs.string();
+    case "id":
+    case "address":
+      return import_bcs2.bcs.Address;
+  }
+  const generic = name.match(/^(vector|option)<(.+)>$/);
+  if (generic) {
+    const [kind, inner] = generic.slice(1);
+    if (kind === "vector") {
+      return import_bcs2.bcs.vector(schemaFromName(inner));
+    } else {
+      return import_bcs2.bcs.option(schemaFromName(inner));
+    }
+  }
+  throw new Error(`Invalid Pure type name: ${name}`);
 }
 
 
-},{"../bcs/index.js":20}],77:[function(require,module,exports){
+},{"../bcs/index.js":20,"@mysten/bcs":13}],81:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14002,7 +14409,7 @@ function pureBcsSchemaFromOpenMoveTypeSignatureBody(typeSignature) {
 }
 
 
-},{"../bcs/index.js":20,"../utils/index.js":81,"../utils/sui-types.js":82}],78:[function(require,module,exports){
+},{"../bcs/index.js":20,"../utils/index.js":86,"../utils/sui-types.js":88}],82:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14070,7 +14477,7 @@ function getIdFromCallArg(arg) {
 }
 
 
-},{"../utils/sui-types.js":82}],79:[function(require,module,exports){
+},{"../utils/sui-types.js":88}],83:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14114,7 +14521,50 @@ const SUI_TYPE_ARG = `${SUI_FRAMEWORK_ADDRESS}::sui::SUI`;
 const SUI_SYSTEM_STATE_OBJECT_ID = (0, import_sui_types.normalizeSuiObjectId)("0x5");
 
 
-},{"./sui-types.js":82}],80:[function(require,module,exports){
+},{"./sui-types.js":88}],84:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var dynamic_fields_exports = {};
+__export(dynamic_fields_exports, {
+  deriveDynamicFieldID: () => deriveDynamicFieldID
+});
+module.exports = __toCommonJS(dynamic_fields_exports);
+var import_bcs = require("@mysten/bcs");
+var import_blake2b = require("@noble/hashes/blake2b");
+var import_bcs2 = require("../bcs/index.js");
+function deriveDynamicFieldID(parentId, typeTag, key) {
+  const address = import_bcs2.bcs.Address.serialize(parentId).toBytes();
+  const tag = import_bcs2.bcs.TypeTag.serialize(typeTag).toBytes();
+  const keyLength = import_bcs2.bcs.u64().serialize(key.length).toBytes();
+  const hash = import_blake2b.blake2b.create({
+    dkLen: 32
+  });
+  hash.update(new Uint8Array([240]));
+  hash.update(address);
+  hash.update(keyLength);
+  hash.update(key);
+  hash.update(tag);
+  return `0x${(0, import_bcs.toHex)(hash.digest().slice(0, 32))}`;
+}
+
+
+},{"../bcs/index.js":20,"@mysten/bcs":13,"@noble/hashes/blake2b":126}],85:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14152,7 +14602,7 @@ function formatDigest(digest) {
 }
 
 
-},{}],81:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14183,10 +14633,16 @@ __export(utils_exports, {
   SUI_SYSTEM_MODULE_NAME: () => import_constants.SUI_SYSTEM_MODULE_NAME,
   SUI_SYSTEM_STATE_OBJECT_ID: () => import_constants.SUI_SYSTEM_STATE_OBJECT_ID,
   SUI_TYPE_ARG: () => import_constants.SUI_TYPE_ARG,
+  deriveDynamicFieldID: () => import_dynamic_fields.deriveDynamicFieldID,
   formatAddress: () => import_format.formatAddress,
   formatDigest: () => import_format.formatDigest,
   fromB64: () => import_bcs.fromB64,
+  fromBase58: () => import_bcs.fromBase58,
+  fromBase64: () => import_bcs.fromBase64,
   fromHEX: () => import_bcs.fromHEX,
+  fromHex: () => import_bcs.fromHex,
+  isValidNamedPackage: () => import_move_registry.isValidNamedPackage,
+  isValidNamedType: () => import_move_registry.isValidNamedType,
   isValidSuiAddress: () => import_sui_types.isValidSuiAddress,
   isValidSuiNSName: () => import_suins.isValidSuiNSName,
   isValidSuiObjectId: () => import_sui_types.isValidSuiObjectId,
@@ -14197,7 +14653,10 @@ __export(utils_exports, {
   normalizeSuiObjectId: () => import_sui_types.normalizeSuiObjectId,
   parseStructTag: () => import_sui_types.parseStructTag,
   toB64: () => import_bcs.toB64,
-  toHEX: () => import_bcs.toHEX
+  toBase58: () => import_bcs.toBase58,
+  toBase64: () => import_bcs.toBase64,
+  toHEX: () => import_bcs.toHEX,
+  toHex: () => import_bcs.toHex
 });
 module.exports = __toCommonJS(utils_exports);
 var import_format = require("./format.js");
@@ -14205,9 +14664,58 @@ var import_sui_types = require("./sui-types.js");
 var import_bcs = require("@mysten/bcs");
 var import_suins = require("./suins.js");
 var import_constants = require("./constants.js");
+var import_move_registry = require("./move-registry.js");
+var import_dynamic_fields = require("./dynamic-fields.js");
 
 
-},{"./constants.js":79,"./format.js":80,"./sui-types.js":82,"./suins.js":83,"@mysten/bcs":13}],82:[function(require,module,exports){
+},{"./constants.js":83,"./dynamic-fields.js":84,"./format.js":85,"./move-registry.js":87,"./sui-types.js":88,"./suins.js":89,"@mysten/bcs":13}],87:[function(require,module,exports){
+"use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var move_registry_exports = {};
+__export(move_registry_exports, {
+  isValidNamedPackage: () => isValidNamedPackage,
+  isValidNamedType: () => isValidNamedType
+});
+module.exports = __toCommonJS(move_registry_exports);
+var import_suins = require("./suins.js");
+const NAME_PATTERN = /^([a-z0-9]+(?:-[a-z0-9]+)*)$/;
+const VERSION_REGEX = /^\d+$/;
+const MAX_APP_SIZE = 64;
+const NAME_SEPARATOR = "/";
+const isValidNamedPackage = (name) => {
+  const parts = name.split(NAME_SEPARATOR);
+  if (parts.length < 2 || parts.length > 3) return false;
+  const [org, app, version] = parts;
+  if (version !== void 0 && !VERSION_REGEX.test(version)) return false;
+  if (!(0, import_suins.isValidSuiNSName)(org)) return false;
+  return NAME_PATTERN.test(app) && app.length < MAX_APP_SIZE;
+};
+const isValidNamedType = (type) => {
+  const splitType = type.split(/::|<|>|,/);
+  for (const t of splitType) {
+    if (t.includes(NAME_SEPARATOR) && !isValidNamedPackage(t)) return false;
+  }
+  return true;
+};
+
+
+},{"./suins.js":89}],88:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14242,7 +14750,7 @@ var import_bcs = require("@mysten/bcs");
 const TX_DIGEST_LENGTH = 32;
 function isValidTransactionDigest(value) {
   try {
-    const buffer = (0, import_bcs.fromB58)(value);
+    const buffer = (0, import_bcs.fromBase58)(value);
     return buffer.length === TX_DIGEST_LENGTH;
   } catch (e) {
     return false;
@@ -14256,8 +14764,7 @@ function isValidSuiObjectId(value) {
   return isValidSuiAddress(value);
 }
 function parseTypeTag(type) {
-  if (!type.includes("::"))
-    return type;
+  if (!type.includes("::")) return type;
   return parseStructTag(type);
 }
 function parseStructTag(type) {
@@ -14299,7 +14806,7 @@ function getHexByteLength(value) {
 }
 
 
-},{"@mysten/bcs":13}],83:[function(require,module,exports){
+},{"@mysten/bcs":13}],89:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14324,8 +14831,8 @@ __export(suins_exports, {
   normalizeSuiNSName: () => normalizeSuiNSName
 });
 module.exports = __toCommonJS(suins_exports);
-const SUI_NS_NAME_REGEX = /^(?:[a-z0-9][a-z0-9-]{0,62}(?:\.[a-z0-9][a-z0-9-]{0,62})*)?@[a-z0-9][a-z0-9-]{0,62}$/i;
-const SUI_NS_DOMAIN_REGEX = /^(?:[a-z0-9][a-z0-9-]{0,62}\.)+sui$/i;
+const SUI_NS_NAME_REGEX = /^(?!.*(^(?!@)|[-.@])($|[-.@]))(?:[a-z0-9-]{0,63}(?:\.[a-z0-9-]{0,63})*)?@[a-z0-9-]{0,63}$/i;
+const SUI_NS_DOMAIN_REGEX = /^(?!.*(^|[-.])($|[-.]))(?:[a-z0-9-]{0,63}\.)+sui$/i;
 const MAX_SUI_NS_NAME_LENGTH = 235;
 function isValidSuiNSName(name) {
   if (name.length > MAX_SUI_NS_NAME_LENGTH) {
@@ -14358,7 +14865,7 @@ function normalizeSuiNSName(name, format = "at") {
 }
 
 
-},{}],84:[function(require,module,exports){
+},{}],90:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14389,7 +14896,7 @@ module.exports = __toCommonJS(verify_exports);
 var import_verify = require("./verify.js");
 
 
-},{"./verify.js":85}],85:[function(require,module,exports){
+},{"./verify.js":91}],91:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14441,8 +14948,8 @@ async function verifyPersonalMessageSignature(message, signature, options = {}) 
   }
   return parsedSignature.publicKey;
 }
-async function verifyTransactionSignature(transaction, signature) {
-  const parsedSignature = parseSignature(signature);
+async function verifyTransactionSignature(transaction, signature, options = {}) {
+  const parsedSignature = parseSignature(signature, options);
   if (!await parsedSignature.publicKey.verifyTransaction(
     transaction,
     parsedSignature.serializedSignature
@@ -14485,14 +14992,14 @@ function publicKeyFromRawBytes(signatureScheme, bytes, options = {}) {
       throw new Error(`Unsupported signature scheme ${signatureScheme}`);
   }
 }
-function publicKeyFromSuiBytes(publicKey) {
-  const bytes = typeof publicKey === "string" ? (0, import_bcs.fromB64)(publicKey) : publicKey;
+function publicKeyFromSuiBytes(publicKey, options = {}) {
+  const bytes = typeof publicKey === "string" ? (0, import_bcs.fromBase64)(publicKey) : publicKey;
   const signatureScheme = import_cryptography.SIGNATURE_FLAG_TO_SCHEME[bytes[0]];
-  return publicKeyFromRawBytes(signatureScheme, bytes.slice(1));
+  return publicKeyFromRawBytes(signatureScheme, bytes.slice(1), options);
 }
 
 
-},{"../cryptography/index.js":35,"../keypairs/ed25519/publickey.js":50,"../keypairs/secp256k1/publickey.js":53,"../keypairs/secp256r1/publickey.js":56,"../multisig/publickey.js":58,"../zklogin/publickey.js":89,"@mysten/bcs":13}],86:[function(require,module,exports){
+},{"../cryptography/index.js":35,"../keypairs/ed25519/publickey.js":50,"../keypairs/secp256k1/publickey.js":53,"../keypairs/secp256r1/publickey.js":56,"../multisig/publickey.js":58,"../zklogin/publickey.js":95,"@mysten/bcs":13}],92:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14517,11 +15024,11 @@ __export(version_exports, {
   TARGETED_RPC_VERSION: () => TARGETED_RPC_VERSION
 });
 module.exports = __toCommonJS(version_exports);
-const PACKAGE_VERSION = "1.1.2";
-const TARGETED_RPC_VERSION = "1.28.0";
+const PACKAGE_VERSION = "1.13.0";
+const TARGETED_RPC_VERSION = "1.36.0";
 
 
-},{}],87:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14565,7 +15072,7 @@ const zkLoginSignature = import_bcs.bcs.struct("ZkLoginSignature", {
 });
 
 
-},{"@mysten/bcs":13}],88:[function(require,module,exports){
+},{"@mysten/bcs":13}],94:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14669,12 +15176,15 @@ function extractClaimValue(claim, claimName) {
 }
 
 
-},{}],89:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -14688,24 +15198,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
-};
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
-    throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var publickey_exports = {};
 __export(publickey_exports, {
   ZkLoginPublicIdentifier: () => ZkLoginPublicIdentifier,
@@ -14722,18 +15218,18 @@ var import_jwt_utils = require("./jwt-utils.js");
 var import_signature = require("./signature.js");
 var import_utils = require("./utils.js");
 var _data, _client;
-const _ZkLoginPublicIdentifier = class extends import_publickey.PublicKey {
+const _ZkLoginPublicIdentifier = class _ZkLoginPublicIdentifier extends import_publickey.PublicKey {
   /**
    * Create a new ZkLoginPublicIdentifier object
    * @param value zkLogin public identifier as buffer or base-64 encoded string
    */
   constructor(value, { client } = {}) {
     super();
-    __privateAdd(this, _data, void 0);
-    __privateAdd(this, _client, void 0);
+    __privateAdd(this, _data);
+    __privateAdd(this, _client);
     __privateSet(this, _client, client);
     if (typeof value === "string") {
-      __privateSet(this, _data, (0, import_bcs.fromB64)(value));
+      __privateSet(this, _data, (0, import_bcs.fromBase64)(value));
     } else if (value instanceof Uint8Array) {
       __privateSet(this, _data, value);
     } else {
@@ -14772,7 +15268,7 @@ const _ZkLoginPublicIdentifier = class extends import_publickey.PublicKey {
     const address = new _ZkLoginPublicIdentifier(parsedSignature.publicKey).toSuiAddress();
     return graphqlVerifyZkLoginSignature({
       address,
-      bytes: (0, import_bcs.toB64)(message),
+      bytes: (0, import_bcs.toBase64)(message),
       signature: parsedSignature.serializedSignature,
       intentScope: "PERSONAL_MESSAGE",
       client: __privateGet(this, _client)
@@ -14786,16 +15282,16 @@ const _ZkLoginPublicIdentifier = class extends import_publickey.PublicKey {
     const address = new _ZkLoginPublicIdentifier(parsedSignature.publicKey).toSuiAddress();
     return graphqlVerifyZkLoginSignature({
       address,
-      bytes: (0, import_bcs.toB64)(transaction),
+      bytes: (0, import_bcs.toBase64)(transaction),
       signature: parsedSignature.serializedSignature,
       intentScope: "TRANSACTION_DATA",
       client: __privateGet(this, _client)
     });
   }
 };
-let ZkLoginPublicIdentifier = _ZkLoginPublicIdentifier;
 _data = new WeakMap();
 _client = new WeakMap();
+let ZkLoginPublicIdentifier = _ZkLoginPublicIdentifier;
 function toZkLoginPublicIdentifier(addressSeed, iss, options) {
   const addressSeedBytesBigEndian = (0, import_utils.toPaddedBigEndianBytes)(addressSeed, 32);
   const issBytes = new TextEncoder().encode(iss);
@@ -14844,7 +15340,7 @@ async function graphqlVerifyZkLoginSignature({
   return resp.data?.verifyZkloginSignature.success === true && resp.data?.verifyZkloginSignature.errors.length === 0;
 }
 function parseSerializedZkLoginSignature(signature) {
-  const bytes = typeof signature === "string" ? (0, import_bcs.fromB64)(signature) : signature;
+  const bytes = typeof signature === "string" ? (0, import_bcs.fromBase64)(signature) : signature;
   if (bytes[0] !== import_signature_scheme.SIGNATURE_SCHEME_TO_FLAG.ZkLogin) {
     throw new Error("Invalid signature scheme");
   }
@@ -14854,7 +15350,7 @@ function parseSerializedZkLoginSignature(signature) {
   const iss = (0, import_jwt_utils.extractClaimValue)(issBase64Details, "iss");
   const publicIdentifer = toZkLoginPublicIdentifier(BigInt(addressSeed), iss);
   return {
-    serializedSignature: (0, import_bcs.toB64)(bytes),
+    serializedSignature: (0, import_bcs.toBase64)(bytes),
     signatureScheme: "ZkLogin",
     zkLogin: {
       inputs,
@@ -14869,7 +15365,7 @@ function parseSerializedZkLoginSignature(signature) {
 }
 
 
-},{"../cryptography/publickey.js":39,"../cryptography/signature-scheme.js":40,"../graphql/client.js":44,"../graphql/schemas/2024.4/index.js":45,"./jwt-utils.js":88,"./signature.js":90,"./utils.js":91,"@mysten/bcs":13}],90:[function(require,module,exports){
+},{"../cryptography/publickey.js":39,"../cryptography/signature-scheme.js":40,"../graphql/client.js":44,"../graphql/schemas/2024.4/index.js":45,"./jwt-utils.js":94,"./signature.js":96,"./utils.js":97,"@mysten/bcs":13}],96:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14902,7 +15398,7 @@ function getZkLoginSignatureBytes({ inputs, maxEpoch, userSignature }) {
     {
       inputs,
       maxEpoch,
-      userSignature: typeof userSignature === "string" ? (0, import_bcs.fromB64)(userSignature) : userSignature
+      userSignature: typeof userSignature === "string" ? (0, import_bcs.fromBase64)(userSignature) : userSignature
     },
     { maxSize: 2048 }
   ).toBytes();
@@ -14912,14 +15408,14 @@ function getZkLoginSignature({ inputs, maxEpoch, userSignature }) {
   const signatureBytes = new Uint8Array(bytes.length + 1);
   signatureBytes.set([import_signature_scheme.SIGNATURE_SCHEME_TO_FLAG.ZkLogin]);
   signatureBytes.set(bytes, 1);
-  return (0, import_bcs.toB64)(signatureBytes);
+  return (0, import_bcs.toBase64)(signatureBytes);
 }
 function parseZkLoginSignature(signature) {
-  return import_bcs2.zkLoginSignature.parse(typeof signature === "string" ? (0, import_bcs.fromB64)(signature) : signature);
+  return import_bcs2.zkLoginSignature.parse(typeof signature === "string" ? (0, import_bcs.fromBase64)(signature) : signature);
 }
 
 
-},{"../cryptography/signature-scheme.js":40,"./bcs.js":87,"@mysten/bcs":13}],91:[function(require,module,exports){
+},{"../cryptography/signature-scheme.js":40,"./bcs.js":93,"@mysten/bcs":13}],97:[function(require,module,exports){
 "use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -14967,7 +15463,8519 @@ function toBigEndianBytes(num, width) {
 }
 
 
-},{"@noble/hashes/utils":116}],92:[function(require,module,exports){
+},{"@noble/hashes/utils":132}],98:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getHash = getHash;
+exports.createCurve = createCurve;
+/*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+const hmac_1 = require("@noble/hashes/hmac");
+const utils_1 = require("@noble/hashes/utils");
+const weierstrass_js_1 = require("./abstract/weierstrass.js");
+// connects noble-curves to noble-hashes
+function getHash(hash) {
+    return {
+        hash,
+        hmac: (key, ...msgs) => (0, hmac_1.hmac)(hash, key, (0, utils_1.concatBytes)(...msgs)),
+        randomBytes: utils_1.randomBytes,
+    };
+}
+function createCurve(curveDef, defHash) {
+    const create = (hash) => (0, weierstrass_js_1.weierstrass)({ ...curveDef, ...getHash(hash) });
+    return Object.freeze({ ...create(defHash), create });
+}
+
+},{"./abstract/weierstrass.js":103,"@noble/hashes/hmac":128,"@noble/hashes/utils":132}],99:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.wNAF = wNAF;
+exports.pippenger = pippenger;
+exports.validateBasic = validateBasic;
+/*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+// Abelian group utilities
+const modular_js_1 = require("./modular.js");
+const utils_js_1 = require("./utils.js");
+const _0n = BigInt(0);
+const _1n = BigInt(1);
+// Since points in different groups cannot be equal (different object constructor),
+// we can have single place to store precomputes
+const pointPrecomputes = new WeakMap();
+const pointWindowSizes = new WeakMap(); // This allows use make points immutable (nothing changes inside)
+// Elliptic curve multiplication of Point by scalar. Fragile.
+// Scalars should always be less than curve order: this should be checked inside of a curve itself.
+// Creates precomputation tables for fast multiplication:
+// - private scalar is split by fixed size windows of W bits
+// - every window point is collected from window's table & added to accumulator
+// - since windows are different, same point inside tables won't be accessed more than once per calc
+// - each multiplication is 'Math.ceil(CURVE_ORDER / 𝑊) + 1' point additions (fixed for any scalar)
+// - +1 window is neccessary for wNAF
+// - wNAF reduces table size: 2x less memory + 2x faster generation, but 10% slower multiplication
+// TODO: Research returning 2d JS array of windows, instead of a single window. This would allow
+// windows to be in different memory locations
+function wNAF(c, bits) {
+    const constTimeNegate = (condition, item) => {
+        const neg = item.negate();
+        return condition ? neg : item;
+    };
+    const validateW = (W) => {
+        if (!Number.isSafeInteger(W) || W <= 0 || W > bits)
+            throw new Error(`Wrong window size=${W}, should be [1..${bits}]`);
+    };
+    const opts = (W) => {
+        validateW(W);
+        const windows = Math.ceil(bits / W) + 1; // +1, because
+        const windowSize = 2 ** (W - 1); // -1 because we skip zero
+        return { windows, windowSize };
+    };
+    return {
+        constTimeNegate,
+        // non-const time multiplication ladder
+        unsafeLadder(elm, n) {
+            let p = c.ZERO;
+            let d = elm;
+            while (n > _0n) {
+                if (n & _1n)
+                    p = p.add(d);
+                d = d.double();
+                n >>= _1n;
+            }
+            return p;
+        },
+        /**
+         * Creates a wNAF precomputation window. Used for caching.
+         * Default window size is set by `utils.precompute()` and is equal to 8.
+         * Number of precomputed points depends on the curve size:
+         * 2^(𝑊−1) * (Math.ceil(𝑛 / 𝑊) + 1), where:
+         * - 𝑊 is the window size
+         * - 𝑛 is the bitlength of the curve order.
+         * For a 256-bit curve and window size 8, the number of precomputed points is 128 * 33 = 4224.
+         * @returns precomputed point tables flattened to a single array
+         */
+        precomputeWindow(elm, W) {
+            const { windows, windowSize } = opts(W);
+            const points = [];
+            let p = elm;
+            let base = p;
+            for (let window = 0; window < windows; window++) {
+                base = p;
+                points.push(base);
+                // =1, because we skip zero
+                for (let i = 1; i < windowSize; i++) {
+                    base = base.add(p);
+                    points.push(base);
+                }
+                p = base.double();
+            }
+            return points;
+        },
+        /**
+         * Implements ec multiplication using precomputed tables and w-ary non-adjacent form.
+         * @param W window size
+         * @param precomputes precomputed tables
+         * @param n scalar (we don't check here, but should be less than curve order)
+         * @returns real and fake (for const-time) points
+         */
+        wNAF(W, precomputes, n) {
+            // TODO: maybe check that scalar is less than group order? wNAF behavious is undefined otherwise
+            // But need to carefully remove other checks before wNAF. ORDER == bits here
+            const { windows, windowSize } = opts(W);
+            let p = c.ZERO;
+            let f = c.BASE;
+            const mask = BigInt(2 ** W - 1); // Create mask with W ones: 0b1111 for W=4 etc.
+            const maxNumber = 2 ** W;
+            const shiftBy = BigInt(W);
+            for (let window = 0; window < windows; window++) {
+                const offset = window * windowSize;
+                // Extract W bits.
+                let wbits = Number(n & mask);
+                // Shift number by W bits.
+                n >>= shiftBy;
+                // If the bits are bigger than max size, we'll split those.
+                // +224 => 256 - 32
+                if (wbits > windowSize) {
+                    wbits -= maxNumber;
+                    n += _1n;
+                }
+                // This code was first written with assumption that 'f' and 'p' will never be infinity point:
+                // since each addition is multiplied by 2 ** W, it cannot cancel each other. However,
+                // there is negate now: it is possible that negated element from low value
+                // would be the same as high element, which will create carry into next window.
+                // It's not obvious how this can fail, but still worth investigating later.
+                // Check if we're onto Zero point.
+                // Add random point inside current window to f.
+                const offset1 = offset;
+                const offset2 = offset + Math.abs(wbits) - 1; // -1 because we skip zero
+                const cond1 = window % 2 !== 0;
+                const cond2 = wbits < 0;
+                if (wbits === 0) {
+                    // The most important part for const-time getPublicKey
+                    f = f.add(constTimeNegate(cond1, precomputes[offset1]));
+                }
+                else {
+                    p = p.add(constTimeNegate(cond2, precomputes[offset2]));
+                }
+            }
+            // JIT-compiler should not eliminate f here, since it will later be used in normalizeZ()
+            // Even if the variable is still unused, there are some checks which will
+            // throw an exception, so compiler needs to prove they won't happen, which is hard.
+            // At this point there is a way to F be infinity-point even if p is not,
+            // which makes it less const-time: around 1 bigint multiply.
+            return { p, f };
+        },
+        wNAFCached(P, n, transform) {
+            const W = pointWindowSizes.get(P) || 1;
+            // Calculate precomputes on a first run, reuse them after
+            let comp = pointPrecomputes.get(P);
+            if (!comp) {
+                comp = this.precomputeWindow(P, W);
+                if (W !== 1)
+                    pointPrecomputes.set(P, transform(comp));
+            }
+            return this.wNAF(W, comp, n);
+        },
+        // We calculate precomputes for elliptic curve point multiplication
+        // using windowed method. This specifies window size and
+        // stores precomputed values. Usually only base point would be precomputed.
+        setWindowSize(P, W) {
+            validateW(W);
+            pointWindowSizes.set(P, W);
+            pointPrecomputes.delete(P);
+        },
+    };
+}
+/**
+ * Pippenger algorithm for multi-scalar multiplication (MSM).
+ * MSM is basically (Pa + Qb + Rc + ...).
+ * 30x faster vs naive addition on L=4096, 10x faster with precomputes.
+ * For N=254bit, L=1, it does: 1024 ADD + 254 DBL. For L=5: 1536 ADD + 254 DBL.
+ * Algorithmically constant-time (for same L), even when 1 point + scalar, or when scalar = 0.
+ * @param c Curve Point constructor
+ * @param field field over CURVE.N - important that it's not over CURVE.P
+ * @param points array of L curve points
+ * @param scalars array of L scalars (aka private keys / bigints)
+ */
+function pippenger(c, field, points, scalars) {
+    // If we split scalars by some window (let's say 8 bits), every chunk will only
+    // take 256 buckets even if there are 4096 scalars, also re-uses double.
+    // TODO:
+    // - https://eprint.iacr.org/2024/750.pdf
+    // - https://tches.iacr.org/index.php/TCHES/article/view/10287
+    // 0 is accepted in scalars
+    if (!Array.isArray(points) || !Array.isArray(scalars) || scalars.length !== points.length)
+        throw new Error('arrays of points and scalars must have equal length');
+    scalars.forEach((s, i) => {
+        if (!field.isValid(s))
+            throw new Error(`wrong scalar at index ${i}`);
+    });
+    points.forEach((p, i) => {
+        if (!(p instanceof c))
+            throw new Error(`wrong point at index ${i}`);
+    });
+    const wbits = (0, utils_js_1.bitLen)(BigInt(points.length));
+    const windowSize = wbits > 12 ? wbits - 3 : wbits > 4 ? wbits - 2 : wbits ? 2 : 1; // in bits
+    const MASK = (1 << windowSize) - 1;
+    const buckets = new Array(MASK + 1).fill(c.ZERO); // +1 for zero array
+    const lastBits = Math.floor((field.BITS - 1) / windowSize) * windowSize;
+    let sum = c.ZERO;
+    for (let i = lastBits; i >= 0; i -= windowSize) {
+        buckets.fill(c.ZERO);
+        for (let j = 0; j < scalars.length; j++) {
+            const scalar = scalars[j];
+            const wbits = Number((scalar >> BigInt(i)) & BigInt(MASK));
+            buckets[wbits] = buckets[wbits].add(points[j]);
+        }
+        let resI = c.ZERO; // not using this will do small speed-up, but will lose ct
+        // Skip first bucket, because it is zero
+        for (let j = buckets.length - 1, sumI = c.ZERO; j > 0; j--) {
+            sumI = sumI.add(buckets[j]);
+            resI = resI.add(sumI);
+        }
+        sum = sum.add(resI);
+        if (i !== 0)
+            for (let j = 0; j < windowSize; j++)
+                sum = sum.double();
+    }
+    return sum;
+}
+function validateBasic(curve) {
+    (0, modular_js_1.validateField)(curve.Fp);
+    (0, utils_js_1.validateObject)(curve, {
+        n: 'bigint',
+        h: 'bigint',
+        Gx: 'field',
+        Gy: 'field',
+    }, {
+        nBitLength: 'isSafeInteger',
+        nByteLength: 'isSafeInteger',
+    });
+    // Set defaults
+    return Object.freeze({
+        ...(0, modular_js_1.nLength)(curve.n, curve.nBitLength),
+        ...curve,
+        ...{ p: curve.Fp.ORDER },
+    });
+}
+
+},{"./modular.js":101,"./utils.js":102}],100:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.expand_message_xmd = expand_message_xmd;
+exports.expand_message_xof = expand_message_xof;
+exports.hash_to_field = hash_to_field;
+exports.isogenyMap = isogenyMap;
+exports.createHasher = createHasher;
+const modular_js_1 = require("./modular.js");
+const utils_js_1 = require("./utils.js");
+// Octet Stream to Integer. "spec" implementation of os2ip is 2.5x slower vs bytesToNumberBE.
+const os2ip = utils_js_1.bytesToNumberBE;
+// Integer to Octet Stream (numberToBytesBE)
+function i2osp(value, length) {
+    anum(value);
+    anum(length);
+    if (value < 0 || value >= 1 << (8 * length)) {
+        throw new Error(`bad I2OSP call: value=${value} length=${length}`);
+    }
+    const res = Array.from({ length }).fill(0);
+    for (let i = length - 1; i >= 0; i--) {
+        res[i] = value & 0xff;
+        value >>>= 8;
+    }
+    return new Uint8Array(res);
+}
+function strxor(a, b) {
+    const arr = new Uint8Array(a.length);
+    for (let i = 0; i < a.length; i++) {
+        arr[i] = a[i] ^ b[i];
+    }
+    return arr;
+}
+function anum(item) {
+    if (!Number.isSafeInteger(item))
+        throw new Error('number expected');
+}
+// Produces a uniformly random byte string using a cryptographic hash function H that outputs b bits
+// https://www.rfc-editor.org/rfc/rfc9380#section-5.3.1
+function expand_message_xmd(msg, DST, lenInBytes, H) {
+    (0, utils_js_1.abytes)(msg);
+    (0, utils_js_1.abytes)(DST);
+    anum(lenInBytes);
+    // https://www.rfc-editor.org/rfc/rfc9380#section-5.3.3
+    if (DST.length > 255)
+        DST = H((0, utils_js_1.concatBytes)((0, utils_js_1.utf8ToBytes)('H2C-OVERSIZE-DST-'), DST));
+    const { outputLen: b_in_bytes, blockLen: r_in_bytes } = H;
+    const ell = Math.ceil(lenInBytes / b_in_bytes);
+    if (lenInBytes > 65535 || ell > 255)
+        throw new Error('expand_message_xmd: invalid lenInBytes');
+    const DST_prime = (0, utils_js_1.concatBytes)(DST, i2osp(DST.length, 1));
+    const Z_pad = i2osp(0, r_in_bytes);
+    const l_i_b_str = i2osp(lenInBytes, 2); // len_in_bytes_str
+    const b = new Array(ell);
+    const b_0 = H((0, utils_js_1.concatBytes)(Z_pad, msg, l_i_b_str, i2osp(0, 1), DST_prime));
+    b[0] = H((0, utils_js_1.concatBytes)(b_0, i2osp(1, 1), DST_prime));
+    for (let i = 1; i <= ell; i++) {
+        const args = [strxor(b_0, b[i - 1]), i2osp(i + 1, 1), DST_prime];
+        b[i] = H((0, utils_js_1.concatBytes)(...args));
+    }
+    const pseudo_random_bytes = (0, utils_js_1.concatBytes)(...b);
+    return pseudo_random_bytes.slice(0, lenInBytes);
+}
+// Produces a uniformly random byte string using an extendable-output function (XOF) H.
+// 1. The collision resistance of H MUST be at least k bits.
+// 2. H MUST be an XOF that has been proved indifferentiable from
+//    a random oracle under a reasonable cryptographic assumption.
+// https://www.rfc-editor.org/rfc/rfc9380#section-5.3.2
+function expand_message_xof(msg, DST, lenInBytes, k, H) {
+    (0, utils_js_1.abytes)(msg);
+    (0, utils_js_1.abytes)(DST);
+    anum(lenInBytes);
+    // https://www.rfc-editor.org/rfc/rfc9380#section-5.3.3
+    // DST = H('H2C-OVERSIZE-DST-' || a_very_long_DST, Math.ceil((lenInBytes * k) / 8));
+    if (DST.length > 255) {
+        const dkLen = Math.ceil((2 * k) / 8);
+        DST = H.create({ dkLen }).update((0, utils_js_1.utf8ToBytes)('H2C-OVERSIZE-DST-')).update(DST).digest();
+    }
+    if (lenInBytes > 65535 || DST.length > 255)
+        throw new Error('expand_message_xof: invalid lenInBytes');
+    return (H.create({ dkLen: lenInBytes })
+        .update(msg)
+        .update(i2osp(lenInBytes, 2))
+        // 2. DST_prime = DST || I2OSP(len(DST), 1)
+        .update(DST)
+        .update(i2osp(DST.length, 1))
+        .digest());
+}
+/**
+ * Hashes arbitrary-length byte strings to a list of one or more elements of a finite field F
+ * https://www.rfc-editor.org/rfc/rfc9380#section-5.2
+ * @param msg a byte string containing the message to hash
+ * @param count the number of elements of F to output
+ * @param options `{DST: string, p: bigint, m: number, k: number, expand: 'xmd' | 'xof', hash: H}`, see above
+ * @returns [u_0, ..., u_(count - 1)], a list of field elements.
+ */
+function hash_to_field(msg, count, options) {
+    (0, utils_js_1.validateObject)(options, {
+        DST: 'stringOrUint8Array',
+        p: 'bigint',
+        m: 'isSafeInteger',
+        k: 'isSafeInteger',
+        hash: 'hash',
+    });
+    const { p, k, m, hash, expand, DST: _DST } = options;
+    (0, utils_js_1.abytes)(msg);
+    anum(count);
+    const DST = typeof _DST === 'string' ? (0, utils_js_1.utf8ToBytes)(_DST) : _DST;
+    const log2p = p.toString(2).length;
+    const L = Math.ceil((log2p + k) / 8); // section 5.1 of ietf draft link above
+    const len_in_bytes = count * m * L;
+    let prb; // pseudo_random_bytes
+    if (expand === 'xmd') {
+        prb = expand_message_xmd(msg, DST, len_in_bytes, hash);
+    }
+    else if (expand === 'xof') {
+        prb = expand_message_xof(msg, DST, len_in_bytes, k, hash);
+    }
+    else if (expand === '_internal_pass') {
+        // for internal tests only
+        prb = msg;
+    }
+    else {
+        throw new Error('expand must be "xmd" or "xof"');
+    }
+    const u = new Array(count);
+    for (let i = 0; i < count; i++) {
+        const e = new Array(m);
+        for (let j = 0; j < m; j++) {
+            const elm_offset = L * (j + i * m);
+            const tv = prb.subarray(elm_offset, elm_offset + L);
+            e[j] = (0, modular_js_1.mod)(os2ip(tv), p);
+        }
+        u[i] = e;
+    }
+    return u;
+}
+function isogenyMap(field, map) {
+    // Make same order as in spec
+    const COEFF = map.map((i) => Array.from(i).reverse());
+    return (x, y) => {
+        const [xNum, xDen, yNum, yDen] = COEFF.map((val) => val.reduce((acc, i) => field.add(field.mul(acc, x), i)));
+        x = field.div(xNum, xDen); // xNum / xDen
+        y = field.mul(y, field.div(yNum, yDen)); // y * (yNum / yDev)
+        return { x, y };
+    };
+}
+function createHasher(Point, mapToCurve, def) {
+    if (typeof mapToCurve !== 'function')
+        throw new Error('mapToCurve() must be defined');
+    return {
+        // Encodes byte string to elliptic curve.
+        // hash_to_curve from https://www.rfc-editor.org/rfc/rfc9380#section-3
+        hashToCurve(msg, options) {
+            const u = hash_to_field(msg, 2, { ...def, DST: def.DST, ...options });
+            const u0 = Point.fromAffine(mapToCurve(u[0]));
+            const u1 = Point.fromAffine(mapToCurve(u[1]));
+            const P = u0.add(u1).clearCofactor();
+            P.assertValidity();
+            return P;
+        },
+        // Encodes byte string to elliptic curve.
+        // encode_to_curve from https://www.rfc-editor.org/rfc/rfc9380#section-3
+        encodeToCurve(msg, options) {
+            const u = hash_to_field(msg, 1, { ...def, DST: def.encodeDST, ...options });
+            const P = Point.fromAffine(mapToCurve(u[0])).clearCofactor();
+            P.assertValidity();
+            return P;
+        },
+        // Same as encodeToCurve, but without hash
+        mapToCurve(scalars) {
+            if (!Array.isArray(scalars))
+                throw new Error('mapToCurve: expected array of bigints');
+            for (const i of scalars)
+                if (typeof i !== 'bigint')
+                    throw new Error(`mapToCurve: expected array of bigints, got ${i} in array`);
+            const P = Point.fromAffine(mapToCurve(scalars)).clearCofactor();
+            P.assertValidity();
+            return P;
+        },
+    };
+}
+
+},{"./modular.js":101,"./utils.js":102}],101:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.isNegativeLE = void 0;
+exports.mod = mod;
+exports.pow = pow;
+exports.pow2 = pow2;
+exports.invert = invert;
+exports.tonelliShanks = tonelliShanks;
+exports.FpSqrt = FpSqrt;
+exports.validateField = validateField;
+exports.FpPow = FpPow;
+exports.FpInvertBatch = FpInvertBatch;
+exports.FpDiv = FpDiv;
+exports.FpLegendre = FpLegendre;
+exports.FpIsSquare = FpIsSquare;
+exports.nLength = nLength;
+exports.Field = Field;
+exports.FpSqrtOdd = FpSqrtOdd;
+exports.FpSqrtEven = FpSqrtEven;
+exports.hashToPrivateScalar = hashToPrivateScalar;
+exports.getFieldBytesLength = getFieldBytesLength;
+exports.getMinHashLength = getMinHashLength;
+exports.mapHashToField = mapHashToField;
+/*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+// Utilities for modular arithmetics and finite fields
+const utils_js_1 = require("./utils.js");
+// prettier-ignore
+const _0n = BigInt(0), _1n = BigInt(1), _2n = BigInt(2), _3n = BigInt(3);
+// prettier-ignore
+const _4n = BigInt(4), _5n = BigInt(5), _8n = BigInt(8);
+// prettier-ignore
+const _9n = BigInt(9), _16n = BigInt(16);
+// Calculates a modulo b
+function mod(a, b) {
+    const result = a % b;
+    return result >= _0n ? result : b + result;
+}
+/**
+ * Efficiently raise num to power and do modular division.
+ * Unsafe in some contexts: uses ladder, so can expose bigint bits.
+ * @example
+ * pow(2n, 6n, 11n) // 64n % 11n == 9n
+ */
+// TODO: use field version && remove
+function pow(num, power, modulo) {
+    if (modulo <= _0n || power < _0n)
+        throw new Error('Expected power/modulo > 0');
+    if (modulo === _1n)
+        return _0n;
+    let res = _1n;
+    while (power > _0n) {
+        if (power & _1n)
+            res = (res * num) % modulo;
+        num = (num * num) % modulo;
+        power >>= _1n;
+    }
+    return res;
+}
+// Does x ^ (2 ^ power) mod p. pow2(30, 4) == 30 ^ (2 ^ 4)
+function pow2(x, power, modulo) {
+    let res = x;
+    while (power-- > _0n) {
+        res *= res;
+        res %= modulo;
+    }
+    return res;
+}
+// Inverses number over modulo
+function invert(number, modulo) {
+    if (number === _0n || modulo <= _0n) {
+        throw new Error(`invert: expected positive integers, got n=${number} mod=${modulo}`);
+    }
+    // Euclidean GCD https://brilliant.org/wiki/extended-euclidean-algorithm/
+    // Fermat's little theorem "CT-like" version inv(n) = n^(m-2) mod m is 30x slower.
+    let a = mod(number, modulo);
+    let b = modulo;
+    // prettier-ignore
+    let x = _0n, y = _1n, u = _1n, v = _0n;
+    while (a !== _0n) {
+        // JIT applies optimization if those two lines follow each other
+        const q = b / a;
+        const r = b % a;
+        const m = x - u * q;
+        const n = y - v * q;
+        // prettier-ignore
+        b = a, a = r, x = u, y = v, u = m, v = n;
+    }
+    const gcd = b;
+    if (gcd !== _1n)
+        throw new Error('invert: does not exist');
+    return mod(x, modulo);
+}
+/**
+ * Tonelli-Shanks square root search algorithm.
+ * 1. https://eprint.iacr.org/2012/685.pdf (page 12)
+ * 2. Square Roots from 1; 24, 51, 10 to Dan Shanks
+ * Will start an infinite loop if field order P is not prime.
+ * @param P field order
+ * @returns function that takes field Fp (created from P) and number n
+ */
+function tonelliShanks(P) {
+    // Legendre constant: used to calculate Legendre symbol (a | p),
+    // which denotes the value of a^((p-1)/2) (mod p).
+    // (a | p) ≡ 1    if a is a square (mod p)
+    // (a | p) ≡ -1   if a is not a square (mod p)
+    // (a | p) ≡ 0    if a ≡ 0 (mod p)
+    const legendreC = (P - _1n) / _2n;
+    let Q, S, Z;
+    // Step 1: By factoring out powers of 2 from p - 1,
+    // find q and s such that p - 1 = q*(2^s) with q odd
+    for (Q = P - _1n, S = 0; Q % _2n === _0n; Q /= _2n, S++)
+        ;
+    // Step 2: Select a non-square z such that (z | p) ≡ -1 and set c ≡ zq
+    for (Z = _2n; Z < P && pow(Z, legendreC, P) !== P - _1n; Z++)
+        ;
+    // Fast-path
+    if (S === 1) {
+        const p1div4 = (P + _1n) / _4n;
+        return function tonelliFast(Fp, n) {
+            const root = Fp.pow(n, p1div4);
+            if (!Fp.eql(Fp.sqr(root), n))
+                throw new Error('Cannot find square root');
+            return root;
+        };
+    }
+    // Slow-path
+    const Q1div2 = (Q + _1n) / _2n;
+    return function tonelliSlow(Fp, n) {
+        // Step 0: Check that n is indeed a square: (n | p) should not be ≡ -1
+        if (Fp.pow(n, legendreC) === Fp.neg(Fp.ONE))
+            throw new Error('Cannot find square root');
+        let r = S;
+        // TODO: will fail at Fp2/etc
+        let g = Fp.pow(Fp.mul(Fp.ONE, Z), Q); // will update both x and b
+        let x = Fp.pow(n, Q1div2); // first guess at the square root
+        let b = Fp.pow(n, Q); // first guess at the fudge factor
+        while (!Fp.eql(b, Fp.ONE)) {
+            if (Fp.eql(b, Fp.ZERO))
+                return Fp.ZERO; // https://en.wikipedia.org/wiki/Tonelli%E2%80%93Shanks_algorithm (4. If t = 0, return r = 0)
+            // Find m such b^(2^m)==1
+            let m = 1;
+            for (let t2 = Fp.sqr(b); m < r; m++) {
+                if (Fp.eql(t2, Fp.ONE))
+                    break;
+                t2 = Fp.sqr(t2); // t2 *= t2
+            }
+            // NOTE: r-m-1 can be bigger than 32, need to convert to bigint before shift, otherwise there will be overflow
+            const ge = Fp.pow(g, _1n << BigInt(r - m - 1)); // ge = 2^(r-m-1)
+            g = Fp.sqr(ge); // g = ge * ge
+            x = Fp.mul(x, ge); // x *= ge
+            b = Fp.mul(b, g); // b *= g
+            r = m;
+        }
+        return x;
+    };
+}
+function FpSqrt(P) {
+    // NOTE: different algorithms can give different roots, it is up to user to decide which one they want.
+    // For example there is FpSqrtOdd/FpSqrtEven to choice root based on oddness (used for hash-to-curve).
+    // P ≡ 3 (mod 4)
+    // √n = n^((P+1)/4)
+    if (P % _4n === _3n) {
+        // Not all roots possible!
+        // const ORDER =
+        //   0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaabn;
+        // const NUM = 72057594037927816n;
+        const p1div4 = (P + _1n) / _4n;
+        return function sqrt3mod4(Fp, n) {
+            const root = Fp.pow(n, p1div4);
+            // Throw if root**2 != n
+            if (!Fp.eql(Fp.sqr(root), n))
+                throw new Error('Cannot find square root');
+            return root;
+        };
+    }
+    // Atkin algorithm for q ≡ 5 (mod 8), https://eprint.iacr.org/2012/685.pdf (page 10)
+    if (P % _8n === _5n) {
+        const c1 = (P - _5n) / _8n;
+        return function sqrt5mod8(Fp, n) {
+            const n2 = Fp.mul(n, _2n);
+            const v = Fp.pow(n2, c1);
+            const nv = Fp.mul(n, v);
+            const i = Fp.mul(Fp.mul(nv, _2n), v);
+            const root = Fp.mul(nv, Fp.sub(i, Fp.ONE));
+            if (!Fp.eql(Fp.sqr(root), n))
+                throw new Error('Cannot find square root');
+            return root;
+        };
+    }
+    // P ≡ 9 (mod 16)
+    if (P % _16n === _9n) {
+        // NOTE: tonelli is too slow for bls-Fp2 calculations even on start
+        // Means we cannot use sqrt for constants at all!
+        //
+        // const c1 = Fp.sqrt(Fp.negate(Fp.ONE)); //  1. c1 = sqrt(-1) in F, i.e., (c1^2) == -1 in F
+        // const c2 = Fp.sqrt(c1);                //  2. c2 = sqrt(c1) in F, i.e., (c2^2) == c1 in F
+        // const c3 = Fp.sqrt(Fp.negate(c1));     //  3. c3 = sqrt(-c1) in F, i.e., (c3^2) == -c1 in F
+        // const c4 = (P + _7n) / _16n;           //  4. c4 = (q + 7) / 16        # Integer arithmetic
+        // sqrt = (x) => {
+        //   let tv1 = Fp.pow(x, c4);             //  1. tv1 = x^c4
+        //   let tv2 = Fp.mul(c1, tv1);           //  2. tv2 = c1 * tv1
+        //   const tv3 = Fp.mul(c2, tv1);         //  3. tv3 = c2 * tv1
+        //   let tv4 = Fp.mul(c3, tv1);           //  4. tv4 = c3 * tv1
+        //   const e1 = Fp.equals(Fp.square(tv2), x); //  5.  e1 = (tv2^2) == x
+        //   const e2 = Fp.equals(Fp.square(tv3), x); //  6.  e2 = (tv3^2) == x
+        //   tv1 = Fp.cmov(tv1, tv2, e1); //  7. tv1 = CMOV(tv1, tv2, e1)  # Select tv2 if (tv2^2) == x
+        //   tv2 = Fp.cmov(tv4, tv3, e2); //  8. tv2 = CMOV(tv4, tv3, e2)  # Select tv3 if (tv3^2) == x
+        //   const e3 = Fp.equals(Fp.square(tv2), x); //  9.  e3 = (tv2^2) == x
+        //   return Fp.cmov(tv1, tv2, e3); //  10.  z = CMOV(tv1, tv2, e3)  # Select the sqrt from tv1 and tv2
+        // }
+    }
+    // Other cases: Tonelli-Shanks algorithm
+    return tonelliShanks(P);
+}
+// Little-endian check for first LE bit (last BE bit);
+const isNegativeLE = (num, modulo) => (mod(num, modulo) & _1n) === _1n;
+exports.isNegativeLE = isNegativeLE;
+// prettier-ignore
+const FIELD_FIELDS = [
+    'create', 'isValid', 'is0', 'neg', 'inv', 'sqrt', 'sqr',
+    'eql', 'add', 'sub', 'mul', 'pow', 'div',
+    'addN', 'subN', 'mulN', 'sqrN'
+];
+function validateField(field) {
+    const initial = {
+        ORDER: 'bigint',
+        MASK: 'bigint',
+        BYTES: 'isSafeInteger',
+        BITS: 'isSafeInteger',
+    };
+    const opts = FIELD_FIELDS.reduce((map, val) => {
+        map[val] = 'function';
+        return map;
+    }, initial);
+    return (0, utils_js_1.validateObject)(field, opts);
+}
+// Generic field functions
+/**
+ * Same as `pow` but for Fp: non-constant-time.
+ * Unsafe in some contexts: uses ladder, so can expose bigint bits.
+ */
+function FpPow(f, num, power) {
+    // Should have same speed as pow for bigints
+    // TODO: benchmark!
+    if (power < _0n)
+        throw new Error('Expected power > 0');
+    if (power === _0n)
+        return f.ONE;
+    if (power === _1n)
+        return num;
+    let p = f.ONE;
+    let d = num;
+    while (power > _0n) {
+        if (power & _1n)
+            p = f.mul(p, d);
+        d = f.sqr(d);
+        power >>= _1n;
+    }
+    return p;
+}
+/**
+ * Efficiently invert an array of Field elements.
+ * `inv(0)` will return `undefined` here: make sure to throw an error.
+ */
+function FpInvertBatch(f, nums) {
+    const tmp = new Array(nums.length);
+    // Walk from first to last, multiply them by each other MOD p
+    const lastMultiplied = nums.reduce((acc, num, i) => {
+        if (f.is0(num))
+            return acc;
+        tmp[i] = acc;
+        return f.mul(acc, num);
+    }, f.ONE);
+    // Invert last element
+    const inverted = f.inv(lastMultiplied);
+    // Walk from last to first, multiply them by inverted each other MOD p
+    nums.reduceRight((acc, num, i) => {
+        if (f.is0(num))
+            return acc;
+        tmp[i] = f.mul(acc, tmp[i]);
+        return f.mul(acc, num);
+    }, inverted);
+    return tmp;
+}
+function FpDiv(f, lhs, rhs) {
+    return f.mul(lhs, typeof rhs === 'bigint' ? invert(rhs, f.ORDER) : f.inv(rhs));
+}
+function FpLegendre(order) {
+    // (a | p) ≡ 1    if a is a square (mod p), quadratic residue
+    // (a | p) ≡ -1   if a is not a square (mod p), quadratic non residue
+    // (a | p) ≡ 0    if a ≡ 0 (mod p)
+    const legendreConst = (order - _1n) / _2n; // Integer arithmetic
+    return (f, x) => f.pow(x, legendreConst);
+}
+// This function returns True whenever the value x is a square in the field F.
+function FpIsSquare(f) {
+    const legendre = FpLegendre(f.ORDER);
+    return (x) => {
+        const p = legendre(f, x);
+        return f.eql(p, f.ZERO) || f.eql(p, f.ONE);
+    };
+}
+// CURVE.n lengths
+function nLength(n, nBitLength) {
+    // Bit size, byte size of CURVE.n
+    const _nBitLength = nBitLength !== undefined ? nBitLength : n.toString(2).length;
+    const nByteLength = Math.ceil(_nBitLength / 8);
+    return { nBitLength: _nBitLength, nByteLength };
+}
+/**
+ * Initializes a finite field over prime. **Non-primes are not supported.**
+ * Do not init in loop: slow. Very fragile: always run a benchmark on a change.
+ * Major performance optimizations:
+ * * a) denormalized operations like mulN instead of mul
+ * * b) same object shape: never add or remove keys
+ * * c) Object.freeze
+ * NOTE: operations don't check 'isValid' for all elements for performance reasons,
+ * it is caller responsibility to check this.
+ * This is low-level code, please make sure you know what you doing.
+ * @param ORDER prime positive bigint
+ * @param bitLen how many bits the field consumes
+ * @param isLE (def: false) if encoding / decoding should be in little-endian
+ * @param redef optional faster redefinitions of sqrt and other methods
+ */
+function Field(ORDER, bitLen, isLE = false, redef = {}) {
+    if (ORDER <= _0n)
+        throw new Error(`Expected Field ORDER > 0, got ${ORDER}`);
+    const { nBitLength: BITS, nByteLength: BYTES } = nLength(ORDER, bitLen);
+    if (BYTES > 2048)
+        throw new Error('Field lengths over 2048 bytes are not supported');
+    const sqrtP = FpSqrt(ORDER);
+    const f = Object.freeze({
+        ORDER,
+        BITS,
+        BYTES,
+        MASK: (0, utils_js_1.bitMask)(BITS),
+        ZERO: _0n,
+        ONE: _1n,
+        create: (num) => mod(num, ORDER),
+        isValid: (num) => {
+            if (typeof num !== 'bigint')
+                throw new Error(`Invalid field element: expected bigint, got ${typeof num}`);
+            return _0n <= num && num < ORDER; // 0 is valid element, but it's not invertible
+        },
+        is0: (num) => num === _0n,
+        isOdd: (num) => (num & _1n) === _1n,
+        neg: (num) => mod(-num, ORDER),
+        eql: (lhs, rhs) => lhs === rhs,
+        sqr: (num) => mod(num * num, ORDER),
+        add: (lhs, rhs) => mod(lhs + rhs, ORDER),
+        sub: (lhs, rhs) => mod(lhs - rhs, ORDER),
+        mul: (lhs, rhs) => mod(lhs * rhs, ORDER),
+        pow: (num, power) => FpPow(f, num, power),
+        div: (lhs, rhs) => mod(lhs * invert(rhs, ORDER), ORDER),
+        // Same as above, but doesn't normalize
+        sqrN: (num) => num * num,
+        addN: (lhs, rhs) => lhs + rhs,
+        subN: (lhs, rhs) => lhs - rhs,
+        mulN: (lhs, rhs) => lhs * rhs,
+        inv: (num) => invert(num, ORDER),
+        sqrt: redef.sqrt || ((n) => sqrtP(f, n)),
+        invertBatch: (lst) => FpInvertBatch(f, lst),
+        // TODO: do we really need constant cmov?
+        // We don't have const-time bigints anyway, so probably will be not very useful
+        cmov: (a, b, c) => (c ? b : a),
+        toBytes: (num) => (isLE ? (0, utils_js_1.numberToBytesLE)(num, BYTES) : (0, utils_js_1.numberToBytesBE)(num, BYTES)),
+        fromBytes: (bytes) => {
+            if (bytes.length !== BYTES)
+                throw new Error(`Fp.fromBytes: expected ${BYTES}, got ${bytes.length}`);
+            return isLE ? (0, utils_js_1.bytesToNumberLE)(bytes) : (0, utils_js_1.bytesToNumberBE)(bytes);
+        },
+    });
+    return Object.freeze(f);
+}
+function FpSqrtOdd(Fp, elm) {
+    if (!Fp.isOdd)
+        throw new Error(`Field doesn't have isOdd`);
+    const root = Fp.sqrt(elm);
+    return Fp.isOdd(root) ? root : Fp.neg(root);
+}
+function FpSqrtEven(Fp, elm) {
+    if (!Fp.isOdd)
+        throw new Error(`Field doesn't have isOdd`);
+    const root = Fp.sqrt(elm);
+    return Fp.isOdd(root) ? Fp.neg(root) : root;
+}
+/**
+ * "Constant-time" private key generation utility.
+ * Same as mapKeyToField, but accepts less bytes (40 instead of 48 for 32-byte field).
+ * Which makes it slightly more biased, less secure.
+ * @deprecated use mapKeyToField instead
+ */
+function hashToPrivateScalar(hash, groupOrder, isLE = false) {
+    hash = (0, utils_js_1.ensureBytes)('privateHash', hash);
+    const hashLen = hash.length;
+    const minLen = nLength(groupOrder).nByteLength + 8;
+    if (minLen < 24 || hashLen < minLen || hashLen > 1024)
+        throw new Error(`hashToPrivateScalar: expected ${minLen}-1024 bytes of input, got ${hashLen}`);
+    const num = isLE ? (0, utils_js_1.bytesToNumberLE)(hash) : (0, utils_js_1.bytesToNumberBE)(hash);
+    return mod(num, groupOrder - _1n) + _1n;
+}
+/**
+ * Returns total number of bytes consumed by the field element.
+ * For example, 32 bytes for usual 256-bit weierstrass curve.
+ * @param fieldOrder number of field elements, usually CURVE.n
+ * @returns byte length of field
+ */
+function getFieldBytesLength(fieldOrder) {
+    if (typeof fieldOrder !== 'bigint')
+        throw new Error('field order must be bigint');
+    const bitLength = fieldOrder.toString(2).length;
+    return Math.ceil(bitLength / 8);
+}
+/**
+ * Returns minimal amount of bytes that can be safely reduced
+ * by field order.
+ * Should be 2^-128 for 128-bit curve such as P256.
+ * @param fieldOrder number of field elements, usually CURVE.n
+ * @returns byte length of target hash
+ */
+function getMinHashLength(fieldOrder) {
+    const length = getFieldBytesLength(fieldOrder);
+    return length + Math.ceil(length / 2);
+}
+/**
+ * "Constant-time" private key generation utility.
+ * Can take (n + n/2) or more bytes of uniform input e.g. from CSPRNG or KDF
+ * and convert them into private scalar, with the modulo bias being negligible.
+ * Needs at least 48 bytes of input for 32-byte private key.
+ * https://research.kudelskisecurity.com/2020/07/28/the-definitive-guide-to-modulo-bias-and-how-to-avoid-it/
+ * FIPS 186-5, A.2 https://csrc.nist.gov/publications/detail/fips/186/5/final
+ * RFC 9380, https://www.rfc-editor.org/rfc/rfc9380#section-5
+ * @param hash hash output from SHA3 or a similar function
+ * @param groupOrder size of subgroup - (e.g. secp256k1.CURVE.n)
+ * @param isLE interpret hash bytes as LE num
+ * @returns valid private scalar
+ */
+function mapHashToField(key, fieldOrder, isLE = false) {
+    const len = key.length;
+    const fieldLen = getFieldBytesLength(fieldOrder);
+    const minLen = getMinHashLength(fieldOrder);
+    // No small numbers: need to understand bias story. No huge numbers: easier to detect JS timings.
+    if (len < 16 || len < minLen || len > 1024)
+        throw new Error(`expected ${minLen}-1024 bytes of input, got ${len}`);
+    const num = isLE ? (0, utils_js_1.bytesToNumberBE)(key) : (0, utils_js_1.bytesToNumberLE)(key);
+    // `mod(x, 11)` can sometimes produce 0. `mod(x, 10) + 1` is the same, but no 0
+    const reduced = mod(num, fieldOrder - _1n) + _1n;
+    return isLE ? (0, utils_js_1.numberToBytesLE)(reduced, fieldLen) : (0, utils_js_1.numberToBytesBE)(reduced, fieldLen);
+}
+
+},{"./utils.js":102}],102:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.notImplemented = exports.bitMask = void 0;
+exports.isBytes = isBytes;
+exports.abytes = abytes;
+exports.abool = abool;
+exports.bytesToHex = bytesToHex;
+exports.numberToHexUnpadded = numberToHexUnpadded;
+exports.hexToNumber = hexToNumber;
+exports.hexToBytes = hexToBytes;
+exports.bytesToNumberBE = bytesToNumberBE;
+exports.bytesToNumberLE = bytesToNumberLE;
+exports.numberToBytesBE = numberToBytesBE;
+exports.numberToBytesLE = numberToBytesLE;
+exports.numberToVarBytesBE = numberToVarBytesBE;
+exports.ensureBytes = ensureBytes;
+exports.concatBytes = concatBytes;
+exports.equalBytes = equalBytes;
+exports.utf8ToBytes = utf8ToBytes;
+exports.inRange = inRange;
+exports.aInRange = aInRange;
+exports.bitLen = bitLen;
+exports.bitGet = bitGet;
+exports.bitSet = bitSet;
+exports.createHmacDrbg = createHmacDrbg;
+exports.validateObject = validateObject;
+exports.memoized = memoized;
+/*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+// 100 lines of code in the file are duplicated from noble-hashes (utils).
+// This is OK: `abstract` directory does not use noble-hashes.
+// User may opt-in into using different hashing library. This way, noble-hashes
+// won't be included into their bundle.
+const _0n = /* @__PURE__ */ BigInt(0);
+const _1n = /* @__PURE__ */ BigInt(1);
+const _2n = /* @__PURE__ */ BigInt(2);
+function isBytes(a) {
+    return (a instanceof Uint8Array ||
+        (a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array'));
+}
+function abytes(item) {
+    if (!isBytes(item))
+        throw new Error('Uint8Array expected');
+}
+function abool(title, value) {
+    if (typeof value !== 'boolean')
+        throw new Error(`${title} must be valid boolean, got "${value}".`);
+}
+// Array where index 0xf0 (240) is mapped to string 'f0'
+const hexes = /* @__PURE__ */ Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, '0'));
+/**
+ * @example bytesToHex(Uint8Array.from([0xca, 0xfe, 0x01, 0x23])) // 'cafe0123'
+ */
+function bytesToHex(bytes) {
+    abytes(bytes);
+    // pre-caching improves the speed 6x
+    let hex = '';
+    for (let i = 0; i < bytes.length; i++) {
+        hex += hexes[bytes[i]];
+    }
+    return hex;
+}
+function numberToHexUnpadded(num) {
+    const hex = num.toString(16);
+    return hex.length & 1 ? `0${hex}` : hex;
+}
+function hexToNumber(hex) {
+    if (typeof hex !== 'string')
+        throw new Error('hex string expected, got ' + typeof hex);
+    // Big Endian
+    return BigInt(hex === '' ? '0' : `0x${hex}`);
+}
+// We use optimized technique to convert hex string to byte array
+const asciis = { _0: 48, _9: 57, _A: 65, _F: 70, _a: 97, _f: 102 };
+function asciiToBase16(char) {
+    if (char >= asciis._0 && char <= asciis._9)
+        return char - asciis._0;
+    if (char >= asciis._A && char <= asciis._F)
+        return char - (asciis._A - 10);
+    if (char >= asciis._a && char <= asciis._f)
+        return char - (asciis._a - 10);
+    return;
+}
+/**
+ * @example hexToBytes('cafe0123') // Uint8Array.from([0xca, 0xfe, 0x01, 0x23])
+ */
+function hexToBytes(hex) {
+    if (typeof hex !== 'string')
+        throw new Error('hex string expected, got ' + typeof hex);
+    const hl = hex.length;
+    const al = hl / 2;
+    if (hl % 2)
+        throw new Error('padded hex string expected, got unpadded hex of length ' + hl);
+    const array = new Uint8Array(al);
+    for (let ai = 0, hi = 0; ai < al; ai++, hi += 2) {
+        const n1 = asciiToBase16(hex.charCodeAt(hi));
+        const n2 = asciiToBase16(hex.charCodeAt(hi + 1));
+        if (n1 === undefined || n2 === undefined) {
+            const char = hex[hi] + hex[hi + 1];
+            throw new Error('hex string expected, got non-hex character "' + char + '" at index ' + hi);
+        }
+        array[ai] = n1 * 16 + n2;
+    }
+    return array;
+}
+// BE: Big Endian, LE: Little Endian
+function bytesToNumberBE(bytes) {
+    return hexToNumber(bytesToHex(bytes));
+}
+function bytesToNumberLE(bytes) {
+    abytes(bytes);
+    return hexToNumber(bytesToHex(Uint8Array.from(bytes).reverse()));
+}
+function numberToBytesBE(n, len) {
+    return hexToBytes(n.toString(16).padStart(len * 2, '0'));
+}
+function numberToBytesLE(n, len) {
+    return numberToBytesBE(n, len).reverse();
+}
+// Unpadded, rarely used
+function numberToVarBytesBE(n) {
+    return hexToBytes(numberToHexUnpadded(n));
+}
+/**
+ * Takes hex string or Uint8Array, converts to Uint8Array.
+ * Validates output length.
+ * Will throw error for other types.
+ * @param title descriptive title for an error e.g. 'private key'
+ * @param hex hex string or Uint8Array
+ * @param expectedLength optional, will compare to result array's length
+ * @returns
+ */
+function ensureBytes(title, hex, expectedLength) {
+    let res;
+    if (typeof hex === 'string') {
+        try {
+            res = hexToBytes(hex);
+        }
+        catch (e) {
+            throw new Error(`${title} must be valid hex string, got "${hex}". Cause: ${e}`);
+        }
+    }
+    else if (isBytes(hex)) {
+        // Uint8Array.from() instead of hash.slice() because node.js Buffer
+        // is instance of Uint8Array, and its slice() creates **mutable** copy
+        res = Uint8Array.from(hex);
+    }
+    else {
+        throw new Error(`${title} must be hex string or Uint8Array`);
+    }
+    const len = res.length;
+    if (typeof expectedLength === 'number' && len !== expectedLength)
+        throw new Error(`${title} expected ${expectedLength} bytes, got ${len}`);
+    return res;
+}
+/**
+ * Copies several Uint8Arrays into one.
+ */
+function concatBytes(...arrays) {
+    let sum = 0;
+    for (let i = 0; i < arrays.length; i++) {
+        const a = arrays[i];
+        abytes(a);
+        sum += a.length;
+    }
+    const res = new Uint8Array(sum);
+    for (let i = 0, pad = 0; i < arrays.length; i++) {
+        const a = arrays[i];
+        res.set(a, pad);
+        pad += a.length;
+    }
+    return res;
+}
+// Compares 2 u8a-s in kinda constant time
+function equalBytes(a, b) {
+    if (a.length !== b.length)
+        return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++)
+        diff |= a[i] ^ b[i];
+    return diff === 0;
+}
+/**
+ * @example utf8ToBytes('abc') // new Uint8Array([97, 98, 99])
+ */
+function utf8ToBytes(str) {
+    if (typeof str !== 'string')
+        throw new Error(`utf8ToBytes expected string, got ${typeof str}`);
+    return new Uint8Array(new TextEncoder().encode(str)); // https://bugzil.la/1681809
+}
+// Is positive bigint
+const isPosBig = (n) => typeof n === 'bigint' && _0n <= n;
+function inRange(n, min, max) {
+    return isPosBig(n) && isPosBig(min) && isPosBig(max) && min <= n && n < max;
+}
+/**
+ * Asserts min <= n < max. NOTE: It's < max and not <= max.
+ * @example
+ * aInRange('x', x, 1n, 256n); // would assume x is in (1n..255n)
+ */
+function aInRange(title, n, min, max) {
+    // Why min <= n < max and not a (min < n < max) OR b (min <= n <= max)?
+    // consider P=256n, min=0n, max=P
+    // - a for min=0 would require -1:          `inRange('x', x, -1n, P)`
+    // - b would commonly require subtraction:  `inRange('x', x, 0n, P - 1n)`
+    // - our way is the cleanest:               `inRange('x', x, 0n, P)
+    if (!inRange(n, min, max))
+        throw new Error(`expected valid ${title}: ${min} <= n < ${max}, got ${typeof n} ${n}`);
+}
+// Bit operations
+/**
+ * Calculates amount of bits in a bigint.
+ * Same as `n.toString(2).length`
+ */
+function bitLen(n) {
+    let len;
+    for (len = 0; n > _0n; n >>= _1n, len += 1)
+        ;
+    return len;
+}
+/**
+ * Gets single bit at position.
+ * NOTE: first bit position is 0 (same as arrays)
+ * Same as `!!+Array.from(n.toString(2)).reverse()[pos]`
+ */
+function bitGet(n, pos) {
+    return (n >> BigInt(pos)) & _1n;
+}
+/**
+ * Sets single bit at position.
+ */
+function bitSet(n, pos, value) {
+    return n | ((value ? _1n : _0n) << BigInt(pos));
+}
+/**
+ * Calculate mask for N bits. Not using ** operator with bigints because of old engines.
+ * Same as BigInt(`0b${Array(i).fill('1').join('')}`)
+ */
+const bitMask = (n) => (_2n << BigInt(n - 1)) - _1n;
+exports.bitMask = bitMask;
+// DRBG
+const u8n = (data) => new Uint8Array(data); // creates Uint8Array
+const u8fr = (arr) => Uint8Array.from(arr); // another shortcut
+/**
+ * Minimal HMAC-DRBG from NIST 800-90 for RFC6979 sigs.
+ * @returns function that will call DRBG until 2nd arg returns something meaningful
+ * @example
+ *   const drbg = createHmacDRBG<Key>(32, 32, hmac);
+ *   drbg(seed, bytesToKey); // bytesToKey must return Key or undefined
+ */
+function createHmacDrbg(hashLen, qByteLen, hmacFn) {
+    if (typeof hashLen !== 'number' || hashLen < 2)
+        throw new Error('hashLen must be a number');
+    if (typeof qByteLen !== 'number' || qByteLen < 2)
+        throw new Error('qByteLen must be a number');
+    if (typeof hmacFn !== 'function')
+        throw new Error('hmacFn must be a function');
+    // Step B, Step C: set hashLen to 8*ceil(hlen/8)
+    let v = u8n(hashLen); // Minimal non-full-spec HMAC-DRBG from NIST 800-90 for RFC6979 sigs.
+    let k = u8n(hashLen); // Steps B and C of RFC6979 3.2: set hashLen, in our case always same
+    let i = 0; // Iterations counter, will throw when over 1000
+    const reset = () => {
+        v.fill(1);
+        k.fill(0);
+        i = 0;
+    };
+    const h = (...b) => hmacFn(k, v, ...b); // hmac(k)(v, ...values)
+    const reseed = (seed = u8n()) => {
+        // HMAC-DRBG reseed() function. Steps D-G
+        k = h(u8fr([0x00]), seed); // k = hmac(k || v || 0x00 || seed)
+        v = h(); // v = hmac(k || v)
+        if (seed.length === 0)
+            return;
+        k = h(u8fr([0x01]), seed); // k = hmac(k || v || 0x01 || seed)
+        v = h(); // v = hmac(k || v)
+    };
+    const gen = () => {
+        // HMAC-DRBG generate() function
+        if (i++ >= 1000)
+            throw new Error('drbg: tried 1000 values');
+        let len = 0;
+        const out = [];
+        while (len < qByteLen) {
+            v = h();
+            const sl = v.slice();
+            out.push(sl);
+            len += v.length;
+        }
+        return concatBytes(...out);
+    };
+    const genUntil = (seed, pred) => {
+        reset();
+        reseed(seed); // Steps D-G
+        let res = undefined; // Step H: grind until k is in [1..n-1]
+        while (!(res = pred(gen())))
+            reseed();
+        reset();
+        return res;
+    };
+    return genUntil;
+}
+// Validating curves and fields
+const validatorFns = {
+    bigint: (val) => typeof val === 'bigint',
+    function: (val) => typeof val === 'function',
+    boolean: (val) => typeof val === 'boolean',
+    string: (val) => typeof val === 'string',
+    stringOrUint8Array: (val) => typeof val === 'string' || isBytes(val),
+    isSafeInteger: (val) => Number.isSafeInteger(val),
+    array: (val) => Array.isArray(val),
+    field: (val, object) => object.Fp.isValid(val),
+    hash: (val) => typeof val === 'function' && Number.isSafeInteger(val.outputLen),
+};
+// type Record<K extends string | number | symbol, T> = { [P in K]: T; }
+function validateObject(object, validators, optValidators = {}) {
+    const checkField = (fieldName, type, isOptional) => {
+        const checkVal = validatorFns[type];
+        if (typeof checkVal !== 'function')
+            throw new Error(`Invalid validator "${type}", expected function`);
+        const val = object[fieldName];
+        if (isOptional && val === undefined)
+            return;
+        if (!checkVal(val, object)) {
+            throw new Error(`Invalid param ${String(fieldName)}=${val} (${typeof val}), expected ${type}`);
+        }
+    };
+    for (const [fieldName, type] of Object.entries(validators))
+        checkField(fieldName, type, false);
+    for (const [fieldName, type] of Object.entries(optValidators))
+        checkField(fieldName, type, true);
+    return object;
+}
+// validate type tests
+// const o: { a: number; b: number; c: number } = { a: 1, b: 5, c: 6 };
+// const z0 = validateObject(o, { a: 'isSafeInteger' }, { c: 'bigint' }); // Ok!
+// // Should fail type-check
+// const z1 = validateObject(o, { a: 'tmp' }, { c: 'zz' });
+// const z2 = validateObject(o, { a: 'isSafeInteger' }, { c: 'zz' });
+// const z3 = validateObject(o, { test: 'boolean', z: 'bug' });
+// const z4 = validateObject(o, { a: 'boolean', z: 'bug' });
+/**
+ * throws not implemented error
+ */
+const notImplemented = () => {
+    throw new Error('not implemented');
+};
+exports.notImplemented = notImplemented;
+/**
+ * Memoizes (caches) computation result.
+ * Uses WeakMap: the value is going auto-cleaned by GC after last reference is removed.
+ */
+function memoized(fn) {
+    const map = new WeakMap();
+    return (arg, ...args) => {
+        const val = map.get(arg);
+        if (val !== undefined)
+            return val;
+        const computed = fn(arg, ...args);
+        map.set(arg, computed);
+        return computed;
+    };
+}
+
+},{}],103:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.DER = void 0;
+exports.weierstrassPoints = weierstrassPoints;
+exports.weierstrass = weierstrass;
+exports.SWUFpSqrtRatio = SWUFpSqrtRatio;
+exports.mapToCurveSimpleSWU = mapToCurveSimpleSWU;
+/*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+// Short Weierstrass curve. The formula is: y² = x³ + ax + b
+const curve_js_1 = require("./curve.js");
+const mod = require("./modular.js");
+const ut = require("./utils.js");
+const utils_js_1 = require("./utils.js");
+function validateSigVerOpts(opts) {
+  if (opts.lowS !== undefined) (0, utils_js_1.abool)('lowS', opts.lowS);
+  if (opts.prehash !== undefined) (0, utils_js_1.abool)('prehash', opts.prehash);
+}
+function validatePointOpts(curve) {
+  const opts = (0, curve_js_1.validateBasic)(curve);
+  ut.validateObject(opts, {
+    a: 'field',
+    b: 'field'
+  }, {
+    allowedPrivateKeyLengths: 'array',
+    wrapPrivateKey: 'boolean',
+    isTorsionFree: 'function',
+    clearCofactor: 'function',
+    allowInfinityPoint: 'boolean',
+    fromBytes: 'function',
+    toBytes: 'function'
+  });
+  const {
+    endo,
+    Fp,
+    a
+  } = opts;
+  if (endo) {
+    if (!Fp.eql(a, Fp.ZERO)) {
+      throw new Error('Endomorphism can only be defined for Koblitz curves that have a=0');
+    }
+    if (typeof endo !== 'object' || typeof endo.beta !== 'bigint' || typeof endo.splitScalar !== 'function') {
+      throw new Error('Expected endomorphism with beta: bigint and splitScalar: function');
+    }
+  }
+  return Object.freeze({
+    ...opts
+  });
+}
+const {
+  bytesToNumberBE: b2n,
+  hexToBytes: h2b
+} = ut;
+/**
+ * ASN.1 DER encoding utilities. ASN is very complex & fragile. Format:
+ *
+ *     [0x30 (SEQUENCE), bytelength, 0x02 (INTEGER), intLength, R, 0x02 (INTEGER), intLength, S]
+ *
+ * Docs: https://letsencrypt.org/docs/a-warm-welcome-to-asn1-and-der/, https://luca.ntop.org/Teaching/Appunti/asn1.html
+ */
+exports.DER = {
+  // asn.1 DER encoding utils
+  Err: class DERErr extends Error {
+    constructor(m = '') {
+      super(m);
+    }
+  },
+  // Basic building block is TLV (Tag-Length-Value)
+  _tlv: {
+    encode: (tag, data) => {
+      const {
+        Err: E
+      } = exports.DER;
+      if (tag < 0 || tag > 256) throw new E('tlv.encode: wrong tag');
+      if (data.length & 1) throw new E('tlv.encode: unpadded data');
+      const dataLen = data.length / 2;
+      const len = ut.numberToHexUnpadded(dataLen);
+      if (len.length / 2 & 128) throw new E('tlv.encode: long form length too big');
+      // length of length with long form flag
+      const lenLen = dataLen > 127 ? ut.numberToHexUnpadded(len.length / 2 | 128) : '';
+      return `${ut.numberToHexUnpadded(tag)}${lenLen}${len}${data}`;
+    },
+    // v - value, l - left bytes (unparsed)
+    decode(tag, data) {
+      const {
+        Err: E
+      } = exports.DER;
+      let pos = 0;
+      if (tag < 0 || tag > 256) throw new E('tlv.encode: wrong tag');
+      if (data.length < 2 || data[pos++] !== tag) throw new E('tlv.decode: wrong tlv');
+      const first = data[pos++];
+      const isLong = !!(first & 128); // First bit of first length byte is flag for short/long form
+      let length = 0;
+      if (!isLong) length = first;else {
+        // Long form: [longFlag(1bit), lengthLength(7bit), length (BE)]
+        const lenLen = first & 127;
+        if (!lenLen) throw new E('tlv.decode(long): indefinite length not supported');
+        if (lenLen > 4) throw new E('tlv.decode(long): byte length is too big'); // this will overflow u32 in js
+        const lengthBytes = data.subarray(pos, pos + lenLen);
+        if (lengthBytes.length !== lenLen) throw new E('tlv.decode: length bytes not complete');
+        if (lengthBytes[0] === 0) throw new E('tlv.decode(long): zero leftmost byte');
+        for (const b of lengthBytes) length = length << 8 | b;
+        pos += lenLen;
+        if (length < 128) throw new E('tlv.decode(long): not minimal encoding');
+      }
+      const v = data.subarray(pos, pos + length);
+      if (v.length !== length) throw new E('tlv.decode: wrong value length');
+      return {
+        v,
+        l: data.subarray(pos + length)
+      };
+    }
+  },
+  // https://crypto.stackexchange.com/a/57734 Leftmost bit of first byte is 'negative' flag,
+  // since we always use positive integers here. It must always be empty:
+  // - add zero byte if exists
+  // - if next byte doesn't have a flag, leading zero is not allowed (minimal encoding)
+  _int: {
+    encode(num) {
+      const {
+        Err: E
+      } = exports.DER;
+      if (num < _0n) throw new E('integer: negative integers are not allowed');
+      let hex = ut.numberToHexUnpadded(num);
+      // Pad with zero byte if negative flag is present
+      if (Number.parseInt(hex[0], 16) & 0b1000) hex = '00' + hex;
+      if (hex.length & 1) throw new E('unexpected assertion');
+      return hex;
+    },
+    decode(data) {
+      const {
+        Err: E
+      } = exports.DER;
+      if (data[0] & 128) throw new E('Invalid signature integer: negative');
+      if (data[0] === 0x00 && !(data[1] & 128)) throw new E('Invalid signature integer: unnecessary leading zero');
+      return b2n(data);
+    }
+  },
+  toSig(hex) {
+    // parse DER signature
+    const {
+      Err: E,
+      _int: int,
+      _tlv: tlv
+    } = exports.DER;
+    const data = typeof hex === 'string' ? h2b(hex) : hex;
+    ut.abytes(data);
+    const {
+      v: seqBytes,
+      l: seqLeftBytes
+    } = tlv.decode(0x30, data);
+    if (seqLeftBytes.length) throw new E('Invalid signature: left bytes after parsing');
+    const {
+      v: rBytes,
+      l: rLeftBytes
+    } = tlv.decode(0x02, seqBytes);
+    const {
+      v: sBytes,
+      l: sLeftBytes
+    } = tlv.decode(0x02, rLeftBytes);
+    if (sLeftBytes.length) throw new E('Invalid signature: left bytes after parsing');
+    return {
+      r: int.decode(rBytes),
+      s: int.decode(sBytes)
+    };
+  },
+  hexFromSig(sig) {
+    const {
+      _tlv: tlv,
+      _int: int
+    } = exports.DER;
+    const seq = `${tlv.encode(0x02, int.encode(sig.r))}${tlv.encode(0x02, int.encode(sig.s))}`;
+    return tlv.encode(0x30, seq);
+  }
+};
+// Be friendly to bad ECMAScript parsers by not using bigint literals
+// prettier-ignore
+const _0n = BigInt(0),
+  _1n = BigInt(1),
+  _2n = BigInt(2),
+  _3n = BigInt(3),
+  _4n = BigInt(4);
+function weierstrassPoints(opts) {
+  const CURVE = validatePointOpts(opts);
+  const {
+    Fp
+  } = CURVE; // All curves has same field / group length as for now, but they can differ
+  const Fn = mod.Field(CURVE.n, CURVE.nBitLength);
+  const toBytes = CURVE.toBytes || ((_c, point, _isCompressed) => {
+    const a = point.toAffine();
+    return ut.concatBytes(Uint8Array.from([0x04]), Fp.toBytes(a.x), Fp.toBytes(a.y));
+  });
+  const fromBytes = CURVE.fromBytes || (bytes => {
+    // const head = bytes[0];
+    const tail = bytes.subarray(1);
+    // if (head !== 0x04) throw new Error('Only non-compressed encoding is supported');
+    const x = Fp.fromBytes(tail.subarray(0, Fp.BYTES));
+    const y = Fp.fromBytes(tail.subarray(Fp.BYTES, 2 * Fp.BYTES));
+    return {
+      x,
+      y
+    };
+  });
+  /**
+   * y² = x³ + ax + b: Short weierstrass curve formula
+   * @returns y²
+   */
+  function weierstrassEquation(x) {
+    const {
+      a,
+      b
+    } = CURVE;
+    const x2 = Fp.sqr(x); // x * x
+    const x3 = Fp.mul(x2, x); // x2 * x
+    return Fp.add(Fp.add(x3, Fp.mul(x, a)), b); // x3 + a * x + b
+  }
+  // Validate whether the passed curve params are valid.
+  // We check if curve equation works for generator point.
+  // `assertValidity()` won't work: `isTorsionFree()` is not available at this point in bls12-381.
+  // ProjectivePoint class has not been initialized yet.
+  if (!Fp.eql(Fp.sqr(CURVE.Gy), weierstrassEquation(CURVE.Gx))) throw new Error('bad generator point: equation left != right');
+  // Valid group elements reside in range 1..n-1
+  function isWithinCurveOrder(num) {
+    return ut.inRange(num, _1n, CURVE.n);
+  }
+  // Validates if priv key is valid and converts it to bigint.
+  // Supports options allowedPrivateKeyLengths and wrapPrivateKey.
+  function normPrivateKeyToScalar(key) {
+    const {
+      allowedPrivateKeyLengths: lengths,
+      nByteLength,
+      wrapPrivateKey,
+      n: N
+    } = CURVE;
+    if (lengths && typeof key !== 'bigint') {
+      if (ut.isBytes(key)) key = ut.bytesToHex(key);
+      // Normalize to hex string, pad. E.g. P521 would norm 130-132 char hex to 132-char bytes
+      if (typeof key !== 'string' || !lengths.includes(key.length)) throw new Error('Invalid key');
+      key = key.padStart(nByteLength * 2, '0');
+    }
+    let num;
+    try {
+      num = typeof key === 'bigint' ? key : ut.bytesToNumberBE((0, utils_js_1.ensureBytes)('private key', key, nByteLength));
+    } catch (error) {
+      throw new Error(`private key must be ${nByteLength} bytes, hex or bigint, not ${typeof key}`);
+    }
+    if (wrapPrivateKey) num = mod.mod(num, N); // disabled by default, enabled for BLS
+    ut.aInRange('private key', num, _1n, N); // num in range [1..N-1]
+    return num;
+  }
+  function assertPrjPoint(other) {
+    if (!(other instanceof Point)) throw new Error('ProjectivePoint expected');
+  }
+  // Memoized toAffine / validity check. They are heavy. Points are immutable.
+  // Converts Projective point to affine (x, y) coordinates.
+  // Can accept precomputed Z^-1 - for example, from invertBatch.
+  // (x, y, z) ∋ (x=x/z, y=y/z)
+  const toAffineMemo = (0, utils_js_1.memoized)((p, iz) => {
+    const {
+      px: x,
+      py: y,
+      pz: z
+    } = p;
+    // Fast-path for normalized points
+    if (Fp.eql(z, Fp.ONE)) return {
+      x,
+      y
+    };
+    const is0 = p.is0();
+    // If invZ was 0, we return zero point. However we still want to execute
+    // all operations, so we replace invZ with a random number, 1.
+    if (iz == null) iz = is0 ? Fp.ONE : Fp.inv(z);
+    const ax = Fp.mul(x, iz);
+    const ay = Fp.mul(y, iz);
+    const zz = Fp.mul(z, iz);
+    if (is0) return {
+      x: Fp.ZERO,
+      y: Fp.ZERO
+    };
+    if (!Fp.eql(zz, Fp.ONE)) throw new Error('invZ was invalid');
+    return {
+      x: ax,
+      y: ay
+    };
+  });
+  // NOTE: on exception this will crash 'cached' and no value will be set.
+  // Otherwise true will be return
+  const assertValidMemo = (0, utils_js_1.memoized)(p => {
+    if (p.is0()) {
+      // (0, 1, 0) aka ZERO is invalid in most contexts.
+      // In BLS, ZERO can be serialized, so we allow it.
+      // (0, 0, 0) is wrong representation of ZERO and is always invalid.
+      if (CURVE.allowInfinityPoint && !Fp.is0(p.py)) return;
+      throw new Error('bad point: ZERO');
+    }
+    // Some 3rd-party test vectors require different wording between here & `fromCompressedHex`
+    const {
+      x,
+      y
+    } = p.toAffine();
+    // Check if x, y are valid field elements
+    if (!Fp.isValid(x) || !Fp.isValid(y)) throw new Error('bad point: x or y not FE');
+    const left = Fp.sqr(y); // y²
+    const right = weierstrassEquation(x); // x³ + ax + b
+    if (!Fp.eql(left, right)) throw new Error('bad point: equation left != right');
+    if (!p.isTorsionFree()) throw new Error('bad point: not in prime-order subgroup');
+    return true;
+  });
+  /**
+   * Projective Point works in 3d / projective (homogeneous) coordinates: (x, y, z) ∋ (x=x/z, y=y/z)
+   * Default Point works in 2d / affine coordinates: (x, y)
+   * We're doing calculations in projective, because its operations don't require costly inversion.
+   */
+  class Point {
+    constructor(px, py, pz) {
+      this.px = px;
+      this.py = py;
+      this.pz = pz;
+      if (px == null || !Fp.isValid(px)) throw new Error('x required');
+      if (py == null || !Fp.isValid(py)) throw new Error('y required');
+      if (pz == null || !Fp.isValid(pz)) throw new Error('z required');
+      Object.freeze(this);
+    }
+    // Does not validate if the point is on-curve.
+    // Use fromHex instead, or call assertValidity() later.
+    static fromAffine(p) {
+      const {
+        x,
+        y
+      } = p || {};
+      if (!p || !Fp.isValid(x) || !Fp.isValid(y)) throw new Error('invalid affine point');
+      if (p instanceof Point) throw new Error('projective point not allowed');
+      const is0 = i => Fp.eql(i, Fp.ZERO);
+      // fromAffine(x:0, y:0) would produce (x:0, y:0, z:1), but we need (x:0, y:1, z:0)
+      if (is0(x) && is0(y)) return Point.ZERO;
+      return new Point(x, y, Fp.ONE);
+    }
+    get x() {
+      return this.toAffine().x;
+    }
+    get y() {
+      return this.toAffine().y;
+    }
+    /**
+     * Takes a bunch of Projective Points but executes only one
+     * inversion on all of them. Inversion is very slow operation,
+     * so this improves performance massively.
+     * Optimization: converts a list of projective points to a list of identical points with Z=1.
+     */
+    static normalizeZ(points) {
+      const toInv = Fp.invertBatch(points.map(p => p.pz));
+      return points.map((p, i) => p.toAffine(toInv[i])).map(Point.fromAffine);
+    }
+    /**
+     * Converts hash string or Uint8Array to Point.
+     * @param hex short/long ECDSA hex
+     */
+    static fromHex(hex) {
+      const P = Point.fromAffine(fromBytes((0, utils_js_1.ensureBytes)('pointHex', hex)));
+      P.assertValidity();
+      return P;
+    }
+    // Multiplies generator point by privateKey.
+    static fromPrivateKey(privateKey) {
+      return Point.BASE.multiply(normPrivateKeyToScalar(privateKey));
+    }
+    // Multiscalar Multiplication
+    static msm(points, scalars) {
+      return (0, curve_js_1.pippenger)(Point, Fn, points, scalars);
+    }
+    // "Private method", don't use it directly
+    _setWindowSize(windowSize) {
+      wnaf.setWindowSize(this, windowSize);
+    }
+    // A point on curve is valid if it conforms to equation.
+    assertValidity() {
+      assertValidMemo(this);
+    }
+    hasEvenY() {
+      const {
+        y
+      } = this.toAffine();
+      if (Fp.isOdd) return !Fp.isOdd(y);
+      throw new Error("Field doesn't support isOdd");
+    }
+    /**
+     * Compare one point to another.
+     */
+    equals(other) {
+      assertPrjPoint(other);
+      const {
+        px: X1,
+        py: Y1,
+        pz: Z1
+      } = this;
+      const {
+        px: X2,
+        py: Y2,
+        pz: Z2
+      } = other;
+      const U1 = Fp.eql(Fp.mul(X1, Z2), Fp.mul(X2, Z1));
+      const U2 = Fp.eql(Fp.mul(Y1, Z2), Fp.mul(Y2, Z1));
+      return U1 && U2;
+    }
+    /**
+     * Flips point to one corresponding to (x, -y) in Affine coordinates.
+     */
+    negate() {
+      return new Point(this.px, Fp.neg(this.py), this.pz);
+    }
+    // Renes-Costello-Batina exception-free doubling formula.
+    // There is 30% faster Jacobian formula, but it is not complete.
+    // https://eprint.iacr.org/2015/1060, algorithm 3
+    // Cost: 8M + 3S + 3*a + 2*b3 + 15add.
+    double() {
+      const {
+        a,
+        b
+      } = CURVE;
+      const b3 = Fp.mul(b, _3n);
+      const {
+        px: X1,
+        py: Y1,
+        pz: Z1
+      } = this;
+      let X3 = Fp.ZERO,
+        Y3 = Fp.ZERO,
+        Z3 = Fp.ZERO; // prettier-ignore
+      let t0 = Fp.mul(X1, X1); // step 1
+      let t1 = Fp.mul(Y1, Y1);
+      let t2 = Fp.mul(Z1, Z1);
+      let t3 = Fp.mul(X1, Y1);
+      t3 = Fp.add(t3, t3); // step 5
+      Z3 = Fp.mul(X1, Z1);
+      Z3 = Fp.add(Z3, Z3);
+      X3 = Fp.mul(a, Z3);
+      Y3 = Fp.mul(b3, t2);
+      Y3 = Fp.add(X3, Y3); // step 10
+      X3 = Fp.sub(t1, Y3);
+      Y3 = Fp.add(t1, Y3);
+      Y3 = Fp.mul(X3, Y3);
+      X3 = Fp.mul(t3, X3);
+      Z3 = Fp.mul(b3, Z3); // step 15
+      t2 = Fp.mul(a, t2);
+      t3 = Fp.sub(t0, t2);
+      t3 = Fp.mul(a, t3);
+      t3 = Fp.add(t3, Z3);
+      Z3 = Fp.add(t0, t0); // step 20
+      t0 = Fp.add(Z3, t0);
+      t0 = Fp.add(t0, t2);
+      t0 = Fp.mul(t0, t3);
+      Y3 = Fp.add(Y3, t0);
+      t2 = Fp.mul(Y1, Z1); // step 25
+      t2 = Fp.add(t2, t2);
+      t0 = Fp.mul(t2, t3);
+      X3 = Fp.sub(X3, t0);
+      Z3 = Fp.mul(t2, t1);
+      Z3 = Fp.add(Z3, Z3); // step 30
+      Z3 = Fp.add(Z3, Z3);
+      return new Point(X3, Y3, Z3);
+    }
+    // Renes-Costello-Batina exception-free addition formula.
+    // There is 30% faster Jacobian formula, but it is not complete.
+    // https://eprint.iacr.org/2015/1060, algorithm 1
+    // Cost: 12M + 0S + 3*a + 3*b3 + 23add.
+    add(other) {
+      assertPrjPoint(other);
+      const {
+        px: X1,
+        py: Y1,
+        pz: Z1
+      } = this;
+      const {
+        px: X2,
+        py: Y2,
+        pz: Z2
+      } = other;
+      let X3 = Fp.ZERO,
+        Y3 = Fp.ZERO,
+        Z3 = Fp.ZERO; // prettier-ignore
+      const a = CURVE.a;
+      const b3 = Fp.mul(CURVE.b, _3n);
+      let t0 = Fp.mul(X1, X2); // step 1
+      let t1 = Fp.mul(Y1, Y2);
+      let t2 = Fp.mul(Z1, Z2);
+      let t3 = Fp.add(X1, Y1);
+      let t4 = Fp.add(X2, Y2); // step 5
+      t3 = Fp.mul(t3, t4);
+      t4 = Fp.add(t0, t1);
+      t3 = Fp.sub(t3, t4);
+      t4 = Fp.add(X1, Z1);
+      let t5 = Fp.add(X2, Z2); // step 10
+      t4 = Fp.mul(t4, t5);
+      t5 = Fp.add(t0, t2);
+      t4 = Fp.sub(t4, t5);
+      t5 = Fp.add(Y1, Z1);
+      X3 = Fp.add(Y2, Z2); // step 15
+      t5 = Fp.mul(t5, X3);
+      X3 = Fp.add(t1, t2);
+      t5 = Fp.sub(t5, X3);
+      Z3 = Fp.mul(a, t4);
+      X3 = Fp.mul(b3, t2); // step 20
+      Z3 = Fp.add(X3, Z3);
+      X3 = Fp.sub(t1, Z3);
+      Z3 = Fp.add(t1, Z3);
+      Y3 = Fp.mul(X3, Z3);
+      t1 = Fp.add(t0, t0); // step 25
+      t1 = Fp.add(t1, t0);
+      t2 = Fp.mul(a, t2);
+      t4 = Fp.mul(b3, t4);
+      t1 = Fp.add(t1, t2);
+      t2 = Fp.sub(t0, t2); // step 30
+      t2 = Fp.mul(a, t2);
+      t4 = Fp.add(t4, t2);
+      t0 = Fp.mul(t1, t4);
+      Y3 = Fp.add(Y3, t0);
+      t0 = Fp.mul(t5, t4); // step 35
+      X3 = Fp.mul(t3, X3);
+      X3 = Fp.sub(X3, t0);
+      t0 = Fp.mul(t3, t1);
+      Z3 = Fp.mul(t5, Z3);
+      Z3 = Fp.add(Z3, t0); // step 40
+      return new Point(X3, Y3, Z3);
+    }
+    subtract(other) {
+      return this.add(other.negate());
+    }
+    is0() {
+      return this.equals(Point.ZERO);
+    }
+    wNAF(n) {
+      return wnaf.wNAFCached(this, n, Point.normalizeZ);
+    }
+    /**
+     * Non-constant-time multiplication. Uses double-and-add algorithm.
+     * It's faster, but should only be used when you don't care about
+     * an exposed private key e.g. sig verification, which works over *public* keys.
+     */
+    multiplyUnsafe(sc) {
+      ut.aInRange('scalar', sc, _0n, CURVE.n);
+      const I = Point.ZERO;
+      if (sc === _0n) return I;
+      if (sc === _1n) return this;
+      const {
+        endo
+      } = CURVE;
+      if (!endo) return wnaf.unsafeLadder(this, sc);
+      // Apply endomorphism
+      let {
+        k1neg,
+        k1,
+        k2neg,
+        k2
+      } = endo.splitScalar(sc);
+      let k1p = I;
+      let k2p = I;
+      let d = this;
+      while (k1 > _0n || k2 > _0n) {
+        if (k1 & _1n) k1p = k1p.add(d);
+        if (k2 & _1n) k2p = k2p.add(d);
+        d = d.double();
+        k1 >>= _1n;
+        k2 >>= _1n;
+      }
+      if (k1neg) k1p = k1p.negate();
+      if (k2neg) k2p = k2p.negate();
+      k2p = new Point(Fp.mul(k2p.px, endo.beta), k2p.py, k2p.pz);
+      return k1p.add(k2p);
+    }
+    /**
+     * Constant time multiplication.
+     * Uses wNAF method. Windowed method may be 10% faster,
+     * but takes 2x longer to generate and consumes 2x memory.
+     * Uses precomputes when available.
+     * Uses endomorphism for Koblitz curves.
+     * @param scalar by which the point would be multiplied
+     * @returns New point
+     */
+    multiply(scalar) {
+      const {
+        endo,
+        n: N
+      } = CURVE;
+      ut.aInRange('scalar', scalar, _1n, N);
+      let point, fake; // Fake point is used to const-time mult
+      if (endo) {
+        const {
+          k1neg,
+          k1,
+          k2neg,
+          k2
+        } = endo.splitScalar(scalar);
+        let {
+          p: k1p,
+          f: f1p
+        } = this.wNAF(k1);
+        let {
+          p: k2p,
+          f: f2p
+        } = this.wNAF(k2);
+        k1p = wnaf.constTimeNegate(k1neg, k1p);
+        k2p = wnaf.constTimeNegate(k2neg, k2p);
+        k2p = new Point(Fp.mul(k2p.px, endo.beta), k2p.py, k2p.pz);
+        point = k1p.add(k2p);
+        fake = f1p.add(f2p);
+      } else {
+        const {
+          p,
+          f
+        } = this.wNAF(scalar);
+        point = p;
+        fake = f;
+      }
+      // Normalize `z` for both points, but return only real one
+      return Point.normalizeZ([point, fake])[0];
+    }
+    /**
+     * Efficiently calculate `aP + bQ`. Unsafe, can expose private key, if used incorrectly.
+     * Not using Strauss-Shamir trick: precomputation tables are faster.
+     * The trick could be useful if both P and Q are not G (not in our case).
+     * @returns non-zero affine point
+     */
+    multiplyAndAddUnsafe(Q, a, b) {
+      const G = Point.BASE; // No Strauss-Shamir trick: we have 10% faster G precomputes
+      const mul = (P, a // Select faster multiply() method
+      ) => a === _0n || a === _1n || !P.equals(G) ? P.multiplyUnsafe(a) : P.multiply(a);
+      const sum = mul(this, a).add(mul(Q, b));
+      return sum.is0() ? undefined : sum;
+    }
+    // Converts Projective point to affine (x, y) coordinates.
+    // Can accept precomputed Z^-1 - for example, from invertBatch.
+    // (x, y, z) ∋ (x=x/z, y=y/z)
+    toAffine(iz) {
+      return toAffineMemo(this, iz);
+    }
+    isTorsionFree() {
+      const {
+        h: cofactor,
+        isTorsionFree
+      } = CURVE;
+      if (cofactor === _1n) return true; // No subgroups, always torsion-free
+      if (isTorsionFree) return isTorsionFree(Point, this);
+      throw new Error('isTorsionFree() has not been declared for the elliptic curve');
+    }
+    clearCofactor() {
+      const {
+        h: cofactor,
+        clearCofactor
+      } = CURVE;
+      if (cofactor === _1n) return this; // Fast-path
+      if (clearCofactor) return clearCofactor(Point, this);
+      return this.multiplyUnsafe(CURVE.h);
+    }
+    toRawBytes(isCompressed = true) {
+      (0, utils_js_1.abool)('isCompressed', isCompressed);
+      this.assertValidity();
+      return toBytes(Point, this, isCompressed);
+    }
+    toHex(isCompressed = true) {
+      (0, utils_js_1.abool)('isCompressed', isCompressed);
+      return ut.bytesToHex(this.toRawBytes(isCompressed));
+    }
+  }
+  Point.BASE = new Point(CURVE.Gx, CURVE.Gy, Fp.ONE);
+  Point.ZERO = new Point(Fp.ZERO, Fp.ONE, Fp.ZERO);
+  const _bits = CURVE.nBitLength;
+  const wnaf = (0, curve_js_1.wNAF)(Point, CURVE.endo ? Math.ceil(_bits / 2) : _bits);
+  // Validate if generator point is on curve
+  return {
+    CURVE,
+    ProjectivePoint: Point,
+    normPrivateKeyToScalar,
+    weierstrassEquation,
+    isWithinCurveOrder
+  };
+}
+function validateOpts(curve) {
+  const opts = (0, curve_js_1.validateBasic)(curve);
+  ut.validateObject(opts, {
+    hash: 'hash',
+    hmac: 'function',
+    randomBytes: 'function'
+  }, {
+    bits2int: 'function',
+    bits2int_modN: 'function',
+    lowS: 'boolean'
+  });
+  return Object.freeze({
+    lowS: true,
+    ...opts
+  });
+}
+/**
+ * Creates short weierstrass curve and ECDSA signature methods for it.
+ * @example
+ * import { Field } from '@noble/curves/abstract/modular';
+ * // Before that, define BigInt-s: a, b, p, n, Gx, Gy
+ * const curve = weierstrass({ a, b, Fp: Field(p), n, Gx, Gy, h: 1n })
+ */
+function weierstrass(curveDef) {
+  const CURVE = validateOpts(curveDef);
+  const {
+    Fp,
+    n: CURVE_ORDER
+  } = CURVE;
+  const compressedLen = Fp.BYTES + 1; // e.g. 33 for 32
+  const uncompressedLen = 2 * Fp.BYTES + 1; // e.g. 65 for 32
+  function modN(a) {
+    return mod.mod(a, CURVE_ORDER);
+  }
+  function invN(a) {
+    return mod.invert(a, CURVE_ORDER);
+  }
+  const {
+    ProjectivePoint: Point,
+    normPrivateKeyToScalar,
+    weierstrassEquation,
+    isWithinCurveOrder
+  } = weierstrassPoints({
+    ...CURVE,
+    toBytes(_c, point, isCompressed) {
+      const a = point.toAffine();
+      const x = Fp.toBytes(a.x);
+      const cat = ut.concatBytes;
+      (0, utils_js_1.abool)('isCompressed', isCompressed);
+      if (isCompressed) {
+        return cat(Uint8Array.from([point.hasEvenY() ? 0x02 : 0x03]), x);
+      } else {
+        return cat(Uint8Array.from([0x04]), x, Fp.toBytes(a.y));
+      }
+    },
+    fromBytes(bytes) {
+      const len = bytes.length;
+      const head = bytes[0];
+      const tail = bytes.subarray(1);
+      // this.assertValidity() is done inside of fromHex
+      if (len === compressedLen && (head === 0x02 || head === 0x03)) {
+        const x = ut.bytesToNumberBE(tail);
+        if (!ut.inRange(x, _1n, Fp.ORDER)) throw new Error('Point is not on curve');
+        const y2 = weierstrassEquation(x); // y² = x³ + ax + b
+        let y;
+        try {
+          y = Fp.sqrt(y2); // y = y² ^ (p+1)/4
+        } catch (sqrtError) {
+          const suffix = sqrtError instanceof Error ? ': ' + sqrtError.message : '';
+          throw new Error('Point is not on curve' + suffix);
+        }
+        const isYOdd = (y & _1n) === _1n;
+        // ECDSA
+        const isHeadOdd = (head & 1) === 1;
+        if (isHeadOdd !== isYOdd) y = Fp.neg(y);
+        return {
+          x,
+          y
+        };
+      } else if (len === uncompressedLen && head === 0x04) {
+        const x = Fp.fromBytes(tail.subarray(0, Fp.BYTES));
+        const y = Fp.fromBytes(tail.subarray(Fp.BYTES, 2 * Fp.BYTES));
+        return {
+          x,
+          y
+        };
+      } else {
+        throw new Error(`Point of length ${len} was invalid. Expected ${compressedLen} compressed bytes or ${uncompressedLen} uncompressed bytes`);
+      }
+    }
+  });
+  const numToNByteStr = num => ut.bytesToHex(ut.numberToBytesBE(num, CURVE.nByteLength));
+  function isBiggerThanHalfOrder(number) {
+    const HALF = CURVE_ORDER >> _1n;
+    return number > HALF;
+  }
+  function normalizeS(s) {
+    return isBiggerThanHalfOrder(s) ? modN(-s) : s;
+  }
+  // slice bytes num
+  const slcNum = (b, from, to) => ut.bytesToNumberBE(b.slice(from, to));
+  /**
+   * ECDSA signature with its (r, s) properties. Supports DER & compact representations.
+   */
+  class Signature {
+    constructor(r, s, recovery) {
+      this.r = r;
+      this.s = s;
+      this.recovery = recovery;
+      this.assertValidity();
+    }
+    // pair (bytes of r, bytes of s)
+    static fromCompact(hex) {
+      const l = CURVE.nByteLength;
+      hex = (0, utils_js_1.ensureBytes)('compactSignature', hex, l * 2);
+      return new Signature(slcNum(hex, 0, l), slcNum(hex, l, 2 * l));
+    }
+    // DER encoded ECDSA signature
+    // https://bitcoin.stackexchange.com/questions/57644/what-are-the-parts-of-a-bitcoin-transaction-input-script
+    static fromDER(hex) {
+      const {
+        r,
+        s
+      } = exports.DER.toSig((0, utils_js_1.ensureBytes)('DER', hex));
+      return new Signature(r, s);
+    }
+    assertValidity() {
+      ut.aInRange('r', this.r, _1n, CURVE_ORDER); // r in [1..N]
+      ut.aInRange('s', this.s, _1n, CURVE_ORDER); // s in [1..N]
+    }
+
+    addRecoveryBit(recovery) {
+      return new Signature(this.r, this.s, recovery);
+    }
+    recoverPublicKey(msgHash) {
+      const {
+        r,
+        s,
+        recovery: rec
+      } = this;
+      const h = bits2int_modN((0, utils_js_1.ensureBytes)('msgHash', msgHash)); // Truncate hash
+      if (rec == null || ![0, 1, 2, 3].includes(rec)) throw new Error('recovery id invalid');
+      const radj = rec === 2 || rec === 3 ? r + CURVE.n : r;
+      if (radj >= Fp.ORDER) throw new Error('recovery id 2 or 3 invalid');
+      const prefix = (rec & 1) === 0 ? '02' : '03';
+      const R = Point.fromHex(prefix + numToNByteStr(radj));
+      const ir = invN(radj); // r^-1
+      const u1 = modN(-h * ir); // -hr^-1
+      const u2 = modN(s * ir); // sr^-1
+      const Q = Point.BASE.multiplyAndAddUnsafe(R, u1, u2); // (sr^-1)R-(hr^-1)G = -(hr^-1)G + (sr^-1)
+      if (!Q) throw new Error('point at infinify'); // unsafe is fine: no priv data leaked
+      Q.assertValidity();
+      return Q;
+    }
+    // Signatures should be low-s, to prevent malleability.
+    hasHighS() {
+      return isBiggerThanHalfOrder(this.s);
+    }
+    normalizeS() {
+      return this.hasHighS() ? new Signature(this.r, modN(-this.s), this.recovery) : this;
+    }
+    // DER-encoded
+    toDERRawBytes() {
+      return ut.hexToBytes(this.toDERHex());
+    }
+    toDERHex() {
+      return exports.DER.hexFromSig({
+        r: this.r,
+        s: this.s
+      });
+    }
+    // padded bytes of r, then padded bytes of s
+    toCompactRawBytes() {
+      return ut.hexToBytes(this.toCompactHex());
+    }
+    toCompactHex() {
+      return numToNByteStr(this.r) + numToNByteStr(this.s);
+    }
+  }
+  const utils = {
+    isValidPrivateKey(privateKey) {
+      try {
+        normPrivateKeyToScalar(privateKey);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    },
+    normPrivateKeyToScalar: normPrivateKeyToScalar,
+    /**
+     * Produces cryptographically secure private key from random of size
+     * (groupLen + ceil(groupLen / 2)) with modulo bias being negligible.
+     */
+    randomPrivateKey: () => {
+      const length = mod.getMinHashLength(CURVE.n);
+      return mod.mapHashToField(CURVE.randomBytes(length), CURVE.n);
+    },
+    /**
+     * Creates precompute table for an arbitrary EC point. Makes point "cached".
+     * Allows to massively speed-up `point.multiply(scalar)`.
+     * @returns cached point
+     * @example
+     * const fast = utils.precompute(8, ProjectivePoint.fromHex(someonesPubKey));
+     * fast.multiply(privKey); // much faster ECDH now
+     */
+    precompute(windowSize = 8, point = Point.BASE) {
+      point._setWindowSize(windowSize);
+      point.multiply(BigInt(3)); // 3 is arbitrary, just need any number here
+      return point;
+    }
+  };
+  /**
+   * Computes public key for a private key. Checks for validity of the private key.
+   * @param privateKey private key
+   * @param isCompressed whether to return compact (default), or full key
+   * @returns Public key, full when isCompressed=false; short when isCompressed=true
+   */
+  function getPublicKey(privateKey, isCompressed = true) {
+    return Point.fromPrivateKey(privateKey).toRawBytes(isCompressed);
+  }
+  /**
+   * Quick and dirty check for item being public key. Does not validate hex, or being on-curve.
+   */
+  function isProbPub(item) {
+    const arr = ut.isBytes(item);
+    const str = typeof item === 'string';
+    const len = (arr || str) && item.length;
+    if (arr) return len === compressedLen || len === uncompressedLen;
+    if (str) return len === 2 * compressedLen || len === 2 * uncompressedLen;
+    if (item instanceof Point) return true;
+    return false;
+  }
+  /**
+   * ECDH (Elliptic Curve Diffie Hellman).
+   * Computes shared public key from private key and public key.
+   * Checks: 1) private key validity 2) shared key is on-curve.
+   * Does NOT hash the result.
+   * @param privateA private key
+   * @param publicB different public key
+   * @param isCompressed whether to return compact (default), or full key
+   * @returns shared public key
+   */
+  function getSharedSecret(privateA, publicB, isCompressed = true) {
+    if (isProbPub(privateA)) throw new Error('first arg must be private key');
+    if (!isProbPub(publicB)) throw new Error('second arg must be public key');
+    const b = Point.fromHex(publicB); // check for being on-curve
+    return b.multiply(normPrivateKeyToScalar(privateA)).toRawBytes(isCompressed);
+  }
+  // RFC6979: ensure ECDSA msg is X bytes and < N. RFC suggests optional truncating via bits2octets.
+  // FIPS 186-4 4.6 suggests the leftmost min(nBitLen, outLen) bits, which matches bits2int.
+  // bits2int can produce res>N, we can do mod(res, N) since the bitLen is the same.
+  // int2octets can't be used; pads small msgs with 0: unacceptatble for trunc as per RFC vectors
+  const bits2int = CURVE.bits2int || function (bytes) {
+    // For curves with nBitLength % 8 !== 0: bits2octets(bits2octets(m)) !== bits2octets(m)
+    // for some cases, since bytes.length * 8 is not actual bitLength.
+    const num = ut.bytesToNumberBE(bytes); // check for == u8 done here
+    const delta = bytes.length * 8 - CURVE.nBitLength; // truncate to nBitLength leftmost bits
+    return delta > 0 ? num >> BigInt(delta) : num;
+  };
+  const bits2int_modN = CURVE.bits2int_modN || function (bytes) {
+    return modN(bits2int(bytes)); // can't use bytesToNumberBE here
+  };
+  // NOTE: pads output with zero as per spec
+  const ORDER_MASK = ut.bitMask(CURVE.nBitLength);
+  /**
+   * Converts to bytes. Checks if num in `[0..ORDER_MASK-1]` e.g.: `[0..2^256-1]`.
+   */
+  function int2octets(num) {
+    ut.aInRange(`num < 2^${CURVE.nBitLength}`, num, _0n, ORDER_MASK);
+    // works with order, can have different size than numToField!
+    return ut.numberToBytesBE(num, CURVE.nByteLength);
+  }
+  // Steps A, D of RFC6979 3.2
+  // Creates RFC6979 seed; converts msg/privKey to numbers.
+  // Used only in sign, not in verify.
+  // NOTE: we cannot assume here that msgHash has same amount of bytes as curve order, this will be wrong at least for P521.
+  // Also it can be bigger for P224 + SHA256
+  function prepSig(msgHash, privateKey, opts = defaultSigOpts) {
+    if (['recovered', 'canonical'].some(k => k in opts)) throw new Error('sign() legacy options not supported');
+    const {
+      hash,
+      randomBytes
+    } = CURVE;
+    let {
+      lowS,
+      prehash,
+      extraEntropy: ent
+    } = opts; // generates low-s sigs by default
+    if (lowS == null) lowS = true; // RFC6979 3.2: we skip step A, because we already provide hash
+    msgHash = (0, utils_js_1.ensureBytes)('msgHash', msgHash);
+    validateSigVerOpts(opts);
+    if (prehash) msgHash = (0, utils_js_1.ensureBytes)('prehashed msgHash', hash(msgHash));
+    // We can't later call bits2octets, since nested bits2int is broken for curves
+    // with nBitLength % 8 !== 0. Because of that, we unwrap it here as int2octets call.
+    // const bits2octets = (bits) => int2octets(bits2int_modN(bits))
+    const h1int = bits2int_modN(msgHash);
+    const d = normPrivateKeyToScalar(privateKey); // validate private key, convert to bigint
+    const seedArgs = [int2octets(d), int2octets(h1int)];
+    // extraEntropy. RFC6979 3.6: additional k' (optional).
+    if (ent != null && ent !== false) {
+      // K = HMAC_K(V || 0x00 || int2octets(x) || bits2octets(h1) || k')
+      const e = ent === true ? randomBytes(Fp.BYTES) : ent; // generate random bytes OR pass as-is
+      seedArgs.push((0, utils_js_1.ensureBytes)('extraEntropy', e)); // check for being bytes
+    }
+
+    const seed = ut.concatBytes(...seedArgs); // Step D of RFC6979 3.2
+    const m = h1int; // NOTE: no need to call bits2int second time here, it is inside truncateHash!
+    // Converts signature params into point w r/s, checks result for validity.
+    function k2sig(kBytes) {
+      // RFC 6979 Section 3.2, step 3: k = bits2int(T)
+      const k = bits2int(kBytes); // Cannot use fields methods, since it is group element
+      if (!isWithinCurveOrder(k)) return; // Important: all mod() calls here must be done over N
+      const ik = invN(k); // k^-1 mod n
+      const q = Point.BASE.multiply(k).toAffine(); // q = Gk
+      const r = modN(q.x); // r = q.x mod n
+      if (r === _0n) return;
+      // Can use scalar blinding b^-1(bm + bdr) where b ∈ [1,q−1] according to
+      // https://tches.iacr.org/index.php/TCHES/article/view/7337/6509. We've decided against it:
+      // a) dependency on CSPRNG b) 15% slowdown c) doesn't really help since bigints are not CT
+      const s = modN(ik * modN(m + r * d)); // Not using blinding here
+      if (s === _0n) return;
+      let recovery = (q.x === r ? 0 : 2) | Number(q.y & _1n); // recovery bit (2 or 3, when q.x > n)
+      let normS = s;
+      if (lowS && isBiggerThanHalfOrder(s)) {
+        normS = normalizeS(s); // if lowS was passed, ensure s is always
+        recovery ^= 1; // // in the bottom half of N
+      }
+
+      return new Signature(r, normS, recovery); // use normS, not s
+    }
+
+    return {
+      seed,
+      k2sig
+    };
+  }
+  const defaultSigOpts = {
+    lowS: CURVE.lowS,
+    prehash: false
+  };
+  const defaultVerOpts = {
+    lowS: CURVE.lowS,
+    prehash: false
+  };
+  /**
+   * Signs message hash with a private key.
+   * ```
+   * sign(m, d, k) where
+   *   (x, y) = G × k
+   *   r = x mod n
+   *   s = (m + dr)/k mod n
+   * ```
+   * @param msgHash NOT message. msg needs to be hashed to `msgHash`, or use `prehash`.
+   * @param privKey private key
+   * @param opts lowS for non-malleable sigs. extraEntropy for mixing randomness into k. prehash will hash first arg.
+   * @returns signature with recovery param
+   */
+  function sign(msgHash, privKey, opts = defaultSigOpts) {
+    const {
+      seed,
+      k2sig
+    } = prepSig(msgHash, privKey, opts); // Steps A, D of RFC6979 3.2.
+    const C = CURVE;
+    const drbg = ut.createHmacDrbg(C.hash.outputLen, C.nByteLength, C.hmac);
+    return drbg(seed, k2sig); // Steps B, C, D, E, F, G
+  }
+  // Enable precomputes. Slows down first publicKey computation by 20ms.
+  Point.BASE._setWindowSize(8);
+  // utils.precompute(8, ProjectivePoint.BASE)
+  /**
+   * Verifies a signature against message hash and public key.
+   * Rejects lowS signatures by default: to override,
+   * specify option `{lowS: false}`. Implements section 4.1.4 from https://www.secg.org/sec1-v2.pdf:
+   *
+   * ```
+   * verify(r, s, h, P) where
+   *   U1 = hs^-1 mod n
+   *   U2 = rs^-1 mod n
+   *   R = U1⋅G - U2⋅P
+   *   mod(R.x, n) == r
+   * ```
+   */
+  function verify(signature, msgHash, publicKey, opts = defaultVerOpts) {
+    const sg = signature;
+    msgHash = (0, utils_js_1.ensureBytes)('msgHash', msgHash);
+    publicKey = (0, utils_js_1.ensureBytes)('publicKey', publicKey);
+    if ('strict' in opts) throw new Error('options.strict was renamed to lowS');
+    validateSigVerOpts(opts);
+    const {
+      lowS,
+      prehash
+    } = opts;
+    let _sig = undefined;
+    let P;
+    try {
+      if (typeof sg === 'string' || ut.isBytes(sg)) {
+        // Signature can be represented in 2 ways: compact (2*nByteLength) & DER (variable-length).
+        // Since DER can also be 2*nByteLength bytes, we check for it first.
+        try {
+          _sig = Signature.fromDER(sg);
+        } catch (derError) {
+          if (!(derError instanceof exports.DER.Err)) throw derError;
+          _sig = Signature.fromCompact(sg);
+        }
+      } else if (typeof sg === 'object' && typeof sg.r === 'bigint' && typeof sg.s === 'bigint') {
+        const {
+          r,
+          s
+        } = sg;
+        _sig = new Signature(r, s);
+      } else {
+        throw new Error('PARSE');
+      }
+      P = Point.fromHex(publicKey);
+    } catch (error) {
+      if (error.message === 'PARSE') throw new Error(`signature must be Signature instance, Uint8Array or hex string`);
+      return false;
+    }
+    if (lowS && _sig.hasHighS()) return false;
+    if (prehash) msgHash = CURVE.hash(msgHash);
+    const {
+      r,
+      s
+    } = _sig;
+    const h = bits2int_modN(msgHash); // Cannot use fields methods, since it is group element
+    const is = invN(s); // s^-1
+    const u1 = modN(h * is); // u1 = hs^-1 mod n
+    const u2 = modN(r * is); // u2 = rs^-1 mod n
+    const R = Point.BASE.multiplyAndAddUnsafe(P, u1, u2)?.toAffine(); // R = u1⋅G + u2⋅P
+    if (!R) return false;
+    const v = modN(R.x);
+    return v === r;
+  }
+  return {
+    CURVE,
+    getPublicKey,
+    getSharedSecret,
+    sign,
+    verify,
+    ProjectivePoint: Point,
+    Signature,
+    utils
+  };
+}
+/**
+ * Implementation of the Shallue and van de Woestijne method for any weierstrass curve.
+ * TODO: check if there is a way to merge this with uvRatio in Edwards; move to modular.
+ * b = True and y = sqrt(u / v) if (u / v) is square in F, and
+ * b = False and y = sqrt(Z * (u / v)) otherwise.
+ * @param Fp
+ * @param Z
+ * @returns
+ */
+function SWUFpSqrtRatio(Fp, Z) {
+  // Generic implementation
+  const q = Fp.ORDER;
+  let l = _0n;
+  for (let o = q - _1n; o % _2n === _0n; o /= _2n) l += _1n;
+  const c1 = l; // 1. c1, the largest integer such that 2^c1 divides q - 1.
+  // We need 2n ** c1 and 2n ** (c1-1). We can't use **; but we can use <<.
+  // 2n ** c1 == 2n << (c1-1)
+  const _2n_pow_c1_1 = _2n << c1 - _1n - _1n;
+  const _2n_pow_c1 = _2n_pow_c1_1 * _2n;
+  const c2 = (q - _1n) / _2n_pow_c1; // 2. c2 = (q - 1) / (2^c1)  # Integer arithmetic
+  const c3 = (c2 - _1n) / _2n; // 3. c3 = (c2 - 1) / 2            # Integer arithmetic
+  const c4 = _2n_pow_c1 - _1n; // 4. c4 = 2^c1 - 1                # Integer arithmetic
+  const c5 = _2n_pow_c1_1; // 5. c5 = 2^(c1 - 1)                  # Integer arithmetic
+  const c6 = Fp.pow(Z, c2); // 6. c6 = Z^c2
+  const c7 = Fp.pow(Z, (c2 + _1n) / _2n); // 7. c7 = Z^((c2 + 1) / 2)
+  let sqrtRatio = (u, v) => {
+    let tv1 = c6; // 1. tv1 = c6
+    let tv2 = Fp.pow(v, c4); // 2. tv2 = v^c4
+    let tv3 = Fp.sqr(tv2); // 3. tv3 = tv2^2
+    tv3 = Fp.mul(tv3, v); // 4. tv3 = tv3 * v
+    let tv5 = Fp.mul(u, tv3); // 5. tv5 = u * tv3
+    tv5 = Fp.pow(tv5, c3); // 6. tv5 = tv5^c3
+    tv5 = Fp.mul(tv5, tv2); // 7. tv5 = tv5 * tv2
+    tv2 = Fp.mul(tv5, v); // 8. tv2 = tv5 * v
+    tv3 = Fp.mul(tv5, u); // 9. tv3 = tv5 * u
+    let tv4 = Fp.mul(tv3, tv2); // 10. tv4 = tv3 * tv2
+    tv5 = Fp.pow(tv4, c5); // 11. tv5 = tv4^c5
+    let isQR = Fp.eql(tv5, Fp.ONE); // 12. isQR = tv5 == 1
+    tv2 = Fp.mul(tv3, c7); // 13. tv2 = tv3 * c7
+    tv5 = Fp.mul(tv4, tv1); // 14. tv5 = tv4 * tv1
+    tv3 = Fp.cmov(tv2, tv3, isQR); // 15. tv3 = CMOV(tv2, tv3, isQR)
+    tv4 = Fp.cmov(tv5, tv4, isQR); // 16. tv4 = CMOV(tv5, tv4, isQR)
+    // 17. for i in (c1, c1 - 1, ..., 2):
+    for (let i = c1; i > _1n; i--) {
+      let tv5 = i - _2n; // 18.    tv5 = i - 2
+      tv5 = _2n << tv5 - _1n; // 19.    tv5 = 2^tv5
+      let tvv5 = Fp.pow(tv4, tv5); // 20.    tv5 = tv4^tv5
+      const e1 = Fp.eql(tvv5, Fp.ONE); // 21.    e1 = tv5 == 1
+      tv2 = Fp.mul(tv3, tv1); // 22.    tv2 = tv3 * tv1
+      tv1 = Fp.mul(tv1, tv1); // 23.    tv1 = tv1 * tv1
+      tvv5 = Fp.mul(tv4, tv1); // 24.    tv5 = tv4 * tv1
+      tv3 = Fp.cmov(tv2, tv3, e1); // 25.    tv3 = CMOV(tv2, tv3, e1)
+      tv4 = Fp.cmov(tvv5, tv4, e1); // 26.    tv4 = CMOV(tv5, tv4, e1)
+    }
+
+    return {
+      isValid: isQR,
+      value: tv3
+    };
+  };
+  if (Fp.ORDER % _4n === _3n) {
+    // sqrt_ratio_3mod4(u, v)
+    const c1 = (Fp.ORDER - _3n) / _4n; // 1. c1 = (q - 3) / 4     # Integer arithmetic
+    const c2 = Fp.sqrt(Fp.neg(Z)); // 2. c2 = sqrt(-Z)
+    sqrtRatio = (u, v) => {
+      let tv1 = Fp.sqr(v); // 1. tv1 = v^2
+      const tv2 = Fp.mul(u, v); // 2. tv2 = u * v
+      tv1 = Fp.mul(tv1, tv2); // 3. tv1 = tv1 * tv2
+      let y1 = Fp.pow(tv1, c1); // 4. y1 = tv1^c1
+      y1 = Fp.mul(y1, tv2); // 5. y1 = y1 * tv2
+      const y2 = Fp.mul(y1, c2); // 6. y2 = y1 * c2
+      const tv3 = Fp.mul(Fp.sqr(y1), v); // 7. tv3 = y1^2; 8. tv3 = tv3 * v
+      const isQR = Fp.eql(tv3, u); // 9. isQR = tv3 == u
+      let y = Fp.cmov(y2, y1, isQR); // 10. y = CMOV(y2, y1, isQR)
+      return {
+        isValid: isQR,
+        value: y
+      }; // 11. return (isQR, y) isQR ? y : y*c2
+    };
+  }
+  // No curves uses that
+  // if (Fp.ORDER % _8n === _5n) // sqrt_ratio_5mod8
+  return sqrtRatio;
+}
+/**
+ * Simplified Shallue-van de Woestijne-Ulas Method
+ * https://www.rfc-editor.org/rfc/rfc9380#section-6.6.2
+ */
+function mapToCurveSimpleSWU(Fp, opts) {
+  mod.validateField(Fp);
+  if (!Fp.isValid(opts.A) || !Fp.isValid(opts.B) || !Fp.isValid(opts.Z)) throw new Error('mapToCurveSimpleSWU: invalid opts');
+  const sqrtRatio = SWUFpSqrtRatio(Fp, opts.Z);
+  if (!Fp.isOdd) throw new Error('Fp.isOdd is not implemented!');
+  // Input: u, an element of F.
+  // Output: (x, y), a point on E.
+  return u => {
+    // prettier-ignore
+    let tv1, tv2, tv3, tv4, tv5, tv6, x, y;
+    tv1 = Fp.sqr(u); // 1.  tv1 = u^2
+    tv1 = Fp.mul(tv1, opts.Z); // 2.  tv1 = Z * tv1
+    tv2 = Fp.sqr(tv1); // 3.  tv2 = tv1^2
+    tv2 = Fp.add(tv2, tv1); // 4.  tv2 = tv2 + tv1
+    tv3 = Fp.add(tv2, Fp.ONE); // 5.  tv3 = tv2 + 1
+    tv3 = Fp.mul(tv3, opts.B); // 6.  tv3 = B * tv3
+    tv4 = Fp.cmov(opts.Z, Fp.neg(tv2), !Fp.eql(tv2, Fp.ZERO)); // 7.  tv4 = CMOV(Z, -tv2, tv2 != 0)
+    tv4 = Fp.mul(tv4, opts.A); // 8.  tv4 = A * tv4
+    tv2 = Fp.sqr(tv3); // 9.  tv2 = tv3^2
+    tv6 = Fp.sqr(tv4); // 10. tv6 = tv4^2
+    tv5 = Fp.mul(tv6, opts.A); // 11. tv5 = A * tv6
+    tv2 = Fp.add(tv2, tv5); // 12. tv2 = tv2 + tv5
+    tv2 = Fp.mul(tv2, tv3); // 13. tv2 = tv2 * tv3
+    tv6 = Fp.mul(tv6, tv4); // 14. tv6 = tv6 * tv4
+    tv5 = Fp.mul(tv6, opts.B); // 15. tv5 = B * tv6
+    tv2 = Fp.add(tv2, tv5); // 16. tv2 = tv2 + tv5
+    x = Fp.mul(tv1, tv3); // 17.   x = tv1 * tv3
+    const {
+      isValid,
+      value
+    } = sqrtRatio(tv2, tv6); // 18. (is_gx1_square, y1) = sqrt_ratio(tv2, tv6)
+    y = Fp.mul(tv1, u); // 19.   y = tv1 * u  -> Z * u^3 * y1
+    y = Fp.mul(y, value); // 20.   y = y * y1
+    x = Fp.cmov(x, tv3, isValid); // 21.   x = CMOV(x, tv3, is_gx1_square)
+    y = Fp.cmov(y, value, isValid); // 22.   y = CMOV(y, y1, is_gx1_square)
+    const e1 = Fp.isOdd(u) === Fp.isOdd(y); // 23.  e1 = sgn0(u) == sgn0(y)
+    y = Fp.cmov(Fp.neg(y), y, e1); // 24.   y = CMOV(-y, y, e1)
+    x = Fp.div(x, tv4); // 25.   x = x / tv4
+    return {
+      x,
+      y
+    };
+  };
+}
+
+},{"./curve.js":99,"./modular.js":101,"./utils.js":102}],104:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.encodeToCurve = exports.hashToCurve = exports.secp256r1 = exports.p256 = void 0;
+/*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+const sha256_1 = require("@noble/hashes/sha256");
+const _shortw_utils_js_1 = require("./_shortw_utils.js");
+const hash_to_curve_js_1 = require("./abstract/hash-to-curve.js");
+const modular_js_1 = require("./abstract/modular.js");
+const weierstrass_js_1 = require("./abstract/weierstrass.js");
+// NIST secp256r1 aka p256
+// https://www.secg.org/sec2-v2.pdf, https://neuromancer.sk/std/nist/P-256
+const Fp = (0, modular_js_1.Field)(BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff'));
+const CURVE_A = Fp.create(BigInt('-3'));
+const CURVE_B = BigInt('0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b');
+// prettier-ignore
+exports.p256 = (0, _shortw_utils_js_1.createCurve)({
+    a: CURVE_A, // Equation params: a, b
+    b: CURVE_B,
+    Fp, // Field: 2n**224n * (2n**32n-1n) + 2n**192n + 2n**96n-1n
+    // Curve order, total count of valid points in the field
+    n: BigInt('0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551'),
+    // Base (generator) point (x, y)
+    Gx: BigInt('0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296'),
+    Gy: BigInt('0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5'),
+    h: BigInt(1),
+    lowS: false,
+}, sha256_1.sha256);
+exports.secp256r1 = exports.p256;
+const mapSWU = /* @__PURE__ */ (() => (0, weierstrass_js_1.mapToCurveSimpleSWU)(Fp, {
+    A: CURVE_A,
+    B: CURVE_B,
+    Z: Fp.create(BigInt('-10')),
+}))();
+const htf = /* @__PURE__ */ (() => (0, hash_to_curve_js_1.createHasher)(exports.secp256r1.ProjectivePoint, (scalars) => mapSWU(scalars[0]), {
+    DST: 'P256_XMD:SHA-256_SSWU_RO_',
+    encodeDST: 'P256_XMD:SHA-256_SSWU_NU_',
+    p: Fp.ORDER,
+    m: 1,
+    k: 128,
+    expand: 'xmd',
+    hash: sha256_1.sha256,
+}))();
+exports.hashToCurve = (() => htf.hashToCurve)();
+exports.encodeToCurve = (() => htf.encodeToCurve)();
+
+},{"./_shortw_utils.js":98,"./abstract/hash-to-curve.js":100,"./abstract/modular.js":101,"./abstract/weierstrass.js":103,"@noble/hashes/sha256":130}],105:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.encodeToCurve = exports.hashToCurve = exports.schnorr = exports.secp256k1 = void 0;
+/*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+const sha256_1 = require("@noble/hashes/sha256");
+const utils_1 = require("@noble/hashes/utils");
+const _shortw_utils_js_1 = require("./_shortw_utils.js");
+const hash_to_curve_js_1 = require("./abstract/hash-to-curve.js");
+const modular_js_1 = require("./abstract/modular.js");
+const utils_js_1 = require("./abstract/utils.js");
+const weierstrass_js_1 = require("./abstract/weierstrass.js");
+const secp256k1P = BigInt('0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f');
+const secp256k1N = BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
+const _1n = BigInt(1);
+const _2n = BigInt(2);
+const divNearest = (a, b) => (a + b / _2n) / b;
+/**
+ * √n = n^((p+1)/4) for fields p = 3 mod 4. We unwrap the loop and multiply bit-by-bit.
+ * (P+1n/4n).toString(2) would produce bits [223x 1, 0, 22x 1, 4x 0, 11, 00]
+ */
+function sqrtMod(y) {
+    const P = secp256k1P;
+    // prettier-ignore
+    const _3n = BigInt(3), _6n = BigInt(6), _11n = BigInt(11), _22n = BigInt(22);
+    // prettier-ignore
+    const _23n = BigInt(23), _44n = BigInt(44), _88n = BigInt(88);
+    const b2 = (y * y * y) % P; // x^3, 11
+    const b3 = (b2 * b2 * y) % P; // x^7
+    const b6 = ((0, modular_js_1.pow2)(b3, _3n, P) * b3) % P;
+    const b9 = ((0, modular_js_1.pow2)(b6, _3n, P) * b3) % P;
+    const b11 = ((0, modular_js_1.pow2)(b9, _2n, P) * b2) % P;
+    const b22 = ((0, modular_js_1.pow2)(b11, _11n, P) * b11) % P;
+    const b44 = ((0, modular_js_1.pow2)(b22, _22n, P) * b22) % P;
+    const b88 = ((0, modular_js_1.pow2)(b44, _44n, P) * b44) % P;
+    const b176 = ((0, modular_js_1.pow2)(b88, _88n, P) * b88) % P;
+    const b220 = ((0, modular_js_1.pow2)(b176, _44n, P) * b44) % P;
+    const b223 = ((0, modular_js_1.pow2)(b220, _3n, P) * b3) % P;
+    const t1 = ((0, modular_js_1.pow2)(b223, _23n, P) * b22) % P;
+    const t2 = ((0, modular_js_1.pow2)(t1, _6n, P) * b2) % P;
+    const root = (0, modular_js_1.pow2)(t2, _2n, P);
+    if (!Fp.eql(Fp.sqr(root), y))
+        throw new Error('Cannot find square root');
+    return root;
+}
+const Fp = (0, modular_js_1.Field)(secp256k1P, undefined, undefined, { sqrt: sqrtMod });
+/**
+ * secp256k1 short weierstrass curve and ECDSA signatures over it.
+ */
+exports.secp256k1 = (0, _shortw_utils_js_1.createCurve)({
+    a: BigInt(0), // equation params: a, b
+    b: BigInt(7), // Seem to be rigid: bitcointalk.org/index.php?topic=289795.msg3183975#msg3183975
+    Fp, // Field's prime: 2n**256n - 2n**32n - 2n**9n - 2n**8n - 2n**7n - 2n**6n - 2n**4n - 1n
+    n: secp256k1N, // Curve order, total count of valid points in the field
+    // Base point (x, y) aka generator point
+    Gx: BigInt('55066263022277343669578718895168534326250603453777594175500187360389116729240'),
+    Gy: BigInt('32670510020758816978083085130507043184471273380659243275938904335757337482424'),
+    h: BigInt(1), // Cofactor
+    lowS: true, // Allow only low-S signatures by default in sign() and verify()
+    /**
+     * secp256k1 belongs to Koblitz curves: it has efficiently computable endomorphism.
+     * Endomorphism uses 2x less RAM, speeds up precomputation by 2x and ECDH / key recovery by 20%.
+     * For precomputed wNAF it trades off 1/2 init time & 1/3 ram for 20% perf hit.
+     * Explanation: https://gist.github.com/paulmillr/eb670806793e84df628a7c434a873066
+     */
+    endo: {
+        beta: BigInt('0x7ae96a2b657c07106e64479eac3434e99cf0497512f58995c1396c28719501ee'),
+        splitScalar: (k) => {
+            const n = secp256k1N;
+            const a1 = BigInt('0x3086d221a7d46bcde86c90e49284eb15');
+            const b1 = -_1n * BigInt('0xe4437ed6010e88286f547fa90abfe4c3');
+            const a2 = BigInt('0x114ca50f7a8e2f3f657c1108d9d44cfd8');
+            const b2 = a1;
+            const POW_2_128 = BigInt('0x100000000000000000000000000000000'); // (2n**128n).toString(16)
+            const c1 = divNearest(b2 * k, n);
+            const c2 = divNearest(-b1 * k, n);
+            let k1 = (0, modular_js_1.mod)(k - c1 * a1 - c2 * a2, n);
+            let k2 = (0, modular_js_1.mod)(-c1 * b1 - c2 * b2, n);
+            const k1neg = k1 > POW_2_128;
+            const k2neg = k2 > POW_2_128;
+            if (k1neg)
+                k1 = n - k1;
+            if (k2neg)
+                k2 = n - k2;
+            if (k1 > POW_2_128 || k2 > POW_2_128) {
+                throw new Error('splitScalar: Endomorphism failed, k=' + k);
+            }
+            return { k1neg, k1, k2neg, k2 };
+        },
+    },
+}, sha256_1.sha256);
+// Schnorr signatures are superior to ECDSA from above. Below is Schnorr-specific BIP0340 code.
+// https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki
+const _0n = BigInt(0);
+/** An object mapping tags to their tagged hash prefix of [SHA256(tag) | SHA256(tag)] */
+const TAGGED_HASH_PREFIXES = {};
+function taggedHash(tag, ...messages) {
+    let tagP = TAGGED_HASH_PREFIXES[tag];
+    if (tagP === undefined) {
+        const tagH = (0, sha256_1.sha256)(Uint8Array.from(tag, (c) => c.charCodeAt(0)));
+        tagP = (0, utils_js_1.concatBytes)(tagH, tagH);
+        TAGGED_HASH_PREFIXES[tag] = tagP;
+    }
+    return (0, sha256_1.sha256)((0, utils_js_1.concatBytes)(tagP, ...messages));
+}
+// ECDSA compact points are 33-byte. Schnorr is 32: we strip first byte 0x02 or 0x03
+const pointToBytes = (point) => point.toRawBytes(true).slice(1);
+const numTo32b = (n) => (0, utils_js_1.numberToBytesBE)(n, 32);
+const modP = (x) => (0, modular_js_1.mod)(x, secp256k1P);
+const modN = (x) => (0, modular_js_1.mod)(x, secp256k1N);
+const Point = exports.secp256k1.ProjectivePoint;
+const GmulAdd = (Q, a, b) => Point.BASE.multiplyAndAddUnsafe(Q, a, b);
+// Calculate point, scalar and bytes
+function schnorrGetExtPubKey(priv) {
+    let d_ = exports.secp256k1.utils.normPrivateKeyToScalar(priv); // same method executed in fromPrivateKey
+    let p = Point.fromPrivateKey(d_); // P = d'⋅G; 0 < d' < n check is done inside
+    const scalar = p.hasEvenY() ? d_ : modN(-d_);
+    return { scalar: scalar, bytes: pointToBytes(p) };
+}
+/**
+ * lift_x from BIP340. Convert 32-byte x coordinate to elliptic curve point.
+ * @returns valid point checked for being on-curve
+ */
+function lift_x(x) {
+    (0, utils_js_1.aInRange)('x', x, _1n, secp256k1P); // Fail if x ≥ p.
+    const xx = modP(x * x);
+    const c = modP(xx * x + BigInt(7)); // Let c = x³ + 7 mod p.
+    let y = sqrtMod(c); // Let y = c^(p+1)/4 mod p.
+    if (y % _2n !== _0n)
+        y = modP(-y); // Return the unique point P such that x(P) = x and
+    const p = new Point(x, y, _1n); // y(P) = y if y mod 2 = 0 or y(P) = p-y otherwise.
+    p.assertValidity();
+    return p;
+}
+const num = utils_js_1.bytesToNumberBE;
+/**
+ * Create tagged hash, convert it to bigint, reduce modulo-n.
+ */
+function challenge(...args) {
+    return modN(num(taggedHash('BIP0340/challenge', ...args)));
+}
+/**
+ * Schnorr public key is just `x` coordinate of Point as per BIP340.
+ */
+function schnorrGetPublicKey(privateKey) {
+    return schnorrGetExtPubKey(privateKey).bytes; // d'=int(sk). Fail if d'=0 or d'≥n. Ret bytes(d'⋅G)
+}
+/**
+ * Creates Schnorr signature as per BIP340. Verifies itself before returning anything.
+ * auxRand is optional and is not the sole source of k generation: bad CSPRNG won't be dangerous.
+ */
+function schnorrSign(message, privateKey, auxRand = (0, utils_1.randomBytes)(32)) {
+    const m = (0, utils_js_1.ensureBytes)('message', message);
+    const { bytes: px, scalar: d } = schnorrGetExtPubKey(privateKey); // checks for isWithinCurveOrder
+    const a = (0, utils_js_1.ensureBytes)('auxRand', auxRand, 32); // Auxiliary random data a: a 32-byte array
+    const t = numTo32b(d ^ num(taggedHash('BIP0340/aux', a))); // Let t be the byte-wise xor of bytes(d) and hash/aux(a)
+    const rand = taggedHash('BIP0340/nonce', t, px, m); // Let rand = hash/nonce(t || bytes(P) || m)
+    const k_ = modN(num(rand)); // Let k' = int(rand) mod n
+    if (k_ === _0n)
+        throw new Error('sign failed: k is zero'); // Fail if k' = 0.
+    const { bytes: rx, scalar: k } = schnorrGetExtPubKey(k_); // Let R = k'⋅G.
+    const e = challenge(rx, px, m); // Let e = int(hash/challenge(bytes(R) || bytes(P) || m)) mod n.
+    const sig = new Uint8Array(64); // Let sig = bytes(R) || bytes((k + ed) mod n).
+    sig.set(rx, 0);
+    sig.set(numTo32b(modN(k + e * d)), 32);
+    // If Verify(bytes(P), m, sig) (see below) returns failure, abort
+    if (!schnorrVerify(sig, m, px))
+        throw new Error('sign: Invalid signature produced');
+    return sig;
+}
+/**
+ * Verifies Schnorr signature.
+ * Will swallow errors & return false except for initial type validation of arguments.
+ */
+function schnorrVerify(signature, message, publicKey) {
+    const sig = (0, utils_js_1.ensureBytes)('signature', signature, 64);
+    const m = (0, utils_js_1.ensureBytes)('message', message);
+    const pub = (0, utils_js_1.ensureBytes)('publicKey', publicKey, 32);
+    try {
+        const P = lift_x(num(pub)); // P = lift_x(int(pk)); fail if that fails
+        const r = num(sig.subarray(0, 32)); // Let r = int(sig[0:32]); fail if r ≥ p.
+        if (!(0, utils_js_1.inRange)(r, _1n, secp256k1P))
+            return false;
+        const s = num(sig.subarray(32, 64)); // Let s = int(sig[32:64]); fail if s ≥ n.
+        if (!(0, utils_js_1.inRange)(s, _1n, secp256k1N))
+            return false;
+        const e = challenge(numTo32b(r), pointToBytes(P), m); // int(challenge(bytes(r)||bytes(P)||m))%n
+        const R = GmulAdd(P, s, modN(-e)); // R = s⋅G - e⋅P
+        if (!R || !R.hasEvenY() || R.toAffine().x !== r)
+            return false; // -eP == (n-e)P
+        return true; // Fail if is_infinite(R) / not has_even_y(R) / x(R) ≠ r.
+    }
+    catch (error) {
+        return false;
+    }
+}
+/**
+ * Schnorr signatures over secp256k1.
+ */
+exports.schnorr = (() => ({
+    getPublicKey: schnorrGetPublicKey,
+    sign: schnorrSign,
+    verify: schnorrVerify,
+    utils: {
+        randomPrivateKey: exports.secp256k1.utils.randomPrivateKey,
+        lift_x,
+        pointToBytes,
+        numberToBytesBE: utils_js_1.numberToBytesBE,
+        bytesToNumberBE: utils_js_1.bytesToNumberBE,
+        taggedHash,
+        mod: modular_js_1.mod,
+    },
+}))();
+const isoMap = /* @__PURE__ */ (() => (0, hash_to_curve_js_1.isogenyMap)(Fp, [
+    // xNum
+    [
+        '0x8e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38daaaaa8c7',
+        '0x7d3d4c80bc321d5b9f315cea7fd44c5d595d2fc0bf63b92dfff1044f17c6581',
+        '0x534c328d23f234e6e2a413deca25caece4506144037c40314ecbd0b53d9dd262',
+        '0x8e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38e38daaaaa88c',
+    ],
+    // xDen
+    [
+        '0xd35771193d94918a9ca34ccbb7b640dd86cd409542f8487d9fe6b745781eb49b',
+        '0xedadc6f64383dc1df7c4b2d51b54225406d36b641f5e41bbc52a56612a8c6d14',
+        '0x0000000000000000000000000000000000000000000000000000000000000001', // LAST 1
+    ],
+    // yNum
+    [
+        '0x4bda12f684bda12f684bda12f684bda12f684bda12f684bda12f684b8e38e23c',
+        '0xc75e0c32d5cb7c0fa9d0a54b12a0a6d5647ab046d686da6fdffc90fc201d71a3',
+        '0x29a6194691f91a73715209ef6512e576722830a201be2018a765e85a9ecee931',
+        '0x2f684bda12f684bda12f684bda12f684bda12f684bda12f684bda12f38e38d84',
+    ],
+    // yDen
+    [
+        '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffff93b',
+        '0x7a06534bb8bdb49fd5e9e6632722c2989467c1bfc8e8d978dfb425d2685c2573',
+        '0x6484aa716545ca2cf3a70c3fa8fe337e0a3d21162f0d6299a7bf8192bfd2a76f',
+        '0x0000000000000000000000000000000000000000000000000000000000000001', // LAST 1
+    ],
+].map((i) => i.map((j) => BigInt(j)))))();
+const mapSWU = /* @__PURE__ */ (() => (0, weierstrass_js_1.mapToCurveSimpleSWU)(Fp, {
+    A: BigInt('0x3f8731abdd661adca08a5558f0f5d272e953d363cb6f0e5d405447c01a444533'),
+    B: BigInt('1771'),
+    Z: Fp.create(BigInt('-11')),
+}))();
+const htf = /* @__PURE__ */ (() => (0, hash_to_curve_js_1.createHasher)(exports.secp256k1.ProjectivePoint, (scalars) => {
+    const { x, y } = mapSWU(Fp.create(scalars[0]));
+    return isoMap(x, y);
+}, {
+    DST: 'secp256k1_XMD:SHA-256_SSWU_RO_',
+    encodeDST: 'secp256k1_XMD:SHA-256_SSWU_NU_',
+    p: Fp.ORDER,
+    m: 1,
+    k: 128,
+    expand: 'xmd',
+    hash: sha256_1.sha256,
+}))();
+exports.hashToCurve = (() => htf.hashToCurve)();
+exports.encodeToCurve = (() => htf.encodeToCurve)();
+
+},{"./_shortw_utils.js":98,"./abstract/hash-to-curve.js":100,"./abstract/modular.js":101,"./abstract/utils.js":102,"./abstract/weierstrass.js":103,"@noble/hashes/sha256":130,"@noble/hashes/utils":132}],106:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+// base-x encoding / decoding
+// Copyright (c) 2018 base-x contributors
+// Copyright (c) 2014-2018 The Bitcoin Core developers (base58.cpp)
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+function base(ALPHABET) {
+  if (ALPHABET.length >= 255) {
+    throw new TypeError('Alphabet too long');
+  }
+  const BASE_MAP = new Uint8Array(256);
+  for (let j = 0; j < BASE_MAP.length; j++) {
+    BASE_MAP[j] = 255;
+  }
+  for (let i = 0; i < ALPHABET.length; i++) {
+    const x = ALPHABET.charAt(i);
+    const xc = x.charCodeAt(0);
+    if (BASE_MAP[xc] !== 255) {
+      throw new TypeError(x + ' is ambiguous');
+    }
+    BASE_MAP[xc] = i;
+  }
+  const BASE = ALPHABET.length;
+  const LEADER = ALPHABET.charAt(0);
+  const FACTOR = Math.log(BASE) / Math.log(256); // log(BASE) / log(256), rounded up
+  const iFACTOR = Math.log(256) / Math.log(BASE); // log(256) / log(BASE), rounded up
+  function encode(source) {
+    // eslint-disable-next-line no-empty
+    if (source instanceof Uint8Array) {} else if (ArrayBuffer.isView(source)) {
+      source = new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
+    } else if (Array.isArray(source)) {
+      source = Uint8Array.from(source);
+    }
+    if (!(source instanceof Uint8Array)) {
+      throw new TypeError('Expected Uint8Array');
+    }
+    if (source.length === 0) {
+      return '';
+    }
+    // Skip & count leading zeroes.
+    let zeroes = 0;
+    let length = 0;
+    let pbegin = 0;
+    const pend = source.length;
+    while (pbegin !== pend && source[pbegin] === 0) {
+      pbegin++;
+      zeroes++;
+    }
+    // Allocate enough space in big-endian base58 representation.
+    const size = (pend - pbegin) * iFACTOR + 1 >>> 0;
+    const b58 = new Uint8Array(size);
+    // Process the bytes.
+    while (pbegin !== pend) {
+      let carry = source[pbegin];
+      // Apply "b58 = b58 * 256 + ch".
+      let i = 0;
+      for (let it1 = size - 1; (carry !== 0 || i < length) && it1 !== -1; it1--, i++) {
+        carry += 256 * b58[it1] >>> 0;
+        b58[it1] = carry % BASE >>> 0;
+        carry = carry / BASE >>> 0;
+      }
+      if (carry !== 0) {
+        throw new Error('Non-zero carry');
+      }
+      length = i;
+      pbegin++;
+    }
+    // Skip leading zeroes in base58 result.
+    let it2 = size - length;
+    while (it2 !== size && b58[it2] === 0) {
+      it2++;
+    }
+    // Translate the result into a string.
+    let str = LEADER.repeat(zeroes);
+    for (; it2 < size; ++it2) {
+      str += ALPHABET.charAt(b58[it2]);
+    }
+    return str;
+  }
+  function decodeUnsafe(source) {
+    if (typeof source !== 'string') {
+      throw new TypeError('Expected String');
+    }
+    if (source.length === 0) {
+      return new Uint8Array();
+    }
+    let psz = 0;
+    // Skip and count leading '1's.
+    let zeroes = 0;
+    let length = 0;
+    while (source[psz] === LEADER) {
+      zeroes++;
+      psz++;
+    }
+    // Allocate enough space in big-endian base256 representation.
+    const size = (source.length - psz) * FACTOR + 1 >>> 0; // log(58) / log(256), rounded up.
+    const b256 = new Uint8Array(size);
+    // Process the characters.
+    while (source[psz]) {
+      // Decode character
+      let carry = BASE_MAP[source.charCodeAt(psz)];
+      // Invalid character
+      if (carry === 255) {
+        return;
+      }
+      let i = 0;
+      for (let it3 = size - 1; (carry !== 0 || i < length) && it3 !== -1; it3--, i++) {
+        carry += BASE * b256[it3] >>> 0;
+        b256[it3] = carry % 256 >>> 0;
+        carry = carry / 256 >>> 0;
+      }
+      if (carry !== 0) {
+        throw new Error('Non-zero carry');
+      }
+      length = i;
+      psz++;
+    }
+    // Skip leading zeroes in b256.
+    let it4 = size - length;
+    while (it4 !== size && b256[it4] === 0) {
+      it4++;
+    }
+    const vch = new Uint8Array(zeroes + (size - it4));
+    let j = zeroes;
+    while (it4 !== size) {
+      vch[j++] = b256[it4++];
+    }
+    return vch;
+  }
+  function decode(string) {
+    const buffer = decodeUnsafe(string);
+    if (buffer) {
+      return buffer;
+    }
+    throw new Error('Non-base' + BASE + ' character');
+  }
+  return {
+    encode,
+    decodeUnsafe,
+    decode
+  };
+}
+var _default = exports.default = base;
+
+},{}],107:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _baseX = _interopRequireDefault(require("base-x"));
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+var _default = exports.default = (0, _baseX.default)(ALPHABET);
+
+},{"base-x":106}],108:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ValiError = exports.UUID_REGEX = exports.ULID_REGEX = exports.OCTAL_REGEX = exports.MAC_REGEX = exports.MAC64_REGEX = exports.MAC48_REGEX = exports.ISO_WEEK_REGEX = exports.ISO_TIME_SECOND_REGEX = exports.ISO_TIME_REGEX = exports.ISO_TIMESTAMP_REGEX = exports.ISO_DATE_TIME_REGEX = exports.ISO_DATE_REGEX = exports.IP_REGEX = exports.IPV6_REGEX = exports.IPV4_REGEX = exports.IMEI_REGEX = exports.HEX_COLOR_REGEX = exports.HEXADECIMAL_REGEX = exports.EMOJI_REGEX = exports.EMAIL_REGEX = exports.DECIMAL_REGEX = exports.CUID2_REGEX = exports.BIC_REGEX = void 0;
+exports._addIssue = _addIssue;
+exports._isLuhnAlgo = _isLuhnAlgo;
+exports._isValidObjectKey = _isValidObjectKey;
+exports._stringify = _stringify;
+exports.any = any;
+exports.array = array;
+exports.arrayAsync = arrayAsync;
+exports.awaitAsync = awaitAsync;
+exports.bic = bic;
+exports.bigint = bigint;
+exports.blob = blob;
+exports.boolean = boolean;
+exports.brand = brand;
+exports.bytes = bytes;
+exports.check = check;
+exports.checkAsync = checkAsync;
+exports.checkItems = checkItems;
+exports.config = config;
+exports.creditCard = creditCard;
+exports.cuid2 = cuid2;
+exports.custom = custom;
+exports.customAsync = customAsync;
+exports.date = date;
+exports.decimal = decimal;
+exports.deleteGlobalConfig = deleteGlobalConfig;
+exports.deleteGlobalMessage = deleteGlobalMessage;
+exports.deleteSchemaMessage = deleteSchemaMessage;
+exports.deleteSpecificMessage = deleteSpecificMessage;
+exports.email = email;
+exports.emoji = emoji;
+exports.empty = empty;
+exports.endsWith = endsWith;
+exports.entriesFromList = entriesFromList;
+exports.enum_ = exports.enum = enum_;
+exports.everyItem = everyItem;
+exports.excludes = excludes;
+exports.fallback = fallback;
+exports.fallbackAsync = fallbackAsync;
+exports.file = file;
+exports.filterItems = filterItems;
+exports.findItem = findItem;
+exports.finite = finite;
+exports.flatten = flatten;
+exports.forward = forward;
+exports.forwardAsync = forwardAsync;
+exports.function_ = exports.function = function_;
+exports.getDefault = getDefault;
+exports.getDefaults = getDefaults;
+exports.getDefaultsAsync = getDefaultsAsync;
+exports.getDotPath = getDotPath;
+exports.getFallback = getFallback;
+exports.getFallbacks = getFallbacks;
+exports.getFallbacksAsync = getFallbacksAsync;
+exports.getGlobalConfig = getGlobalConfig;
+exports.getGlobalMessage = getGlobalMessage;
+exports.getSchemaMessage = getSchemaMessage;
+exports.getSpecificMessage = getSpecificMessage;
+exports.hash = hash;
+exports.hexColor = hexColor;
+exports.hexadecimal = hexadecimal;
+exports.imei = imei;
+exports.includes = includes;
+exports.instance = instance;
+exports.integer = integer;
+exports.intersect = intersect;
+exports.intersectAsync = intersectAsync;
+exports.ip = ip;
+exports.ipv4 = ipv4;
+exports.ipv6 = ipv6;
+exports.is = is;
+exports.isOfKind = isOfKind;
+exports.isOfType = isOfType;
+exports.isValiError = isValiError;
+exports.isoDate = isoDate;
+exports.isoDateTime = isoDateTime;
+exports.isoTime = isoTime;
+exports.isoTimeSecond = isoTimeSecond;
+exports.isoTimestamp = isoTimestamp;
+exports.isoWeek = isoWeek;
+exports.keyof = keyof;
+exports.lazy = lazy;
+exports.lazyAsync = lazyAsync;
+exports.length = length;
+exports.literal = literal;
+exports.looseObject = looseObject;
+exports.looseObjectAsync = looseObjectAsync;
+exports.looseTuple = looseTuple;
+exports.looseTupleAsync = looseTupleAsync;
+exports.mac = mac;
+exports.mac48 = mac48;
+exports.mac64 = mac64;
+exports.map = map;
+exports.mapAsync = mapAsync;
+exports.mapItems = mapItems;
+exports.maxBytes = maxBytes;
+exports.maxLength = maxLength;
+exports.maxSize = maxSize;
+exports.maxValue = maxValue;
+exports.mimeType = mimeType;
+exports.minBytes = minBytes;
+exports.minLength = minLength;
+exports.minSize = minSize;
+exports.minValue = minValue;
+exports.multipleOf = multipleOf;
+exports.nan = nan;
+exports.never = never;
+exports.nonEmpty = nonEmpty;
+exports.nonNullable = nonNullable;
+exports.nonNullableAsync = nonNullableAsync;
+exports.nonNullish = nonNullish;
+exports.nonNullishAsync = nonNullishAsync;
+exports.nonOptional = nonOptional;
+exports.nonOptionalAsync = nonOptionalAsync;
+exports.normalize = normalize;
+exports.notBytes = notBytes;
+exports.notLength = notLength;
+exports.notSize = notSize;
+exports.notValue = notValue;
+exports.null_ = exports.null = null_;
+exports.nullable = nullable;
+exports.nullableAsync = nullableAsync;
+exports.nullish = nullish;
+exports.nullishAsync = nullishAsync;
+exports.number = number;
+exports.object = object;
+exports.objectAsync = objectAsync;
+exports.objectWithRest = objectWithRest;
+exports.objectWithRestAsync = objectWithRestAsync;
+exports.octal = octal;
+exports.omit = omit;
+exports.optional = optional;
+exports.optionalAsync = optionalAsync;
+exports.parse = parse;
+exports.parseAsync = parseAsync;
+exports.parser = parser;
+exports.parserAsync = parserAsync;
+exports.partial = partial;
+exports.partialAsync = partialAsync;
+exports.partialCheck = partialCheck;
+exports.partialCheckAsync = partialCheckAsync;
+exports.pick = pick;
+exports.picklist = picklist;
+exports.pipe = pipe;
+exports.pipeAsync = pipeAsync;
+exports.promise = promise;
+exports.rawCheck = rawCheck;
+exports.rawCheckAsync = rawCheckAsync;
+exports.rawTransform = rawTransform;
+exports.rawTransformAsync = rawTransformAsync;
+exports.readonly = readonly;
+exports.record = record;
+exports.recordAsync = recordAsync;
+exports.reduceItems = reduceItems;
+exports.regex = regex;
+exports.required = required;
+exports.requiredAsync = requiredAsync;
+exports.safeInteger = safeInteger;
+exports.safeParse = safeParse;
+exports.safeParseAsync = safeParseAsync;
+exports.safeParser = safeParser;
+exports.safeParserAsync = safeParserAsync;
+exports.set = set;
+exports.setAsync = setAsync;
+exports.setGlobalConfig = setGlobalConfig;
+exports.setGlobalMessage = setGlobalMessage;
+exports.setSchemaMessage = setSchemaMessage;
+exports.setSpecificMessage = setSpecificMessage;
+exports.size = size;
+exports.someItem = someItem;
+exports.sortItems = sortItems;
+exports.startsWith = startsWith;
+exports.strictObject = strictObject;
+exports.strictObjectAsync = strictObjectAsync;
+exports.strictTuple = strictTuple;
+exports.strictTupleAsync = strictTupleAsync;
+exports.string = string;
+exports.symbol = symbol;
+exports.toLowerCase = toLowerCase;
+exports.toMaxValue = toMaxValue;
+exports.toMinValue = toMinValue;
+exports.toUpperCase = toUpperCase;
+exports.transform = transform;
+exports.transformAsync = transformAsync;
+exports.trim = trim;
+exports.trimEnd = trimEnd;
+exports.trimStart = trimStart;
+exports.tuple = tuple;
+exports.tupleAsync = tupleAsync;
+exports.tupleWithRest = tupleWithRest;
+exports.tupleWithRestAsync = tupleWithRestAsync;
+exports.ulid = ulid;
+exports.undefined_ = exports.undefined = undefined_;
+exports.union = union;
+exports.unionAsync = unionAsync;
+exports.unknown = unknown;
+exports.unwrap = unwrap;
+exports.url = url;
+exports.uuid = uuid;
+exports.value = value;
+exports.variant = variant;
+exports.variantAsync = variantAsync;
+exports.void_ = exports.void = void_;
+// src/actions/await/awaitAsync.ts
+function awaitAsync() {
+  return {
+    kind: "transformation",
+    type: "await",
+    reference: awaitAsync,
+    async: true,
+    async _run(dataset) {
+      dataset.value = await dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/regex.ts
+var BIC_REGEX = exports.BIC_REGEX = /^[A-Z]{6}(?!00)[A-Z\d]{2}(?:[A-Z\d]{3})?$/u;
+var CUID2_REGEX = exports.CUID2_REGEX = /^[a-z][\da-z]*$/u;
+var DECIMAL_REGEX = exports.DECIMAL_REGEX = /^\d+$/u;
+var EMAIL_REGEX = exports.EMAIL_REGEX = /^[\w+-]+(?:\.[\w+-]+)*@[\da-z]+(?:[.-][\da-z]+)*\.[a-z]{2,}$/iu;
+var EMOJI_REGEX = exports.EMOJI_REGEX = /^[\p{Extended_Pictographic}\p{Emoji_Component}]+$/u;
+var HEXADECIMAL_REGEX = exports.HEXADECIMAL_REGEX = /^(?:0h|0x)?[\da-f]+$/iu;
+var HEX_COLOR_REGEX = exports.HEX_COLOR_REGEX = /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/iu;
+var IMEI_REGEX = exports.IMEI_REGEX = /^\d{15}$|^\d{2}-\d{6}-\d{6}-\d$/u;
+var IPV4_REGEX = exports.IPV4_REGEX =
+// eslint-disable-next-line redos-detector/no-unsafe-regex -- false positive
+/^(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])(?:\.(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])){3}$/u;
+var IPV6_REGEX = exports.IPV6_REGEX = /^(?:(?:[\da-f]{1,4}:){7}[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,7}:|(?:[\da-f]{1,4}:){1,6}:[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,5}(?::[\da-f]{1,4}){1,2}|(?:[\da-f]{1,4}:){1,4}(?::[\da-f]{1,4}){1,3}|(?:[\da-f]{1,4}:){1,3}(?::[\da-f]{1,4}){1,4}|(?:[\da-f]{1,4}:){1,2}(?::[\da-f]{1,4}){1,5}|[\da-f]{1,4}:(?::[\da-f]{1,4}){1,6}|:(?:(?::[\da-f]{1,4}){1,7}|:)|fe80:(?::[\da-f]{0,4}){0,4}%[\da-z]+|::(?:f{4}(?::0{1,4})?:)?(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d)|(?:[\da-f]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d))$/iu;
+var IP_REGEX = exports.IP_REGEX = /^(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])(?:\.(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])){3}$|^(?:(?:[\da-f]{1,4}:){7}[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,7}:|(?:[\da-f]{1,4}:){1,6}:[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,5}(?::[\da-f]{1,4}){1,2}|(?:[\da-f]{1,4}:){1,4}(?::[\da-f]{1,4}){1,3}|(?:[\da-f]{1,4}:){1,3}(?::[\da-f]{1,4}){1,4}|(?:[\da-f]{1,4}:){1,2}(?::[\da-f]{1,4}){1,5}|[\da-f]{1,4}:(?::[\da-f]{1,4}){1,6}|:(?:(?::[\da-f]{1,4}){1,7}|:)|fe80:(?::[\da-f]{0,4}){0,4}%[\da-z]+|::(?:f{4}(?::0{1,4})?:)?(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d)|(?:[\da-f]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d))$/iu;
+var ISO_DATE_REGEX = exports.ISO_DATE_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])$/u;
+var ISO_DATE_TIME_REGEX = exports.ISO_DATE_TIME_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])T(?:0\d|1\d|2[0-3]):[0-5]\d$/u;
+var ISO_TIME_REGEX = exports.ISO_TIME_REGEX = /^(?:0\d|1\d|2[0-3]):[0-5]\d$/u;
+var ISO_TIME_SECOND_REGEX = exports.ISO_TIME_SECOND_REGEX = /^(?:0\d|1\d|2[0-3])(?::[0-5]\d){2}$/u;
+var ISO_TIMESTAMP_REGEX = exports.ISO_TIMESTAMP_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])T(?:0\d|1\d|2[0-3])(?::[0-5]\d){2}(?:\.\d{1,9})?(?:Z|[+-](?:0\d|1\d|2[0-3])(?::?[0-5]\d)?)$/u;
+var ISO_WEEK_REGEX = exports.ISO_WEEK_REGEX = /^\d{4}-W(?:0[1-9]|[1-4]\d|5[0-3])$/u;
+var MAC48_REGEX = exports.MAC48_REGEX = /^(?:[\da-f]{2}:){5}[\da-f]{2}$|^(?:[\da-f]{2}-){5}[\da-f]{2}$|^(?:[\da-f]{4}\.){2}[\da-f]{4}$/iu;
+var MAC64_REGEX = exports.MAC64_REGEX = /^(?:[\da-f]{2}:){7}[\da-f]{2}$|^(?:[\da-f]{2}-){7}[\da-f]{2}$|^(?:[\da-f]{4}\.){3}[\da-f]{4}$|^(?:[\da-f]{4}:){3}[\da-f]{4}$/iu;
+var MAC_REGEX = exports.MAC_REGEX = /^(?:[\da-f]{2}:){5}[\da-f]{2}$|^(?:[\da-f]{2}-){5}[\da-f]{2}$|^(?:[\da-f]{4}\.){2}[\da-f]{4}$|^(?:[\da-f]{2}:){7}[\da-f]{2}$|^(?:[\da-f]{2}-){7}[\da-f]{2}$|^(?:[\da-f]{4}\.){3}[\da-f]{4}$|^(?:[\da-f]{4}:){3}[\da-f]{4}$/iu;
+var OCTAL_REGEX = exports.OCTAL_REGEX = /^(?:0o)?[0-7]+$/iu;
+var ULID_REGEX = exports.ULID_REGEX = /^[\da-hjkmnp-tv-z]{26}$/iu;
+var UUID_REGEX = exports.UUID_REGEX = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
+
+// src/storages/globalConfig/globalConfig.ts
+var store;
+function setGlobalConfig(config2) {
+  store = {
+    ...store,
+    ...config2
+  };
+}
+function getGlobalConfig(config2) {
+  return {
+    lang: config2?.lang ?? store?.lang,
+    message: config2?.message,
+    abortEarly: config2?.abortEarly ?? store?.abortEarly,
+    abortPipeEarly: config2?.abortPipeEarly ?? store?.abortPipeEarly
+  };
+}
+function deleteGlobalConfig() {
+  store = void 0;
+}
+
+// src/storages/globalMessage/globalMessage.ts
+var store2;
+function setGlobalMessage(message, lang) {
+  if (!store2) store2 = /* @__PURE__ */new Map();
+  store2.set(lang, message);
+}
+function getGlobalMessage(lang) {
+  return store2?.get(lang);
+}
+function deleteGlobalMessage(lang) {
+  store2?.delete(lang);
+}
+
+// src/storages/schemaMessage/schemaMessage.ts
+var store3;
+function setSchemaMessage(message, lang) {
+  if (!store3) store3 = /* @__PURE__ */new Map();
+  store3.set(lang, message);
+}
+function getSchemaMessage(lang) {
+  return store3?.get(lang);
+}
+function deleteSchemaMessage(lang) {
+  store3?.delete(lang);
+}
+
+// src/storages/specificMessage/specificMessage.ts
+var store4;
+function setSpecificMessage(reference, message, lang) {
+  if (!store4) store4 = /* @__PURE__ */new Map();
+  if (!store4.get(reference)) store4.set(reference, /* @__PURE__ */new Map());
+  store4.get(reference).set(lang, message);
+}
+function getSpecificMessage(reference, lang) {
+  return store4?.get(reference)?.get(lang);
+}
+function deleteSpecificMessage(reference, lang) {
+  store4?.get(reference)?.delete(lang);
+}
+
+// src/utils/_stringify/_stringify.ts
+function _stringify(input) {
+  const type = typeof input;
+  if (type === "string") {
+    return `"${input}"`;
+  }
+  if (type === "number" || type === "bigint" || type === "boolean") {
+    return `${input}`;
+  }
+  if (type === "object" || type === "function") {
+    return (input && Object.getPrototypeOf(input)?.constructor?.name) ?? "null";
+  }
+  return type;
+}
+
+// src/utils/_addIssue/_addIssue.ts
+function _addIssue(context, label, dataset, config2, other) {
+  const input = other && "input" in other ? other.input : dataset.value;
+  const expected = other?.expected ?? context.expects ?? null;
+  const received = other?.received ?? _stringify(input);
+  const issue = {
+    kind: context.kind,
+    type: context.type,
+    input,
+    expected,
+    received,
+    message: `Invalid ${label}: ${expected ? `Expected ${expected} but r` : "R"}eceived ${received}`,
+    // @ts-expect-error
+    requirement: context.requirement,
+    path: other?.path,
+    issues: other?.issues,
+    lang: config2.lang,
+    abortEarly: config2.abortEarly,
+    abortPipeEarly: config2.abortPipeEarly
+  };
+  const isSchema = context.kind === "schema";
+  const message = other?.message ??
+  // @ts-expect-error
+  context.message ?? getSpecificMessage(context.reference, issue.lang) ?? (isSchema ? getSchemaMessage(issue.lang) : null) ?? config2.message ?? getGlobalMessage(issue.lang);
+  if (message) {
+    issue.message = typeof message === "function" ? message(issue) : message;
+  }
+  if (isSchema) {
+    dataset.typed = false;
+  }
+  if (dataset.issues) {
+    dataset.issues.push(issue);
+  } else {
+    dataset.issues = [issue];
+  }
+}
+
+// src/utils/_isLuhnAlgo/_isLuhnAlgo.ts
+var NON_DIGIT_REGEX = /\D/gu;
+function _isLuhnAlgo(input) {
+  const number2 = input.replace(NON_DIGIT_REGEX, "");
+  let length2 = number2.length;
+  let bit = 1;
+  let sum = 0;
+  while (length2) {
+    const value2 = +number2[--length2];
+    bit ^= 1;
+    sum += bit ? [0, 2, 4, 6, 8, 1, 3, 5, 7, 9][value2] : value2;
+  }
+  return sum % 10 === 0;
+}
+
+// src/utils/_isValidObjectKey/_isValidObjectKey.ts
+function _isValidObjectKey(object2, key) {
+  return Object.hasOwn(object2, key) && key !== "__proto__" && key !== "prototype" && key !== "constructor";
+}
+
+// src/utils/entriesFromList/entriesFromList.ts
+function entriesFromList(list, schema) {
+  const entries = {};
+  for (const key of list) {
+    entries[key] = schema;
+  }
+  return entries;
+}
+
+// src/utils/getDotPath/getDotPath.ts
+function getDotPath(issue) {
+  if (issue.path) {
+    let key = "";
+    for (const item of issue.path) {
+      if (typeof item.key === "string" || typeof item.key === "number") {
+        if (key) {
+          key += `.${item.key}`;
+        } else {
+          key += item.key;
+        }
+      } else {
+        return null;
+      }
+    }
+    return key;
+  }
+  return null;
+}
+
+// src/utils/isOfKind/isOfKind.ts
+function isOfKind(kind, object2) {
+  return object2.kind === kind;
+}
+
+// src/utils/isOfType/isOfType.ts
+function isOfType(type, object2) {
+  return object2.type === type;
+}
+
+// src/utils/isValiError/isValiError.ts
+function isValiError(error) {
+  return error instanceof ValiError;
+}
+
+// src/utils/ValiError/ValiError.ts
+var ValiError = class extends Error {
+  /**
+   * The error issues.
+   */
+  issues;
+  /**
+   * Creates a Valibot error with useful information.
+   *
+   * @param issues The error issues.
+   */
+  constructor(issues) {
+    super(issues[0].message);
+    this.name = "ValiError";
+    this.issues = issues;
+  }
+};
+
+// src/actions/bic/bic.ts
+exports.ValiError = ValiError;
+function bic(message) {
+  return {
+    kind: "validation",
+    type: "bic",
+    reference: bic,
+    async: false,
+    expects: null,
+    requirement: BIC_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "BIC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/brand/brand.ts
+function brand(name) {
+  return {
+    kind: "transformation",
+    type: "brand",
+    reference: brand,
+    async: false,
+    name,
+    _run(dataset) {
+      return dataset;
+    }
+  };
+}
+
+// src/actions/bytes/bytes.ts
+function bytes(requirement, message) {
+  return {
+    kind: "validation",
+    type: "bytes",
+    reference: bytes,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = new TextEncoder().encode(dataset.value).length;
+        if (length2 !== this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/check/check.ts
+function check(requirement, message) {
+  return {
+    kind: "validation",
+    type: "check",
+    reference: check,
+    async: false,
+    expects: null,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/check/checkAsync.ts
+function checkAsync(requirement, message) {
+  return {
+    kind: "validation",
+    type: "check",
+    reference: checkAsync,
+    async: true,
+    expects: null,
+    requirement,
+    message,
+    async _run(dataset, config2) {
+      if (dataset.typed && !(await this.requirement(dataset.value))) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/checkItems/checkItems.ts
+function checkItems(requirement, message) {
+  return {
+    kind: "validation",
+    type: "check_items",
+    reference: checkItems,
+    async: false,
+    expects: null,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed) {
+        for (let index = 0; index < dataset.value.length; index++) {
+          const item = dataset.value[index];
+          if (!this.requirement(item, index, dataset.value)) {
+            _addIssue(this, "item", dataset, config2, {
+              input: item,
+              path: [{
+                type: "array",
+                origin: "value",
+                input: dataset.value,
+                key: index,
+                value: item
+              }]
+            });
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/creditCard/creditCard.ts
+var CREDIT_CARD_REGEX = /^(?:\d{14,19}|\d{4}(?: \d{3,6}){2,4}|\d{4}(?:-\d{3,6}){2,4})$/u;
+var SANITIZE_REGEX = /[- ]/gu;
+var PROVIDER_REGEX_LIST = [
+// American Express
+/^3[47]\d{13}$/u,
+// Diners Club
+/^3(?:0[0-5]|[68]\d)\d{11,13}$/u,
+// Discover
+/^6(?:011|5\d{2})\d{12,15}$/u,
+// JCB
+/^(?:2131|1800|35\d{3})\d{11}$/u,
+// Mastercard
+/^5[1-5]\d{2}|(?:222\d|22[3-9]\d|2[3-6]\d{2}|27[01]\d|2720)\d{12}$/u,
+// UnionPay
+/^(?:6[27]\d{14,17}|81\d{14,17})$/u,
+// Visa
+/^4\d{12}(?:\d{3,6})?$/u];
+function creditCard(message) {
+  return {
+    kind: "validation",
+    type: "credit_card",
+    reference: creditCard,
+    async: false,
+    expects: null,
+    requirement(input) {
+      let sanitized;
+      return CREDIT_CARD_REGEX.test(input) && (
+      // Remove any hyphens and blanks
+      sanitized = input.replace(SANITIZE_REGEX, "")) &&
+      // Check if it matches a provider
+      PROVIDER_REGEX_LIST.some(regex2 => regex2.test(sanitized)) &&
+      // Check if passes luhn algorithm
+      _isLuhnAlgo(sanitized);
+    },
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "credit card", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/cuid2/cuid2.ts
+function cuid2(message) {
+  return {
+    kind: "validation",
+    type: "cuid2",
+    reference: cuid2,
+    async: false,
+    expects: null,
+    requirement: CUID2_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "Cuid2", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/decimal/decimal.ts
+function decimal(message) {
+  return {
+    kind: "validation",
+    type: "decimal",
+    reference: decimal,
+    async: false,
+    expects: null,
+    requirement: DECIMAL_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "decimal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/email/email.ts
+function email(message) {
+  return {
+    kind: "validation",
+    type: "email",
+    reference: email,
+    expects: null,
+    async: false,
+    requirement: EMAIL_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "email", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/emoji/emoji.ts
+function emoji(message) {
+  return {
+    kind: "validation",
+    type: "emoji",
+    reference: emoji,
+    async: false,
+    expects: null,
+    requirement: EMOJI_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "emoji", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/empty/empty.ts
+function empty(message) {
+  return {
+    kind: "validation",
+    type: "empty",
+    reference: empty,
+    async: false,
+    expects: "0",
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.length > 0) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/endsWith/endsWith.ts
+function endsWith(requirement, message) {
+  return {
+    kind: "validation",
+    type: "ends_with",
+    reference: endsWith,
+    async: false,
+    expects: `"${requirement}"`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !dataset.value.endsWith(this.requirement)) {
+        _addIssue(this, "end", dataset, config2, {
+          received: `"${dataset.value.slice(-this.requirement.length)}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/everyItem/everyItem.ts
+function everyItem(requirement, message) {
+  return {
+    kind: "validation",
+    type: "every_item",
+    reference: everyItem,
+    async: false,
+    expects: null,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !dataset.value.every(this.requirement)) {
+        _addIssue(this, "item", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/excludes/excludes.ts
+function excludes(requirement, message) {
+  const received = _stringify(requirement);
+  return {
+    kind: "validation",
+    type: "excludes",
+    reference: excludes,
+    async: false,
+    expects: `!${received}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.includes(this.requirement)) {
+        _addIssue(this, "content", dataset, config2, {
+          received
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/filterItems/filterItems.ts
+function filterItems(operation) {
+  return {
+    kind: "transformation",
+    type: "filter_items",
+    reference: filterItems,
+    async: false,
+    operation,
+    _run(dataset) {
+      dataset.value = dataset.value.filter(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/findItem/findItem.ts
+function findItem(operation) {
+  return {
+    kind: "transformation",
+    type: "find_item",
+    reference: findItem,
+    async: false,
+    operation,
+    _run(dataset) {
+      dataset.value = dataset.value.find(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/finite/finite.ts
+function finite(message) {
+  return {
+    kind: "validation",
+    type: "finite",
+    reference: finite,
+    async: false,
+    expects: null,
+    requirement: Number.isFinite,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "finite", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hash/hash.ts
+var HASH_LENGTHS = {
+  md4: 32,
+  md5: 32,
+  sha1: 40,
+  sha256: 64,
+  sha384: 96,
+  sha512: 128,
+  ripemd128: 32,
+  ripemd160: 40,
+  tiger128: 32,
+  tiger160: 40,
+  tiger192: 48,
+  crc32: 8,
+  crc32b: 8,
+  adler32: 8
+};
+function hash(types, message) {
+  return {
+    kind: "validation",
+    type: "hash",
+    reference: hash,
+    expects: null,
+    async: false,
+    requirement: RegExp(types.map(type => `^[a-f0-9]{${HASH_LENGTHS[type]}}$`).join("|"), "iu"),
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hash", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hexadecimal/hexadecimal.ts
+function hexadecimal(message) {
+  return {
+    kind: "validation",
+    type: "hexadecimal",
+    reference: hexadecimal,
+    async: false,
+    expects: null,
+    requirement: HEXADECIMAL_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hexadecimal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/hexColor/hexColor.ts
+function hexColor(message) {
+  return {
+    kind: "validation",
+    type: "hex_color",
+    reference: hexColor,
+    async: false,
+    expects: null,
+    requirement: HEX_COLOR_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "hex color", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/imei/imei.ts
+function imei(message) {
+  return {
+    kind: "validation",
+    type: "imei",
+    reference: imei,
+    async: false,
+    expects: null,
+    requirement(input) {
+      return IMEI_REGEX.test(input) && _isLuhnAlgo(input);
+    },
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "IMEI", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/includes/includes.ts
+function includes(requirement, message) {
+  const expects = _stringify(requirement);
+  return {
+    kind: "validation",
+    type: "includes",
+    reference: includes,
+    async: false,
+    expects,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !dataset.value.includes(this.requirement)) {
+        _addIssue(this, "content", dataset, config2, {
+          received: `!${expects}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/integer/integer.ts
+function integer(message) {
+  return {
+    kind: "validation",
+    type: "integer",
+    reference: integer,
+    async: false,
+    expects: null,
+    requirement: Number.isInteger,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "integer", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ip/ip.ts
+function ip(message) {
+  return {
+    kind: "validation",
+    type: "ip",
+    reference: ip,
+    async: false,
+    expects: null,
+    requirement: IP_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IP", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ipv4/ipv4.ts
+function ipv4(message) {
+  return {
+    kind: "validation",
+    type: "ipv4",
+    reference: ipv4,
+    async: false,
+    expects: null,
+    requirement: IPV4_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IPv4", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ipv6/ipv6.ts
+function ipv6(message) {
+  return {
+    kind: "validation",
+    type: "ipv6",
+    reference: ipv6,
+    async: false,
+    expects: null,
+    requirement: IPV6_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "IPv6", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoDate/isoDate.ts
+function isoDate(message) {
+  return {
+    kind: "validation",
+    type: "iso_date",
+    reference: isoDate,
+    async: false,
+    expects: null,
+    requirement: ISO_DATE_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "date", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoDateTime/isoDateTime.ts
+function isoDateTime(message) {
+  return {
+    kind: "validation",
+    type: "iso_date_time",
+    reference: isoDateTime,
+    async: false,
+    expects: null,
+    requirement: ISO_DATE_TIME_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "date-time", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTime/isoTime.ts
+function isoTime(message) {
+  return {
+    kind: "validation",
+    type: "iso_time",
+    reference: isoTime,
+    async: false,
+    expects: null,
+    requirement: ISO_TIME_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "time", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTimeSecond/isoTimeSecond.ts
+function isoTimeSecond(message) {
+  return {
+    kind: "validation",
+    type: "iso_time_second",
+    reference: isoTimeSecond,
+    async: false,
+    expects: null,
+    requirement: ISO_TIME_SECOND_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "time-second", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoTimestamp/isoTimestamp.ts
+function isoTimestamp(message) {
+  return {
+    kind: "validation",
+    type: "iso_timestamp",
+    reference: isoTimestamp,
+    async: false,
+    expects: null,
+    requirement: ISO_TIMESTAMP_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "timestamp", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/isoWeek/isoWeek.ts
+function isoWeek(message) {
+  return {
+    kind: "validation",
+    type: "iso_week",
+    reference: isoWeek,
+    async: false,
+    expects: null,
+    requirement: ISO_WEEK_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "week", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/length/length.ts
+function length(requirement, message) {
+  return {
+    kind: "validation",
+    type: "length",
+    reference: length,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.length !== this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac/mac.ts
+function mac(message) {
+  return {
+    kind: "validation",
+    type: "mac",
+    reference: mac,
+    async: false,
+    expects: null,
+    requirement: MAC_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac48/mac48.ts
+function mac48(message) {
+  return {
+    kind: "validation",
+    type: "mac48",
+    reference: mac48,
+    async: false,
+    expects: null,
+    requirement: MAC48_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "48-bit MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mac64/mac64.ts
+function mac64(message) {
+  return {
+    kind: "validation",
+    type: "mac64",
+    reference: mac64,
+    async: false,
+    expects: null,
+    requirement: MAC64_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "64-bit MAC", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mapItems/mapItems.ts
+function mapItems(operation) {
+  return {
+    kind: "transformation",
+    type: "map_items",
+    reference: mapItems,
+    async: false,
+    operation,
+    _run(dataset) {
+      dataset.value = dataset.value.map(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxBytes/maxBytes.ts
+function maxBytes(requirement, message) {
+  return {
+    kind: "validation",
+    type: "max_bytes",
+    reference: maxBytes,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = new TextEncoder().encode(dataset.value).length;
+        if (length2 > this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxLength/maxLength.ts
+function maxLength(requirement, message) {
+  return {
+    kind: "validation",
+    type: "max_length",
+    reference: maxLength,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.length > this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxSize/maxSize.ts
+function maxSize(requirement, message) {
+  return {
+    kind: "validation",
+    type: "max_size",
+    reference: maxSize,
+    async: false,
+    expects: `<=${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.size > this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/maxValue/maxValue.ts
+function maxValue(requirement, message) {
+  return {
+    kind: "validation",
+    type: "max_value",
+    reference: maxValue,
+    async: false,
+    expects: `<=${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value > this.requirement) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/mimeType/mimeType.ts
+function mimeType(requirement, message) {
+  return {
+    kind: "validation",
+    type: "mime_type",
+    reference: mimeType,
+    async: false,
+    expects: requirement.map(option => `"${option}"`).join(" | ") || "never",
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.includes(dataset.value.type)) {
+        _addIssue(this, "MIME type", dataset, config2, {
+          received: `"${dataset.value.type}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minBytes/minBytes.ts
+function minBytes(requirement, message) {
+  return {
+    kind: "validation",
+    type: "min_bytes",
+    reference: minBytes,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = new TextEncoder().encode(dataset.value).length;
+        if (length2 < this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minLength/minLength.ts
+function minLength(requirement, message) {
+  return {
+    kind: "validation",
+    type: "min_length",
+    reference: minLength,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.length < this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minSize/minSize.ts
+function minSize(requirement, message) {
+  return {
+    kind: "validation",
+    type: "min_size",
+    reference: minSize,
+    async: false,
+    expects: `>=${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.size < this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/minValue/minValue.ts
+function minValue(requirement, message) {
+  return {
+    kind: "validation",
+    type: "min_value",
+    reference: minValue,
+    async: false,
+    expects: `>=${requirement instanceof Date ? requirement.toJSON() : _stringify(requirement)}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value < this.requirement) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/multipleOf/multipleOf.ts
+function multipleOf(requirement, message) {
+  return {
+    kind: "validation",
+    type: "multiple_of",
+    reference: multipleOf,
+    async: false,
+    expects: `%${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value % this.requirement !== 0) {
+        _addIssue(this, "multiple", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/nonEmpty/nonEmpty.ts
+function nonEmpty(message) {
+  return {
+    kind: "validation",
+    type: "non_empty",
+    reference: nonEmpty,
+    async: false,
+    expects: "!0",
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.length === 0) {
+        _addIssue(this, "length", dataset, config2, {
+          received: "0"
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/normalize/normalize.ts
+function normalize(form) {
+  return {
+    kind: "transformation",
+    type: "normalize",
+    reference: normalize,
+    async: false,
+    form,
+    _run(dataset) {
+      dataset.value = dataset.value.normalize(this.form);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notBytes/notBytes.ts
+function notBytes(requirement, message) {
+  return {
+    kind: "validation",
+    type: "not_bytes",
+    reference: notBytes,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed) {
+        const length2 = new TextEncoder().encode(dataset.value).length;
+        if (length2 === this.requirement) {
+          _addIssue(this, "bytes", dataset, config2, {
+            received: `${length2}`
+          });
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notLength/notLength.ts
+function notLength(requirement, message) {
+  return {
+    kind: "validation",
+    type: "not_length",
+    reference: notLength,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.length === this.requirement) {
+        _addIssue(this, "length", dataset, config2, {
+          received: `${dataset.value.length}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notSize/notSize.ts
+function notSize(requirement, message) {
+  return {
+    kind: "validation",
+    type: "not_size",
+    reference: notSize,
+    async: false,
+    expects: `!${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.size === this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/notValue/notValue.ts
+function notValue(requirement, message) {
+  return {
+    kind: "validation",
+    type: "not_value",
+    reference: notValue,
+    async: false,
+    expects: requirement instanceof Date ? `!${requirement.toJSON()}` : `!${_stringify(requirement)}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && this.requirement <= dataset.value && this.requirement >= dataset.value) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/octal/octal.ts
+function octal(message) {
+  return {
+    kind: "validation",
+    type: "octal",
+    reference: octal,
+    async: false,
+    expects: null,
+    requirement: OCTAL_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "octal", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/partialCheck/utils/_isPartiallyTyped/_isPartiallyTyped.ts
+function _isPartiallyTyped(dataset, pathList) {
+  if (dataset.issues) {
+    for (const path of pathList) {
+      for (const issue of dataset.issues) {
+        let typed = false;
+        const bound = Math.min(path.length, issue.path?.length ?? 0);
+        for (let index = 0; index < bound; index++) {
+          if (path[index] !== issue.path[index].key) {
+            typed = true;
+            break;
+          }
+        }
+        if (!typed) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// src/actions/partialCheck/partialCheck.ts
+function partialCheck(pathList, requirement, message) {
+  return {
+    kind: "validation",
+    type: "partial_check",
+    reference: partialCheck,
+    async: false,
+    expects: null,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (_isPartiallyTyped(dataset, pathList) &&
+      // @ts-expect-error
+      !this.requirement(dataset.value)) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/partialCheck/partialCheckAsync.ts
+function partialCheckAsync(pathList, requirement, message) {
+  return {
+    kind: "validation",
+    type: "partial_check",
+    reference: partialCheckAsync,
+    async: true,
+    expects: null,
+    requirement,
+    message,
+    async _run(dataset, config2) {
+      if (_isPartiallyTyped(dataset, pathList) &&
+      // @ts-expect-error
+      !(await this.requirement(dataset.value))) {
+        _addIssue(this, "input", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawCheck/rawCheck.ts
+function rawCheck(action) {
+  return {
+    kind: "validation",
+    type: "raw_check",
+    reference: rawCheck,
+    async: false,
+    expects: null,
+    _run(dataset, config2) {
+      action({
+        dataset,
+        config: config2,
+        addIssue: info => _addIssue(this, info?.label ?? "input", dataset, config2, info)
+      });
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawCheck/rawCheckAsync.ts
+function rawCheckAsync(action) {
+  return {
+    kind: "validation",
+    type: "raw_check",
+    reference: rawCheckAsync,
+    async: true,
+    expects: null,
+    async _run(dataset, config2) {
+      await action({
+        dataset,
+        config: config2,
+        addIssue: info => _addIssue(this, info?.label ?? "input", dataset, config2, info)
+      });
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawTransform/rawTransform.ts
+function rawTransform(action) {
+  return {
+    kind: "transformation",
+    type: "raw_transform",
+    reference: rawTransform,
+    async: false,
+    _run(dataset, config2) {
+      const output = action({
+        dataset,
+        config: config2,
+        addIssue: info => _addIssue(this, info?.label ?? "input", dataset, config2, info),
+        NEVER: null
+      });
+      if (dataset.issues) {
+        dataset.typed = false;
+      } else {
+        dataset.value = output;
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/rawTransform/rawTransformAsync.ts
+function rawTransformAsync(action) {
+  return {
+    kind: "transformation",
+    type: "raw_transform",
+    reference: rawTransformAsync,
+    async: true,
+    async _run(dataset, config2) {
+      const output = await action({
+        dataset,
+        config: config2,
+        addIssue: info => _addIssue(this, info?.label ?? "input", dataset, config2, info),
+        NEVER: null
+      });
+      if (dataset.issues) {
+        dataset.typed = false;
+      } else {
+        dataset.value = output;
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/readonly/readonly.ts
+function readonly() {
+  return {
+    kind: "transformation",
+    type: "readonly",
+    reference: readonly,
+    async: false,
+    _run(dataset) {
+      return dataset;
+    }
+  };
+}
+
+// src/actions/reduceItems/reduceItems.ts
+function reduceItems(operation, initial) {
+  return {
+    kind: "transformation",
+    type: "reduce_items",
+    reference: reduceItems,
+    async: false,
+    operation,
+    initial,
+    _run(dataset) {
+      dataset.value = dataset.value.reduce(this.operation, this.initial);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/regex/regex.ts
+function regex(requirement, message) {
+  return {
+    kind: "validation",
+    type: "regex",
+    reference: regex,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "format", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/safeInteger/safeInteger.ts
+function safeInteger(message) {
+  return {
+    kind: "validation",
+    type: "safe_integer",
+    reference: safeInteger,
+    async: false,
+    expects: null,
+    requirement: Number.isSafeInteger,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "safe integer", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/size/size.ts
+function size(requirement, message) {
+  return {
+    kind: "validation",
+    type: "size",
+    reference: size,
+    async: false,
+    expects: `${requirement}`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && dataset.value.size !== this.requirement) {
+        _addIssue(this, "size", dataset, config2, {
+          received: `${dataset.value.size}`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/someItem/someItem.ts
+function someItem(requirement, message) {
+  return {
+    kind: "validation",
+    type: "some_item",
+    reference: someItem,
+    async: false,
+    expects: null,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !dataset.value.some(this.requirement)) {
+        _addIssue(this, "item", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/sortItems/sortItems.ts
+function sortItems(operation) {
+  return {
+    kind: "transformation",
+    type: "sort_items",
+    reference: sortItems,
+    async: false,
+    operation,
+    _run(dataset) {
+      dataset.value = dataset.value.sort(this.operation);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/startsWith/startsWith.ts
+function startsWith(requirement, message) {
+  return {
+    kind: "validation",
+    type: "starts_with",
+    reference: startsWith,
+    async: false,
+    expects: `"${requirement}"`,
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !dataset.value.startsWith(this.requirement)) {
+        _addIssue(this, "start", dataset, config2, {
+          received: `"${dataset.value.slice(0, this.requirement.length)}"`
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toLowerCase/toLowerCase.ts
+function toLowerCase() {
+  return {
+    kind: "transformation",
+    type: "to_lower_case",
+    reference: toLowerCase,
+    async: false,
+    _run(dataset) {
+      dataset.value = dataset.value.toLowerCase();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toMaxValue/toMaxValue.ts
+function toMaxValue(requirement) {
+  return {
+    kind: "transformation",
+    type: "to_max_value",
+    reference: toMaxValue,
+    async: false,
+    requirement,
+    _run(dataset) {
+      dataset.value = dataset.value > this.requirement ? this.requirement : dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toMinValue/toMinValue.ts
+function toMinValue(requirement) {
+  return {
+    kind: "transformation",
+    type: "to_min_value",
+    reference: toMinValue,
+    async: false,
+    requirement,
+    _run(dataset) {
+      dataset.value = dataset.value < this.requirement ? this.requirement : dataset.value;
+      return dataset;
+    }
+  };
+}
+
+// src/actions/toUpperCase/toUpperCase.ts
+function toUpperCase() {
+  return {
+    kind: "transformation",
+    type: "to_upper_case",
+    reference: toUpperCase,
+    async: false,
+    _run(dataset) {
+      dataset.value = dataset.value.toUpperCase();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/transform/transform.ts
+function transform(operation) {
+  return {
+    kind: "transformation",
+    type: "transform",
+    reference: transform,
+    async: false,
+    operation,
+    _run(dataset) {
+      dataset.value = this.operation(dataset.value);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/transform/transformAsync.ts
+function transformAsync(operation) {
+  return {
+    kind: "transformation",
+    type: "transform",
+    reference: transformAsync,
+    async: true,
+    operation,
+    async _run(dataset) {
+      dataset.value = await this.operation(dataset.value);
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trim/trim.ts
+function trim() {
+  return {
+    kind: "transformation",
+    type: "trim",
+    reference: trim,
+    async: false,
+    _run(dataset) {
+      dataset.value = dataset.value.trim();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trimEnd/trimEnd.ts
+function trimEnd() {
+  return {
+    kind: "transformation",
+    type: "trim_end",
+    reference: trimEnd,
+    async: false,
+    _run(dataset) {
+      dataset.value = dataset.value.trimEnd();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/trimStart/trimStart.ts
+function trimStart() {
+  return {
+    kind: "transformation",
+    type: "trim_start",
+    reference: trimStart,
+    async: false,
+    _run(dataset) {
+      dataset.value = dataset.value.trimStart();
+      return dataset;
+    }
+  };
+}
+
+// src/actions/ulid/ulid.ts
+function ulid(message) {
+  return {
+    kind: "validation",
+    type: "ulid",
+    reference: ulid,
+    async: false,
+    expects: null,
+    requirement: ULID_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "ULID", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/url/url.ts
+function url(message) {
+  return {
+    kind: "validation",
+    type: "url",
+    reference: url,
+    async: false,
+    expects: null,
+    requirement(input) {
+      try {
+        new URL(input);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement(dataset.value)) {
+        _addIssue(this, "URL", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/uuid/uuid.ts
+function uuid(message) {
+  return {
+    kind: "validation",
+    type: "uuid",
+    reference: uuid,
+    async: false,
+    expects: null,
+    requirement: UUID_REGEX,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !this.requirement.test(dataset.value)) {
+        _addIssue(this, "UUID", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/actions/value/value.ts
+function value(requirement, message) {
+  return {
+    kind: "validation",
+    type: "value",
+    reference: value,
+    async: false,
+    expects: requirement instanceof Date ? requirement.toJSON() : _stringify(requirement),
+    requirement,
+    message,
+    _run(dataset, config2) {
+      if (dataset.typed && !(this.requirement <= dataset.value && this.requirement >= dataset.value)) {
+        _addIssue(this, "value", dataset, config2, {
+          received: dataset.value instanceof Date ? dataset.value.toJSON() : _stringify(dataset.value)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/config/config.ts
+function config(schema, config2) {
+  return {
+    ...schema,
+    _run(dataset, config_) {
+      return schema._run(dataset, {
+        ...config_,
+        ...config2
+      });
+    }
+  };
+}
+
+// src/methods/getFallback/getFallback.ts
+function getFallback(schema, dataset, config2) {
+  return typeof schema.fallback === "function" ?
+  // @ts-expect-error
+  schema.fallback(dataset, config2) :
+  // @ts-expect-error
+  schema.fallback;
+}
+
+// src/methods/fallback/fallback.ts
+function fallback(schema, fallback2) {
+  return {
+    ...schema,
+    fallback: fallback2,
+    _run(dataset, config2) {
+      schema._run(dataset, config2);
+      return dataset.issues ? {
+        typed: true,
+        value: getFallback(this, dataset, config2)
+      } : dataset;
+    }
+  };
+}
+
+// src/methods/fallback/fallbackAsync.ts
+function fallbackAsync(schema, fallback2) {
+  return {
+    ...schema,
+    fallback: fallback2,
+    async: true,
+    async _run(dataset, config2) {
+      schema._run(dataset, config2);
+      return dataset.issues ?
+      // @ts-expect-error
+      {
+        typed: true,
+        value: await getFallback(this, dataset, config2)
+      } : dataset;
+    }
+  };
+}
+
+// src/methods/flatten/flatten.ts
+function flatten(issues) {
+  const flatErrors = {};
+  for (const issue of issues) {
+    if (issue.path) {
+      const dotPath = getDotPath(issue);
+      if (dotPath) {
+        if (!flatErrors.nested) {
+          flatErrors.nested = {};
+        }
+        if (flatErrors.nested[dotPath]) {
+          flatErrors.nested[dotPath].push(issue.message);
+        } else {
+          flatErrors.nested[dotPath] = [issue.message];
+        }
+      } else {
+        if (flatErrors.other) {
+          flatErrors.other.push(issue.message);
+        } else {
+          flatErrors.other = [issue.message];
+        }
+      }
+    } else {
+      if (flatErrors.root) {
+        flatErrors.root.push(issue.message);
+      } else {
+        flatErrors.root = [issue.message];
+      }
+    }
+  }
+  return flatErrors;
+}
+
+// src/methods/forward/forward.ts
+function forward(action, pathKeys) {
+  return {
+    ...action,
+    _run(dataset, config2) {
+      const prevIssues = dataset.issues && [...dataset.issues];
+      action._run(dataset, config2);
+      if (dataset.issues) {
+        for (const issue of dataset.issues) {
+          if (!prevIssues?.includes(issue)) {
+            let pathInput = dataset.value;
+            for (const key of pathKeys) {
+              const pathValue = pathInput[key];
+              const pathItem = {
+                type: "unknown",
+                origin: "value",
+                input: pathInput,
+                key,
+                value: pathValue
+              };
+              if (issue.path) {
+                issue.path.push(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              if (!pathValue) {
+                break;
+              }
+              pathInput = pathValue;
+            }
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/forward/forwardAsync.ts
+function forwardAsync(action, pathKeys) {
+  return {
+    ...action,
+    async: true,
+    async _run(dataset, config2) {
+      const prevIssues = dataset.issues && [...dataset.issues];
+      await action._run(dataset, config2);
+      if (dataset.issues) {
+        for (const issue of dataset.issues) {
+          if (!prevIssues?.includes(issue)) {
+            let pathInput = dataset.value;
+            for (const key of pathKeys) {
+              const pathValue = pathInput[key];
+              const pathItem = {
+                type: "unknown",
+                origin: "value",
+                input: pathInput,
+                key,
+                value: pathValue
+              };
+              if (issue.path) {
+                issue.path.push(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              if (!pathValue) {
+                break;
+              }
+              pathInput = pathValue;
+            }
+          }
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/getDefault/getDefault.ts
+function getDefault(schema, dataset, config2) {
+  return typeof schema.default === "function" ?
+  // @ts-expect-error
+  schema.default(dataset, config2) :
+  // @ts-expect-error
+  schema.default;
+}
+
+// src/methods/getDefaults/getDefaults.ts
+function getDefaults(schema) {
+  if ("entries" in schema) {
+    const object2 = {};
+    for (const key in schema.entries) {
+      object2[key] = getDefaults(schema.entries[key]);
+    }
+    return object2;
+  }
+  if ("items" in schema) {
+    return schema.items.map(getDefaults);
+  }
+  return getDefault(schema);
+}
+
+// src/methods/getDefaults/getDefaultsAsync.ts
+async function getDefaultsAsync(schema) {
+  if ("entries" in schema) {
+    return Object.fromEntries(await Promise.all(Object.entries(schema.entries).map(async ([key, value2]) => [key, await getDefaultsAsync(value2)])));
+  }
+  if ("items" in schema) {
+    return Promise.all(schema.items.map(getDefaultsAsync));
+  }
+  return getDefault(schema);
+}
+
+// src/methods/getFallbacks/getFallbacks.ts
+function getFallbacks(schema) {
+  if ("entries" in schema) {
+    const object2 = {};
+    for (const key in schema.entries) {
+      object2[key] = getFallbacks(schema.entries[key]);
+    }
+    return object2;
+  }
+  if ("items" in schema) {
+    return schema.items.map(getFallbacks);
+  }
+  return getFallback(schema);
+}
+
+// src/methods/getFallbacks/getFallbacksAsync.ts
+async function getFallbacksAsync(schema) {
+  if ("entries" in schema) {
+    return Object.fromEntries(await Promise.all(Object.entries(schema.entries).map(async ([key, value2]) => [key, await getFallbacksAsync(value2)])));
+  }
+  if ("items" in schema) {
+    return Promise.all(schema.items.map(getFallbacksAsync));
+  }
+  return getFallback(schema);
+}
+
+// src/methods/is/is.ts
+function is(schema, input) {
+  return !schema._run({
+    typed: false,
+    value: input
+  }, {
+    abortEarly: true
+  }).issues;
+}
+
+// src/schemas/any/any.ts
+function any() {
+  return {
+    kind: "schema",
+    type: "any",
+    reference: any,
+    expects: "any",
+    async: false,
+    _run(dataset) {
+      dataset.typed = true;
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/array/array.ts
+function array(item, message) {
+  return {
+    kind: "schema",
+    type: "array",
+    reference: array,
+    expects: "Array",
+    async: false,
+    item,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < input.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.item._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/array/arrayAsync.ts
+function arrayAsync(item, message) {
+  return {
+    kind: "schema",
+    type: "array",
+    reference: arrayAsync,
+    expects: "Array",
+    async: true,
+    item,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(input.map(value2 => this.item._run({
+          typed: false,
+          value: value2
+        }, config2)));
+        for (let key = 0; key < itemDatasets.length; key++) {
+          const itemDataset = itemDatasets[key];
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: input[key]
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/bigint/bigint.ts
+function bigint(message) {
+  return {
+    kind: "schema",
+    type: "bigint",
+    reference: bigint,
+    expects: "bigint",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (typeof dataset.value === "bigint") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/blob/blob.ts
+function blob(message) {
+  return {
+    kind: "schema",
+    type: "blob",
+    reference: blob,
+    expects: "Blob",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value instanceof Blob) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/boolean/boolean.ts
+function boolean(message) {
+  return {
+    kind: "schema",
+    type: "boolean",
+    reference: boolean,
+    expects: "boolean",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (typeof dataset.value === "boolean") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/custom/custom.ts
+function custom(check2, message) {
+  return {
+    kind: "schema",
+    type: "custom",
+    reference: custom,
+    expects: "unknown",
+    async: false,
+    check: check2,
+    message,
+    _run(dataset, config2) {
+      if (this.check(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/custom/customAsync.ts
+function customAsync(check2, message) {
+  return {
+    kind: "schema",
+    type: "custom",
+    reference: customAsync,
+    expects: "unknown",
+    async: true,
+    check: check2,
+    message,
+    async _run(dataset, config2) {
+      if (await this.check(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/date/date.ts
+function date(message) {
+  return {
+    kind: "schema",
+    type: "date",
+    reference: date,
+    expects: "Date",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value instanceof Date) {
+        if (!isNaN(dataset.value)) {
+          dataset.typed = true;
+        } else {
+          _addIssue(this, "type", dataset, config2, {
+            received: '"Invalid Date"'
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/enum/enum.ts
+function enum_(enum__, message) {
+  const options = Object.entries(enum__).filter(([key]) => isNaN(+key)).map(([, value2]) => value2);
+  return {
+    kind: "schema",
+    type: "enum",
+    reference: enum_,
+    expects: options.map(_stringify).join(" | ") || "never",
+    async: false,
+    enum: enum__,
+    options,
+    message,
+    _run(dataset, config2) {
+      if (this.options.includes(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/file/file.ts
+function file(message) {
+  return {
+    kind: "schema",
+    type: "file",
+    reference: file,
+    expects: "File",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value instanceof File) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/function/function.ts
+function function_(message) {
+  return {
+    kind: "schema",
+    type: "function",
+    reference: function_,
+    expects: "Function",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (typeof dataset.value === "function") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/instance/instance.ts
+function instance(class_, message) {
+  return {
+    kind: "schema",
+    type: "instance",
+    reference: instance,
+    expects: class_.name,
+    async: false,
+    class: class_,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value instanceof this.class) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/intersect/utils/_merge/_merge.ts
+function _merge(value1, value2) {
+  if (typeof value1 === typeof value2) {
+    if (value1 === value2 || value1 instanceof Date && value2 instanceof Date && +value1 === +value2) {
+      return {
+        value: value1
+      };
+    }
+    if (value1 && value2 && value1.constructor === Object && value2.constructor === Object) {
+      for (const key in value2) {
+        if (key in value1) {
+          const dataset = _merge(value1[key], value2[key]);
+          if (dataset.issue) {
+            return dataset;
+          }
+          value1[key] = dataset.value;
+        } else {
+          value1[key] = value2[key];
+        }
+      }
+      return {
+        value: value1
+      };
+    }
+    if (Array.isArray(value1) && Array.isArray(value2)) {
+      if (value1.length === value2.length) {
+        for (let index = 0; index < value1.length; index++) {
+          const dataset = _merge(value1[index], value2[index]);
+          if (dataset.issue) {
+            return dataset;
+          }
+          value1[index] = dataset.value;
+        }
+        return {
+          value: value1
+        };
+      }
+    }
+  }
+  return {
+    issue: true
+  };
+}
+
+// src/schemas/intersect/intersect.ts
+function intersect(options, message) {
+  return {
+    kind: "schema",
+    type: "intersect",
+    reference: intersect,
+    expects: [...new Set(options.map(option => option.expects))].join(" & ") || "never",
+    async: false,
+    options,
+    message,
+    _run(dataset, config2) {
+      if (this.options.length) {
+        const input = dataset.value;
+        let outputs;
+        dataset.typed = true;
+        for (const schema of this.options) {
+          const optionDataset = schema._run({
+            typed: false,
+            value: input
+          }, config2);
+          if (optionDataset.issues) {
+            if (dataset.issues) {
+              dataset.issues.push(...optionDataset.issues);
+            } else {
+              dataset.issues = optionDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!optionDataset.typed) {
+            dataset.typed = false;
+          }
+          if (dataset.typed) {
+            if (outputs) {
+              outputs.push(optionDataset.value);
+            } else {
+              outputs = [optionDataset.value];
+            }
+          }
+        }
+        if (dataset.typed) {
+          dataset.value = outputs[0];
+          for (let index = 1; index < outputs.length; index++) {
+            const mergeDataset = _merge(dataset.value, outputs[index]);
+            if (mergeDataset.issue) {
+              _addIssue(this, "type", dataset, config2, {
+                received: "unknown"
+              });
+              break;
+            }
+            dataset.value = mergeDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/intersect/intersectAsync.ts
+function intersectAsync(options, message) {
+  return {
+    kind: "schema",
+    type: "intersect",
+    reference: intersectAsync,
+    expects: [...new Set(options.map(option => option.expects))].join(" & ") || "never",
+    async: true,
+    options,
+    message,
+    async _run(dataset, config2) {
+      if (this.options.length) {
+        const input = dataset.value;
+        let outputs;
+        dataset.typed = true;
+        const optionDatasets = await Promise.all(this.options.map(schema => schema._run({
+          typed: false,
+          value: input
+        }, config2)));
+        for (const optionDataset of optionDatasets) {
+          if (optionDataset.issues) {
+            if (dataset.issues) {
+              dataset.issues.push(...optionDataset.issues);
+            } else {
+              dataset.issues = optionDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!optionDataset.typed) {
+            dataset.typed = false;
+          }
+          if (dataset.typed) {
+            if (outputs) {
+              outputs.push(optionDataset.value);
+            } else {
+              outputs = [optionDataset.value];
+            }
+          }
+        }
+        if (dataset.typed) {
+          dataset.value = outputs[0];
+          for (let index = 1; index < outputs.length; index++) {
+            const mergeDataset = _merge(dataset.value, outputs[index]);
+            if (mergeDataset.issue) {
+              _addIssue(this, "type", dataset, config2, {
+                received: "unknown"
+              });
+              break;
+            }
+            dataset.value = mergeDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/lazy/lazy.ts
+function lazy(getter) {
+  return {
+    kind: "schema",
+    type: "lazy",
+    reference: lazy,
+    expects: "unknown",
+    async: false,
+    getter,
+    _run(dataset, config2) {
+      return this.getter(dataset.value)._run(dataset, config2);
+    }
+  };
+}
+
+// src/schemas/lazy/lazyAsync.ts
+function lazyAsync(getter) {
+  return {
+    kind: "schema",
+    type: "lazy",
+    reference: lazyAsync,
+    expects: "unknown",
+    async: true,
+    getter,
+    async _run(dataset, config2) {
+      return (await this.getter(dataset.value))._run(dataset, config2);
+    }
+  };
+}
+
+// src/schemas/literal/literal.ts
+function literal(literal_, message) {
+  return {
+    kind: "schema",
+    type: "literal",
+    reference: literal,
+    expects: _stringify(literal_),
+    async: false,
+    literal: literal_,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value === this.literal) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseObject/looseObject.ts
+function looseObject(entries, message) {
+  return {
+    kind: "schema",
+    type: "loose_object",
+    reference: looseObject,
+    expects: "Object",
+    async: false,
+    entries,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const value2 = input[key];
+          const valueDataset = this.entries[key]._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (valueDataset.value !== void 0 || key in input) {
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              dataset.value[key] = input[key];
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseObject/looseObjectAsync.ts
+function looseObjectAsync(entries, message) {
+  return {
+    kind: "schema",
+    type: "loose_object",
+    reference: looseObjectAsync,
+    expects: "Object",
+    async: true,
+    entries,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(Object.entries(this.entries).map(async ([key, schema]) => {
+          const value2 = input[key];
+          return [key, value2, await schema._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        }));
+        for (const [key, value2, valueDataset] of valueDatasets) {
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (valueDataset.value !== void 0 || key in input) {
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              dataset.value[key] = input[key];
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseTuple/looseTuple.ts
+function looseTuple(items, message) {
+  return {
+    kind: "schema",
+    type: "loose_tuple",
+    reference: looseTuple,
+    expects: "Array",
+    async: false,
+    items,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            dataset.value.push(input[key]);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/looseTuple/looseTupleAsync.ts
+function looseTupleAsync(items, message) {
+  return {
+    kind: "schema",
+    type: "loose_tuple",
+    reference: looseTupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(this.items.map(async (item, key) => {
+          const value2 = input[key];
+          return [key, value2, await item._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        }));
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            dataset.value.push(input[key]);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/map/map.ts
+function map(key, value2, message) {
+  return {
+    kind: "schema",
+    type: "map",
+    reference: map,
+    expects: "Map",
+    async: false,
+    key,
+    value: value2,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Map) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */new Map();
+        for (const [inputKey, inputValue] of input) {
+          const keyDataset = this.key._run({
+            typed: false,
+            value: inputKey
+          }, config2);
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "key",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of keyDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          const valueDataset = this.value._run({
+            typed: false,
+            value: inputValue
+          }, config2);
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "value",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.set(keyDataset.value, valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/map/mapAsync.ts
+function mapAsync(key, value2, message) {
+  return {
+    kind: "schema",
+    type: "map",
+    reference: mapAsync,
+    expects: "Map",
+    async: true,
+    key,
+    value: value2,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Map) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */new Map();
+        const datasets = await Promise.all([...input].map(([inputKey, inputValue]) => Promise.all([inputKey, inputValue, this.key._run({
+          typed: false,
+          value: inputKey
+        }, config2), this.value._run({
+          typed: false,
+          value: inputValue
+        }, config2)])));
+        for (const [inputKey, inputValue, keyDataset, valueDataset] of datasets) {
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "key",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of keyDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "map",
+              origin: "value",
+              input,
+              key: inputKey,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.set(keyDataset.value, valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nan/nan.ts
+function nan(message) {
+  return {
+    kind: "schema",
+    type: "nan",
+    reference: nan,
+    expects: "NaN",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (Number.isNaN(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/never/never.ts
+function never(message) {
+  return {
+    kind: "schema",
+    type: "never",
+    reference: never,
+    expects: "never",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      _addIssue(this, "type", dataset, config2);
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nonNullable/nonNullable.ts
+function nonNullable(wrapped, message) {
+  return {
+    kind: "schema",
+    type: "non_nullable",
+    reference: nonNullable,
+    expects: "!null",
+    async: false,
+    wrapped,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value === null) {
+        _addIssue(this, "type", dataset, config2);
+        return dataset;
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nonNullable/nonNullableAsync.ts
+function nonNullableAsync(wrapped, message) {
+  return {
+    kind: "schema",
+    type: "non_nullable",
+    reference: nonNullableAsync,
+    expects: "!null",
+    async: true,
+    wrapped,
+    message,
+    async _run(dataset, config2) {
+      if (dataset.value === null) {
+        _addIssue(this, "type", dataset, config2);
+        return dataset;
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nonNullish/nonNullish.ts
+function nonNullish(wrapped, message) {
+  return {
+    kind: "schema",
+    type: "non_nullish",
+    reference: nonNullish,
+    expects: "!null & !undefined",
+    async: false,
+    wrapped,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value === null || dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+        return dataset;
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nonNullish/nonNullishAsync.ts
+function nonNullishAsync(wrapped, message) {
+  return {
+    kind: "schema",
+    type: "non_nullish",
+    reference: nonNullishAsync,
+    expects: "!null & !undefined",
+    async: true,
+    wrapped,
+    message,
+    async _run(dataset, config2) {
+      if (dataset.value === null || dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+        return dataset;
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nonOptional/nonOptional.ts
+function nonOptional(wrapped, message) {
+  return {
+    kind: "schema",
+    type: "non_optional",
+    reference: nonOptional,
+    expects: "!undefined",
+    async: false,
+    wrapped,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+        return dataset;
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+}
+
+// src/schemas/nonOptional/nonOptionalAsync.ts
+function nonOptionalAsync(wrapped, message) {
+  return {
+    kind: "schema",
+    type: "non_optional",
+    reference: nonOptionalAsync,
+    expects: "!undefined",
+    async: true,
+    wrapped,
+    message,
+    async _run(dataset, config2) {
+      if (dataset.value === void 0) {
+        _addIssue(this, "type", dataset, config2);
+        return dataset;
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+}
+
+// src/schemas/null/null.ts
+function null_(message) {
+  return {
+    kind: "schema",
+    type: "null",
+    reference: null_,
+    expects: "null",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value === null) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/nullable/nullable.ts
+function nullable(wrapped, ...args) {
+  const schema = {
+    kind: "schema",
+    type: "nullable",
+    reference: nullable,
+    expects: `${wrapped.expects} | null`,
+    async: false,
+    wrapped,
+    _run(dataset, config2) {
+      if (dataset.value === null) {
+        if ("default" in this) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+  if (0 in args) {
+    schema.default = args[0];
+  }
+  return schema;
+}
+
+// src/schemas/nullable/nullableAsync.ts
+function nullableAsync(wrapped, ...args) {
+  const schema = {
+    kind: "schema",
+    type: "nullable",
+    reference: nullableAsync,
+    expects: `${wrapped.expects} | null`,
+    async: true,
+    wrapped,
+    async _run(dataset, config2) {
+      if (dataset.value === null) {
+        if ("default" in this) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+  if (0 in args) {
+    schema.default = args[0];
+  }
+  return schema;
+}
+
+// src/schemas/nullish/nullish.ts
+function nullish(wrapped, ...args) {
+  const schema = {
+    kind: "schema",
+    type: "nullish",
+    reference: nullish,
+    expects: `${wrapped.expects} | null | undefined`,
+    async: false,
+    wrapped,
+    _run(dataset, config2) {
+      if (dataset.value === null || dataset.value === void 0) {
+        if ("default" in this) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null || dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+  if (0 in args) {
+    schema.default = args[0];
+  }
+  return schema;
+}
+
+// src/schemas/nullish/nullishAsync.ts
+function nullishAsync(wrapped, ...args) {
+  const schema = {
+    kind: "schema",
+    type: "nullish",
+    reference: nullishAsync,
+    expects: `${wrapped.expects} | null | undefined`,
+    async: true,
+    wrapped,
+    async _run(dataset, config2) {
+      if (dataset.value === null || dataset.value === void 0) {
+        if ("default" in this) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === null || dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+  if (0 in args) {
+    schema.default = args[0];
+  }
+  return schema;
+}
+
+// src/schemas/number/number.ts
+function number(message) {
+  return {
+    kind: "schema",
+    type: "number",
+    reference: number,
+    expects: "number",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (typeof dataset.value === "number" && !isNaN(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/object/object.ts
+function object(entries, message) {
+  return {
+    kind: "schema",
+    type: "object",
+    reference: object,
+    expects: "Object",
+    async: false,
+    entries,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const value2 = input[key];
+          const valueDataset = this.entries[key]._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (valueDataset.value !== void 0 || key in input) {
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/object/objectAsync.ts
+function objectAsync(entries, message) {
+  return {
+    kind: "schema",
+    type: "object",
+    reference: objectAsync,
+    expects: "Object",
+    async: true,
+    entries,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(Object.entries(this.entries).map(async ([key, schema]) => {
+          const value2 = input[key];
+          return [key, value2, await schema._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        }));
+        for (const [key, value2, valueDataset] of valueDatasets) {
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (valueDataset.value !== void 0 || key in input) {
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/objectWithRest/objectWithRest.ts
+function objectWithRest(entries, rest, message) {
+  return {
+    kind: "schema",
+    type: "object_with_rest",
+    reference: objectWithRest,
+    expects: "Object",
+    async: false,
+    entries,
+    rest,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const value2 = input[key];
+          const valueDataset = this.entries[key]._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (valueDataset.value !== void 0 || key in input) {
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (_isValidObjectKey(input, key) && !(key in this.entries)) {
+              const value2 = input[key];
+              const valueDataset = this.rest._run({
+                typed: false,
+                value: value2
+              }, config2);
+              if (valueDataset.issues) {
+                const pathItem = {
+                  type: "object",
+                  origin: "value",
+                  input,
+                  key,
+                  value: value2
+                };
+                for (const issue of valueDataset.issues) {
+                  if (issue.path) {
+                    issue.path.unshift(pathItem);
+                  } else {
+                    issue.path = [pathItem];
+                  }
+                  dataset.issues?.push(issue);
+                }
+                if (!dataset.issues) {
+                  dataset.issues = valueDataset.issues;
+                }
+                if (config2.abortEarly) {
+                  dataset.typed = false;
+                  break;
+                }
+              }
+              if (!valueDataset.typed) {
+                dataset.typed = false;
+              }
+              dataset.value[key] = valueDataset.value;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/objectWithRest/objectWithRestAsync.ts
+function objectWithRestAsync(entries, rest, message) {
+  return {
+    kind: "schema",
+    type: "object_with_rest",
+    reference: objectWithRestAsync,
+    expects: "Object",
+    async: true,
+    entries,
+    rest,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const [normalDatasets, restDatasets] = await Promise.all([
+        // Parse schema of each normal entry
+        Promise.all(Object.entries(this.entries).map(async ([key, schema]) => {
+          const value2 = input[key];
+          return [key, value2, await schema._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        })),
+        // Parse other entries with rest schema
+        Promise.all(Object.entries(input).filter(([key]) => _isValidObjectKey(input, key) && !(key in this.entries)).map(async ([key, value2]) => [key, value2, await this.rest._run({
+          typed: false,
+          value: value2
+        }, config2)]))]);
+        for (const [key, value2, valueDataset] of normalDatasets) {
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (valueDataset.value !== void 0 || key in input) {
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const [key, value2, valueDataset] of restDatasets) {
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!valueDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/optional/optional.ts
+function optional(wrapped, ...args) {
+  const schema = {
+    kind: "schema",
+    type: "optional",
+    reference: optional,
+    expects: `${wrapped.expects} | undefined`,
+    async: false,
+    wrapped,
+    _run(dataset, config2) {
+      if (dataset.value === void 0) {
+        if ("default" in this) {
+          dataset.value = getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+  if (0 in args) {
+    schema.default = args[0];
+  }
+  return schema;
+}
+
+// src/schemas/optional/optionalAsync.ts
+function optionalAsync(wrapped, ...args) {
+  const schema = {
+    kind: "schema",
+    type: "optional",
+    reference: optionalAsync,
+    expects: `${wrapped.expects} | undefined`,
+    async: true,
+    wrapped,
+    async _run(dataset, config2) {
+      if (dataset.value === void 0) {
+        if ("default" in this) {
+          dataset.value = await getDefault(this, dataset, config2);
+        }
+        if (dataset.value === void 0) {
+          dataset.typed = true;
+          return dataset;
+        }
+      }
+      return this.wrapped._run(dataset, config2);
+    }
+  };
+  if (0 in args) {
+    schema.default = args[0];
+  }
+  return schema;
+}
+
+// src/schemas/picklist/picklist.ts
+function picklist(options, message) {
+  return {
+    kind: "schema",
+    type: "picklist",
+    reference: picklist,
+    expects: options.map(_stringify).join(" | ") || "never",
+    async: false,
+    options,
+    message,
+    _run(dataset, config2) {
+      if (this.options.includes(dataset.value)) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/promise/promise.ts
+function promise(message) {
+  return {
+    kind: "schema",
+    type: "promise",
+    reference: promise,
+    expects: "Promise",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value instanceof Promise) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/record/record.ts
+function record(key, value2, message) {
+  return {
+    kind: "schema",
+    type: "record",
+    reference: record,
+    expects: "Object",
+    async: false,
+    key,
+    value: value2,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const entryKey in input) {
+          if (_isValidObjectKey(input, entryKey)) {
+            const entryValue = input[entryKey];
+            const keyDataset = this.key._run({
+              typed: false,
+              value: entryKey
+            }, config2);
+            if (keyDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "key",
+                input,
+                key: entryKey,
+                value: entryValue
+              };
+              for (const issue of keyDataset.issues) {
+                issue.path = [pathItem];
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = keyDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            const valueDataset = this.value._run({
+              typed: false,
+              value: entryValue
+            }, config2);
+            if (valueDataset.issues) {
+              const pathItem = {
+                type: "object",
+                origin: "value",
+                input,
+                key: entryKey,
+                value: entryValue
+              };
+              for (const issue of valueDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = valueDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!keyDataset.typed || !valueDataset.typed) {
+              dataset.typed = false;
+            }
+            if (keyDataset.typed) {
+              dataset.value[keyDataset.value] = valueDataset.value;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/record/recordAsync.ts
+function recordAsync(key, value2, message) {
+  return {
+    kind: "schema",
+    type: "record",
+    reference: recordAsync,
+    expects: "Object",
+    async: true,
+    key,
+    value: value2,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const datasets = await Promise.all(Object.entries(input).filter(([key2]) => _isValidObjectKey(input, key2)).map(([entryKey, entryValue]) => Promise.all([entryKey, entryValue, this.key._run({
+          typed: false,
+          value: entryKey
+        }, config2), this.value._run({
+          typed: false,
+          value: entryValue
+        }, config2)])));
+        for (const [entryKey, entryValue, keyDataset, valueDataset] of datasets) {
+          if (keyDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "key",
+              input,
+              key: entryKey,
+              value: entryValue
+            };
+            for (const issue of keyDataset.issues) {
+              issue.path = [pathItem];
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = keyDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key: entryKey,
+              value: entryValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!keyDataset.typed || !valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (keyDataset.typed) {
+            dataset.value[keyDataset.value] = valueDataset.value;
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/set/set.ts
+function set(value2, message) {
+  return {
+    kind: "schema",
+    type: "set",
+    reference: set,
+    expects: "Set",
+    async: false,
+    value: value2,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Set) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */new Set();
+        for (const inputValue of input) {
+          const valueDataset = this.value._run({
+            typed: false,
+            value: inputValue
+          }, config2);
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "set",
+              origin: "value",
+              input,
+              key: null,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.add(valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/set/setAsync.ts
+function setAsync(value2, message) {
+  return {
+    kind: "schema",
+    type: "set",
+    reference: setAsync,
+    expects: "Set",
+    async: true,
+    value: value2,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (input instanceof Set) {
+        dataset.typed = true;
+        dataset.value = /* @__PURE__ */new Set();
+        const valueDatasets = await Promise.all([...input].map(async inputValue => [inputValue, await this.value._run({
+          typed: false,
+          value: inputValue
+        }, config2)]));
+        for (const [inputValue, valueDataset] of valueDatasets) {
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "set",
+              origin: "value",
+              input,
+              key: null,
+              value: inputValue
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.add(valueDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictObject/strictObject.ts
+function strictObject(entries, message) {
+  return {
+    kind: "schema",
+    type: "strict_object",
+    reference: strictObject,
+    expects: "Object",
+    async: false,
+    entries,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        for (const key in this.entries) {
+          const value2 = input[key];
+          const valueDataset = this.entries[key]._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (valueDataset.value !== void 0 || key in input) {
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (!(key in this.entries)) {
+              const value2 = input[key];
+              _addIssue(this, "type", dataset, config2, {
+                input: value2,
+                expected: "never",
+                path: [{
+                  type: "object",
+                  origin: "value",
+                  input,
+                  key,
+                  value: value2
+                }]
+              });
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictObject/strictObjectAsync.ts
+function strictObjectAsync(entries, message) {
+  return {
+    kind: "schema",
+    type: "strict_object",
+    reference: strictObjectAsync,
+    expects: "Object",
+    async: true,
+    entries,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        dataset.typed = true;
+        dataset.value = {};
+        const valueDatasets = await Promise.all(Object.entries(this.entries).map(async ([key, schema]) => {
+          const value2 = input[key];
+          return [key, value2, await schema._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        }));
+        for (const [key, value2, valueDataset] of valueDatasets) {
+          if (valueDataset.issues) {
+            const pathItem = {
+              type: "object",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of valueDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = valueDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!valueDataset.typed) {
+            dataset.typed = false;
+          }
+          if (valueDataset.value !== void 0 || key in input) {
+            dataset.value[key] = valueDataset.value;
+          }
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const key in input) {
+            if (!(key in this.entries)) {
+              const value2 = input[key];
+              _addIssue(this, "type", dataset, config2, {
+                input: value2,
+                expected: "never",
+                path: [{
+                  type: "object",
+                  origin: "value",
+                  input,
+                  key,
+                  value: value2
+                }]
+              });
+              break;
+            }
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictTuple/strictTuple.ts
+function strictTuple(items, message) {
+  return {
+    kind: "schema",
+    type: "strict_tuple",
+    reference: strictTuple,
+    expects: "Array",
+    async: false,
+    items,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!(dataset.issues && config2.abortEarly) && this.items.length < input.length) {
+          const value2 = input[items.length];
+          _addIssue(this, "type", dataset, config2, {
+            input: value2,
+            expected: "never",
+            path: [{
+              type: "array",
+              origin: "value",
+              input,
+              key: this.items.length,
+              value: value2
+            }]
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/strictTuple/strictTupleAsync.ts
+function strictTupleAsync(items, message) {
+  return {
+    kind: "schema",
+    type: "strict_tuple",
+    reference: strictTupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(this.items.map(async (item, key) => {
+          const value2 = input[key];
+          return [key, value2, await item._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        }));
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!(dataset.issues && config2.abortEarly) && this.items.length < input.length) {
+          const value2 = input[items.length];
+          _addIssue(this, "type", dataset, config2, {
+            input: value2,
+            expected: "never",
+            path: [{
+              type: "array",
+              origin: "value",
+              input,
+              key: this.items.length,
+              value: value2
+            }]
+          });
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/string/string.ts
+function string(message) {
+  return {
+    kind: "schema",
+    type: "string",
+    reference: string,
+    expects: "string",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (typeof dataset.value === "string") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/symbol/symbol.ts
+function symbol(message) {
+  return {
+    kind: "schema",
+    type: "symbol",
+    reference: symbol,
+    expects: "symbol",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (typeof dataset.value === "symbol") {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tuple/tuple.ts
+function tuple(items, message) {
+  return {
+    kind: "schema",
+    type: "tuple",
+    reference: tuple,
+    expects: "Array",
+    async: false,
+    items,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tuple/tupleAsync.ts
+function tupleAsync(items, message) {
+  return {
+    kind: "schema",
+    type: "tuple",
+    reference: tupleAsync,
+    expects: "Array",
+    async: true,
+    items,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const itemDatasets = await Promise.all(this.items.map(async (item, key) => {
+          const value2 = input[key];
+          return [key, value2, await item._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        }));
+        for (const [key, value2, itemDataset] of itemDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tupleWithRest/tupleWithRest.ts
+function tupleWithRest(items, rest, message) {
+  return {
+    kind: "schema",
+    type: "tuple_with_rest",
+    reference: tupleWithRest,
+    expects: "Array",
+    async: false,
+    items,
+    rest,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        for (let key = 0; key < this.items.length; key++) {
+          const value2 = input[key];
+          const itemDataset = this.items[key]._run({
+            typed: false,
+            value: value2
+          }, config2);
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (let key = this.items.length; key < input.length; key++) {
+            const value2 = input[key];
+            const itemDataset = this.rest._run({
+              typed: false,
+              value: value2
+            }, config2);
+            if (itemDataset.issues) {
+              const pathItem = {
+                type: "array",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of itemDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = itemDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!itemDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value.push(itemDataset.value);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/tupleWithRest/tupleWithRestAsync.ts
+function tupleWithRestAsync(items, rest, message) {
+  return {
+    kind: "schema",
+    type: "tuple_with_rest",
+    reference: tupleWithRestAsync,
+    expects: "Array",
+    async: true,
+    items,
+    rest,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (Array.isArray(input)) {
+        dataset.typed = true;
+        dataset.value = [];
+        const [normalDatasets, restDatasets] = await Promise.all([
+        // Parse schema of each normal item
+        Promise.all(this.items.map(async (item, key) => {
+          const value2 = input[key];
+          return [key, value2, await item._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        })),
+        // Parse other items with rest schema
+        Promise.all(input.slice(this.items.length).map(async (value2, key) => {
+          return [key + this.items.length, value2, await this.rest._run({
+            typed: false,
+            value: value2
+          }, config2)];
+        }))]);
+        for (const [key, value2, itemDataset] of normalDatasets) {
+          if (itemDataset.issues) {
+            const pathItem = {
+              type: "array",
+              origin: "value",
+              input,
+              key,
+              value: value2
+            };
+            for (const issue of itemDataset.issues) {
+              if (issue.path) {
+                issue.path.unshift(pathItem);
+              } else {
+                issue.path = [pathItem];
+              }
+              dataset.issues?.push(issue);
+            }
+            if (!dataset.issues) {
+              dataset.issues = itemDataset.issues;
+            }
+            if (config2.abortEarly) {
+              dataset.typed = false;
+              break;
+            }
+          }
+          if (!itemDataset.typed) {
+            dataset.typed = false;
+          }
+          dataset.value.push(itemDataset.value);
+        }
+        if (!dataset.issues || !config2.abortEarly) {
+          for (const [key, value2, itemDataset] of restDatasets) {
+            if (itemDataset.issues) {
+              const pathItem = {
+                type: "array",
+                origin: "value",
+                input,
+                key,
+                value: value2
+              };
+              for (const issue of itemDataset.issues) {
+                if (issue.path) {
+                  issue.path.unshift(pathItem);
+                } else {
+                  issue.path = [pathItem];
+                }
+                dataset.issues?.push(issue);
+              }
+              if (!dataset.issues) {
+                dataset.issues = itemDataset.issues;
+              }
+              if (config2.abortEarly) {
+                dataset.typed = false;
+                break;
+              }
+            }
+            if (!itemDataset.typed) {
+              dataset.typed = false;
+            }
+            dataset.value.push(itemDataset.value);
+          }
+        }
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/undefined/undefined.ts
+function undefined_(message) {
+  return {
+    kind: "schema",
+    type: "undefined",
+    reference: undefined_,
+    expects: "undefined",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value === void 0) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/union/utils/_subIssues/_subIssues.ts
+function _subIssues(datasets) {
+  let issues;
+  if (datasets) {
+    for (const dataset of datasets) {
+      if (issues) {
+        issues.push(...dataset.issues);
+      } else {
+        issues = dataset.issues;
+      }
+    }
+  }
+  return issues;
+}
+
+// src/schemas/union/union.ts
+function union(options, message) {
+  return {
+    kind: "schema",
+    type: "union",
+    reference: union,
+    expects: [...new Set(options.map(option => option.expects))].join(" | ") || "never",
+    async: false,
+    options,
+    message,
+    _run(dataset, config2) {
+      let validDataset;
+      let typedDatasets;
+      let untypedDatasets;
+      for (const schema of this.options) {
+        const optionDataset = schema._run({
+          typed: false,
+          value: dataset.value
+        }, config2);
+        if (optionDataset.typed) {
+          if (optionDataset.issues) {
+            if (typedDatasets) {
+              typedDatasets.push(optionDataset);
+            } else {
+              typedDatasets = [optionDataset];
+            }
+          } else {
+            validDataset = optionDataset;
+            break;
+          }
+        } else {
+          if (untypedDatasets) {
+            untypedDatasets.push(optionDataset);
+          } else {
+            untypedDatasets = [optionDataset];
+          }
+        }
+      }
+      if (validDataset) {
+        return validDataset;
+      }
+      if (typedDatasets) {
+        if (typedDatasets.length === 1) {
+          return typedDatasets[0];
+        }
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(typedDatasets)
+        });
+        dataset.typed = true;
+      } else if (untypedDatasets?.length === 1) {
+        return untypedDatasets[0];
+      } else {
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(untypedDatasets)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/union/unionAsync.ts
+function unionAsync(options, message) {
+  return {
+    kind: "schema",
+    type: "union",
+    reference: unionAsync,
+    expects: [...new Set(options.map(option => option.expects))].join(" | ") || "never",
+    async: true,
+    options,
+    message,
+    async _run(dataset, config2) {
+      let validDataset;
+      let typedDatasets;
+      let untypedDatasets;
+      for (const schema of this.options) {
+        const optionDataset = await schema._run({
+          typed: false,
+          value: dataset.value
+        }, config2);
+        if (optionDataset.typed) {
+          if (optionDataset.issues) {
+            if (typedDatasets) {
+              typedDatasets.push(optionDataset);
+            } else {
+              typedDatasets = [optionDataset];
+            }
+          } else {
+            validDataset = optionDataset;
+            break;
+          }
+        } else {
+          if (untypedDatasets) {
+            untypedDatasets.push(optionDataset);
+          } else {
+            untypedDatasets = [optionDataset];
+          }
+        }
+      }
+      if (validDataset) {
+        return validDataset;
+      }
+      if (typedDatasets) {
+        if (typedDatasets.length === 1) {
+          return typedDatasets[0];
+        }
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(typedDatasets)
+        });
+        dataset.typed = true;
+      } else if (untypedDatasets?.length === 1) {
+        return untypedDatasets[0];
+      } else {
+        _addIssue(this, "type", dataset, config2, {
+          issues: _subIssues(untypedDatasets)
+        });
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/unknown/unknown.ts
+function unknown() {
+  return {
+    kind: "schema",
+    type: "unknown",
+    reference: unknown,
+    expects: "unknown",
+    async: false,
+    _run(dataset) {
+      dataset.typed = true;
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/variant/utils/_discriminators/_discriminators.ts
+function _discriminators(key, options, set2 = /* @__PURE__ */new Set()) {
+  for (const schema of options) {
+    if (schema.type === "variant") {
+      _discriminators(key, schema.options, set2);
+    } else {
+      set2.add(schema.entries[key].expects);
+    }
+  }
+  return set2;
+}
+
+// src/schemas/variant/variant.ts
+function variant(key, options, message) {
+  let expectedDiscriminators;
+  return {
+    kind: "schema",
+    type: "variant",
+    reference: variant,
+    expects: "Object",
+    async: false,
+    key,
+    options,
+    message,
+    _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        const discriminator = input[this.key];
+        if (this.key in input) {
+          let outputDataset;
+          for (const schema of this.options) {
+            if (schema.type === "variant" || !schema.entries[this.key]._run({
+              typed: false,
+              value: discriminator
+            }, config2).issues) {
+              const optionDataset = schema._run({
+                typed: false,
+                value: input
+              }, config2);
+              if (!optionDataset.issues) {
+                return optionDataset;
+              }
+              if (!outputDataset || !outputDataset.typed && optionDataset.typed) {
+                outputDataset = optionDataset;
+              }
+            }
+          }
+          if (outputDataset) {
+            return outputDataset;
+          }
+        }
+        if (!expectedDiscriminators) {
+          expectedDiscriminators = [..._discriminators(this.key, this.options)].join(" | ") || "never";
+        }
+        _addIssue(this, "type", dataset, config2, {
+          input: discriminator,
+          expected: expectedDiscriminators,
+          path: [{
+            type: "object",
+            origin: "value",
+            input,
+            key: this.key,
+            value: discriminator
+          }]
+        });
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/variant/variantAsync.ts
+function variantAsync(key, options, message) {
+  let expectedDiscriminators;
+  return {
+    kind: "schema",
+    type: "variant",
+    reference: variantAsync,
+    expects: "Object",
+    async: true,
+    key,
+    options,
+    message,
+    async _run(dataset, config2) {
+      const input = dataset.value;
+      if (input && typeof input === "object") {
+        const discriminator = input[this.key];
+        if (this.key in input) {
+          let outputDataset;
+          for (const schema of this.options) {
+            if (schema.type === "variant" || !(await schema.entries[this.key]._run({
+              typed: false,
+              value: discriminator
+            }, config2)).issues) {
+              const optionDataset = await schema._run({
+                typed: false,
+                value: input
+              }, config2);
+              if (!optionDataset.issues) {
+                return optionDataset;
+              }
+              if (!outputDataset || !outputDataset.typed && optionDataset.typed) {
+                outputDataset = optionDataset;
+              }
+            }
+          }
+          if (outputDataset) {
+            return outputDataset;
+          }
+        }
+        if (!expectedDiscriminators) {
+          expectedDiscriminators = [..._discriminators(this.key, this.options)].join(" | ") || "never";
+        }
+        _addIssue(this, "type", dataset, config2, {
+          input: discriminator,
+          expected: expectedDiscriminators,
+          path: [{
+            type: "object",
+            origin: "value",
+            input,
+            key: this.key,
+            value: discriminator
+          }]
+        });
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/schemas/void/void.ts
+function void_(message) {
+  return {
+    kind: "schema",
+    type: "void",
+    reference: void_,
+    expects: "void",
+    async: false,
+    message,
+    _run(dataset, config2) {
+      if (dataset.value === void 0) {
+        dataset.typed = true;
+      } else {
+        _addIssue(this, "type", dataset, config2);
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/keyof/keyof.ts
+function keyof(schema, message) {
+  return picklist(Object.keys(schema.entries), message);
+}
+
+// src/methods/omit/omit.ts
+function omit(schema, keys) {
+  const entries = {
+    ...schema.entries
+  };
+  for (const key of keys) {
+    delete entries[key];
+  }
+  return {
+    ...schema,
+    entries
+  };
+}
+
+// src/methods/parse/parse.ts
+function parse(schema, input, config2) {
+  const dataset = schema._run({
+    typed: false,
+    value: input
+  }, getGlobalConfig(config2));
+  if (dataset.issues) {
+    throw new ValiError(dataset.issues);
+  }
+  return dataset.value;
+}
+
+// src/methods/parse/parseAsync.ts
+async function parseAsync(schema, input, config2) {
+  const dataset = await schema._run({
+    typed: false,
+    value: input
+  }, getGlobalConfig(config2));
+  if (dataset.issues) {
+    throw new ValiError(dataset.issues);
+  }
+  return dataset.value;
+}
+
+// src/methods/parser/parser.ts
+function parser(schema, config2) {
+  const func = input => parse(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/parser/parserAsync.ts
+function parserAsync(schema, config2) {
+  const func = input => parseAsync(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/partial/partial.ts
+function partial(schema, keys) {
+  const entries = {};
+  for (const key in schema.entries) {
+    entries[key] = !keys || keys.includes(key) ? optional(schema.entries[key]) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries
+  };
+}
+
+// src/methods/partial/partialAsync.ts
+function partialAsync(schema, keys) {
+  const entries = {};
+  for (const key in schema.entries) {
+    entries[key] = !keys || keys.includes(key) ? optionalAsync(schema.entries[key]) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries
+  };
+}
+
+// src/methods/pick/pick.ts
+function pick(schema, keys) {
+  const entries = {};
+  for (const key of keys) {
+    entries[key] = schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries
+  };
+}
+
+// src/methods/pipe/pipe.ts
+function pipe(...pipe2) {
+  return {
+    ...pipe2[0],
+    pipe: pipe2,
+    _run(dataset, config2) {
+      for (let index = 0; index < pipe2.length; index++) {
+        if (dataset.issues && (pipe2[index].kind === "schema" || pipe2[index].kind === "transformation")) {
+          dataset.typed = false;
+          break;
+        }
+        if (!dataset.issues || !config2.abortEarly && !config2.abortPipeEarly) {
+          dataset = pipe2[index]._run(dataset, config2);
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/pipe/pipeAsync.ts
+function pipeAsync(...pipe2) {
+  return {
+    ...pipe2[0],
+    pipe: pipe2,
+    async: true,
+    async _run(dataset, config2) {
+      for (let index = 0; index < pipe2.length; index++) {
+        if (dataset.issues && (pipe2[index].kind === "schema" || pipe2[index].kind === "transformation")) {
+          dataset.typed = false;
+          break;
+        }
+        if (!dataset.issues || !config2.abortEarly && !config2.abortPipeEarly) {
+          dataset = await pipe2[index]._run(dataset, config2);
+        }
+      }
+      return dataset;
+    }
+  };
+}
+
+// src/methods/required/required.ts
+function required(schema, arg2, arg3) {
+  const keys = Array.isArray(arg2) ? arg2 : void 0;
+  const message = Array.isArray(arg2) ? arg3 : arg2;
+  const entries = {};
+  for (const key in schema.entries) {
+    entries[key] = !keys || keys.includes(key) ? nonOptional(schema.entries[key], message) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries
+  };
+}
+
+// src/methods/required/requiredAsync.ts
+function requiredAsync(schema, arg2, arg3) {
+  const keys = Array.isArray(arg2) ? arg2 : void 0;
+  const message = Array.isArray(arg2) ? arg3 : arg2;
+  const entries = {};
+  for (const key in schema.entries) {
+    entries[key] = !keys || keys.includes(key) ? nonOptionalAsync(schema.entries[key], message) : schema.entries[key];
+  }
+  return {
+    ...schema,
+    entries
+  };
+}
+
+// src/methods/safeParse/safeParse.ts
+function safeParse(schema, input, config2) {
+  const dataset = schema._run({
+    typed: false,
+    value: input
+  }, getGlobalConfig(config2));
+  return {
+    typed: dataset.typed,
+    success: !dataset.issues,
+    output: dataset.value,
+    issues: dataset.issues
+  };
+}
+
+// src/methods/safeParse/safeParseAsync.ts
+async function safeParseAsync(schema, input, config2) {
+  const dataset = await schema._run({
+    typed: false,
+    value: input
+  }, getGlobalConfig(config2));
+  return {
+    typed: dataset.typed,
+    success: !dataset.issues,
+    output: dataset.value,
+    issues: dataset.issues
+  };
+}
+
+// src/methods/safeParser/safeParser.ts
+function safeParser(schema, config2) {
+  const func = input => safeParse(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/safeParser/safeParserAsync.ts
+function safeParserAsync(schema, config2) {
+  const func = input => safeParseAsync(schema, input, config2);
+  func.schema = schema;
+  func.config = config2;
+  return func;
+}
+
+// src/methods/unwrap/unwrap.ts
+function unwrap(schema) {
+  return schema.wrapped;
+}
+
+},{}],109:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createCurve = exports.getHash = void 0;
@@ -14990,7 +23998,7 @@ function createCurve(curveDef, defHash) {
 }
 exports.createCurve = createCurve;
 
-},{"./abstract/weierstrass.js":97,"@noble/hashes/hmac":101,"@noble/hashes/utils":103}],93:[function(require,module,exports){
+},{"./abstract/weierstrass.js":114,"@noble/hashes/hmac":118,"@noble/hashes/utils":120}],110:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateBasic = exports.wNAF = void 0;
@@ -15152,7 +24160,7 @@ function validateBasic(curve) {
 }
 exports.validateBasic = validateBasic;
 
-},{"./modular.js":95,"./utils.js":96}],94:[function(require,module,exports){
+},{"./modular.js":112,"./utils.js":113}],111:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createHasher = exports.isogenyMap = exports.hash_to_field = exports.expand_message_xof = exports.expand_message_xmd = void 0;
@@ -15323,7 +24331,7 @@ function createHasher(Point, mapToCurve, def) {
 }
 exports.createHasher = createHasher;
 
-},{"./modular.js":95,"./utils.js":96}],95:[function(require,module,exports){
+},{"./modular.js":112,"./utils.js":113}],112:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mapHashToField = exports.getMinHashLength = exports.getFieldBytesLength = exports.hashToPrivateScalar = exports.FpSqrtEven = exports.FpSqrtOdd = exports.Field = exports.nLength = exports.FpIsSquare = exports.FpDiv = exports.FpInvertBatch = exports.FpPow = exports.validateField = exports.isNegativeLE = exports.FpSqrt = exports.tonelliShanks = exports.invert = exports.pow2 = exports.pow = exports.mod = void 0;
@@ -15763,7 +24771,7 @@ function mapHashToField(key, fieldOrder, isLE = false) {
 }
 exports.mapHashToField = mapHashToField;
 
-},{"./utils.js":96}],96:[function(require,module,exports){
+},{"./utils.js":113}],113:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateObject = exports.createHmacDrbg = exports.bitMask = exports.bitSet = exports.bitGet = exports.bitLen = exports.utf8ToBytes = exports.equalBytes = exports.concatBytes = exports.ensureBytes = exports.numberToVarBytesBE = exports.numberToBytesLE = exports.numberToBytesBE = exports.bytesToNumberLE = exports.bytesToNumberBE = exports.hexToBytes = exports.hexToNumber = exports.numberToHexUnpadded = exports.bytesToHex = exports.abytes = exports.isBytes = void 0;
@@ -16077,7 +25085,7 @@ exports.validateObject = validateObject;
 // const z3 = validateObject(o, { test: 'boolean', z: 'bug' });
 // const z4 = validateObject(o, { a: 'boolean', z: 'bug' });
 
-},{}],97:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.mapToCurveSimpleSWU = exports.SWUFpSqrtRatio = exports.weierstrass = exports.weierstrassPoints = exports.DER = void 0;
@@ -17147,7 +26155,7 @@ function mapToCurveSimpleSWU(Fp, opts) {
 }
 exports.mapToCurveSimpleSWU = mapToCurveSimpleSWU;
 
-},{"./curve.js":93,"./modular.js":95,"./utils.js":96}],98:[function(require,module,exports){
+},{"./curve.js":110,"./modular.js":112,"./utils.js":113}],115:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.output = exports.exists = exports.hash = exports.bytes = exports.bool = exports.number = exports.isBytes = void 0;
@@ -17199,7 +26207,7 @@ exports.output = output;
 const assert = { number, bool, bytes, hash, exists, output };
 exports.default = assert;
 
-},{}],99:[function(require,module,exports){
+},{}],116:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HashMD = exports.Maj = exports.Chi = void 0;
@@ -17328,13 +26336,13 @@ class HashMD extends utils_js_1.Hash {
 }
 exports.HashMD = HashMD;
 
-},{"./_assert.js":98,"./utils.js":103}],100:[function(require,module,exports){
+},{"./_assert.js":115,"./utils.js":120}],117:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.crypto = void 0;
 exports.crypto = typeof globalThis === 'object' && 'crypto' in globalThis ? globalThis.crypto : undefined;
 
-},{}],101:[function(require,module,exports){
+},{}],118:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.hmac = exports.HMAC = void 0;
@@ -17417,7 +26425,7 @@ const hmac = (hash, key, message) => new HMAC(hash, key).update(message).digest(
 exports.hmac = hmac;
 exports.hmac.create = (hash, key) => new HMAC(hash, key);
 
-},{"./_assert.js":98,"./utils.js":103}],102:[function(require,module,exports){
+},{"./_assert.js":115,"./utils.js":120}],119:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sha224 = exports.sha256 = void 0;
@@ -17544,7 +26552,7 @@ class SHA224 extends SHA256 {
 exports.sha256 = (0, utils_js_1.wrapConstructor)(() => new SHA256());
 exports.sha224 = (0, utils_js_1.wrapConstructor)(() => new SHA224());
 
-},{"./_md.js":99,"./utils.js":103}],103:[function(require,module,exports){
+},{"./_md.js":116,"./utils.js":120}],120:[function(require,module,exports){
 "use strict";
 
 /*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) */
@@ -17756,53 +26764,7 @@ function randomBytes(bytesLength = 32) {
 }
 exports.randomBytes = randomBytes;
 
-},{"./_assert.js":98,"@noble/hashes/crypto":100}],104:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.encodeToCurve = exports.hashToCurve = exports.secp256r1 = exports.p256 = void 0;
-/*! noble-curves - MIT License (c) 2022 Paul Miller (paulmillr.com) */
-const _shortw_utils_js_1 = require("./_shortw_utils.js");
-const sha256_1 = require("@noble/hashes/sha256");
-const modular_js_1 = require("./abstract/modular.js");
-const weierstrass_js_1 = require("./abstract/weierstrass.js");
-const hash_to_curve_js_1 = require("./abstract/hash-to-curve.js");
-// NIST secp256r1 aka p256
-// https://www.secg.org/sec2-v2.pdf, https://neuromancer.sk/std/nist/P-256
-const Fp = (0, modular_js_1.Field)(BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff'));
-const CURVE_A = Fp.create(BigInt('-3'));
-const CURVE_B = BigInt('0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b');
-// prettier-ignore
-exports.p256 = (0, _shortw_utils_js_1.createCurve)({
-    a: CURVE_A, // Equation params: a, b
-    b: CURVE_B,
-    Fp, // Field: 2n**224n * (2n**32n-1n) + 2n**192n + 2n**96n-1n
-    // Curve order, total count of valid points in the field
-    n: BigInt('0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551'),
-    // Base (generator) point (x, y)
-    Gx: BigInt('0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296'),
-    Gy: BigInt('0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5'),
-    h: BigInt(1),
-    lowS: false,
-}, sha256_1.sha256);
-exports.secp256r1 = exports.p256;
-const mapSWU = /* @__PURE__ */ (() => (0, weierstrass_js_1.mapToCurveSimpleSWU)(Fp, {
-    A: CURVE_A,
-    B: CURVE_B,
-    Z: Fp.create(BigInt('-10')),
-}))();
-const htf = /* @__PURE__ */ (() => (0, hash_to_curve_js_1.createHasher)(exports.secp256r1.ProjectivePoint, (scalars) => mapSWU(scalars[0]), {
-    DST: 'P256_XMD:SHA-256_SSWU_RO_',
-    encodeDST: 'P256_XMD:SHA-256_SSWU_NU_',
-    p: Fp.ORDER,
-    m: 1,
-    k: 128,
-    expand: 'xmd',
-    hash: sha256_1.sha256,
-}))();
-exports.hashToCurve = (() => htf.hashToCurve)();
-exports.encodeToCurve = (() => htf.encodeToCurve)();
-
-},{"./_shortw_utils.js":92,"./abstract/hash-to-curve.js":94,"./abstract/modular.js":95,"./abstract/weierstrass.js":97,"@noble/hashes/sha256":102}],105:[function(require,module,exports){
+},{"./_assert.js":115,"@noble/hashes/crypto":117}],121:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.encodeToCurve = exports.hashToCurve = exports.schnorr = exports.secp256k1 = void 0;
@@ -18060,20 +27022,24 @@ const htf = /* @__PURE__ */ (() => (0, hash_to_curve_js_1.createHasher)(exports.
 exports.hashToCurve = (() => htf.hashToCurve)();
 exports.encodeToCurve = (() => htf.encodeToCurve)();
 
-},{"./_shortw_utils.js":92,"./abstract/hash-to-curve.js":94,"./abstract/modular.js":95,"./abstract/utils.js":96,"./abstract/weierstrass.js":97,"@noble/hashes/sha256":102,"@noble/hashes/utils":103}],106:[function(require,module,exports){
+},{"./_shortw_utils.js":109,"./abstract/hash-to-curve.js":111,"./abstract/modular.js":112,"./abstract/utils.js":113,"./abstract/weierstrass.js":114,"@noble/hashes/sha256":119,"@noble/hashes/utils":120}],122:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.output = exports.exists = exports.hash = exports.bytes = exports.bool = exports.number = void 0;
+exports.isBytes = isBytes;
+exports.number = number;
+exports.bool = bool;
+exports.bytes = bytes;
+exports.hash = hash;
+exports.exists = exists;
+exports.output = output;
 function number(n) {
     if (!Number.isSafeInteger(n) || n < 0)
-        throw new Error(`Wrong positive integer: ${n}`);
+        throw new Error(`positive integer expected, not ${n}`);
 }
-exports.number = number;
 function bool(b) {
     if (typeof b !== 'boolean')
-        throw new Error(`Expected boolean, not ${b}`);
+        throw new Error(`boolean expected, not ${b}`);
 }
-exports.bool = bool;
 // copied from utils
 function isBytes(a) {
     return (a instanceof Uint8Array ||
@@ -18081,25 +27047,22 @@ function isBytes(a) {
 }
 function bytes(b, ...lengths) {
     if (!isBytes(b))
-        throw new Error('Expected Uint8Array');
+        throw new Error('Uint8Array expected');
     if (lengths.length > 0 && !lengths.includes(b.length))
-        throw new Error(`Expected Uint8Array of length ${lengths}, not of length=${b.length}`);
+        throw new Error(`Uint8Array expected of length ${lengths}, not of length=${b.length}`);
 }
-exports.bytes = bytes;
-function hash(hash) {
-    if (typeof hash !== 'function' || typeof hash.create !== 'function')
+function hash(h) {
+    if (typeof h !== 'function' || typeof h.create !== 'function')
         throw new Error('Hash should be wrapped by utils.wrapConstructor');
-    number(hash.outputLen);
-    number(hash.blockLen);
+    number(h.outputLen);
+    number(h.blockLen);
 }
-exports.hash = hash;
 function exists(instance, checkFinished = true) {
     if (instance.destroyed)
         throw new Error('Hash instance has been destroyed');
     if (checkFinished && instance.finished)
         throw new Error('Hash#digest() has already been called');
 }
-exports.exists = exists;
 function output(out, instance) {
     bytes(out);
     const min = instance.outputLen;
@@ -18107,14 +27070,13 @@ function output(out, instance) {
         throw new Error(`digestInto() expects output buffer of length at least ${min}`);
     }
 }
-exports.output = output;
 const assert = { number, bool, bytes, hash, exists, output };
 exports.default = assert;
 
-},{}],107:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BLAKE2 = exports.SIGMA = void 0;
+exports.BLAKE = exports.SIGMA = void 0;
 const _assert_js_1 = require("./_assert.js");
 const utils_js_1 = require("./utils.js");
 // Blake is based on ChaCha permutation.
@@ -18134,7 +27096,7 @@ exports.SIGMA = new Uint8Array([
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
     14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3,
 ]);
-class BLAKE2 extends utils_js_1.Hash {
+class BLAKE extends utils_js_1.Hash {
     constructor(blockLen, outputLen, opts = {}, keyLen, saltLen, persLen) {
         super();
         this.blockLen = blockLen;
@@ -18170,7 +27132,11 @@ class BLAKE2 extends utils_js_1.Hash {
         for (let pos = 0; pos < len;) {
             // If buffer is full and we still have input (don't process last block, same as blake2s)
             if (this.pos === blockLen) {
+                if (!utils_js_1.isLE)
+                    (0, utils_js_1.byteSwap32)(buffer32);
                 this.compress(buffer32, 0, false);
+                if (!utils_js_1.isLE)
+                    (0, utils_js_1.byteSwap32)(buffer32);
                 this.pos = 0;
             }
             const take = Math.min(blockLen - this.pos, len - pos);
@@ -18178,10 +27144,14 @@ class BLAKE2 extends utils_js_1.Hash {
             // full block && aligned to 4 bytes && not last in input
             if (take === blockLen && !(dataOffset % 4) && pos + take < len) {
                 const data32 = new Uint32Array(buf, dataOffset, Math.floor((len - pos) / 4));
+                if (!utils_js_1.isLE)
+                    (0, utils_js_1.byteSwap32)(data32);
                 for (let pos32 = 0; pos + blockLen < len; pos32 += buffer32.length, pos += blockLen) {
                     this.length += blockLen;
                     this.compress(data32, pos32, false);
                 }
+                if (!utils_js_1.isLE)
+                    (0, utils_js_1.byteSwap32)(data32);
                 continue;
             }
             buffer.set(data.subarray(pos, pos + take), this.pos);
@@ -18198,9 +27168,13 @@ class BLAKE2 extends utils_js_1.Hash {
         this.finished = true;
         // Padding
         this.buffer.subarray(pos).fill(0);
+        if (!utils_js_1.isLE)
+            (0, utils_js_1.byteSwap32)(buffer32);
         this.compress(buffer32, 0, true);
+        if (!utils_js_1.isLE)
+            (0, utils_js_1.byteSwap32)(buffer32);
         const out32 = (0, utils_js_1.u32)(out);
-        this.get().forEach((v, i) => (out32[i] = v));
+        this.get().forEach((v, i) => (out32[i] = (0, utils_js_1.byteSwapIfBE)(v)));
     }
     digest() {
         const { buffer, outputLen } = this;
@@ -18222,15 +27196,17 @@ class BLAKE2 extends utils_js_1.Hash {
         return to;
     }
 }
-exports.BLAKE2 = BLAKE2;
+exports.BLAKE = BLAKE;
 
-},{"./_assert.js":106,"./utils.js":116}],108:[function(require,module,exports){
+},{"./_assert.js":122,"./utils.js":132}],124:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SHA2 = void 0;
+exports.HashMD = exports.Maj = exports.Chi = void 0;
 const _assert_js_1 = require("./_assert.js");
 const utils_js_1 = require("./utils.js");
-// Polyfill for Safari 14
+/**
+ * Polyfill for Safari 14
+ */
 function setBigUint64(view, byteOffset, value, isLE) {
     if (typeof view.setBigUint64 === 'function')
         return view.setBigUint64(byteOffset, value, isLE);
@@ -18243,8 +27219,21 @@ function setBigUint64(view, byteOffset, value, isLE) {
     view.setUint32(byteOffset + h, wh, isLE);
     view.setUint32(byteOffset + l, wl, isLE);
 }
-// Base SHA2 class (RFC 6234)
-class SHA2 extends utils_js_1.Hash {
+/**
+ * Choice: a ? b : c
+ */
+const Chi = (a, b, c) => (a & b) ^ (~a & c);
+exports.Chi = Chi;
+/**
+ * Majority function, true if any two inputs is true
+ */
+const Maj = (a, b, c) => (a & b) ^ (a & c) ^ (b & c);
+exports.Maj = Maj;
+/**
+ * Merkle-Damgard hash construction base class.
+ * Could be used to create MD5, RIPEMD, SHA1, SHA2.
+ */
+class HashMD extends utils_js_1.Hash {
     constructor(blockLen, outputLen, padOffset, isLE) {
         super();
         this.blockLen = blockLen;
@@ -18296,7 +27285,8 @@ class SHA2 extends utils_js_1.Hash {
         // append the bit '1' to the message
         buffer[pos++] = 0b10000000;
         this.buffer.subarray(pos).fill(0);
-        // we have less than padOffset left in buffer, so we cannot put length in current block, need process it and pad again
+        // we have less than padOffset left in buffer, so we cannot put length in
+        // current block, need process it and pad again
         if (this.padOffset > blockLen - pos) {
             this.process(view, 0);
             pos = 0;
@@ -18341,12 +27331,15 @@ class SHA2 extends utils_js_1.Hash {
         return to;
     }
 }
-exports.SHA2 = SHA2;
+exports.HashMD = HashMD;
 
-},{"./_assert.js":106,"./utils.js":116}],109:[function(require,module,exports){
+},{"./_assert.js":122,"./utils.js":132}],125:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.add5L = exports.add5H = exports.add4H = exports.add4L = exports.add3H = exports.add3L = exports.add = exports.rotlBL = exports.rotlBH = exports.rotlSL = exports.rotlSH = exports.rotr32L = exports.rotr32H = exports.rotrBL = exports.rotrBH = exports.rotrSL = exports.rotrSH = exports.shrSL = exports.shrSH = exports.toBig = exports.split = exports.fromBig = void 0;
+exports.add5L = exports.add5H = exports.add4H = exports.add4L = exports.add3H = exports.add3L = exports.rotlBL = exports.rotlBH = exports.rotlSL = exports.rotlSH = exports.rotr32L = exports.rotr32H = exports.rotrBL = exports.rotrBH = exports.rotrSL = exports.rotrSH = exports.shrSL = exports.shrSH = exports.toBig = void 0;
+exports.fromBig = fromBig;
+exports.split = split;
+exports.add = add;
 const U32_MASK64 = /* @__PURE__ */ BigInt(2 ** 32 - 1);
 const _32n = /* @__PURE__ */ BigInt(32);
 // We are not using BigUint64Array, because they are extremely slow as per 2022
@@ -18355,7 +27348,6 @@ function fromBig(n, le = false) {
         return { h: Number(n & U32_MASK64), l: Number((n >> _32n) & U32_MASK64) };
     return { h: Number((n >> _32n) & U32_MASK64) | 0, l: Number(n & U32_MASK64) | 0 };
 }
-exports.fromBig = fromBig;
 function split(lst, le = false) {
     let Ah = new Uint32Array(lst.length);
     let Al = new Uint32Array(lst.length);
@@ -18365,7 +27357,6 @@ function split(lst, le = false) {
     }
     return [Ah, Al];
 }
-exports.split = split;
 const toBig = (h, l) => (BigInt(h >>> 0) << _32n) | BigInt(l >>> 0);
 exports.toBig = toBig;
 // for Shift in [0, 32)
@@ -18404,7 +27395,6 @@ function add(Ah, Al, Bh, Bl) {
     const l = (Al >>> 0) + (Bl >>> 0);
     return { h: (Ah + Bh + ((l / 2 ** 32) | 0)) | 0, l: l | 0 };
 }
-exports.add = add;
 // Addition with more than 2 elements
 const add3L = (Al, Bl, Cl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0);
 exports.add3L = add3L;
@@ -18429,29 +27419,29 @@ const u64 = {
 };
 exports.default = u64;
 
-},{}],110:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.blake2b = void 0;
-const _blake2_js_1 = require("./_blake2.js");
+exports.blake2b = exports.BLAKE2b = void 0;
+const _blake_js_1 = require("./_blake.js");
 const _u64_js_1 = require("./_u64.js");
 const utils_js_1 = require("./utils.js");
 // Same as SHA-512 but LE
 // prettier-ignore
-const IV = /* @__PURE__ */ new Uint32Array([
+const B2B_IV = /* @__PURE__ */ new Uint32Array([
     0xf3bcc908, 0x6a09e667, 0x84caa73b, 0xbb67ae85, 0xfe94f82b, 0x3c6ef372, 0x5f1d36f1, 0xa54ff53a,
     0xade682d1, 0x510e527f, 0x2b3e6c1f, 0x9b05688c, 0xfb41bd6b, 0x1f83d9ab, 0x137e2179, 0x5be0cd19
 ]);
 // Temporary buffer
-const BUF = /* @__PURE__ */ new Uint32Array(32);
+const BBUF = /* @__PURE__ */ new Uint32Array(32);
 // Mixing function G splitted in two halfs
-function G1(a, b, c, d, msg, x) {
+function G1b(a, b, c, d, msg, x) {
     // NOTE: V is LE here
     const Xl = msg[x], Xh = msg[x + 1]; // prettier-ignore
-    let Al = BUF[2 * a], Ah = BUF[2 * a + 1]; // prettier-ignore
-    let Bl = BUF[2 * b], Bh = BUF[2 * b + 1]; // prettier-ignore
-    let Cl = BUF[2 * c], Ch = BUF[2 * c + 1]; // prettier-ignore
-    let Dl = BUF[2 * d], Dh = BUF[2 * d + 1]; // prettier-ignore
+    let Al = BBUF[2 * a], Ah = BBUF[2 * a + 1]; // prettier-ignore
+    let Bl = BBUF[2 * b], Bh = BBUF[2 * b + 1]; // prettier-ignore
+    let Cl = BBUF[2 * c], Ch = BBUF[2 * c + 1]; // prettier-ignore
+    let Dl = BBUF[2 * d], Dh = BBUF[2 * d + 1]; // prettier-ignore
     // v[a] = (v[a] + v[b] + x) | 0;
     let ll = _u64_js_1.default.add3L(Al, Bl, Xl);
     Ah = _u64_js_1.default.add3H(ll, Ah, Bh, Xh);
@@ -18464,18 +27454,18 @@ function G1(a, b, c, d, msg, x) {
     // v[b] = rotr(v[b] ^ v[c], 24)
     ({ Bh, Bl } = { Bh: Bh ^ Ch, Bl: Bl ^ Cl });
     ({ Bh, Bl } = { Bh: _u64_js_1.default.rotrSH(Bh, Bl, 24), Bl: _u64_js_1.default.rotrSL(Bh, Bl, 24) });
-    (BUF[2 * a] = Al), (BUF[2 * a + 1] = Ah);
-    (BUF[2 * b] = Bl), (BUF[2 * b + 1] = Bh);
-    (BUF[2 * c] = Cl), (BUF[2 * c + 1] = Ch);
-    (BUF[2 * d] = Dl), (BUF[2 * d + 1] = Dh);
+    (BBUF[2 * a] = Al), (BBUF[2 * a + 1] = Ah);
+    (BBUF[2 * b] = Bl), (BBUF[2 * b + 1] = Bh);
+    (BBUF[2 * c] = Cl), (BBUF[2 * c + 1] = Ch);
+    (BBUF[2 * d] = Dl), (BBUF[2 * d + 1] = Dh);
 }
-function G2(a, b, c, d, msg, x) {
+function G2b(a, b, c, d, msg, x) {
     // NOTE: V is LE here
     const Xl = msg[x], Xh = msg[x + 1]; // prettier-ignore
-    let Al = BUF[2 * a], Ah = BUF[2 * a + 1]; // prettier-ignore
-    let Bl = BUF[2 * b], Bh = BUF[2 * b + 1]; // prettier-ignore
-    let Cl = BUF[2 * c], Ch = BUF[2 * c + 1]; // prettier-ignore
-    let Dl = BUF[2 * d], Dh = BUF[2 * d + 1]; // prettier-ignore
+    let Al = BBUF[2 * a], Ah = BBUF[2 * a + 1]; // prettier-ignore
+    let Bl = BBUF[2 * b], Bh = BBUF[2 * b + 1]; // prettier-ignore
+    let Cl = BBUF[2 * c], Ch = BBUF[2 * c + 1]; // prettier-ignore
+    let Dl = BBUF[2 * d], Dh = BBUF[2 * d + 1]; // prettier-ignore
     // v[a] = (v[a] + v[b] + x) | 0;
     let ll = _u64_js_1.default.add3L(Al, Bl, Xl);
     Ah = _u64_js_1.default.add3H(ll, Ah, Bh, Xh);
@@ -18488,46 +27478,46 @@ function G2(a, b, c, d, msg, x) {
     // v[b] = rotr(v[b] ^ v[c], 63)
     ({ Bh, Bl } = { Bh: Bh ^ Ch, Bl: Bl ^ Cl });
     ({ Bh, Bl } = { Bh: _u64_js_1.default.rotrBH(Bh, Bl, 63), Bl: _u64_js_1.default.rotrBL(Bh, Bl, 63) });
-    (BUF[2 * a] = Al), (BUF[2 * a + 1] = Ah);
-    (BUF[2 * b] = Bl), (BUF[2 * b + 1] = Bh);
-    (BUF[2 * c] = Cl), (BUF[2 * c + 1] = Ch);
-    (BUF[2 * d] = Dl), (BUF[2 * d + 1] = Dh);
+    (BBUF[2 * a] = Al), (BBUF[2 * a + 1] = Ah);
+    (BBUF[2 * b] = Bl), (BBUF[2 * b + 1] = Bh);
+    (BBUF[2 * c] = Cl), (BBUF[2 * c + 1] = Ch);
+    (BBUF[2 * d] = Dl), (BBUF[2 * d + 1] = Dh);
 }
-class BLAKE2b extends _blake2_js_1.BLAKE2 {
+class BLAKE2b extends _blake_js_1.BLAKE {
     constructor(opts = {}) {
         super(128, opts.dkLen === undefined ? 64 : opts.dkLen, opts, 64, 16, 16);
         // Same as SHA-512, but LE
-        this.v0l = IV[0] | 0;
-        this.v0h = IV[1] | 0;
-        this.v1l = IV[2] | 0;
-        this.v1h = IV[3] | 0;
-        this.v2l = IV[4] | 0;
-        this.v2h = IV[5] | 0;
-        this.v3l = IV[6] | 0;
-        this.v3h = IV[7] | 0;
-        this.v4l = IV[8] | 0;
-        this.v4h = IV[9] | 0;
-        this.v5l = IV[10] | 0;
-        this.v5h = IV[11] | 0;
-        this.v6l = IV[12] | 0;
-        this.v6h = IV[13] | 0;
-        this.v7l = IV[14] | 0;
-        this.v7h = IV[15] | 0;
+        this.v0l = B2B_IV[0] | 0;
+        this.v0h = B2B_IV[1] | 0;
+        this.v1l = B2B_IV[2] | 0;
+        this.v1h = B2B_IV[3] | 0;
+        this.v2l = B2B_IV[4] | 0;
+        this.v2h = B2B_IV[5] | 0;
+        this.v3l = B2B_IV[6] | 0;
+        this.v3h = B2B_IV[7] | 0;
+        this.v4l = B2B_IV[8] | 0;
+        this.v4h = B2B_IV[9] | 0;
+        this.v5l = B2B_IV[10] | 0;
+        this.v5h = B2B_IV[11] | 0;
+        this.v6l = B2B_IV[12] | 0;
+        this.v6h = B2B_IV[13] | 0;
+        this.v7l = B2B_IV[14] | 0;
+        this.v7h = B2B_IV[15] | 0;
         const keyLength = opts.key ? opts.key.length : 0;
         this.v0l ^= this.outputLen | (keyLength << 8) | (0x01 << 16) | (0x01 << 24);
         if (opts.salt) {
             const salt = (0, utils_js_1.u32)((0, utils_js_1.toBytes)(opts.salt));
-            this.v4l ^= salt[0];
-            this.v4h ^= salt[1];
-            this.v5l ^= salt[2];
-            this.v5h ^= salt[3];
+            this.v4l ^= (0, utils_js_1.byteSwapIfBE)(salt[0]);
+            this.v4h ^= (0, utils_js_1.byteSwapIfBE)(salt[1]);
+            this.v5l ^= (0, utils_js_1.byteSwapIfBE)(salt[2]);
+            this.v5h ^= (0, utils_js_1.byteSwapIfBE)(salt[3]);
         }
         if (opts.personalization) {
             const pers = (0, utils_js_1.u32)((0, utils_js_1.toBytes)(opts.personalization));
-            this.v6l ^= pers[0];
-            this.v6h ^= pers[1];
-            this.v7l ^= pers[2];
-            this.v7h ^= pers[3];
+            this.v6l ^= (0, utils_js_1.byteSwapIfBE)(pers[0]);
+            this.v6h ^= (0, utils_js_1.byteSwapIfBE)(pers[1]);
+            this.v7l ^= (0, utils_js_1.byteSwapIfBE)(pers[2]);
+            this.v7h ^= (0, utils_js_1.byteSwapIfBE)(pers[3]);
         }
         if (opts.key) {
             // Pad to blockLen and update
@@ -18561,53 +27551,53 @@ class BLAKE2b extends _blake2_js_1.BLAKE2 {
         this.v7h = v7h | 0;
     }
     compress(msg, offset, isLast) {
-        this.get().forEach((v, i) => (BUF[i] = v)); // First half from state.
-        BUF.set(IV, 16); // Second half from IV.
+        this.get().forEach((v, i) => (BBUF[i] = v)); // First half from state.
+        BBUF.set(B2B_IV, 16); // Second half from IV.
         let { h, l } = _u64_js_1.default.fromBig(BigInt(this.length));
-        BUF[24] = IV[8] ^ l; // Low word of the offset.
-        BUF[25] = IV[9] ^ h; // High word.
+        BBUF[24] = B2B_IV[8] ^ l; // Low word of the offset.
+        BBUF[25] = B2B_IV[9] ^ h; // High word.
         // Invert all bits for last block
         if (isLast) {
-            BUF[28] = ~BUF[28];
-            BUF[29] = ~BUF[29];
+            BBUF[28] = ~BBUF[28];
+            BBUF[29] = ~BBUF[29];
         }
         let j = 0;
-        const s = _blake2_js_1.SIGMA;
+        const s = _blake_js_1.SIGMA;
         for (let i = 0; i < 12; i++) {
-            G1(0, 4, 8, 12, msg, offset + 2 * s[j++]);
-            G2(0, 4, 8, 12, msg, offset + 2 * s[j++]);
-            G1(1, 5, 9, 13, msg, offset + 2 * s[j++]);
-            G2(1, 5, 9, 13, msg, offset + 2 * s[j++]);
-            G1(2, 6, 10, 14, msg, offset + 2 * s[j++]);
-            G2(2, 6, 10, 14, msg, offset + 2 * s[j++]);
-            G1(3, 7, 11, 15, msg, offset + 2 * s[j++]);
-            G2(3, 7, 11, 15, msg, offset + 2 * s[j++]);
-            G1(0, 5, 10, 15, msg, offset + 2 * s[j++]);
-            G2(0, 5, 10, 15, msg, offset + 2 * s[j++]);
-            G1(1, 6, 11, 12, msg, offset + 2 * s[j++]);
-            G2(1, 6, 11, 12, msg, offset + 2 * s[j++]);
-            G1(2, 7, 8, 13, msg, offset + 2 * s[j++]);
-            G2(2, 7, 8, 13, msg, offset + 2 * s[j++]);
-            G1(3, 4, 9, 14, msg, offset + 2 * s[j++]);
-            G2(3, 4, 9, 14, msg, offset + 2 * s[j++]);
+            G1b(0, 4, 8, 12, msg, offset + 2 * s[j++]);
+            G2b(0, 4, 8, 12, msg, offset + 2 * s[j++]);
+            G1b(1, 5, 9, 13, msg, offset + 2 * s[j++]);
+            G2b(1, 5, 9, 13, msg, offset + 2 * s[j++]);
+            G1b(2, 6, 10, 14, msg, offset + 2 * s[j++]);
+            G2b(2, 6, 10, 14, msg, offset + 2 * s[j++]);
+            G1b(3, 7, 11, 15, msg, offset + 2 * s[j++]);
+            G2b(3, 7, 11, 15, msg, offset + 2 * s[j++]);
+            G1b(0, 5, 10, 15, msg, offset + 2 * s[j++]);
+            G2b(0, 5, 10, 15, msg, offset + 2 * s[j++]);
+            G1b(1, 6, 11, 12, msg, offset + 2 * s[j++]);
+            G2b(1, 6, 11, 12, msg, offset + 2 * s[j++]);
+            G1b(2, 7, 8, 13, msg, offset + 2 * s[j++]);
+            G2b(2, 7, 8, 13, msg, offset + 2 * s[j++]);
+            G1b(3, 4, 9, 14, msg, offset + 2 * s[j++]);
+            G2b(3, 4, 9, 14, msg, offset + 2 * s[j++]);
         }
-        this.v0l ^= BUF[0] ^ BUF[16];
-        this.v0h ^= BUF[1] ^ BUF[17];
-        this.v1l ^= BUF[2] ^ BUF[18];
-        this.v1h ^= BUF[3] ^ BUF[19];
-        this.v2l ^= BUF[4] ^ BUF[20];
-        this.v2h ^= BUF[5] ^ BUF[21];
-        this.v3l ^= BUF[6] ^ BUF[22];
-        this.v3h ^= BUF[7] ^ BUF[23];
-        this.v4l ^= BUF[8] ^ BUF[24];
-        this.v4h ^= BUF[9] ^ BUF[25];
-        this.v5l ^= BUF[10] ^ BUF[26];
-        this.v5h ^= BUF[11] ^ BUF[27];
-        this.v6l ^= BUF[12] ^ BUF[28];
-        this.v6h ^= BUF[13] ^ BUF[29];
-        this.v7l ^= BUF[14] ^ BUF[30];
-        this.v7h ^= BUF[15] ^ BUF[31];
-        BUF.fill(0);
+        this.v0l ^= BBUF[0] ^ BBUF[16];
+        this.v0h ^= BBUF[1] ^ BBUF[17];
+        this.v1l ^= BBUF[2] ^ BBUF[18];
+        this.v1h ^= BBUF[3] ^ BBUF[19];
+        this.v2l ^= BBUF[4] ^ BBUF[20];
+        this.v2h ^= BBUF[5] ^ BBUF[21];
+        this.v3l ^= BBUF[6] ^ BBUF[22];
+        this.v3h ^= BBUF[7] ^ BBUF[23];
+        this.v4l ^= BBUF[8] ^ BBUF[24];
+        this.v4h ^= BBUF[9] ^ BBUF[25];
+        this.v5l ^= BBUF[10] ^ BBUF[26];
+        this.v5h ^= BBUF[11] ^ BBUF[27];
+        this.v6l ^= BBUF[12] ^ BBUF[28];
+        this.v6h ^= BBUF[13] ^ BBUF[29];
+        this.v7l ^= BBUF[14] ^ BBUF[30];
+        this.v7h ^= BBUF[15] ^ BBUF[31];
+        BBUF.fill(0);
     }
     destroy() {
         this.destroyed = true;
@@ -18615,6 +27605,7 @@ class BLAKE2b extends _blake2_js_1.BLAKE2 {
         this.set(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
+exports.BLAKE2b = BLAKE2b;
 /**
  * BLAKE2b - optimized for 64-bit platforms. JS doesn't have uint64, so it's slower than BLAKE2s.
  * @param msg - message that would be hashed
@@ -18622,14 +27613,107 @@ class BLAKE2b extends _blake2_js_1.BLAKE2 {
  */
 exports.blake2b = (0, utils_js_1.wrapConstructorWithOpts)((opts) => new BLAKE2b(opts));
 
-},{"./_blake2.js":107,"./_u64.js":109,"./utils.js":116}],111:[function(require,module,exports){
-arguments[4][100][0].apply(exports,arguments)
-},{"dup":100}],112:[function(require,module,exports){
-arguments[4][101][0].apply(exports,arguments)
-},{"./_assert.js":106,"./utils.js":116,"dup":101}],113:[function(require,module,exports){
+},{"./_blake.js":123,"./_u64.js":125,"./utils.js":132}],127:[function(require,module,exports){
+arguments[4][117][0].apply(exports,arguments)
+},{"dup":117}],128:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.hmac = exports.HMAC = void 0;
+const _assert_js_1 = require("./_assert.js");
+const utils_js_1 = require("./utils.js");
+// HMAC (RFC 2104)
+class HMAC extends utils_js_1.Hash {
+  constructor(hash, _key) {
+    super();
+    this.finished = false;
+    this.destroyed = false;
+    (0, _assert_js_1.hash)(hash);
+    const key = (0, utils_js_1.toBytes)(_key);
+    this.iHash = hash.create();
+    if (typeof this.iHash.update !== 'function') throw new Error('Expected instance of class which extends utils.Hash');
+    this.blockLen = this.iHash.blockLen;
+    this.outputLen = this.iHash.outputLen;
+    const blockLen = this.blockLen;
+    const pad = new Uint8Array(blockLen);
+    // blockLen can be bigger than outputLen
+    pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
+    for (let i = 0; i < pad.length; i++) pad[i] ^= 0x36;
+    this.iHash.update(pad);
+    // By doing update (processing of first block) of outer hash here we can re-use it between multiple calls via clone
+    this.oHash = hash.create();
+    // Undo internal XOR && apply outer XOR
+    for (let i = 0; i < pad.length; i++) pad[i] ^= 0x36 ^ 0x5c;
+    this.oHash.update(pad);
+    pad.fill(0);
+  }
+  update(buf) {
+    (0, _assert_js_1.exists)(this);
+    this.iHash.update(buf);
+    return this;
+  }
+  digestInto(out) {
+    (0, _assert_js_1.exists)(this);
+    (0, _assert_js_1.bytes)(out, this.outputLen);
+    this.finished = true;
+    this.iHash.digestInto(out);
+    this.oHash.update(out);
+    this.oHash.digestInto(out);
+    this.destroy();
+  }
+  digest() {
+    const out = new Uint8Array(this.oHash.outputLen);
+    this.digestInto(out);
+    return out;
+  }
+  _cloneInto(to) {
+    // Create new instance without calling constructor since key already in state and we don't know it.
+    to || (to = Object.create(Object.getPrototypeOf(this), {}));
+    const {
+      oHash,
+      iHash,
+      finished,
+      destroyed,
+      blockLen,
+      outputLen
+    } = this;
+    to = to;
+    to.finished = finished;
+    to.destroyed = destroyed;
+    to.blockLen = blockLen;
+    to.outputLen = outputLen;
+    to.oHash = oHash._cloneInto(to.oHash);
+    to.iHash = iHash._cloneInto(to.iHash);
+    return to;
+  }
+  destroy() {
+    this.destroyed = true;
+    this.oHash.destroy();
+    this.iHash.destroy();
+  }
+}
+exports.HMAC = HMAC;
+/**
+ * HMAC: RFC2104 message authentication code.
+ * @param hash - function that would be used e.g. sha256
+ * @param key - message key
+ * @param message - message data
+ * @example
+ * import { hmac } from '@noble/hashes/hmac';
+ * import { sha256 } from '@noble/hashes/sha2';
+ * const mac1 = hmac(sha256, 'key', 'message');
+ */
+const hmac = (hash, key, message) => new HMAC(hash, key).update(message).digest();
+exports.hmac = hmac;
+exports.hmac.create = (hash, key) => new HMAC(hash, key);
+
+},{"./_assert.js":122,"./utils.js":132}],129:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.pbkdf2Async = exports.pbkdf2 = void 0;
+exports.pbkdf2 = pbkdf2;
+exports.pbkdf2Async = pbkdf2Async;
 const _assert_js_1 = require("./_assert.js");
 const hmac_js_1 = require("./hmac.js");
 const utils_js_1 = require("./utils.js");
@@ -18691,7 +27775,6 @@ function pbkdf2(hash, password, salt, opts) {
     }
     return pbkdf2Output(PRF, PRFSalt, DK, prfW, u);
 }
-exports.pbkdf2 = pbkdf2;
 async function pbkdf2Async(hash, password, salt, opts) {
     const { c, dkLen, asyncTick, DK, PRF, PRFSalt } = pbkdf2Init(hash, password, salt, opts);
     let prfW; // Working copy
@@ -18716,20 +27799,15 @@ async function pbkdf2Async(hash, password, salt, opts) {
     }
     return pbkdf2Output(PRF, PRFSalt, DK, prfW, u);
 }
-exports.pbkdf2Async = pbkdf2Async;
 
-},{"./_assert.js":106,"./hmac.js":112,"./utils.js":116}],114:[function(require,module,exports){
+},{"./_assert.js":122,"./hmac.js":128,"./utils.js":132}],130:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sha224 = exports.sha256 = void 0;
-const _sha2_js_1 = require("./_sha2.js");
+exports.sha224 = exports.sha256 = exports.SHA256 = void 0;
+const _md_js_1 = require("./_md.js");
 const utils_js_1 = require("./utils.js");
 // SHA2-256 need to try 2^128 hashes to execute birthday attack.
 // BTC network is doing 2^67 hashes/sec as per early 2023.
-// Choice: a ? b : c
-const Chi = (a, b, c) => (a & b) ^ (~a & c);
-// Majority function, true if any two inpust is true
-const Maj = (a, b, c) => (a & b) ^ (a & c) ^ (b & c);
 // Round constants:
 // first 32 bits of the fractional parts of the cube roots of the first 64 primes 2..311)
 // prettier-ignore
@@ -18743,27 +27821,28 @@ const SHA256_K = /* @__PURE__ */ new Uint32Array([
     0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 ]);
-// Initial state (first 32 bits of the fractional parts of the square roots of the first 8 primes 2..19):
+// Initial state:
+// first 32 bits of the fractional parts of the square roots of the first 8 primes 2..19
 // prettier-ignore
-const IV = /* @__PURE__ */ new Uint32Array([
+const SHA256_IV = /* @__PURE__ */ new Uint32Array([
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
 ]);
 // Temporary buffer, not used to store anything between runs
 // Named this way because it matches specification.
 const SHA256_W = /* @__PURE__ */ new Uint32Array(64);
-class SHA256 extends _sha2_js_1.SHA2 {
+class SHA256 extends _md_js_1.HashMD {
     constructor() {
         super(64, 32, 8, false);
         // We cannot use array here since array allows indexing by variable
         // which means optimizer/compiler cannot use registers.
-        this.A = IV[0] | 0;
-        this.B = IV[1] | 0;
-        this.C = IV[2] | 0;
-        this.D = IV[3] | 0;
-        this.E = IV[4] | 0;
-        this.F = IV[5] | 0;
-        this.G = IV[6] | 0;
-        this.H = IV[7] | 0;
+        this.A = SHA256_IV[0] | 0;
+        this.B = SHA256_IV[1] | 0;
+        this.C = SHA256_IV[2] | 0;
+        this.D = SHA256_IV[3] | 0;
+        this.E = SHA256_IV[4] | 0;
+        this.F = SHA256_IV[5] | 0;
+        this.G = SHA256_IV[6] | 0;
+        this.H = SHA256_IV[7] | 0;
     }
     get() {
         const { A, B, C, D, E, F, G, H } = this;
@@ -18795,9 +27874,9 @@ class SHA256 extends _sha2_js_1.SHA2 {
         let { A, B, C, D, E, F, G, H } = this;
         for (let i = 0; i < 64; i++) {
             const sigma1 = (0, utils_js_1.rotr)(E, 6) ^ (0, utils_js_1.rotr)(E, 11) ^ (0, utils_js_1.rotr)(E, 25);
-            const T1 = (H + sigma1 + Chi(E, F, G) + SHA256_K[i] + SHA256_W[i]) | 0;
+            const T1 = (H + sigma1 + (0, _md_js_1.Chi)(E, F, G) + SHA256_K[i] + SHA256_W[i]) | 0;
             const sigma0 = (0, utils_js_1.rotr)(A, 2) ^ (0, utils_js_1.rotr)(A, 13) ^ (0, utils_js_1.rotr)(A, 22);
-            const T2 = (sigma0 + Maj(A, B, C)) | 0;
+            const T2 = (sigma0 + (0, _md_js_1.Maj)(A, B, C)) | 0;
             H = G;
             G = F;
             F = E;
@@ -18826,6 +27905,7 @@ class SHA256 extends _sha2_js_1.SHA2 {
         this.buffer.fill(0);
     }
 }
+exports.SHA256 = SHA256;
 // Constants from https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 class SHA224 extends SHA256 {
     constructor() {
@@ -18846,13 +27926,16 @@ class SHA224 extends SHA256 {
  * @param message - data that would be hashed
  */
 exports.sha256 = (0, utils_js_1.wrapConstructor)(() => new SHA256());
+/**
+ * SHA2-224 hash function
+ */
 exports.sha224 = (0, utils_js_1.wrapConstructor)(() => new SHA224());
 
-},{"./_sha2.js":108,"./utils.js":116}],115:[function(require,module,exports){
+},{"./_md.js":124,"./utils.js":132}],131:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sha384 = exports.sha512_256 = exports.sha512_224 = exports.sha512 = exports.SHA512 = void 0;
-const _sha2_js_1 = require("./_sha2.js");
+exports.sha384 = exports.sha512_256 = exports.sha512_224 = exports.sha512 = exports.SHA384 = exports.SHA512_256 = exports.SHA512_224 = exports.SHA512 = void 0;
+const _md_js_1 = require("./_md.js");
 const _u64_js_1 = require("./_u64.js");
 const utils_js_1 = require("./utils.js");
 // Round contants (first 32 bits of the fractional parts of the cube roots of the first 80 primes 2..409):
@@ -18882,7 +27965,7 @@ const [SHA512_Kh, SHA512_Kl] = /* @__PURE__ */ (() => _u64_js_1.default.split([
 // Temporary buffer, not used to store anything between runs
 const SHA512_W_H = /* @__PURE__ */ new Uint32Array(80);
 const SHA512_W_L = /* @__PURE__ */ new Uint32Array(80);
-class SHA512 extends _sha2_js_1.SHA2 {
+class SHA512 extends _md_js_1.HashMD {
     constructor() {
         super(128, 64, 16, false);
         // We cannot use array here since array allows indexing by variable which means optimizer/compiler cannot use registers.
@@ -19033,6 +28116,7 @@ class SHA512_224 extends SHA512 {
         this.outputLen = 28;
     }
 }
+exports.SHA512_224 = SHA512_224;
 class SHA512_256 extends SHA512 {
     constructor() {
         super();
@@ -19056,6 +28140,7 @@ class SHA512_256 extends SHA512 {
         this.outputLen = 32;
     }
 }
+exports.SHA512_256 = SHA512_256;
 class SHA384 extends SHA512 {
     constructor() {
         super();
@@ -19079,19 +28164,33 @@ class SHA384 extends SHA512 {
         this.outputLen = 48;
     }
 }
+exports.SHA384 = SHA384;
 exports.sha512 = (0, utils_js_1.wrapConstructor)(() => new SHA512());
 exports.sha512_224 = (0, utils_js_1.wrapConstructor)(() => new SHA512_224());
 exports.sha512_256 = (0, utils_js_1.wrapConstructor)(() => new SHA512_256());
 exports.sha384 = (0, utils_js_1.wrapConstructor)(() => new SHA384());
 
-},{"./_sha2.js":108,"./_u64.js":109,"./utils.js":116}],116:[function(require,module,exports){
+},{"./_md.js":124,"./_u64.js":125,"./utils.js":132}],132:[function(require,module,exports){
 "use strict";
 
 /*! noble-hashes - MIT License (c) 2022 Paul Miller (paulmillr.com) */
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.randomBytes = exports.wrapXOFConstructorWithOpts = exports.wrapConstructorWithOpts = exports.wrapConstructor = exports.checkOpts = exports.Hash = exports.concatBytes = exports.toBytes = exports.utf8ToBytes = exports.asyncLoop = exports.nextTick = exports.hexToBytes = exports.bytesToHex = exports.isLE = exports.rotr = exports.createView = exports.u32 = exports.u8 = void 0;
+exports.Hash = exports.nextTick = exports.byteSwapIfBE = exports.byteSwap = exports.isLE = exports.rotl = exports.rotr = exports.createView = exports.u32 = exports.u8 = void 0;
+exports.isBytes = isBytes;
+exports.byteSwap32 = byteSwap32;
+exports.bytesToHex = bytesToHex;
+exports.hexToBytes = hexToBytes;
+exports.asyncLoop = asyncLoop;
+exports.utf8ToBytes = utf8ToBytes;
+exports.toBytes = toBytes;
+exports.concatBytes = concatBytes;
+exports.checkOpts = checkOpts;
+exports.wrapConstructor = wrapConstructor;
+exports.wrapConstructorWithOpts = wrapConstructorWithOpts;
+exports.wrapXOFConstructorWithOpts = wrapXOFConstructorWithOpts;
+exports.randomBytes = randomBytes;
 // We use WebCrypto aka globalThis.crypto, which exists in browsers and node.js 16+.
 // node.js versions earlier than v19 don't declare it in global scope.
 // For node.js, package.json#exports field mapping rewrites import
@@ -19099,26 +28198,38 @@ exports.randomBytes = exports.wrapXOFConstructorWithOpts = exports.wrapConstruct
 // Makes the utils un-importable in browsers without a bundler.
 // Once node.js 18 is deprecated (2025-04-30), we can just drop the import.
 const crypto_1 = require("@noble/hashes/crypto");
+const _assert_js_1 = require("./_assert.js");
+// export { isBytes } from './_assert.js';
+// We can't reuse isBytes from _assert, because somehow this causes huge perf issues
+function isBytes(a) {
+  return a instanceof Uint8Array || a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array';
+}
 // Cast array to different type
 const u8 = arr => new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
 exports.u8 = u8;
 const u32 = arr => new Uint32Array(arr.buffer, arr.byteOffset, Math.floor(arr.byteLength / 4));
 exports.u32 = u32;
-function isBytes(a) {
-  return a instanceof Uint8Array || a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array';
-}
 // Cast array to view
 const createView = arr => new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
 exports.createView = createView;
 // The rotate right (circular right shift) operation for uint32
 const rotr = (word, shift) => word << 32 - shift | word >>> shift;
 exports.rotr = rotr;
-// big-endian hardware is rare. Just in case someone still decides to run hashes:
-// early-throw an error because we don't support BE yet.
-// Other libraries would silently corrupt the data instead of throwing an error,
-// when they don't support it.
+// The rotate left (circular left shift) operation for uint32
+const rotl = (word, shift) => word << shift | word >>> 32 - shift >>> 0;
+exports.rotl = rotl;
 exports.isLE = new Uint8Array(new Uint32Array([0x11223344]).buffer)[0] === 0x44;
-if (!exports.isLE) throw new Error('Non little-endian hardware is not supported');
+// The byte swap operation for uint32
+const byteSwap = word => word << 24 & 0xff000000 | word << 8 & 0xff0000 | word >>> 8 & 0xff00 | word >>> 24 & 0xff;
+exports.byteSwap = byteSwap;
+// Conditionally byte swap if on a big-endian platform
+exports.byteSwapIfBE = exports.isLE ? n => n : n => (0, exports.byteSwap)(n);
+// In place byte swap for Uint32Array
+function byteSwap32(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = (0, exports.byteSwap)(arr[i]);
+  }
+}
 // Array where index 0xf0 (240) is mapped to string 'f0'
 const hexes = /* @__PURE__ */Array.from({
   length: 256
@@ -19127,7 +28238,7 @@ const hexes = /* @__PURE__ */Array.from({
  * @example bytesToHex(Uint8Array.from([0xca, 0xfe, 0x01, 0x23])) // 'cafe0123'
  */
 function bytesToHex(bytes) {
-  if (!isBytes(bytes)) throw new Error('Uint8Array expected');
+  (0, _assert_js_1.bytes)(bytes);
   // pre-caching improves the speed 6x
   let hex = '';
   for (let i = 0; i < bytes.length; i++) {
@@ -19135,7 +28246,6 @@ function bytesToHex(bytes) {
   }
   return hex;
 }
-exports.bytesToHex = bytesToHex;
 // We use optimized technique to convert hex string to byte array
 const asciis = {
   _0: 48,
@@ -19171,7 +28281,6 @@ function hexToBytes(hex) {
   }
   return array;
 }
-exports.hexToBytes = hexToBytes;
 // There is no setImmediate in browser and setTimeout is slow.
 // call of async fn will return Promise, which will be fullfiled only on
 // next scheduler queue processing step and this is exactly what we need.
@@ -19189,7 +28298,6 @@ async function asyncLoop(iters, tick, cb) {
     ts += diff;
   }
 }
-exports.asyncLoop = asyncLoop;
 /**
  * @example utf8ToBytes('abc') // new Uint8Array([97, 98, 99])
  */
@@ -19197,8 +28305,6 @@ function utf8ToBytes(str) {
   if (typeof str !== 'string') throw new Error(`utf8ToBytes expected string, got ${typeof str}`);
   return new Uint8Array(new TextEncoder().encode(str)); // https://bugzil.la/1681809
 }
-
-exports.utf8ToBytes = utf8ToBytes;
 /**
  * Normalizes (non-hex) string or Uint8Array to Uint8Array.
  * Warning: when Uint8Array is passed, it would NOT get copied.
@@ -19206,10 +28312,9 @@ exports.utf8ToBytes = utf8ToBytes;
  */
 function toBytes(data) {
   if (typeof data === 'string') data = utf8ToBytes(data);
-  if (!isBytes(data)) throw new Error(`expected Uint8Array, got ${typeof data}`);
+  (0, _assert_js_1.bytes)(data);
   return data;
 }
-exports.toBytes = toBytes;
 /**
  * Copies several Uint8Arrays into one.
  */
@@ -19217,7 +28322,7 @@ function concatBytes(...arrays) {
   let sum = 0;
   for (let i = 0; i < arrays.length; i++) {
     const a = arrays[i];
-    if (!isBytes(a)) throw new Error('Uint8Array expected');
+    (0, _assert_js_1.bytes)(a);
     sum += a.length;
   }
   const res = new Uint8Array(sum);
@@ -19228,7 +28333,6 @@ function concatBytes(...arrays) {
   }
   return res;
 }
-exports.concatBytes = concatBytes;
 // For runtime check if class implements interface
 class Hash {
   // Safe version that clones internal state
@@ -19243,7 +28347,6 @@ function checkOpts(defaults, opts) {
   const merged = Object.assign(defaults, opts);
   return merged;
 }
-exports.checkOpts = checkOpts;
 function wrapConstructor(hashCons) {
   const hashC = msg => hashCons().update(toBytes(msg)).digest();
   const tmp = hashCons();
@@ -19252,7 +28355,6 @@ function wrapConstructor(hashCons) {
   hashC.create = () => hashCons();
   return hashC;
 }
-exports.wrapConstructor = wrapConstructor;
 function wrapConstructorWithOpts(hashCons) {
   const hashC = (msg, opts) => hashCons(opts).update(toBytes(msg)).digest();
   const tmp = hashCons({});
@@ -19261,7 +28363,6 @@ function wrapConstructorWithOpts(hashCons) {
   hashC.create = opts => hashCons(opts);
   return hashC;
 }
-exports.wrapConstructorWithOpts = wrapConstructorWithOpts;
 function wrapXOFConstructorWithOpts(hashCons) {
   const hashC = (msg, opts) => hashCons(opts).update(toBytes(msg)).digest();
   const tmp = hashCons({});
@@ -19270,7 +28371,6 @@ function wrapXOFConstructorWithOpts(hashCons) {
   hashC.create = opts => hashCons(opts);
   return hashC;
 }
-exports.wrapXOFConstructorWithOpts = wrapXOFConstructorWithOpts;
 /**
  * Secure PRNG. Uses `crypto.getRandomValues`, which defers to OS.
  */
@@ -19278,18 +28378,21 @@ function randomBytes(bytesLength = 32) {
   if (crypto_1.crypto && typeof crypto_1.crypto.getRandomValues === 'function') {
     return crypto_1.crypto.getRandomValues(new Uint8Array(bytesLength));
   }
+  // Legacy Node.js compatibility
+  if (crypto_1.crypto && typeof crypto_1.crypto.randomBytes === 'function') {
+    return crypto_1.crypto.randomBytes(bytesLength);
+  }
   throw new Error('crypto.getRandomValues must be defined');
 }
-exports.randomBytes = randomBytes;
 
-},{"@noble/hashes/crypto":111}],117:[function(require,module,exports){
+},{"./_assert.js":122,"@noble/hashes/crypto":127}],133:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.assertNumber = assertNumber;
-exports.utils = exports.utf8 = exports.stringToBytes = exports.str = exports.hex = exports.createBase58check = exports.bytesToString = exports.bytes = exports.bech32m = exports.bech32 = exports.base64urlnopad = exports.base64url = exports.base64nopad = exports.base64 = exports.base58xrp = exports.base58xmr = exports.base58flickr = exports.base58check = exports.base58 = exports.base32hex = exports.base32crockford = exports.base32 = exports.base16 = void 0;
+exports.utils = exports.utf8 = exports.stringToBytes = exports.str = exports.hex = exports.createBase58check = exports.bytesToString = exports.bytes = exports.bech32m = exports.bech32 = exports.base64urlnopad = exports.base64url = exports.base64nopad = exports.base64 = exports.base58xrp = exports.base58xmr = exports.base58flickr = exports.base58check = exports.base58 = exports.base32nopad = exports.base32hexnopad = exports.base32hex = exports.base32crockford = exports.base32 = exports.base16 = void 0;
 /*! scure-base - MIT License (c) 2022 Paul Miller (paulmillr.com) */
 // Utilities
 /**
@@ -19554,7 +28657,9 @@ const utils = exports.utils = {
 // ---------------------
 const base16 = exports.base16 = /* @__PURE__ */chain(radix2(4), alphabet('0123456789ABCDEF'), join(''));
 const base32 = exports.base32 = /* @__PURE__ */chain(radix2(5), alphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'), padding(5), join(''));
+const base32nopad = exports.base32nopad = /* @__PURE__ */chain(radix2(5), alphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'), join(''));
 const base32hex = exports.base32hex = /* @__PURE__ */chain(radix2(5), alphabet('0123456789ABCDEFGHIJKLMNOPQRSTUV'), padding(5), join(''));
+const base32hexnopad = exports.base32hexnopad = /* @__PURE__ */chain(radix2(5), alphabet('0123456789ABCDEFGHIJKLMNOPQRSTUV'), join(''));
 const base32crockford = exports.base32crockford = /* @__PURE__ */chain(radix2(5), alphabet('0123456789ABCDEFGHJKMNPQRSTVWXYZ'), join(''), normalize(s => s.toUpperCase().replace(/O/g, '0').replace(/[IL]/g, '1')));
 const base64 = exports.base64 = /* @__PURE__ */chain(radix2(6), alphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'), padding(6), join(''));
 const base64nopad = exports.base64nopad = /* @__PURE__ */chain(radix2(6), alphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'), join(''));
@@ -19593,7 +28698,7 @@ const base58xmr = exports.base58xmr = {
     return Uint8Array.from(res);
   }
 };
-const createBase58check = /* @__PURE__ */sha256 => chain(checksum(4, data => sha256(sha256(data))), base58);
+const createBase58check = sha256 => chain(checksum(4, data => sha256(sha256(data))), base58);
 // legacy export, bad name
 exports.createBase58check = createBase58check;
 const base58check = exports.base58check = createBase58check;
@@ -19639,6 +28744,7 @@ function genBech32(encoding) {
   const fromWordsUnsafe = unsafeWrapper(fromWords);
   function encode(prefix, words, limit = 90) {
     if (typeof prefix !== 'string') throw new Error(`bech32.encode prefix should be string, not ${typeof prefix}`);
+    if (words instanceof Uint8Array) words = Array.from(words);
     if (!Array.isArray(words) || words.length && typeof words[0] !== 'number') throw new Error(`bech32.encode words should be array of numbers, not ${typeof words}`);
     if (prefix.length === 0) throw new TypeError(`Invalid prefix length ${prefix.length}`);
     const actualLength = prefix.length + 7 + words.length;
@@ -19678,9 +28784,13 @@ function genBech32(encoding) {
       bytes: fromWords(words)
     };
   }
+  function encodeFromBytes(prefix, bytes) {
+    return encode(prefix, toWords(bytes));
+  }
   return {
     encode,
     decode,
+    encodeFromBytes,
     decodeToBytes,
     decodeUnsafe,
     fromWords,
@@ -19725,7 +28835,7 @@ const stringToBytes = (type, str) => {
 exports.stringToBytes = stringToBytes;
 const bytes = exports.bytes = stringToBytes;
 
-},{}],118:[function(require,module,exports){
+},{}],134:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -20004,17 +29114,101 @@ class HDKey {
 }
 exports.HDKey = HDKey;
 
-},{"@noble/curves/abstract/modular":95,"@noble/curves/secp256k1":105,"@noble/hashes/_assert":119,"@noble/hashes/hmac":123,"@noble/hashes/ripemd160":124,"@noble/hashes/sha256":125,"@noble/hashes/sha512":126,"@noble/hashes/utils":127,"@scure/base":117}],119:[function(require,module,exports){
-arguments[4][98][0].apply(exports,arguments)
-},{"dup":98}],120:[function(require,module,exports){
-arguments[4][99][0].apply(exports,arguments)
-},{"./_assert.js":119,"./utils.js":127,"dup":99}],121:[function(require,module,exports){
-arguments[4][109][0].apply(exports,arguments)
-},{"dup":109}],122:[function(require,module,exports){
-arguments[4][100][0].apply(exports,arguments)
-},{"dup":100}],123:[function(require,module,exports){
-arguments[4][101][0].apply(exports,arguments)
-},{"./_assert.js":119,"./utils.js":127,"dup":101}],124:[function(require,module,exports){
+},{"@noble/curves/abstract/modular":112,"@noble/curves/secp256k1":121,"@noble/hashes/_assert":135,"@noble/hashes/hmac":139,"@noble/hashes/ripemd160":140,"@noble/hashes/sha256":141,"@noble/hashes/sha512":142,"@noble/hashes/utils":143,"@scure/base":133}],135:[function(require,module,exports){
+arguments[4][115][0].apply(exports,arguments)
+},{"dup":115}],136:[function(require,module,exports){
+arguments[4][116][0].apply(exports,arguments)
+},{"./_assert.js":135,"./utils.js":143,"dup":116}],137:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.add5L = exports.add5H = exports.add4H = exports.add4L = exports.add3H = exports.add3L = exports.add = exports.rotlBL = exports.rotlBH = exports.rotlSL = exports.rotlSH = exports.rotr32L = exports.rotr32H = exports.rotrBL = exports.rotrBH = exports.rotrSL = exports.rotrSH = exports.shrSL = exports.shrSH = exports.toBig = exports.split = exports.fromBig = void 0;
+const U32_MASK64 = /* @__PURE__ */ BigInt(2 ** 32 - 1);
+const _32n = /* @__PURE__ */ BigInt(32);
+// We are not using BigUint64Array, because they are extremely slow as per 2022
+function fromBig(n, le = false) {
+    if (le)
+        return { h: Number(n & U32_MASK64), l: Number((n >> _32n) & U32_MASK64) };
+    return { h: Number((n >> _32n) & U32_MASK64) | 0, l: Number(n & U32_MASK64) | 0 };
+}
+exports.fromBig = fromBig;
+function split(lst, le = false) {
+    let Ah = new Uint32Array(lst.length);
+    let Al = new Uint32Array(lst.length);
+    for (let i = 0; i < lst.length; i++) {
+        const { h, l } = fromBig(lst[i], le);
+        [Ah[i], Al[i]] = [h, l];
+    }
+    return [Ah, Al];
+}
+exports.split = split;
+const toBig = (h, l) => (BigInt(h >>> 0) << _32n) | BigInt(l >>> 0);
+exports.toBig = toBig;
+// for Shift in [0, 32)
+const shrSH = (h, _l, s) => h >>> s;
+exports.shrSH = shrSH;
+const shrSL = (h, l, s) => (h << (32 - s)) | (l >>> s);
+exports.shrSL = shrSL;
+// Right rotate for Shift in [1, 32)
+const rotrSH = (h, l, s) => (h >>> s) | (l << (32 - s));
+exports.rotrSH = rotrSH;
+const rotrSL = (h, l, s) => (h << (32 - s)) | (l >>> s);
+exports.rotrSL = rotrSL;
+// Right rotate for Shift in (32, 64), NOTE: 32 is special case.
+const rotrBH = (h, l, s) => (h << (64 - s)) | (l >>> (s - 32));
+exports.rotrBH = rotrBH;
+const rotrBL = (h, l, s) => (h >>> (s - 32)) | (l << (64 - s));
+exports.rotrBL = rotrBL;
+// Right rotate for shift===32 (just swaps l&h)
+const rotr32H = (_h, l) => l;
+exports.rotr32H = rotr32H;
+const rotr32L = (h, _l) => h;
+exports.rotr32L = rotr32L;
+// Left rotate for Shift in [1, 32)
+const rotlSH = (h, l, s) => (h << s) | (l >>> (32 - s));
+exports.rotlSH = rotlSH;
+const rotlSL = (h, l, s) => (l << s) | (h >>> (32 - s));
+exports.rotlSL = rotlSL;
+// Left rotate for Shift in (32, 64), NOTE: 32 is special case.
+const rotlBH = (h, l, s) => (l << (s - 32)) | (h >>> (64 - s));
+exports.rotlBH = rotlBH;
+const rotlBL = (h, l, s) => (h << (s - 32)) | (l >>> (64 - s));
+exports.rotlBL = rotlBL;
+// JS uses 32-bit signed integers for bitwise operations which means we cannot
+// simple take carry out of low bit sum by shift, we need to use division.
+function add(Ah, Al, Bh, Bl) {
+    const l = (Al >>> 0) + (Bl >>> 0);
+    return { h: (Ah + Bh + ((l / 2 ** 32) | 0)) | 0, l: l | 0 };
+}
+exports.add = add;
+// Addition with more than 2 elements
+const add3L = (Al, Bl, Cl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0);
+exports.add3L = add3L;
+const add3H = (low, Ah, Bh, Ch) => (Ah + Bh + Ch + ((low / 2 ** 32) | 0)) | 0;
+exports.add3H = add3H;
+const add4L = (Al, Bl, Cl, Dl) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0);
+exports.add4L = add4L;
+const add4H = (low, Ah, Bh, Ch, Dh) => (Ah + Bh + Ch + Dh + ((low / 2 ** 32) | 0)) | 0;
+exports.add4H = add4H;
+const add5L = (Al, Bl, Cl, Dl, El) => (Al >>> 0) + (Bl >>> 0) + (Cl >>> 0) + (Dl >>> 0) + (El >>> 0);
+exports.add5L = add5L;
+const add5H = (low, Ah, Bh, Ch, Dh, Eh) => (Ah + Bh + Ch + Dh + Eh + ((low / 2 ** 32) | 0)) | 0;
+exports.add5H = add5H;
+// prettier-ignore
+const u64 = {
+    fromBig, split, toBig,
+    shrSH, shrSL,
+    rotrSH, rotrSL, rotrBH, rotrBL,
+    rotr32H, rotr32L,
+    rotlSH, rotlSL, rotlBH, rotlBL,
+    add, add3L, add3H, add4L, add4H, add5H, add5L,
+};
+exports.default = u64;
+
+},{}],138:[function(require,module,exports){
+arguments[4][117][0].apply(exports,arguments)
+},{"dup":117}],139:[function(require,module,exports){
+arguments[4][118][0].apply(exports,arguments)
+},{"./_assert.js":135,"./utils.js":143,"dup":118}],140:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ripemd160 = exports.RIPEMD160 = void 0;
@@ -20121,9 +29315,9 @@ exports.RIPEMD160 = RIPEMD160;
  */
 exports.ripemd160 = (0, utils_js_1.wrapConstructor)(() => new RIPEMD160());
 
-},{"./_md.js":120,"./utils.js":127}],125:[function(require,module,exports){
-arguments[4][102][0].apply(exports,arguments)
-},{"./_md.js":120,"./utils.js":127,"dup":102}],126:[function(require,module,exports){
+},{"./_md.js":136,"./utils.js":143}],141:[function(require,module,exports){
+arguments[4][119][0].apply(exports,arguments)
+},{"./_md.js":136,"./utils.js":143,"dup":119}],142:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sha384 = exports.sha512_256 = exports.sha512_224 = exports.sha512 = exports.SHA512 = void 0;
@@ -20359,12 +29553,17 @@ exports.sha512_224 = (0, utils_js_1.wrapConstructor)(() => new SHA512_224());
 exports.sha512_256 = (0, utils_js_1.wrapConstructor)(() => new SHA512_256());
 exports.sha384 = (0, utils_js_1.wrapConstructor)(() => new SHA384());
 
-},{"./_md.js":120,"./_u64.js":121,"./utils.js":127}],127:[function(require,module,exports){
-arguments[4][103][0].apply(exports,arguments)
-},{"./_assert.js":119,"@noble/hashes/crypto":122,"dup":103}],128:[function(require,module,exports){
+},{"./_md.js":136,"./_u64.js":137,"./utils.js":143}],143:[function(require,module,exports){
+arguments[4][120][0].apply(exports,arguments)
+},{"./_assert.js":135,"@noble/hashes/crypto":138,"dup":120}],144:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.mnemonicToSeedSync = exports.mnemonicToSeed = exports.validateMnemonic = exports.entropyToMnemonic = exports.mnemonicToEntropy = exports.generateMnemonic = void 0;
+exports.generateMnemonic = generateMnemonic;
+exports.mnemonicToEntropy = mnemonicToEntropy;
+exports.entropyToMnemonic = entropyToMnemonic;
+exports.validateMnemonic = validateMnemonic;
+exports.mnemonicToSeed = mnemonicToSeed;
+exports.mnemonicToSeedSync = mnemonicToSeedSync;
 /*! scure-bip39 - MIT License (c) 2022 Patricio Palladino, Paul Miller (paulmillr.com) */
 const _assert_1 = require("@noble/hashes/_assert");
 const pbkdf2_1 = require("@noble/hashes/pbkdf2");
@@ -20377,6 +29576,7 @@ const isJapanese = (wordlist) => wordlist[0] === '\u3042\u3044\u3053\u304f\u3057
 // Normalization replaces equivalent sequences of characters
 // so that any two texts that are equivalent will be reduced
 // to the same sequence of code points, called the normal form of the original text.
+// https://tonsky.me/blog/unicode/#why-is-a----
 function nfkd(str) {
     if (typeof str !== 'string')
         throw new TypeError(`Invalid mnemonic type: ${typeof str}`);
@@ -20390,7 +29590,7 @@ function normalize(str) {
     return { nfkd: norm, words };
 }
 function assertEntropy(entropy) {
-    _assert_1.default.bytes(entropy, 16, 20, 24, 28, 32);
+    (0, _assert_1.bytes)(entropy, 16, 20, 24, 28, 32);
 }
 /**
  * Generate x random words. Uses Cryptographically-Secure Random Number Generator.
@@ -20401,12 +29601,11 @@ function assertEntropy(entropy) {
  * // 'legal winner thank year wave sausage worth useful legal winner thank yellow'
  */
 function generateMnemonic(wordlist, strength = 128) {
-    _assert_1.default.number(strength);
+    (0, _assert_1.number)(strength);
     if (strength % 32 !== 0 || strength > 256)
         throw new TypeError('Invalid entropy');
     return entropyToMnemonic((0, utils_1.randomBytes)(strength / 8), wordlist);
 }
-exports.generateMnemonic = generateMnemonic;
 const calcChecksum = (entropy) => {
     // Checksum is ent.length/4 bits long
     const bitsLeft = 8 - entropy.length / 4;
@@ -20416,7 +29615,7 @@ const calcChecksum = (entropy) => {
 };
 function getCoder(wordlist) {
     if (!Array.isArray(wordlist) || wordlist.length !== 2048 || typeof wordlist[0] !== 'string')
-        throw new Error('Worlist: expected array of 2048 strings');
+        throw new Error('Wordlist: expected array of 2048 strings');
     wordlist.forEach((i) => {
         if (typeof i !== 'string')
             throw new Error(`Wordlist: non-string element: ${i}`);
@@ -20442,7 +29641,6 @@ function mnemonicToEntropy(mnemonic, wordlist) {
     assertEntropy(entropy);
     return entropy;
 }
-exports.mnemonicToEntropy = mnemonicToEntropy;
 /**
  * Reversible: Converts raw entropy in form of byte array to mnemonic string.
  * @param entropy byte array
@@ -20461,7 +29659,6 @@ function entropyToMnemonic(entropy, wordlist) {
     const words = getCoder(wordlist).encode(entropy);
     return words.join(isJapanese(wordlist) ? '\u3000' : ' ');
 }
-exports.entropyToMnemonic = entropyToMnemonic;
 /**
  * Validates mnemonic for being 12-24 words contained in `wordlist`.
  */
@@ -20474,7 +29671,6 @@ function validateMnemonic(mnemonic, wordlist) {
     }
     return true;
 }
-exports.validateMnemonic = validateMnemonic;
 const salt = (passphrase) => nfkd(`mnemonic${passphrase}`);
 /**
  * Irreversible: Uses KDF to derive 64 bytes of key data from mnemonic + optional password.
@@ -20489,7 +29685,6 @@ const salt = (passphrase) => nfkd(`mnemonic${passphrase}`);
 function mnemonicToSeed(mnemonic, passphrase = '') {
     return (0, pbkdf2_1.pbkdf2Async)(sha512_1.sha512, normalize(mnemonic).nfkd, salt(passphrase), { c: 2048, dkLen: 64 });
 }
-exports.mnemonicToSeed = mnemonicToSeed;
 /**
  * Irreversible: Uses KDF to derive 64 bytes of key data from mnemonic + optional password.
  * @param mnemonic 12-24 words
@@ -20503,9 +29698,8 @@ exports.mnemonicToSeed = mnemonicToSeed;
 function mnemonicToSeedSync(mnemonic, passphrase = '') {
     return (0, pbkdf2_1.pbkdf2)(sha512_1.sha512, normalize(mnemonic).nfkd, salt(passphrase), { c: 2048, dkLen: 64 });
 }
-exports.mnemonicToSeedSync = mnemonicToSeedSync;
 
-},{"@noble/hashes/_assert":106,"@noble/hashes/pbkdf2":113,"@noble/hashes/sha256":114,"@noble/hashes/sha512":115,"@noble/hashes/utils":116,"@scure/base":117}],129:[function(require,module,exports){
+},{"@noble/hashes/_assert":122,"@noble/hashes/pbkdf2":129,"@noble/hashes/sha256":130,"@noble/hashes/sha512":131,"@noble/hashes/utils":132,"@scure/base":133}],145:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.wordlist = void 0;
@@ -22558,130 +31752,7 @@ zero
 zone
 zoo`.split('\n');
 
-},{}],130:[function(require,module,exports){
-'use strict'
-// base-x encoding / decoding
-// Copyright (c) 2018 base-x contributors
-// Copyright (c) 2014-2018 The Bitcoin Core developers (base58.cpp)
-// Distributed under the MIT software license, see the accompanying
-// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-function base (ALPHABET) {
-  if (ALPHABET.length >= 255) { throw new TypeError('Alphabet too long') }
-  var BASE_MAP = new Uint8Array(256)
-  for (var j = 0; j < BASE_MAP.length; j++) {
-    BASE_MAP[j] = 255
-  }
-  for (var i = 0; i < ALPHABET.length; i++) {
-    var x = ALPHABET.charAt(i)
-    var xc = x.charCodeAt(0)
-    if (BASE_MAP[xc] !== 255) { throw new TypeError(x + ' is ambiguous') }
-    BASE_MAP[xc] = i
-  }
-  var BASE = ALPHABET.length
-  var LEADER = ALPHABET.charAt(0)
-  var FACTOR = Math.log(BASE) / Math.log(256) // log(BASE) / log(256), rounded up
-  var iFACTOR = Math.log(256) / Math.log(BASE) // log(256) / log(BASE), rounded up
-  function encode (source) {
-    if (source instanceof Uint8Array) {
-    } else if (ArrayBuffer.isView(source)) {
-      source = new Uint8Array(source.buffer, source.byteOffset, source.byteLength)
-    } else if (Array.isArray(source)) {
-      source = Uint8Array.from(source)
-    }
-    if (!(source instanceof Uint8Array)) { throw new TypeError('Expected Uint8Array') }
-    if (source.length === 0) { return '' }
-        // Skip & count leading zeroes.
-    var zeroes = 0
-    var length = 0
-    var pbegin = 0
-    var pend = source.length
-    while (pbegin !== pend && source[pbegin] === 0) {
-      pbegin++
-      zeroes++
-    }
-        // Allocate enough space in big-endian base58 representation.
-    var size = ((pend - pbegin) * iFACTOR + 1) >>> 0
-    var b58 = new Uint8Array(size)
-        // Process the bytes.
-    while (pbegin !== pend) {
-      var carry = source[pbegin]
-            // Apply "b58 = b58 * 256 + ch".
-      var i = 0
-      for (var it1 = size - 1; (carry !== 0 || i < length) && (it1 !== -1); it1--, i++) {
-        carry += (256 * b58[it1]) >>> 0
-        b58[it1] = (carry % BASE) >>> 0
-        carry = (carry / BASE) >>> 0
-      }
-      if (carry !== 0) { throw new Error('Non-zero carry') }
-      length = i
-      pbegin++
-    }
-        // Skip leading zeroes in base58 result.
-    var it2 = size - length
-    while (it2 !== size && b58[it2] === 0) {
-      it2++
-    }
-        // Translate the result into a string.
-    var str = LEADER.repeat(zeroes)
-    for (; it2 < size; ++it2) { str += ALPHABET.charAt(b58[it2]) }
-    return str
-  }
-  function decodeUnsafe (source) {
-    if (typeof source !== 'string') { throw new TypeError('Expected String') }
-    if (source.length === 0) { return new Uint8Array() }
-    var psz = 0
-        // Skip and count leading '1's.
-    var zeroes = 0
-    var length = 0
-    while (source[psz] === LEADER) {
-      zeroes++
-      psz++
-    }
-        // Allocate enough space in big-endian base256 representation.
-    var size = (((source.length - psz) * FACTOR) + 1) >>> 0 // log(58) / log(256), rounded up.
-    var b256 = new Uint8Array(size)
-        // Process the characters.
-    while (source[psz]) {
-            // Decode character
-      var carry = BASE_MAP[source.charCodeAt(psz)]
-            // Invalid character
-      if (carry === 255) { return }
-      var i = 0
-      for (var it3 = size - 1; (carry !== 0 || i < length) && (it3 !== -1); it3--, i++) {
-        carry += (BASE * b256[it3]) >>> 0
-        b256[it3] = (carry % 256) >>> 0
-        carry = (carry / 256) >>> 0
-      }
-      if (carry !== 0) { throw new Error('Non-zero carry') }
-      length = i
-      psz++
-    }
-        // Skip leading zeroes in b256.
-    var it4 = size - length
-    while (it4 !== size && b256[it4] === 0) {
-      it4++
-    }
-    var vch = new Uint8Array(zeroes + (size - it4))
-    var j = zeroes
-    while (it4 !== size) {
-      vch[j++] = b256[it4++]
-    }
-    return vch
-  }
-  function decode (string) {
-    var buffer = decodeUnsafe(string)
-    if (buffer) { return buffer }
-    throw new Error('Non-base' + BASE + ' character')
-  }
-  return {
-    encode: encode,
-    decodeUnsafe: decodeUnsafe,
-    decode: decode
-  }
-}
-module.exports = base
-
-},{}],131:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bech32m = exports.bech32 = void 0;
@@ -22853,7 +31924,7 @@ function getLibraryFromEncoding(encoding) {
 exports.bech32 = getLibraryFromEncoding('bech32');
 exports.bech32m = getLibraryFromEncoding('bech32m');
 
-},{}],132:[function(require,module,exports){
+},{}],147:[function(require,module,exports){
 (function (module, exports) {
   'use strict';
 
@@ -26402,15 +35473,9 @@ exports.bech32m = getLibraryFromEncoding('bech32m');
   };
 })(typeof module === 'undefined' || module, this);
 
-},{"buffer":133}],133:[function(require,module,exports){
+},{"buffer":148}],148:[function(require,module,exports){
 
-},{}],134:[function(require,module,exports){
-const basex = require('base-x')
-const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-
-module.exports = basex(ALPHABET)
-
-},{"base-x":130}],135:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26423,53 +35488,99 @@ exports.parse = parse;
 exports.readFragment = readFragment;
 exports.unsafe_readResult = unsafe_readResult;
 var _graphql = require("@0no-co/graphql.web");
+var a = 0;
+var e = new Set();
 function initGraphQLTada() {
-  function graphql(e, i) {
-    var a = (0, _graphql.parse)(e).definitions;
-    var t = new Set();
-    for (var s of i || []) {
-      for (var d of s.definitions) {
-        if (d.kind === _graphql.Kind.FRAGMENT_DEFINITION && !t.has(d)) {
-          a.push(d);
-          t.add(d);
+  function graphql(t, i) {
+    var o = (0, _graphql.parse)(t).definitions;
+    var s = new Set();
+    for (var f of i || []) {
+      for (var u of f.definitions) {
+        if (u.kind === _graphql.Kind.FRAGMENT_DEFINITION && !s.has(u)) {
+          o.push(u);
+          s.add(u);
         }
       }
     }
-    if (a[0].kind === _graphql.Kind.FRAGMENT_DEFINITION && a[0].directives) {
-      a[0].directives = a[0].directives.filter(n => "_unmask" !== n.name.value);
+    var d;
+    if ((d = o[0].kind === _graphql.Kind.FRAGMENT_DEFINITION) && o[0].directives) {
+      o[0].directives = o[0].directives.filter(r => "_unmask" !== r.name.value);
     }
+    var c;
     return {
       kind: _graphql.Kind.DOCUMENT,
-      definitions: a
+      definitions: o,
+      get loc() {
+        if (!c && d) {
+          var r = t + function concatLocSources(r) {
+            try {
+              a++;
+              var n = "";
+              for (var t of r) {
+                if (!e.has(t)) {
+                  e.add(t);
+                  var {
+                    loc: i
+                  } = t;
+                  if (i) {
+                    n += i.source.body;
+                  }
+                }
+              }
+              return n;
+            } finally {
+              if (0 == --a) {
+                e.clear();
+              }
+            }
+          }(i || []);
+          return {
+            start: 0,
+            end: r.length,
+            source: {
+              body: r,
+              name: "GraphQLTada",
+              locationOffset: {
+                line: 1,
+                column: 1
+              }
+            }
+          };
+        }
+        return c;
+      },
+      set loc(r) {
+        c = r;
+      }
     };
   }
-  graphql.scalar = function scalar(n, r) {
-    return r;
+  graphql.scalar = function scalar(r, n) {
+    return n;
   };
-  graphql.persisted = function persisted(r, e) {
+  graphql.persisted = function persisted(n, a) {
     return {
       kind: _graphql.Kind.DOCUMENT,
-      definitions: e ? e.definitions : [],
-      documentId: r
+      definitions: a ? a.definitions : [],
+      documentId: n
     };
   };
   return graphql;
 }
-function parse(n) {
-  return (0, _graphql.parse)(n);
+function parse(r) {
+  return (0, _graphql.parse)(r);
 }
-function readFragment(...n) {
-  return 2 === n.length ? n[1] : n[0];
+function readFragment(...r) {
+  return 2 === r.length ? r[1] : r[0];
 }
-function maskFragments(n, r) {
-  return r;
+function maskFragments(r, n) {
+  return n;
 }
-function unsafe_readResult(n, r) {
-  return r;
+function unsafe_readResult(r, n) {
+  return n;
 }
-var e = exports.graphql = initGraphQLTada();
+var t = exports.graphql = initGraphQLTada();
 
-},{"@0no-co/graphql.web":6}],136:[function(require,module,exports){
+},{"@0no-co/graphql.web":6}],150:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26678,7 +35789,7 @@ function formatError(error) {
   return error.toJSON();
 }
 
-},{"../jsutils/isObjectLike.mjs":158,"../language/location.mjs":178,"../language/printLocation.mjs":181}],137:[function(require,module,exports){
+},{"../jsutils/isObjectLike.mjs":172,"../language/location.mjs":192,"../language/printLocation.mjs":195}],151:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26718,7 +35829,7 @@ var _GraphQLError = require("./GraphQLError.mjs");
 var _syntaxError = require("./syntaxError.mjs");
 var _locatedError = require("./locatedError.mjs");
 
-},{"./GraphQLError.mjs":136,"./locatedError.mjs":138,"./syntaxError.mjs":139}],138:[function(require,module,exports){
+},{"./GraphQLError.mjs":150,"./locatedError.mjs":152,"./syntaxError.mjs":153}],152:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26752,7 +35863,7 @@ function isLocatedGraphQLError(error) {
   return Array.isArray(error.path);
 }
 
-},{"../jsutils/toError.mjs":169,"./GraphQLError.mjs":136}],139:[function(require,module,exports){
+},{"../jsutils/toError.mjs":183,"./GraphQLError.mjs":150}],153:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26772,7 +35883,7 @@ function syntaxError(source, position, description) {
   });
 }
 
-},{"./GraphQLError.mjs":136}],140:[function(require,module,exports){
+},{"./GraphQLError.mjs":150}],154:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26905,7 +36016,7 @@ function getFieldEntryKey(node) {
   return node.alias ? node.alias.value : node.name.value;
 }
 
-},{"../language/kinds.mjs":176,"../type/definition.mjs":188,"../type/directives.mjs":189,"../utilities/typeFromAST.mjs":215,"./values.mjs":145}],141:[function(require,module,exports){
+},{"../language/kinds.mjs":190,"../type/definition.mjs":202,"../type/directives.mjs":203,"../utilities/typeFromAST.mjs":229,"./values.mjs":159}],155:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27576,7 +36687,7 @@ function getFieldDef(schema, parentType, fieldNode) {
   return parentType.getFields()[fieldName];
 }
 
-},{"../error/GraphQLError.mjs":136,"../error/locatedError.mjs":138,"../jsutils/Path.mjs":148,"../jsutils/devAssert.mjs":149,"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../jsutils/isIterableObject.mjs":157,"../jsutils/isObjectLike.mjs":158,"../jsutils/isPromise.mjs":159,"../jsutils/memoize3.mjs":163,"../jsutils/promiseForObject.mjs":166,"../jsutils/promiseReduce.mjs":167,"../language/ast.mjs":171,"../language/kinds.mjs":176,"../type/definition.mjs":188,"../type/introspection.mjs":191,"../type/validate.mjs":194,"./collectFields.mjs":140,"./values.mjs":145}],142:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../error/locatedError.mjs":152,"../jsutils/Path.mjs":162,"../jsutils/devAssert.mjs":163,"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../jsutils/isIterableObject.mjs":171,"../jsutils/isObjectLike.mjs":172,"../jsutils/isPromise.mjs":173,"../jsutils/memoize3.mjs":177,"../jsutils/promiseForObject.mjs":180,"../jsutils/promiseReduce.mjs":181,"../language/ast.mjs":185,"../language/kinds.mjs":190,"../type/definition.mjs":202,"../type/introspection.mjs":205,"../type/validate.mjs":208,"./collectFields.mjs":154,"./values.mjs":159}],156:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27647,7 +36758,7 @@ var _execute = require("./execute.mjs");
 var _subscribe = require("./subscribe.mjs");
 var _values = require("./values.mjs");
 
-},{"../jsutils/Path.mjs":148,"./execute.mjs":141,"./subscribe.mjs":144,"./values.mjs":145}],143:[function(require,module,exports){
+},{"../jsutils/Path.mjs":162,"./execute.mjs":155,"./subscribe.mjs":158,"./values.mjs":159}],157:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27707,7 +36818,7 @@ function mapAsyncIterator(iterable, callback) {
   };
 }
 
-},{}],144:[function(require,module,exports){
+},{}],158:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27899,7 +37010,7 @@ async function executeSubscription(exeContext) {
   }
 }
 
-},{"../error/GraphQLError.mjs":136,"../error/locatedError.mjs":138,"../jsutils/Path.mjs":148,"../jsutils/devAssert.mjs":149,"../jsutils/inspect.mjs":153,"../jsutils/isAsyncIterable.mjs":156,"./collectFields.mjs":140,"./execute.mjs":141,"./mapAsyncIterator.mjs":143,"./values.mjs":145}],145:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../error/locatedError.mjs":152,"../jsutils/Path.mjs":162,"../jsutils/devAssert.mjs":163,"../jsutils/inspect.mjs":167,"../jsutils/isAsyncIterable.mjs":170,"./collectFields.mjs":154,"./execute.mjs":155,"./mapAsyncIterator.mjs":157,"./values.mjs":159}],159:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28083,7 +37194,7 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-},{"../error/GraphQLError.mjs":136,"../jsutils/inspect.mjs":153,"../jsutils/keyMap.mjs":160,"../jsutils/printPathArray.mjs":165,"../language/kinds.mjs":176,"../language/printer.mjs":183,"../type/definition.mjs":188,"../utilities/coerceInputValue.mjs":200,"../utilities/typeFromAST.mjs":215,"../utilities/valueFromAST.mjs":216}],146:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../jsutils/inspect.mjs":167,"../jsutils/keyMap.mjs":174,"../jsutils/printPathArray.mjs":179,"../language/kinds.mjs":190,"../language/printer.mjs":197,"../type/definition.mjs":202,"../utilities/coerceInputValue.mjs":214,"../utilities/typeFromAST.mjs":229,"../utilities/valueFromAST.mjs":230}],160:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28205,7 +37316,7 @@ function graphqlImpl(args) {
   });
 }
 
-},{"./execution/execute.mjs":141,"./jsutils/devAssert.mjs":149,"./jsutils/isPromise.mjs":159,"./language/parser.mjs":179,"./type/validate.mjs":194,"./validation/validate.mjs":257}],147:[function(require,module,exports){
+},{"./execution/execute.mjs":155,"./jsutils/devAssert.mjs":163,"./jsutils/isPromise.mjs":173,"./language/parser.mjs":193,"./type/validate.mjs":208,"./validation/validate.mjs":272}],161:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28355,6 +37466,12 @@ Object.defineProperty(exports, "GraphQLObjectType", {
     return _index.GraphQLObjectType;
   }
 });
+Object.defineProperty(exports, "GraphQLOneOfDirective", {
+  enumerable: true,
+  get: function () {
+    return _index.GraphQLOneOfDirective;
+  }
+});
 Object.defineProperty(exports, "GraphQLScalarType", {
   enumerable: true,
   get: function () {
@@ -28443,6 +37560,12 @@ Object.defineProperty(exports, "LoneSchemaDefinitionRule", {
   enumerable: true,
   get: function () {
     return _index4.LoneSchemaDefinitionRule;
+  }
+});
+Object.defineProperty(exports, "MaxIntrospectionDepthRule", {
+  enumerable: true,
+  get: function () {
+    return _index4.MaxIntrospectionDepthRule;
   }
 });
 Object.defineProperty(exports, "NoDeprecatedCustomRule", {
@@ -29339,6 +38462,12 @@ Object.defineProperty(exports, "printType", {
     return _index6.printType;
   }
 });
+Object.defineProperty(exports, "recommendedRules", {
+  enumerable: true,
+  get: function () {
+    return _index4.recommendedRules;
+  }
+});
 Object.defineProperty(exports, "resolveObjMapThunk", {
   enumerable: true,
   get: function () {
@@ -29468,7 +38597,7 @@ var _index4 = require("./validation/index.mjs");
 var _index5 = require("./error/index.mjs");
 var _index6 = require("./utilities/index.mjs");
 
-},{"./error/index.mjs":137,"./execution/index.mjs":142,"./graphql.mjs":146,"./language/index.mjs":175,"./type/index.mjs":190,"./utilities/index.mjs":207,"./validation/index.mjs":219,"./version.mjs":258}],148:[function(require,module,exports){
+},{"./error/index.mjs":151,"./execution/index.mjs":156,"./graphql.mjs":160,"./language/index.mjs":189,"./type/index.mjs":204,"./utilities/index.mjs":221,"./validation/index.mjs":233,"./version.mjs":273}],162:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29500,7 +38629,7 @@ function pathToArray(path) {
   return flattened.reverse();
 }
 
-},{}],149:[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29514,7 +38643,7 @@ function devAssert(condition, message) {
   }
 }
 
-},{}],150:[function(require,module,exports){
+},{}],164:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29546,7 +38675,7 @@ function didYouMean(firstArg, secondArg) {
   return message + selected.join(', ') + ', or ' + lastItem + '?';
 }
 
-},{}],151:[function(require,module,exports){
+},{}],165:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29570,7 +38699,7 @@ function groupBy(list, keyFn) {
   return result;
 }
 
-},{}],152:[function(require,module,exports){
+},{}],166:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29584,7 +38713,7 @@ function identityFunc(x) {
   return x;
 }
 
-},{}],153:[function(require,module,exports){
+},{}],167:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29676,7 +38805,7 @@ function getObjectTag(object) {
   return tag;
 }
 
-},{}],154:[function(require,module,exports){
+},{}],168:[function(require,module,exports){
 (function (process){(function (){
 "use strict";
 
@@ -29734,7 +38863,7 @@ spurious results.`);
 };
 
 }).call(this)}).call(this,require('_process'))
-},{"./inspect.mjs":153,"_process":5}],155:[function(require,module,exports){
+},{"./inspect.mjs":167,"_process":5}],169:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29748,7 +38877,7 @@ function invariant(condition, message) {
   }
 }
 
-},{}],156:[function(require,module,exports){
+},{}],170:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29763,7 +38892,7 @@ function isAsyncIterable(maybeAsyncIterable) {
   return typeof (maybeAsyncIterable === null || maybeAsyncIterable === void 0 ? void 0 : maybeAsyncIterable[Symbol.asyncIterator]) === 'function';
 }
 
-},{}],157:[function(require,module,exports){
+},{}],171:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29791,7 +38920,7 @@ function isIterableObject(maybeIterable) {
   return typeof maybeIterable === 'object' && typeof (maybeIterable === null || maybeIterable === void 0 ? void 0 : maybeIterable[Symbol.iterator]) === 'function';
 }
 
-},{}],158:[function(require,module,exports){
+},{}],172:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29806,7 +38935,7 @@ function isObjectLike(value) {
   return typeof value == 'object' && value !== null;
 }
 
-},{}],159:[function(require,module,exports){
+},{}],173:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29821,7 +38950,7 @@ function isPromise(value) {
   return typeof (value === null || value === void 0 ? void 0 : value.then) === 'function';
 }
 
-},{}],160:[function(require,module,exports){
+},{}],174:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29863,7 +38992,7 @@ function keyMap(list, keyFn) {
   return result;
 }
 
-},{}],161:[function(require,module,exports){
+},{}],175:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29895,7 +39024,7 @@ function keyValMap(list, keyFn, valFn) {
   return result;
 }
 
-},{}],162:[function(require,module,exports){
+},{}],176:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29914,7 +39043,7 @@ function mapValue(map, fn) {
   return result;
 }
 
-},{}],163:[function(require,module,exports){
+},{}],177:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -29949,7 +39078,7 @@ function memoize3(fn) {
   };
 }
 
-},{}],164:[function(require,module,exports){
+},{}],178:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30007,7 +39136,7 @@ function isDigit(code) {
   return !isNaN(code) && DIGIT_0 <= code && code <= DIGIT_9;
 }
 
-},{}],165:[function(require,module,exports){
+},{}],179:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30021,7 +39150,7 @@ function printPathArray(path) {
   return path.map(key => typeof key === 'number' ? '[' + key.toString() + ']' : '.' + key).join('');
 }
 
-},{}],166:[function(require,module,exports){
+},{}],180:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30045,7 +39174,7 @@ function promiseForObject(object) {
   });
 }
 
-},{}],167:[function(require,module,exports){
+},{}],181:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30068,7 +39197,7 @@ function promiseReduce(values, callbackFn, initialValue) {
   return accumulator;
 }
 
-},{"./isPromise.mjs":159}],168:[function(require,module,exports){
+},{"./isPromise.mjs":173}],182:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30184,7 +39313,7 @@ function stringToArray(str) {
   return array;
 }
 
-},{"./naturalCompare.mjs":164}],169:[function(require,module,exports){
+},{"./naturalCompare.mjs":178}],183:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30207,7 +39336,7 @@ class NonErrorThrown extends Error {
   }
 }
 
-},{"./inspect.mjs":153}],170:[function(require,module,exports){
+},{"./inspect.mjs":167}],184:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30228,7 +39357,7 @@ function toObjMap(obj) {
   return map;
 }
 
-},{}],171:[function(require,module,exports){
+},{}],185:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30411,7 +39540,7 @@ var OperationTypeNode;
   OperationTypeNode['SUBSCRIPTION'] = 'subscription';
 })(OperationTypeNode || (exports.OperationTypeNode = OperationTypeNode = {}));
 
-},{}],172:[function(require,module,exports){
+},{}],186:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30564,7 +39693,7 @@ function printBlockString(value, options) {
   return '"""' + result + '"""';
 }
 
-},{"./characterClasses.mjs":173}],173:[function(require,module,exports){
+},{"./characterClasses.mjs":187}],187:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30640,7 +39769,7 @@ function isNameContinue(code) {
   return isLetter(code) || isDigit(code) || code === 0x005f;
 }
 
-},{}],174:[function(require,module,exports){
+},{}],188:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30679,7 +39808,7 @@ var DirectiveLocation;
  * @deprecated Please use `DirectiveLocation`. Will be remove in v17.
  */
 
-},{}],175:[function(require,module,exports){
+},{}],189:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30884,7 +40013,7 @@ var _ast = require("./ast.mjs");
 var _predicates = require("./predicates.mjs");
 var _directiveLocation = require("./directiveLocation.mjs");
 
-},{"./ast.mjs":171,"./directiveLocation.mjs":174,"./kinds.mjs":176,"./lexer.mjs":177,"./location.mjs":178,"./parser.mjs":179,"./predicates.mjs":180,"./printLocation.mjs":181,"./printer.mjs":183,"./source.mjs":184,"./tokenKind.mjs":185,"./visitor.mjs":186}],176:[function(require,module,exports){
+},{"./ast.mjs":185,"./directiveLocation.mjs":188,"./kinds.mjs":190,"./lexer.mjs":191,"./location.mjs":192,"./parser.mjs":193,"./predicates.mjs":194,"./printLocation.mjs":195,"./printer.mjs":197,"./source.mjs":198,"./tokenKind.mjs":199,"./visitor.mjs":200}],190:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -30947,7 +40076,7 @@ var Kind;
  * @deprecated Please use `Kind`. Will be remove in v17.
  */
 
-},{}],177:[function(require,module,exports){
+},{}],191:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -31668,7 +40797,7 @@ function readName(lexer, start) {
   return createToken(lexer, _tokenKind.TokenKind.NAME, start, position, body.slice(start, position));
 }
 
-},{"../error/syntaxError.mjs":139,"./ast.mjs":171,"./blockString.mjs":172,"./characterClasses.mjs":173,"./tokenKind.mjs":185}],178:[function(require,module,exports){
+},{"../error/syntaxError.mjs":153,"./ast.mjs":185,"./blockString.mjs":186,"./characterClasses.mjs":187,"./tokenKind.mjs":199}],192:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -31702,7 +40831,7 @@ function getLocation(source, position) {
   };
 }
 
-},{"../jsutils/invariant.mjs":155}],179:[function(require,module,exports){
+},{"../jsutils/invariant.mjs":169}],193:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33045,7 +42174,7 @@ function getTokenKindDesc(kind) {
   return (0, _lexer.isPunctuatorTokenKind)(kind) ? `"${kind}"` : kind;
 }
 
-},{"../error/syntaxError.mjs":139,"./ast.mjs":171,"./directiveLocation.mjs":174,"./kinds.mjs":176,"./lexer.mjs":177,"./source.mjs":184,"./tokenKind.mjs":185}],180:[function(require,module,exports){
+},{"../error/syntaxError.mjs":153,"./ast.mjs":185,"./directiveLocation.mjs":188,"./kinds.mjs":190,"./lexer.mjs":191,"./source.mjs":198,"./tokenKind.mjs":199}],194:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33093,7 +42222,7 @@ function isTypeExtensionNode(node) {
   return node.kind === _kinds.Kind.SCALAR_TYPE_EXTENSION || node.kind === _kinds.Kind.OBJECT_TYPE_EXTENSION || node.kind === _kinds.Kind.INTERFACE_TYPE_EXTENSION || node.kind === _kinds.Kind.UNION_TYPE_EXTENSION || node.kind === _kinds.Kind.ENUM_TYPE_EXTENSION || node.kind === _kinds.Kind.INPUT_OBJECT_TYPE_EXTENSION;
 }
 
-},{"./kinds.mjs":176}],181:[function(require,module,exports){
+},{"./kinds.mjs":190}],195:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33143,7 +42272,7 @@ function printPrefixedLines(lines) {
   return existingLines.map(([prefix, line]) => prefix.padStart(padLen) + (line ? ' ' + line : '')).join('\n');
 }
 
-},{"./location.mjs":178}],182:[function(require,module,exports){
+},{"./location.mjs":192}],196:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33175,7 +42304,7 @@ const escapeSequences = ['\\u0000', '\\u0001', '\\u0002', '\\u0003', '\\u0004', 
 // 6F
 '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '\\u007F', '\\u0080', '\\u0081', '\\u0082', '\\u0083', '\\u0084', '\\u0085', '\\u0086', '\\u0087', '\\u0088', '\\u0089', '\\u008A', '\\u008B', '\\u008C', '\\u008D', '\\u008E', '\\u008F', '\\u0090', '\\u0091', '\\u0092', '\\u0093', '\\u0094', '\\u0095', '\\u0096', '\\u0097', '\\u0098', '\\u0099', '\\u009A', '\\u009B', '\\u009C', '\\u009D', '\\u009E', '\\u009F'];
 
-},{}],183:[function(require,module,exports){
+},{}],197:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33526,7 +42655,7 @@ function hasMultilineItems(maybeArray) {
   return (_maybeArray$some = maybeArray === null || maybeArray === void 0 ? void 0 : maybeArray.some(str => str.includes('\n'))) !== null && _maybeArray$some !== void 0 ? _maybeArray$some : false;
 }
 
-},{"./blockString.mjs":172,"./printString.mjs":182,"./visitor.mjs":186}],184:[function(require,module,exports){
+},{"./blockString.mjs":186,"./printString.mjs":196,"./visitor.mjs":200}],198:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33570,7 +42699,7 @@ function isSource(source) {
   return (0, _instanceOf.instanceOf)(source, Source);
 }
 
-},{"../jsutils/devAssert.mjs":149,"../jsutils/inspect.mjs":153,"../jsutils/instanceOf.mjs":154}],185:[function(require,module,exports){
+},{"../jsutils/devAssert.mjs":163,"../jsutils/inspect.mjs":167,"../jsutils/instanceOf.mjs":168}],199:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33613,7 +42742,7 @@ var TokenKind;
  * @deprecated Please use `TokenKind`. Will be remove in v17.
  */
 
-},{}],186:[function(require,module,exports){
+},{}],200:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33932,7 +43061,7 @@ function getVisitFn(visitor, kind, isLeaving) {
   return isLeaving ? leave : enter;
 }
 
-},{"../jsutils/devAssert.mjs":149,"../jsutils/inspect.mjs":153,"./ast.mjs":171,"./kinds.mjs":176}],187:[function(require,module,exports){
+},{"../jsutils/devAssert.mjs":163,"../jsutils/inspect.mjs":167,"./ast.mjs":185,"./kinds.mjs":190}],201:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33976,7 +43105,7 @@ function assertEnumValueName(name) {
   return assertName(name);
 }
 
-},{"../error/GraphQLError.mjs":136,"../jsutils/devAssert.mjs":149,"../language/characterClasses.mjs":173}],188:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../jsutils/devAssert.mjs":163,"../language/characterClasses.mjs":187}],202:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -34742,20 +43871,29 @@ class GraphQLEnumType {
     this.extensions = (0, _toObjMap.toObjMap)(config.extensions);
     this.astNode = config.astNode;
     this.extensionASTNodes = (_config$extensionASTN5 = config.extensionASTNodes) !== null && _config$extensionASTN5 !== void 0 ? _config$extensionASTN5 : [];
-    this._values = defineEnumValues(this.name, config.values);
-    this._valueLookup = new Map(this._values.map(enumValue => [enumValue.value, enumValue]));
-    this._nameLookup = (0, _keyMap.keyMap)(this._values, value => value.name);
+    this._values = typeof config.values === 'function' ? config.values : defineEnumValues(this.name, config.values);
+    this._valueLookup = null;
+    this._nameLookup = null;
   }
   get [Symbol.toStringTag]() {
     return 'GraphQLEnumType';
   }
   getValues() {
+    if (typeof this._values === 'function') {
+      this._values = defineEnumValues(this.name, this._values());
+    }
     return this._values;
   }
   getValue(name) {
+    if (this._nameLookup === null) {
+      this._nameLookup = (0, _keyMap.keyMap)(this.getValues(), value => value.name);
+    }
     return this._nameLookup[name];
   }
   serialize(outputValue) {
+    if (this._valueLookup === null) {
+      this._valueLookup = new Map(this.getValues().map(enumValue => [enumValue.value, enumValue]));
+    }
     const enumValue = this._valueLookup.get(outputValue);
     if (enumValue === undefined) {
       throw new _GraphQLError.GraphQLError(`Enum "${this.name}" cannot represent value: ${(0, _inspect.inspect)(outputValue)}`);
@@ -34860,12 +43998,13 @@ function defineEnumValues(typeName, valueMap) {
  */
 class GraphQLInputObjectType {
   constructor(config) {
-    var _config$extensionASTN6;
+    var _config$extensionASTN6, _config$isOneOf;
     this.name = (0, _assertName.assertName)(config.name);
     this.description = config.description;
     this.extensions = (0, _toObjMap.toObjMap)(config.extensions);
     this.astNode = config.astNode;
     this.extensionASTNodes = (_config$extensionASTN6 = config.extensionASTNodes) !== null && _config$extensionASTN6 !== void 0 ? _config$extensionASTN6 : [];
+    this.isOneOf = (_config$isOneOf = config.isOneOf) !== null && _config$isOneOf !== void 0 ? _config$isOneOf : false;
     this._fields = defineInputFieldMap.bind(undefined, config);
   }
   get [Symbol.toStringTag]() {
@@ -34892,7 +44031,8 @@ class GraphQLInputObjectType {
       fields,
       extensions: this.extensions,
       astNode: this.astNode,
-      extensionASTNodes: this.extensionASTNodes
+      extensionASTNodes: this.extensionASTNodes,
+      isOneOf: this.isOneOf
     };
   }
   toString() {
@@ -34923,13 +44063,13 @@ function isRequiredInputField(field) {
   return isNonNullType(field.type) && field.defaultValue === undefined;
 }
 
-},{"../error/GraphQLError.mjs":136,"../jsutils/devAssert.mjs":149,"../jsutils/didYouMean.mjs":150,"../jsutils/identityFunc.mjs":152,"../jsutils/inspect.mjs":153,"../jsutils/instanceOf.mjs":154,"../jsutils/isObjectLike.mjs":158,"../jsutils/keyMap.mjs":160,"../jsutils/keyValMap.mjs":161,"../jsutils/mapValue.mjs":162,"../jsutils/suggestionList.mjs":168,"../jsutils/toObjMap.mjs":170,"../language/kinds.mjs":176,"../language/printer.mjs":183,"../utilities/valueFromASTUntyped.mjs":217,"./assertName.mjs":187}],189:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../jsutils/devAssert.mjs":163,"../jsutils/didYouMean.mjs":164,"../jsutils/identityFunc.mjs":166,"../jsutils/inspect.mjs":167,"../jsutils/instanceOf.mjs":168,"../jsutils/isObjectLike.mjs":172,"../jsutils/keyMap.mjs":174,"../jsutils/keyValMap.mjs":175,"../jsutils/mapValue.mjs":176,"../jsutils/suggestionList.mjs":182,"../jsutils/toObjMap.mjs":184,"../language/kinds.mjs":190,"../language/printer.mjs":197,"../utilities/valueFromASTUntyped.mjs":231,"./assertName.mjs":201}],203:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.GraphQLSpecifiedByDirective = exports.GraphQLSkipDirective = exports.GraphQLIncludeDirective = exports.GraphQLDirective = exports.GraphQLDeprecatedDirective = exports.DEFAULT_DEPRECATION_REASON = void 0;
+exports.GraphQLSpecifiedByDirective = exports.GraphQLSkipDirective = exports.GraphQLOneOfDirective = exports.GraphQLIncludeDirective = exports.GraphQLDirective = exports.GraphQLDeprecatedDirective = exports.DEFAULT_DEPRECATION_REASON = void 0;
 exports.assertDirective = assertDirective;
 exports.isDirective = isDirective;
 exports.isSpecifiedDirective = isSpecifiedDirective;
@@ -35073,17 +44213,27 @@ const GraphQLSpecifiedByDirective = exports.GraphQLSpecifiedByDirective = new Gr
   }
 });
 /**
+ * Used to indicate an Input Object is a OneOf Input Object.
+ */
+
+const GraphQLOneOfDirective = exports.GraphQLOneOfDirective = new GraphQLDirective({
+  name: 'oneOf',
+  description: 'Indicates exactly one field must be supplied and this field must not be `null`.',
+  locations: [_directiveLocation.DirectiveLocation.INPUT_OBJECT],
+  args: {}
+});
+/**
  * The full list of specified directives.
  */
 
-const specifiedDirectives = exports.specifiedDirectives = Object.freeze([GraphQLIncludeDirective, GraphQLSkipDirective, GraphQLDeprecatedDirective, GraphQLSpecifiedByDirective]);
+const specifiedDirectives = exports.specifiedDirectives = Object.freeze([GraphQLIncludeDirective, GraphQLSkipDirective, GraphQLDeprecatedDirective, GraphQLSpecifiedByDirective, GraphQLOneOfDirective]);
 function isSpecifiedDirective(directive) {
   return specifiedDirectives.some(({
     name
   }) => name === directive.name);
 }
 
-},{"../jsutils/devAssert.mjs":149,"../jsutils/inspect.mjs":153,"../jsutils/instanceOf.mjs":154,"../jsutils/isObjectLike.mjs":158,"../jsutils/toObjMap.mjs":170,"../language/directiveLocation.mjs":174,"./assertName.mjs":187,"./definition.mjs":188,"./scalars.mjs":192}],190:[function(require,module,exports){
+},{"../jsutils/devAssert.mjs":163,"../jsutils/inspect.mjs":167,"../jsutils/instanceOf.mjs":168,"../jsutils/isObjectLike.mjs":172,"../jsutils/toObjMap.mjs":184,"../language/directiveLocation.mjs":188,"./assertName.mjs":201,"./definition.mjs":202,"./scalars.mjs":206}],204:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -35183,6 +44333,12 @@ Object.defineProperty(exports, "GraphQLObjectType", {
   enumerable: true,
   get: function () {
     return _definition.GraphQLObjectType;
+  }
+});
+Object.defineProperty(exports, "GraphQLOneOfDirective", {
+  enumerable: true,
+  get: function () {
+    return _directives.GraphQLOneOfDirective;
   }
 });
 Object.defineProperty(exports, "GraphQLScalarType", {
@@ -35625,7 +44781,7 @@ var _introspection = require("./introspection.mjs");
 var _validate = require("./validate.mjs");
 var _assertName = require("./assertName.mjs");
 
-},{"./assertName.mjs":187,"./definition.mjs":188,"./directives.mjs":189,"./introspection.mjs":191,"./scalars.mjs":192,"./schema.mjs":193,"./validate.mjs":194}],191:[function(require,module,exports){
+},{"./assertName.mjs":201,"./definition.mjs":202,"./directives.mjs":203,"./introspection.mjs":205,"./scalars.mjs":206,"./schema.mjs":207,"./validate.mjs":208}],205:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -35918,6 +45074,14 @@ const __Type = exports.__Type = new _definition.GraphQLObjectType({
     ofType: {
       type: __Type,
       resolve: type => 'ofType' in type ? type.ofType : undefined
+    },
+    isOneOf: {
+      type: _scalars.GraphQLBoolean,
+      resolve: type => {
+        if ((0, _definition.isInputObjectType)(type)) {
+          return type.isOneOf;
+        }
+      }
     }
   })
 });
@@ -36128,7 +45292,7 @@ function isIntrospectionType(type) {
   }) => type.name === name);
 }
 
-},{"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../language/directiveLocation.mjs":174,"../language/printer.mjs":183,"../utilities/astFromValue.mjs":197,"./definition.mjs":188,"./scalars.mjs":192}],192:[function(require,module,exports){
+},{"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../language/directiveLocation.mjs":188,"../language/printer.mjs":197,"../utilities/astFromValue.mjs":211,"./definition.mjs":202,"./scalars.mjs":206}],206:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -36345,7 +45509,7 @@ function serializeObject(outputValue) {
   return outputValue;
 }
 
-},{"../error/GraphQLError.mjs":136,"../jsutils/inspect.mjs":153,"../jsutils/isObjectLike.mjs":158,"../language/kinds.mjs":176,"../language/printer.mjs":183,"./definition.mjs":188}],193:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../jsutils/inspect.mjs":167,"../jsutils/isObjectLike.mjs":172,"../language/kinds.mjs":190,"../language/printer.mjs":197,"./definition.mjs":202}],207:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -36658,7 +45822,7 @@ function collectReferencedTypes(type, typeSet) {
   return typeSet;
 }
 
-},{"../jsutils/devAssert.mjs":149,"../jsutils/inspect.mjs":153,"../jsutils/instanceOf.mjs":154,"../jsutils/isObjectLike.mjs":158,"../jsutils/toObjMap.mjs":170,"../language/ast.mjs":171,"./definition.mjs":188,"./directives.mjs":189,"./introspection.mjs":191}],194:[function(require,module,exports){
+},{"../jsutils/devAssert.mjs":163,"../jsutils/inspect.mjs":167,"../jsutils/instanceOf.mjs":168,"../jsutils/isObjectLike.mjs":172,"../jsutils/toObjMap.mjs":184,"../language/ast.mjs":185,"./definition.mjs":202,"./directives.mjs":203,"./introspection.mjs":205}],208:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -36973,6 +46137,18 @@ function validateInputFields(context, inputObj) {
       var _field$astNode3;
       context.reportError(`Required input field ${inputObj.name}.${field.name} cannot be deprecated.`, [getDeprecatedDirectiveNode(field.astNode), (_field$astNode3 = field.astNode) === null || _field$astNode3 === void 0 ? void 0 : _field$astNode3.type]);
     }
+    if (inputObj.isOneOf) {
+      validateOneOfInputObjectField(inputObj, field, context);
+    }
+  }
+}
+function validateOneOfInputObjectField(type, field, context) {
+  if ((0, _definition.isNonNullType)(field.type)) {
+    var _field$astNode4;
+    context.reportError(`OneOf input field ${type.name}.${field.name} must be nullable.`, (_field$astNode4 = field.astNode) === null || _field$astNode4 === void 0 ? void 0 : _field$astNode4.type);
+  }
+  if (field.defaultValue !== undefined) {
+    context.reportError(`OneOf input field ${type.name}.${field.name} cannot have a default value.`, field.astNode);
   }
 }
 function createInputObjectCircularRefsValidator(context) {
@@ -37046,7 +46222,7 @@ function getDeprecatedDirectiveNode(definitionNode) {
   return definitionNode === null || definitionNode === void 0 ? void 0 : (_definitionNode$direc = definitionNode.directives) === null || _definitionNode$direc === void 0 ? void 0 : _definitionNode$direc.find(node => node.name.value === _directives.GraphQLDeprecatedDirective.name);
 }
 
-},{"../error/GraphQLError.mjs":136,"../jsutils/inspect.mjs":153,"../language/ast.mjs":171,"../utilities/typeComparators.mjs":214,"./definition.mjs":188,"./directives.mjs":189,"./introspection.mjs":191,"./schema.mjs":193}],195:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../jsutils/inspect.mjs":167,"../language/ast.mjs":185,"../utilities/typeComparators.mjs":228,"./definition.mjs":202,"./directives.mjs":203,"./introspection.mjs":205,"./schema.mjs":207}],209:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37338,7 +46514,7 @@ function visitWithTypeInfo(typeInfo, visitor) {
   };
 }
 
-},{"../language/ast.mjs":171,"../language/kinds.mjs":176,"../language/visitor.mjs":186,"../type/definition.mjs":188,"../type/introspection.mjs":191,"./typeFromAST.mjs":215}],196:[function(require,module,exports){
+},{"../language/ast.mjs":185,"../language/kinds.mjs":190,"../language/visitor.mjs":200,"../type/definition.mjs":202,"../type/introspection.mjs":205,"./typeFromAST.mjs":229}],210:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37381,7 +46557,7 @@ function isValidNameError(name) {
 }
 /* c8 ignore stop */
 
-},{"../error/GraphQLError.mjs":136,"../jsutils/devAssert.mjs":149,"../type/assertName.mjs":187}],197:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../jsutils/devAssert.mjs":163,"../type/assertName.mjs":201}],211:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37539,7 +46715,7 @@ function astFromValue(value, type) {
 
 const integerStringRegExp = /^-?(?:0|[1-9][0-9]*)$/;
 
-},{"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../jsutils/isIterableObject.mjs":157,"../jsutils/isObjectLike.mjs":158,"../language/kinds.mjs":176,"../type/definition.mjs":188,"../type/scalars.mjs":192}],198:[function(require,module,exports){
+},{"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../jsutils/isIterableObject.mjs":171,"../jsutils/isObjectLike.mjs":172,"../language/kinds.mjs":190,"../type/definition.mjs":202,"../type/scalars.mjs":206}],212:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37623,7 +46799,7 @@ function buildSchema(source, options) {
   });
 }
 
-},{"../jsutils/devAssert.mjs":149,"../language/kinds.mjs":176,"../language/parser.mjs":179,"../type/directives.mjs":189,"../type/schema.mjs":193,"../validation/validate.mjs":257,"./extendSchema.mjs":202}],199:[function(require,module,exports){
+},{"../jsutils/devAssert.mjs":163,"../language/kinds.mjs":190,"../language/parser.mjs":193,"../type/directives.mjs":203,"../type/schema.mjs":207,"../validation/validate.mjs":272,"./extendSchema.mjs":216}],213:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37813,7 +46989,8 @@ function buildClientSchema(introspection, options) {
     return new _definition.GraphQLInputObjectType({
       name: inputObjectIntrospection.name,
       description: inputObjectIntrospection.description,
-      fields: () => buildInputValueDefMap(inputObjectIntrospection.inputFields)
+      fields: () => buildInputValueDefMap(inputObjectIntrospection.inputFields),
+      isOneOf: inputObjectIntrospection.isOneOf
     });
   }
   function buildFieldDefMap(typeIntrospection) {
@@ -37875,7 +47052,7 @@ function buildClientSchema(introspection, options) {
   }
 }
 
-},{"../jsutils/devAssert.mjs":149,"../jsutils/inspect.mjs":153,"../jsutils/isObjectLike.mjs":158,"../jsutils/keyValMap.mjs":161,"../language/parser.mjs":179,"../type/definition.mjs":188,"../type/directives.mjs":189,"../type/introspection.mjs":191,"../type/scalars.mjs":192,"../type/schema.mjs":193,"./valueFromAST.mjs":216}],200:[function(require,module,exports){
+},{"../jsutils/devAssert.mjs":163,"../jsutils/inspect.mjs":167,"../jsutils/isObjectLike.mjs":172,"../jsutils/keyValMap.mjs":175,"../language/parser.mjs":193,"../type/definition.mjs":202,"../type/directives.mjs":203,"../type/introspection.mjs":205,"../type/scalars.mjs":206,"../type/schema.mjs":207,"./valueFromAST.mjs":230}],214:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -37956,6 +47133,17 @@ function coerceInputValueImpl(inputValue, type, onError, path) {
         onError((0, _Path.pathToArray)(path), inputValue, new _GraphQLError.GraphQLError(`Field "${fieldName}" is not defined by type "${type.name}".` + (0, _didYouMean.didYouMean)(suggestions)));
       }
     }
+    if (type.isOneOf) {
+      const keys = Object.keys(coercedValue);
+      if (keys.length !== 1) {
+        onError((0, _Path.pathToArray)(path), inputValue, new _GraphQLError.GraphQLError(`Exactly one key must be specified for OneOf type "${type.name}".`));
+      }
+      const key = keys[0];
+      const value = coercedValue[key];
+      if (value === null) {
+        onError((0, _Path.pathToArray)(path).concat(key), value, new _GraphQLError.GraphQLError(`Field "${key}" must be non-null.`));
+      }
+    }
     return coercedValue;
   }
   if ((0, _definition.isLeafType)(type)) {
@@ -37986,7 +47174,7 @@ function coerceInputValueImpl(inputValue, type, onError, path) {
   false || (0, _invariant.invariant)(false, 'Unexpected input type: ' + (0, _inspect.inspect)(type));
 }
 
-},{"../error/GraphQLError.mjs":136,"../jsutils/Path.mjs":148,"../jsutils/didYouMean.mjs":150,"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../jsutils/isIterableObject.mjs":157,"../jsutils/isObjectLike.mjs":158,"../jsutils/printPathArray.mjs":165,"../jsutils/suggestionList.mjs":168,"../type/definition.mjs":188}],201:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../jsutils/Path.mjs":162,"../jsutils/didYouMean.mjs":164,"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../jsutils/isIterableObject.mjs":171,"../jsutils/isObjectLike.mjs":172,"../jsutils/printPathArray.mjs":179,"../jsutils/suggestionList.mjs":182,"../type/definition.mjs":202}],215:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -38011,7 +47199,7 @@ function concatAST(documents) {
   };
 }
 
-},{"../language/kinds.mjs":176}],202:[function(require,module,exports){
+},{"../language/kinds.mjs":190}],216:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -38515,7 +47703,8 @@ function extendSchemaImpl(schemaConfig, documentAST, options) {
             description: (_astNode$description6 = astNode.description) === null || _astNode$description6 === void 0 ? void 0 : _astNode$description6.value,
             fields: () => buildInputFieldMap(allNodes),
             astNode,
-            extensionASTNodes
+            extensionASTNodes,
+            isOneOf: isOneOf(astNode)
           });
         }
     }
@@ -38541,8 +47730,15 @@ function getSpecifiedByURL(node) {
 
   return specifiedBy === null || specifiedBy === void 0 ? void 0 : specifiedBy.url;
 }
+/**
+ * Given an input object node, returns if the node should be OneOf.
+ */
 
-},{"../execution/values.mjs":145,"../jsutils/devAssert.mjs":149,"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../jsutils/keyMap.mjs":160,"../jsutils/mapValue.mjs":162,"../language/kinds.mjs":176,"../language/predicates.mjs":180,"../type/definition.mjs":188,"../type/directives.mjs":189,"../type/introspection.mjs":191,"../type/scalars.mjs":192,"../type/schema.mjs":193,"../validation/validate.mjs":257,"./valueFromAST.mjs":216}],203:[function(require,module,exports){
+function isOneOf(node) {
+  return Boolean((0, _values.getDirectiveValues)(_directives.GraphQLOneOfDirective, node));
+}
+
+},{"../execution/values.mjs":159,"../jsutils/devAssert.mjs":163,"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../jsutils/keyMap.mjs":174,"../jsutils/mapValue.mjs":176,"../language/kinds.mjs":190,"../language/predicates.mjs":194,"../type/definition.mjs":202,"../type/directives.mjs":203,"../type/introspection.mjs":205,"../type/scalars.mjs":206,"../type/schema.mjs":207,"../validation/validate.mjs":272,"./valueFromAST.mjs":230}],217:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -38931,7 +48127,7 @@ function diff(oldArray, newArray) {
   };
 }
 
-},{"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../jsutils/keyMap.mjs":160,"../language/printer.mjs":183,"../type/definition.mjs":188,"../type/scalars.mjs":192,"./astFromValue.mjs":197,"./sortValueNode.mjs":212}],204:[function(require,module,exports){
+},{"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../jsutils/keyMap.mjs":174,"../language/printer.mjs":197,"../type/definition.mjs":202,"../type/scalars.mjs":206,"./astFromValue.mjs":211,"./sortValueNode.mjs":226}],218:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -38949,6 +48145,7 @@ function getIntrospectionQuery(options) {
     directiveIsRepeatable: false,
     schemaDescription: false,
     inputValueDeprecation: false,
+    oneOf: false,
     ...options
   };
   const descriptions = optionsWithDefault.descriptions ? 'description' : '';
@@ -38958,6 +48155,7 @@ function getIntrospectionQuery(options) {
   function inputDeprecation(str) {
     return optionsWithDefault.inputValueDeprecation ? str : '';
   }
+  const oneOf = optionsWithDefault.oneOf ? 'isOneOf' : '';
   return `
     query IntrospectionQuery {
       __schema {
@@ -38985,6 +48183,7 @@ function getIntrospectionQuery(options) {
       name
       ${descriptions}
       ${specifiedByUrl}
+      ${oneOf}
       fields(includeDeprecated: true) {
         name
         ${descriptions}
@@ -39066,7 +48265,7 @@ function getIntrospectionQuery(options) {
   `;
 }
 
-},{}],205:[function(require,module,exports){
+},{}],219:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39101,7 +48300,7 @@ function getOperationAST(documentAST, operationName) {
   return operation;
 }
 
-},{"../language/kinds.mjs":176}],206:[function(require,module,exports){
+},{"../language/kinds.mjs":190}],220:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39147,7 +48346,7 @@ function getOperationRootType(schema, operation) {
   });
 }
 
-},{"../error/GraphQLError.mjs":136}],207:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150}],221:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39361,7 +48560,7 @@ var _typeComparators = require("./typeComparators.mjs");
 var _assertValidName = require("./assertValidName.mjs");
 var _findBreakingChanges = require("./findBreakingChanges.mjs");
 
-},{"./TypeInfo.mjs":195,"./assertValidName.mjs":196,"./astFromValue.mjs":197,"./buildASTSchema.mjs":198,"./buildClientSchema.mjs":199,"./coerceInputValue.mjs":200,"./concatAST.mjs":201,"./extendSchema.mjs":202,"./findBreakingChanges.mjs":203,"./getIntrospectionQuery.mjs":204,"./getOperationAST.mjs":205,"./getOperationRootType.mjs":206,"./introspectionFromSchema.mjs":208,"./lexicographicSortSchema.mjs":209,"./printSchema.mjs":210,"./separateOperations.mjs":211,"./stripIgnoredCharacters.mjs":213,"./typeComparators.mjs":214,"./typeFromAST.mjs":215,"./valueFromAST.mjs":216,"./valueFromASTUntyped.mjs":217}],208:[function(require,module,exports){
+},{"./TypeInfo.mjs":209,"./assertValidName.mjs":210,"./astFromValue.mjs":211,"./buildASTSchema.mjs":212,"./buildClientSchema.mjs":213,"./coerceInputValue.mjs":214,"./concatAST.mjs":215,"./extendSchema.mjs":216,"./findBreakingChanges.mjs":217,"./getIntrospectionQuery.mjs":218,"./getOperationAST.mjs":219,"./getOperationRootType.mjs":220,"./introspectionFromSchema.mjs":222,"./lexicographicSortSchema.mjs":223,"./printSchema.mjs":224,"./separateOperations.mjs":225,"./stripIgnoredCharacters.mjs":227,"./typeComparators.mjs":228,"./typeFromAST.mjs":229,"./valueFromAST.mjs":230,"./valueFromASTUntyped.mjs":231}],222:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39388,6 +48587,7 @@ function introspectionFromSchema(schema, options) {
     directiveIsRepeatable: true,
     schemaDescription: true,
     inputValueDeprecation: true,
+    oneOf: true,
     ...options
   };
   const document = (0, _parser.parse)((0, _getIntrospectionQuery.getIntrospectionQuery)(optionsWithDefaults));
@@ -39399,7 +48599,7 @@ function introspectionFromSchema(schema, options) {
   return result.data;
 }
 
-},{"../execution/execute.mjs":141,"../jsutils/invariant.mjs":155,"../language/parser.mjs":179,"./getIntrospectionQuery.mjs":204}],209:[function(require,module,exports){
+},{"../execution/execute.mjs":155,"../jsutils/invariant.mjs":169,"../language/parser.mjs":193,"./getIntrospectionQuery.mjs":218}],223:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39543,7 +48743,7 @@ function sortBy(array, mapToKey) {
   });
 }
 
-},{"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../jsutils/keyValMap.mjs":161,"../jsutils/naturalCompare.mjs":164,"../type/definition.mjs":188,"../type/directives.mjs":189,"../type/introspection.mjs":191,"../type/schema.mjs":193}],210:[function(require,module,exports){
+},{"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../jsutils/keyValMap.mjs":175,"../jsutils/naturalCompare.mjs":178,"../type/definition.mjs":202,"../type/directives.mjs":203,"../type/introspection.mjs":205,"../type/schema.mjs":207}],224:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39674,7 +48874,7 @@ function printEnum(type) {
 }
 function printInputObject(type) {
   const fields = Object.values(type.getFields()).map((f, i) => printDescription(f, '  ', !i) + '  ' + printInputValue(f));
-  return printDescription(type) + `input ${type.name}` + printBlock(fields);
+  return printDescription(type) + `input ${type.name}` + (type.isOneOf ? ' @oneOf' : '') + printBlock(fields);
 }
 function printFields(type) {
   const fields = Object.values(type.getFields()).map((f, i) => printDescription(f, '  ', !i) + '  ' + f.name + printArgs(f.args, '  ') + ': ' + String(f.type) + printDeprecated(f.deprecationReason));
@@ -39743,7 +48943,7 @@ function printDescription(def, indentation = '', firstInBlock = true) {
   return prefix + blockString.replace(/\n/g, '\n' + indentation) + '\n';
 }
 
-},{"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../language/blockString.mjs":172,"../language/kinds.mjs":176,"../language/printer.mjs":183,"../type/definition.mjs":188,"../type/directives.mjs":189,"../type/introspection.mjs":191,"../type/scalars.mjs":192,"./astFromValue.mjs":197}],211:[function(require,module,exports){
+},{"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../language/blockString.mjs":186,"../language/kinds.mjs":190,"../language/printer.mjs":197,"../type/definition.mjs":202,"../type/directives.mjs":203,"../type/introspection.mjs":205,"../type/scalars.mjs":206,"./astFromValue.mjs":211}],225:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39817,7 +49017,7 @@ function collectDependencies(selectionSet) {
   return dependencies;
 }
 
-},{"../language/kinds.mjs":176,"../language/visitor.mjs":186}],212:[function(require,module,exports){
+},{"../language/kinds.mjs":190,"../language/visitor.mjs":200}],226:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39863,7 +49063,7 @@ function sortFields(fields) {
   })).sort((fieldA, fieldB) => (0, _naturalCompare.naturalCompare)(fieldA.name.value, fieldB.name.value));
 }
 
-},{"../jsutils/naturalCompare.mjs":164,"../language/kinds.mjs":176}],213:[function(require,module,exports){
+},{"../jsutils/naturalCompare.mjs":178,"../language/kinds.mjs":190}],227:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -39969,7 +49169,7 @@ function stripIgnoredCharacters(source) {
   return strippedBody;
 }
 
-},{"../language/blockString.mjs":172,"../language/lexer.mjs":177,"../language/source.mjs":184,"../language/tokenKind.mjs":185}],214:[function(require,module,exports){
+},{"../language/blockString.mjs":186,"../language/lexer.mjs":191,"../language/source.mjs":198,"../language/tokenKind.mjs":199}],228:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40066,7 +49266,7 @@ function doTypesOverlap(schema, typeA, typeB) {
   return false;
 }
 
-},{"../type/definition.mjs":188}],215:[function(require,module,exports){
+},{"../type/definition.mjs":202}],229:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40092,7 +49292,7 @@ function typeFromAST(schema, typeNode) {
   }
 }
 
-},{"../language/kinds.mjs":176,"../type/definition.mjs":188}],216:[function(require,module,exports){
+},{"../language/kinds.mjs":190,"../type/definition.mjs":202}],230:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40213,6 +49413,17 @@ function valueFromAST(valueNode, type, variables) {
 
       coercedObj[field.name] = fieldValue;
     }
+    if (type.isOneOf) {
+      const keys = Object.keys(coercedObj);
+      if (keys.length !== 1) {
+        return; // Invalid: not exactly one key, intentionally return no value.
+      }
+
+      if (coercedObj[keys[0]] === null) {
+        return; // Invalid: value not non-null, intentionally return no value.
+      }
+    }
+
     return coercedObj;
   }
   if ((0, _definition.isLeafType)(type)) {
@@ -40243,7 +49454,7 @@ function isMissingVariable(valueNode, variables) {
   return valueNode.kind === _kinds.Kind.VARIABLE && (variables == null || variables[valueNode.name.value] === undefined);
 }
 
-},{"../jsutils/inspect.mjs":153,"../jsutils/invariant.mjs":155,"../jsutils/keyMap.mjs":160,"../language/kinds.mjs":176,"../type/definition.mjs":188}],217:[function(require,module,exports){
+},{"../jsutils/inspect.mjs":167,"../jsutils/invariant.mjs":169,"../jsutils/keyMap.mjs":174,"../language/kinds.mjs":190,"../type/definition.mjs":202}],231:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40290,7 +49501,7 @@ function valueFromASTUntyped(valueNode, variables) {
   }
 }
 
-},{"../jsutils/keyValMap.mjs":161,"../language/kinds.mjs":176}],218:[function(require,module,exports){
+},{"../jsutils/keyValMap.mjs":175,"../language/kinds.mjs":190}],232:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40467,7 +49678,7 @@ class ValidationContext extends ASTValidationContext {
 }
 exports.ValidationContext = ValidationContext;
 
-},{"../language/kinds.mjs":176,"../language/visitor.mjs":186,"../utilities/TypeInfo.mjs":195}],219:[function(require,module,exports){
+},{"../language/kinds.mjs":190,"../language/visitor.mjs":200,"../utilities/TypeInfo.mjs":209}],233:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40525,6 +49736,12 @@ Object.defineProperty(exports, "LoneSchemaDefinitionRule", {
   enumerable: true,
   get: function () {
     return _LoneSchemaDefinitionRule.LoneSchemaDefinitionRule;
+  }
+});
+Object.defineProperty(exports, "MaxIntrospectionDepthRule", {
+  enumerable: true,
+  get: function () {
+    return _MaxIntrospectionDepthRule.MaxIntrospectionDepthRule;
   }
 });
 Object.defineProperty(exports, "NoDeprecatedCustomRule", {
@@ -40695,6 +49912,12 @@ Object.defineProperty(exports, "VariablesInAllowedPositionRule", {
     return _VariablesInAllowedPositionRule.VariablesInAllowedPositionRule;
   }
 });
+Object.defineProperty(exports, "recommendedRules", {
+  enumerable: true,
+  get: function () {
+    return _specifiedRules.recommendedRules;
+  }
+});
 Object.defineProperty(exports, "specifiedRules", {
   enumerable: true,
   get: function () {
@@ -40736,6 +49959,7 @@ var _UniqueVariableNamesRule = require("./rules/UniqueVariableNamesRule.mjs");
 var _ValuesOfCorrectTypeRule = require("./rules/ValuesOfCorrectTypeRule.mjs");
 var _VariablesAreInputTypesRule = require("./rules/VariablesAreInputTypesRule.mjs");
 var _VariablesInAllowedPositionRule = require("./rules/VariablesInAllowedPositionRule.mjs");
+var _MaxIntrospectionDepthRule = require("./rules/MaxIntrospectionDepthRule.mjs");
 var _LoneSchemaDefinitionRule = require("./rules/LoneSchemaDefinitionRule.mjs");
 var _UniqueOperationTypesRule = require("./rules/UniqueOperationTypesRule.mjs");
 var _UniqueTypeNamesRule = require("./rules/UniqueTypeNamesRule.mjs");
@@ -40747,7 +49971,7 @@ var _PossibleTypeExtensionsRule = require("./rules/PossibleTypeExtensionsRule.mj
 var _NoDeprecatedCustomRule = require("./rules/custom/NoDeprecatedCustomRule.mjs");
 var _NoSchemaIntrospectionCustomRule = require("./rules/custom/NoSchemaIntrospectionCustomRule.mjs");
 
-},{"./ValidationContext.mjs":218,"./rules/ExecutableDefinitionsRule.mjs":220,"./rules/FieldsOnCorrectTypeRule.mjs":221,"./rules/FragmentsOnCompositeTypesRule.mjs":222,"./rules/KnownArgumentNamesRule.mjs":223,"./rules/KnownDirectivesRule.mjs":224,"./rules/KnownFragmentNamesRule.mjs":225,"./rules/KnownTypeNamesRule.mjs":226,"./rules/LoneAnonymousOperationRule.mjs":227,"./rules/LoneSchemaDefinitionRule.mjs":228,"./rules/NoFragmentCyclesRule.mjs":229,"./rules/NoUndefinedVariablesRule.mjs":230,"./rules/NoUnusedFragmentsRule.mjs":231,"./rules/NoUnusedVariablesRule.mjs":232,"./rules/OverlappingFieldsCanBeMergedRule.mjs":233,"./rules/PossibleFragmentSpreadsRule.mjs":234,"./rules/PossibleTypeExtensionsRule.mjs":235,"./rules/ProvidedRequiredArgumentsRule.mjs":236,"./rules/ScalarLeafsRule.mjs":237,"./rules/SingleFieldSubscriptionsRule.mjs":238,"./rules/UniqueArgumentDefinitionNamesRule.mjs":239,"./rules/UniqueArgumentNamesRule.mjs":240,"./rules/UniqueDirectiveNamesRule.mjs":241,"./rules/UniqueDirectivesPerLocationRule.mjs":242,"./rules/UniqueEnumValueNamesRule.mjs":243,"./rules/UniqueFieldDefinitionNamesRule.mjs":244,"./rules/UniqueFragmentNamesRule.mjs":245,"./rules/UniqueInputFieldNamesRule.mjs":246,"./rules/UniqueOperationNamesRule.mjs":247,"./rules/UniqueOperationTypesRule.mjs":248,"./rules/UniqueTypeNamesRule.mjs":249,"./rules/UniqueVariableNamesRule.mjs":250,"./rules/ValuesOfCorrectTypeRule.mjs":251,"./rules/VariablesAreInputTypesRule.mjs":252,"./rules/VariablesInAllowedPositionRule.mjs":253,"./rules/custom/NoDeprecatedCustomRule.mjs":254,"./rules/custom/NoSchemaIntrospectionCustomRule.mjs":255,"./specifiedRules.mjs":256,"./validate.mjs":257}],220:[function(require,module,exports){
+},{"./ValidationContext.mjs":232,"./rules/ExecutableDefinitionsRule.mjs":234,"./rules/FieldsOnCorrectTypeRule.mjs":235,"./rules/FragmentsOnCompositeTypesRule.mjs":236,"./rules/KnownArgumentNamesRule.mjs":237,"./rules/KnownDirectivesRule.mjs":238,"./rules/KnownFragmentNamesRule.mjs":239,"./rules/KnownTypeNamesRule.mjs":240,"./rules/LoneAnonymousOperationRule.mjs":241,"./rules/LoneSchemaDefinitionRule.mjs":242,"./rules/MaxIntrospectionDepthRule.mjs":243,"./rules/NoFragmentCyclesRule.mjs":244,"./rules/NoUndefinedVariablesRule.mjs":245,"./rules/NoUnusedFragmentsRule.mjs":246,"./rules/NoUnusedVariablesRule.mjs":247,"./rules/OverlappingFieldsCanBeMergedRule.mjs":248,"./rules/PossibleFragmentSpreadsRule.mjs":249,"./rules/PossibleTypeExtensionsRule.mjs":250,"./rules/ProvidedRequiredArgumentsRule.mjs":251,"./rules/ScalarLeafsRule.mjs":252,"./rules/SingleFieldSubscriptionsRule.mjs":253,"./rules/UniqueArgumentDefinitionNamesRule.mjs":254,"./rules/UniqueArgumentNamesRule.mjs":255,"./rules/UniqueDirectiveNamesRule.mjs":256,"./rules/UniqueDirectivesPerLocationRule.mjs":257,"./rules/UniqueEnumValueNamesRule.mjs":258,"./rules/UniqueFieldDefinitionNamesRule.mjs":259,"./rules/UniqueFragmentNamesRule.mjs":260,"./rules/UniqueInputFieldNamesRule.mjs":261,"./rules/UniqueOperationNamesRule.mjs":262,"./rules/UniqueOperationTypesRule.mjs":263,"./rules/UniqueTypeNamesRule.mjs":264,"./rules/UniqueVariableNamesRule.mjs":265,"./rules/ValuesOfCorrectTypeRule.mjs":266,"./rules/VariablesAreInputTypesRule.mjs":267,"./rules/VariablesInAllowedPositionRule.mjs":268,"./rules/custom/NoDeprecatedCustomRule.mjs":269,"./rules/custom/NoSchemaIntrospectionCustomRule.mjs":270,"./specifiedRules.mjs":271,"./validate.mjs":272}],234:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40781,7 +50005,7 @@ function ExecutableDefinitionsRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../language/kinds.mjs":176,"../../language/predicates.mjs":180}],221:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../language/kinds.mjs":190,"../../language/predicates.mjs":194}],235:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40886,7 +50110,7 @@ function getSuggestedFieldNames(type, fieldName) {
   return [];
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/didYouMean.mjs":150,"../../jsutils/naturalCompare.mjs":164,"../../jsutils/suggestionList.mjs":168,"../../type/definition.mjs":188}],222:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/didYouMean.mjs":164,"../../jsutils/naturalCompare.mjs":178,"../../jsutils/suggestionList.mjs":182,"../../type/definition.mjs":202}],236:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -40932,7 +50156,7 @@ function FragmentsOnCompositeTypesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../language/printer.mjs":183,"../../type/definition.mjs":188,"../../utilities/typeFromAST.mjs":215}],223:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../language/printer.mjs":197,"../../type/definition.mjs":202,"../../utilities/typeFromAST.mjs":229}],237:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41016,7 +50240,7 @@ function KnownArgumentNamesOnDirectivesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/didYouMean.mjs":150,"../../jsutils/suggestionList.mjs":168,"../../language/kinds.mjs":176,"../../type/directives.mjs":189}],224:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/didYouMean.mjs":164,"../../jsutils/suggestionList.mjs":182,"../../language/kinds.mjs":190,"../../type/directives.mjs":203}],238:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41136,7 +50360,7 @@ function getDirectiveLocationForOperation(operation) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/inspect.mjs":153,"../../jsutils/invariant.mjs":155,"../../language/ast.mjs":171,"../../language/directiveLocation.mjs":174,"../../language/kinds.mjs":176,"../../type/directives.mjs":189}],225:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/inspect.mjs":167,"../../jsutils/invariant.mjs":169,"../../language/ast.mjs":185,"../../language/directiveLocation.mjs":188,"../../language/kinds.mjs":190,"../../type/directives.mjs":203}],239:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41166,7 +50390,7 @@ function KnownFragmentNamesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136}],226:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],240:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41220,7 +50444,7 @@ function isSDLNode(value) {
   return 'kind' in value && ((0, _predicates.isTypeSystemDefinitionNode)(value) || (0, _predicates.isTypeSystemExtensionNode)(value));
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/didYouMean.mjs":150,"../../jsutils/suggestionList.mjs":168,"../../language/predicates.mjs":180,"../../type/introspection.mjs":191,"../../type/scalars.mjs":192}],227:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/didYouMean.mjs":164,"../../jsutils/suggestionList.mjs":182,"../../language/predicates.mjs":194,"../../type/introspection.mjs":205,"../../type/scalars.mjs":206}],241:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41253,7 +50477,7 @@ function LoneAnonymousOperationRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../language/kinds.mjs":176}],228:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../language/kinds.mjs":190}],242:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41289,7 +50513,79 @@ function LoneSchemaDefinitionRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136}],229:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],243:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MaxIntrospectionDepthRule = MaxIntrospectionDepthRule;
+var _GraphQLError = require("../../error/GraphQLError.mjs");
+var _kinds = require("../../language/kinds.mjs");
+const MAX_LISTS_DEPTH = 3;
+function MaxIntrospectionDepthRule(context) {
+  /**
+   * Counts the depth of list fields in "__Type" recursively and
+   * returns `true` if the limit has been reached.
+   */
+  function checkDepth(node, visitedFragments = Object.create(null), depth = 0) {
+    if (node.kind === _kinds.Kind.FRAGMENT_SPREAD) {
+      const fragmentName = node.name.value;
+      if (visitedFragments[fragmentName] === true) {
+        // Fragment cycles are handled by `NoFragmentCyclesRule`.
+        return false;
+      }
+      const fragment = context.getFragment(fragmentName);
+      if (!fragment) {
+        // Missing fragments checks are handled by `KnownFragmentNamesRule`.
+        return false;
+      } // Rather than following an immutable programming pattern which has
+      // significant memory and garbage collection overhead, we've opted to
+      // take a mutable approach for efficiency's sake. Importantly visiting a
+      // fragment twice is fine, so long as you don't do one visit inside the
+      // other.
+
+      try {
+        visitedFragments[fragmentName] = true;
+        return checkDepth(fragment, visitedFragments, depth);
+      } finally {
+        visitedFragments[fragmentName] = undefined;
+      }
+    }
+    if (node.kind === _kinds.Kind.FIELD && (
+    // check all introspection lists
+    node.name.value === 'fields' || node.name.value === 'interfaces' || node.name.value === 'possibleTypes' || node.name.value === 'inputFields')) {
+      // eslint-disable-next-line no-param-reassign
+      depth++;
+      if (depth >= MAX_LISTS_DEPTH) {
+        return true;
+      }
+    } // handles fields and inline fragments
+
+    if ('selectionSet' in node && node.selectionSet) {
+      for (const child of node.selectionSet.selections) {
+        if (checkDepth(child, visitedFragments, depth)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  return {
+    Field(node) {
+      if (node.name.value === '__schema' || node.name.value === '__type') {
+        if (checkDepth(node)) {
+          context.reportError(new _GraphQLError.GraphQLError('Maximum introspection depth exceeded', {
+            nodes: [node]
+          }));
+          return false;
+        }
+      }
+    }
+  };
+}
+
+},{"../../error/GraphQLError.mjs":150,"../../language/kinds.mjs":190}],244:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41356,7 +50652,7 @@ function NoFragmentCyclesRule(context) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136}],230:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],245:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41399,7 +50695,7 @@ function NoUndefinedVariablesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136}],231:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],246:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41448,7 +50744,7 @@ function NoUnusedFragmentsRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136}],232:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],247:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41495,7 +50791,7 @@ function NoUnusedVariablesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136}],233:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],248:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41953,7 +51249,7 @@ class PairSet {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/inspect.mjs":153,"../../language/kinds.mjs":176,"../../language/printer.mjs":183,"../../type/definition.mjs":188,"../../utilities/sortValueNode.mjs":212,"../../utilities/typeFromAST.mjs":215}],234:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/inspect.mjs":167,"../../language/kinds.mjs":190,"../../language/printer.mjs":197,"../../type/definition.mjs":202,"../../utilities/sortValueNode.mjs":226,"../../utilities/typeFromAST.mjs":229}],249:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42009,7 +51305,7 @@ function getFragmentType(context, name) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/inspect.mjs":153,"../../type/definition.mjs":188,"../../utilities/typeComparators.mjs":214,"../../utilities/typeFromAST.mjs":215}],235:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/inspect.mjs":167,"../../type/definition.mjs":202,"../../utilities/typeComparators.mjs":228,"../../utilities/typeFromAST.mjs":229}],250:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42129,7 +51425,7 @@ function extensionKindToTypeName(kind) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/didYouMean.mjs":150,"../../jsutils/inspect.mjs":153,"../../jsutils/invariant.mjs":155,"../../jsutils/suggestionList.mjs":168,"../../language/kinds.mjs":176,"../../language/predicates.mjs":180,"../../type/definition.mjs":188}],236:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/didYouMean.mjs":164,"../../jsutils/inspect.mjs":167,"../../jsutils/invariant.mjs":169,"../../jsutils/suggestionList.mjs":182,"../../language/kinds.mjs":190,"../../language/predicates.mjs":194,"../../type/definition.mjs":202}],251:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42233,7 +51529,7 @@ function isRequiredArgumentNode(arg) {
   return arg.type.kind === _kinds.Kind.NON_NULL_TYPE && arg.defaultValue == null;
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/inspect.mjs":153,"../../jsutils/keyMap.mjs":160,"../../language/kinds.mjs":176,"../../language/printer.mjs":183,"../../type/definition.mjs":188,"../../type/directives.mjs":189}],237:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/inspect.mjs":167,"../../jsutils/keyMap.mjs":174,"../../language/kinds.mjs":190,"../../language/printer.mjs":197,"../../type/definition.mjs":202,"../../type/directives.mjs":203}],252:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42275,7 +51571,7 @@ function ScalarLeafsRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/inspect.mjs":153,"../../type/definition.mjs":188}],238:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/inspect.mjs":167,"../../type/definition.mjs":202}],253:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42333,7 +51629,7 @@ function SingleFieldSubscriptionsRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../execution/collectFields.mjs":140,"../../language/kinds.mjs":176}],239:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../execution/collectFields.mjs":154,"../../language/kinds.mjs":190}],254:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42395,7 +51691,7 @@ function UniqueArgumentDefinitionNamesRule(context) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/groupBy.mjs":151}],240:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/groupBy.mjs":165}],255:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42435,7 +51731,7 @@ function UniqueArgumentNamesRule(context) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/groupBy.mjs":151}],241:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/groupBy.mjs":165}],256:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42472,7 +51768,7 @@ function UniqueDirectiveNamesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136}],242:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],257:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42542,7 +51838,7 @@ function UniqueDirectivesPerLocationRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../language/kinds.mjs":176,"../../language/predicates.mjs":180,"../../type/directives.mjs":189}],243:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../language/kinds.mjs":190,"../../language/predicates.mjs":194,"../../type/directives.mjs":203}],258:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42594,7 +51890,7 @@ function UniqueEnumValueNamesRule(context) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../type/definition.mjs":188}],244:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../type/definition.mjs":202}],259:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42655,7 +51951,7 @@ function hasField(type, fieldName) {
   return false;
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../type/definition.mjs":188}],245:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../type/definition.mjs":202}],260:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42688,7 +51984,7 @@ function UniqueFragmentNamesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136}],246:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],261:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42733,7 +52029,7 @@ function UniqueInputFieldNamesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/invariant.mjs":155}],247:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/invariant.mjs":169}],262:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42768,7 +52064,7 @@ function UniqueOperationNamesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136}],248:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],263:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42819,7 +52115,7 @@ function UniqueOperationTypesRule(context) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136}],249:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],264:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42862,7 +52158,7 @@ function UniqueTypeNamesRule(context) {
   }
 }
 
-},{"../../error/GraphQLError.mjs":136}],250:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150}],265:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42897,7 +52193,7 @@ function UniqueVariableNamesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/groupBy.mjs":151}],251:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/groupBy.mjs":165}],266:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -42909,6 +52205,7 @@ var _inspect = require("../../jsutils/inspect.mjs");
 var _keyMap = require("../../jsutils/keyMap.mjs");
 var _suggestionList = require("../../jsutils/suggestionList.mjs");
 var _GraphQLError = require("../../error/GraphQLError.mjs");
+var _kinds = require("../../language/kinds.mjs");
 var _printer = require("../../language/printer.mjs");
 var _definition = require("../../type/definition.mjs");
 /**
@@ -42920,7 +52217,16 @@ var _definition = require("../../type/definition.mjs");
  * See https://spec.graphql.org/draft/#sec-Values-of-Correct-Type
  */
 function ValuesOfCorrectTypeRule(context) {
+  let variableDefinitions = {};
   return {
+    OperationDefinition: {
+      enter() {
+        variableDefinitions = {};
+      }
+    },
+    VariableDefinition(definition) {
+      variableDefinitions[definition.variable.name.value] = definition;
+    },
     ListValue(node) {
       // Note: TypeInfo will traverse into a list's item type, so look to the
       // parent input type to check if it is a list.
@@ -42947,6 +52253,9 @@ function ValuesOfCorrectTypeRule(context) {
             nodes: node
           }));
         }
+      }
+      if (type.isOneOf) {
+        validateOneOfInputObject(context, node, type, fieldNodeMap, variableDefinitions);
       }
     },
     ObjectField(node) {
@@ -43017,8 +52326,38 @@ function isValidValueNode(context, node) {
     }
   }
 }
+function validateOneOfInputObject(context, node, type, fieldNodeMap, variableDefinitions) {
+  var _fieldNodeMap$keys$;
+  const keys = Object.keys(fieldNodeMap);
+  const isNotExactlyOneField = keys.length !== 1;
+  if (isNotExactlyOneField) {
+    context.reportError(new _GraphQLError.GraphQLError(`OneOf Input Object "${type.name}" must specify exactly one key.`, {
+      nodes: [node]
+    }));
+    return;
+  }
+  const value = (_fieldNodeMap$keys$ = fieldNodeMap[keys[0]]) === null || _fieldNodeMap$keys$ === void 0 ? void 0 : _fieldNodeMap$keys$.value;
+  const isNullLiteral = !value || value.kind === _kinds.Kind.NULL;
+  const isVariable = (value === null || value === void 0 ? void 0 : value.kind) === _kinds.Kind.VARIABLE;
+  if (isNullLiteral) {
+    context.reportError(new _GraphQLError.GraphQLError(`Field "${type.name}.${keys[0]}" must be non-null.`, {
+      nodes: [node]
+    }));
+    return;
+  }
+  if (isVariable) {
+    const variableName = value.name.value;
+    const definition = variableDefinitions[variableName];
+    const isNullableVariable = definition.type.kind !== _kinds.Kind.NON_NULL_TYPE;
+    if (isNullableVariable) {
+      context.reportError(new _GraphQLError.GraphQLError(`Variable "${variableName}" must be non-nullable to be used for OneOf Input Object "${type.name}".`, {
+        nodes: [node]
+      }));
+    }
+  }
+}
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/didYouMean.mjs":150,"../../jsutils/inspect.mjs":153,"../../jsutils/keyMap.mjs":160,"../../jsutils/suggestionList.mjs":168,"../../language/printer.mjs":183,"../../type/definition.mjs":188}],252:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/didYouMean.mjs":164,"../../jsutils/inspect.mjs":167,"../../jsutils/keyMap.mjs":174,"../../jsutils/suggestionList.mjs":182,"../../language/kinds.mjs":190,"../../language/printer.mjs":197,"../../type/definition.mjs":202}],267:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -43052,7 +52391,7 @@ function VariablesAreInputTypesRule(context) {
   };
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../language/printer.mjs":183,"../../type/definition.mjs":188,"../../utilities/typeFromAST.mjs":215}],253:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../language/printer.mjs":197,"../../type/definition.mjs":202,"../../utilities/typeFromAST.mjs":229}],268:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -43131,7 +52470,7 @@ function allowedVariableUsage(schema, varType, varDefaultValue, locationType, lo
   return (0, _typeComparators.isTypeSubTypeOf)(schema, varType, locationType);
 }
 
-},{"../../error/GraphQLError.mjs":136,"../../jsutils/inspect.mjs":153,"../../language/kinds.mjs":176,"../../type/definition.mjs":188,"../../utilities/typeComparators.mjs":214,"../../utilities/typeFromAST.mjs":215}],254:[function(require,module,exports){
+},{"../../error/GraphQLError.mjs":150,"../../jsutils/inspect.mjs":167,"../../language/kinds.mjs":190,"../../type/definition.mjs":202,"../../utilities/typeComparators.mjs":228,"../../utilities/typeFromAST.mjs":229}],269:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -43209,7 +52548,7 @@ function NoDeprecatedCustomRule(context) {
   };
 }
 
-},{"../../../error/GraphQLError.mjs":136,"../../../jsutils/invariant.mjs":155,"../../../type/definition.mjs":188}],255:[function(require,module,exports){
+},{"../../../error/GraphQLError.mjs":150,"../../../jsutils/invariant.mjs":169,"../../../type/definition.mjs":202}],270:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -43242,13 +52581,13 @@ function NoSchemaIntrospectionCustomRule(context) {
   };
 }
 
-},{"../../../error/GraphQLError.mjs":136,"../../../type/definition.mjs":188,"../../../type/introspection.mjs":191}],256:[function(require,module,exports){
+},{"../../../error/GraphQLError.mjs":150,"../../../type/definition.mjs":202,"../../../type/introspection.mjs":205}],271:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.specifiedSDLRules = exports.specifiedRules = void 0;
+exports.specifiedSDLRules = exports.specifiedRules = exports.recommendedRules = void 0;
 var _ExecutableDefinitionsRule = require("./rules/ExecutableDefinitionsRule.mjs");
 var _FieldsOnCorrectTypeRule = require("./rules/FieldsOnCorrectTypeRule.mjs");
 var _FragmentsOnCompositeTypesRule = require("./rules/FragmentsOnCompositeTypesRule.mjs");
@@ -43258,6 +52597,7 @@ var _KnownFragmentNamesRule = require("./rules/KnownFragmentNamesRule.mjs");
 var _KnownTypeNamesRule = require("./rules/KnownTypeNamesRule.mjs");
 var _LoneAnonymousOperationRule = require("./rules/LoneAnonymousOperationRule.mjs");
 var _LoneSchemaDefinitionRule = require("./rules/LoneSchemaDefinitionRule.mjs");
+var _MaxIntrospectionDepthRule = require("./rules/MaxIntrospectionDepthRule.mjs");
 var _NoFragmentCyclesRule = require("./rules/NoFragmentCyclesRule.mjs");
 var _NoUndefinedVariablesRule = require("./rules/NoUndefinedVariablesRule.mjs");
 var _NoUnusedFragmentsRule = require("./rules/NoUnusedFragmentsRule.mjs");
@@ -43300,6 +52640,8 @@ var _VariablesInAllowedPositionRule = require("./rules/VariablesInAllowedPositio
 
 // SDL-specific validation rules
 
+// TODO: Spec Section
+
 // Spec Section: "Fragments must not form cycles"
 
 // Spec Section: "All Variable Used Defined"
@@ -43337,19 +52679,25 @@ var _VariablesInAllowedPositionRule = require("./rules/VariablesInAllowedPositio
 // Spec Section: "All Variable Usages Are Allowed"
 
 /**
+ * Technically these aren't part of the spec but they are strongly encouraged
+ * validation rules.
+ */
+const recommendedRules = exports.recommendedRules = Object.freeze([_MaxIntrospectionDepthRule.MaxIntrospectionDepthRule]);
+/**
  * This set includes all validation rules defined by the GraphQL spec.
  *
  * The order of the rules in this list has been adjusted to lead to the
  * most clear output when encountering multiple validation errors.
  */
-const specifiedRules = exports.specifiedRules = Object.freeze([_ExecutableDefinitionsRule.ExecutableDefinitionsRule, _UniqueOperationNamesRule.UniqueOperationNamesRule, _LoneAnonymousOperationRule.LoneAnonymousOperationRule, _SingleFieldSubscriptionsRule.SingleFieldSubscriptionsRule, _KnownTypeNamesRule.KnownTypeNamesRule, _FragmentsOnCompositeTypesRule.FragmentsOnCompositeTypesRule, _VariablesAreInputTypesRule.VariablesAreInputTypesRule, _ScalarLeafsRule.ScalarLeafsRule, _FieldsOnCorrectTypeRule.FieldsOnCorrectTypeRule, _UniqueFragmentNamesRule.UniqueFragmentNamesRule, _KnownFragmentNamesRule.KnownFragmentNamesRule, _NoUnusedFragmentsRule.NoUnusedFragmentsRule, _PossibleFragmentSpreadsRule.PossibleFragmentSpreadsRule, _NoFragmentCyclesRule.NoFragmentCyclesRule, _UniqueVariableNamesRule.UniqueVariableNamesRule, _NoUndefinedVariablesRule.NoUndefinedVariablesRule, _NoUnusedVariablesRule.NoUnusedVariablesRule, _KnownDirectivesRule.KnownDirectivesRule, _UniqueDirectivesPerLocationRule.UniqueDirectivesPerLocationRule, _KnownArgumentNamesRule.KnownArgumentNamesRule, _UniqueArgumentNamesRule.UniqueArgumentNamesRule, _ValuesOfCorrectTypeRule.ValuesOfCorrectTypeRule, _ProvidedRequiredArgumentsRule.ProvidedRequiredArgumentsRule, _VariablesInAllowedPositionRule.VariablesInAllowedPositionRule, _OverlappingFieldsCanBeMergedRule.OverlappingFieldsCanBeMergedRule, _UniqueInputFieldNamesRule.UniqueInputFieldNamesRule]);
+
+const specifiedRules = exports.specifiedRules = Object.freeze([_ExecutableDefinitionsRule.ExecutableDefinitionsRule, _UniqueOperationNamesRule.UniqueOperationNamesRule, _LoneAnonymousOperationRule.LoneAnonymousOperationRule, _SingleFieldSubscriptionsRule.SingleFieldSubscriptionsRule, _KnownTypeNamesRule.KnownTypeNamesRule, _FragmentsOnCompositeTypesRule.FragmentsOnCompositeTypesRule, _VariablesAreInputTypesRule.VariablesAreInputTypesRule, _ScalarLeafsRule.ScalarLeafsRule, _FieldsOnCorrectTypeRule.FieldsOnCorrectTypeRule, _UniqueFragmentNamesRule.UniqueFragmentNamesRule, _KnownFragmentNamesRule.KnownFragmentNamesRule, _NoUnusedFragmentsRule.NoUnusedFragmentsRule, _PossibleFragmentSpreadsRule.PossibleFragmentSpreadsRule, _NoFragmentCyclesRule.NoFragmentCyclesRule, _UniqueVariableNamesRule.UniqueVariableNamesRule, _NoUndefinedVariablesRule.NoUndefinedVariablesRule, _NoUnusedVariablesRule.NoUnusedVariablesRule, _KnownDirectivesRule.KnownDirectivesRule, _UniqueDirectivesPerLocationRule.UniqueDirectivesPerLocationRule, _KnownArgumentNamesRule.KnownArgumentNamesRule, _UniqueArgumentNamesRule.UniqueArgumentNamesRule, _ValuesOfCorrectTypeRule.ValuesOfCorrectTypeRule, _ProvidedRequiredArgumentsRule.ProvidedRequiredArgumentsRule, _VariablesInAllowedPositionRule.VariablesInAllowedPositionRule, _OverlappingFieldsCanBeMergedRule.OverlappingFieldsCanBeMergedRule, _UniqueInputFieldNamesRule.UniqueInputFieldNamesRule, ...recommendedRules]);
 /**
  * @internal
  */
 
 const specifiedSDLRules = exports.specifiedSDLRules = Object.freeze([_LoneSchemaDefinitionRule.LoneSchemaDefinitionRule, _UniqueOperationTypesRule.UniqueOperationTypesRule, _UniqueTypeNamesRule.UniqueTypeNamesRule, _UniqueEnumValueNamesRule.UniqueEnumValueNamesRule, _UniqueFieldDefinitionNamesRule.UniqueFieldDefinitionNamesRule, _UniqueArgumentDefinitionNamesRule.UniqueArgumentDefinitionNamesRule, _UniqueDirectiveNamesRule.UniqueDirectiveNamesRule, _KnownTypeNamesRule.KnownTypeNamesRule, _KnownDirectivesRule.KnownDirectivesRule, _UniqueDirectivesPerLocationRule.UniqueDirectivesPerLocationRule, _PossibleTypeExtensionsRule.PossibleTypeExtensionsRule, _KnownArgumentNamesRule.KnownArgumentNamesOnDirectivesRule, _UniqueArgumentNamesRule.UniqueArgumentNamesRule, _UniqueInputFieldNamesRule.UniqueInputFieldNamesRule, _ProvidedRequiredArgumentsRule.ProvidedRequiredArgumentsOnDirectivesRule]);
 
-},{"./rules/ExecutableDefinitionsRule.mjs":220,"./rules/FieldsOnCorrectTypeRule.mjs":221,"./rules/FragmentsOnCompositeTypesRule.mjs":222,"./rules/KnownArgumentNamesRule.mjs":223,"./rules/KnownDirectivesRule.mjs":224,"./rules/KnownFragmentNamesRule.mjs":225,"./rules/KnownTypeNamesRule.mjs":226,"./rules/LoneAnonymousOperationRule.mjs":227,"./rules/LoneSchemaDefinitionRule.mjs":228,"./rules/NoFragmentCyclesRule.mjs":229,"./rules/NoUndefinedVariablesRule.mjs":230,"./rules/NoUnusedFragmentsRule.mjs":231,"./rules/NoUnusedVariablesRule.mjs":232,"./rules/OverlappingFieldsCanBeMergedRule.mjs":233,"./rules/PossibleFragmentSpreadsRule.mjs":234,"./rules/PossibleTypeExtensionsRule.mjs":235,"./rules/ProvidedRequiredArgumentsRule.mjs":236,"./rules/ScalarLeafsRule.mjs":237,"./rules/SingleFieldSubscriptionsRule.mjs":238,"./rules/UniqueArgumentDefinitionNamesRule.mjs":239,"./rules/UniqueArgumentNamesRule.mjs":240,"./rules/UniqueDirectiveNamesRule.mjs":241,"./rules/UniqueDirectivesPerLocationRule.mjs":242,"./rules/UniqueEnumValueNamesRule.mjs":243,"./rules/UniqueFieldDefinitionNamesRule.mjs":244,"./rules/UniqueFragmentNamesRule.mjs":245,"./rules/UniqueInputFieldNamesRule.mjs":246,"./rules/UniqueOperationNamesRule.mjs":247,"./rules/UniqueOperationTypesRule.mjs":248,"./rules/UniqueTypeNamesRule.mjs":249,"./rules/UniqueVariableNamesRule.mjs":250,"./rules/ValuesOfCorrectTypeRule.mjs":251,"./rules/VariablesAreInputTypesRule.mjs":252,"./rules/VariablesInAllowedPositionRule.mjs":253}],257:[function(require,module,exports){
+},{"./rules/ExecutableDefinitionsRule.mjs":234,"./rules/FieldsOnCorrectTypeRule.mjs":235,"./rules/FragmentsOnCompositeTypesRule.mjs":236,"./rules/KnownArgumentNamesRule.mjs":237,"./rules/KnownDirectivesRule.mjs":238,"./rules/KnownFragmentNamesRule.mjs":239,"./rules/KnownTypeNamesRule.mjs":240,"./rules/LoneAnonymousOperationRule.mjs":241,"./rules/LoneSchemaDefinitionRule.mjs":242,"./rules/MaxIntrospectionDepthRule.mjs":243,"./rules/NoFragmentCyclesRule.mjs":244,"./rules/NoUndefinedVariablesRule.mjs":245,"./rules/NoUnusedFragmentsRule.mjs":246,"./rules/NoUnusedVariablesRule.mjs":247,"./rules/OverlappingFieldsCanBeMergedRule.mjs":248,"./rules/PossibleFragmentSpreadsRule.mjs":249,"./rules/PossibleTypeExtensionsRule.mjs":250,"./rules/ProvidedRequiredArgumentsRule.mjs":251,"./rules/ScalarLeafsRule.mjs":252,"./rules/SingleFieldSubscriptionsRule.mjs":253,"./rules/UniqueArgumentDefinitionNamesRule.mjs":254,"./rules/UniqueArgumentNamesRule.mjs":255,"./rules/UniqueDirectiveNamesRule.mjs":256,"./rules/UniqueDirectivesPerLocationRule.mjs":257,"./rules/UniqueEnumValueNamesRule.mjs":258,"./rules/UniqueFieldDefinitionNamesRule.mjs":259,"./rules/UniqueFragmentNamesRule.mjs":260,"./rules/UniqueInputFieldNamesRule.mjs":261,"./rules/UniqueOperationNamesRule.mjs":262,"./rules/UniqueOperationTypesRule.mjs":263,"./rules/UniqueTypeNamesRule.mjs":264,"./rules/UniqueVariableNamesRule.mjs":265,"./rules/ValuesOfCorrectTypeRule.mjs":266,"./rules/VariablesAreInputTypesRule.mjs":267,"./rules/VariablesInAllowedPositionRule.mjs":268}],272:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -43457,7 +52805,7 @@ function assertValidSDLExtension(documentAST, schema) {
   }
 }
 
-},{"../error/GraphQLError.mjs":136,"../jsutils/devAssert.mjs":149,"../language/visitor.mjs":186,"../type/validate.mjs":194,"../utilities/TypeInfo.mjs":195,"./ValidationContext.mjs":218,"./specifiedRules.mjs":256}],258:[function(require,module,exports){
+},{"../error/GraphQLError.mjs":150,"../jsutils/devAssert.mjs":163,"../language/visitor.mjs":200,"../type/validate.mjs":208,"../utilities/TypeInfo.mjs":209,"./ValidationContext.mjs":232,"./specifiedRules.mjs":271}],273:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -43470,19 +52818,19 @@ exports.versionInfo = exports.version = void 0;
 /**
  * A string containing the version of the GraphQL.js library
  */
-const version = exports.version = '16.8.2';
+const version = exports.version = '16.9.0';
 /**
  * An object containing the components of the GraphQL.js version string
  */
 
 const versionInfo = exports.versionInfo = Object.freeze({
   major: 16,
-  minor: 8,
-  patch: 2,
+  minor: 9,
+  patch: 0,
   preReleaseTag: null
 });
 
-},{}],259:[function(require,module,exports){
+},{}],274:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -43511,10 +52859,10 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],260:[function(require,module,exports){
+},{}],275:[function(require,module,exports){
 module.exports = require('./lib/api')(require('./lib/keccak'))
 
-},{"./lib/api":261,"./lib/keccak":265}],261:[function(require,module,exports){
+},{"./lib/api":276,"./lib/keccak":280}],276:[function(require,module,exports){
 const createKeccak = require('./keccak')
 const createShake = require('./shake')
 
@@ -43543,7 +52891,7 @@ module.exports = function (KeccakState) {
   }
 }
 
-},{"./keccak":262,"./shake":263}],262:[function(require,module,exports){
+},{"./keccak":277,"./shake":278}],277:[function(require,module,exports){
 (function (Buffer){(function (){
 const { Transform } = require('readable-stream')
 
@@ -43624,7 +52972,7 @@ module.exports = (KeccakState) => class Keccak extends Transform {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":2,"readable-stream":280}],263:[function(require,module,exports){
+},{"buffer":2,"readable-stream":295}],278:[function(require,module,exports){
 (function (Buffer){(function (){
 const { Transform } = require('readable-stream')
 
@@ -43696,7 +53044,7 @@ module.exports = (KeccakState) => class Shake extends Transform {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":2,"readable-stream":280}],264:[function(require,module,exports){
+},{"buffer":2,"readable-stream":295}],279:[function(require,module,exports){
 const P1600_ROUND_CONSTANTS = [1, 0, 32898, 0, 32906, 2147483648, 2147516416, 2147483648, 32907, 0, 2147483649, 0, 2147516545, 2147483648, 32777, 2147483648, 138, 0, 136, 0, 2147516425, 0, 2147483658, 0, 2147516555, 0, 139, 2147483648, 32905, 2147483648, 32771, 2147483648, 32770, 2147483648, 128, 2147483648, 32778, 0, 2147483658, 2147483648, 2147516545, 2147483648, 32896, 2147483648, 2147483649, 0, 2147516424, 2147483648]
 
 exports.p1600 = function (s) {
@@ -43884,7 +53232,7 @@ exports.p1600 = function (s) {
   }
 }
 
-},{}],265:[function(require,module,exports){
+},{}],280:[function(require,module,exports){
 (function (Buffer){(function (){
 const keccakState = require('./keccak-state-unroll')
 
@@ -43956,7 +53304,7 @@ Keccak.prototype.copy = function (dest) {
 module.exports = Keccak
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./keccak-state-unroll":264,"buffer":2}],266:[function(require,module,exports){
+},{"./keccak-state-unroll":279,"buffer":2}],281:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -44085,7 +53433,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],267:[function(require,module,exports){
+},{}],282:[function(require,module,exports){
 (function (process){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -44214,7 +53562,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this)}).call(this,require('_process'))
-},{"./_stream_readable":269,"./_stream_writable":271,"_process":5,"inherits":259}],268:[function(require,module,exports){
+},{"./_stream_readable":284,"./_stream_writable":286,"_process":5,"inherits":274}],283:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -44252,7 +53600,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":270,"inherits":259}],269:[function(require,module,exports){
+},{"./_stream_transform":285,"inherits":274}],284:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -45282,7 +54630,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":266,"./_stream_duplex":267,"./internal/streams/async_iterator":272,"./internal/streams/buffer_list":273,"./internal/streams/destroy":274,"./internal/streams/from":276,"./internal/streams/state":278,"./internal/streams/stream":279,"_process":5,"buffer":2,"events":3,"inherits":259,"string_decoder/":283,"util":133}],270:[function(require,module,exports){
+},{"../errors":281,"./_stream_duplex":282,"./internal/streams/async_iterator":287,"./internal/streams/buffer_list":288,"./internal/streams/destroy":289,"./internal/streams/from":291,"./internal/streams/state":293,"./internal/streams/stream":294,"_process":5,"buffer":2,"events":3,"inherits":274,"string_decoder/":298,"util":148}],285:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -45473,7 +54821,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":266,"./_stream_duplex":267,"inherits":259}],271:[function(require,module,exports){
+},{"../errors":281,"./_stream_duplex":282,"inherits":274}],286:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -46117,7 +55465,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":266,"./_stream_duplex":267,"./internal/streams/destroy":274,"./internal/streams/state":278,"./internal/streams/stream":279,"_process":5,"buffer":2,"inherits":259,"util-deprecate":285}],272:[function(require,module,exports){
+},{"../errors":281,"./_stream_duplex":282,"./internal/streams/destroy":289,"./internal/streams/state":293,"./internal/streams/stream":294,"_process":5,"buffer":2,"inherits":274,"util-deprecate":300}],287:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -46300,7 +55648,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 };
 module.exports = createReadableStreamAsyncIterator;
 }).call(this)}).call(this,require('_process'))
-},{"./end-of-stream":275,"_process":5}],273:[function(require,module,exports){
+},{"./end-of-stream":290,"_process":5}],288:[function(require,module,exports){
 'use strict';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
@@ -46484,7 +55832,7 @@ module.exports = /*#__PURE__*/function () {
   }]);
   return BufferList;
 }();
-},{"buffer":2,"util":133}],274:[function(require,module,exports){
+},{"buffer":2,"util":148}],289:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -46583,7 +55931,7 @@ module.exports = {
   errorOrDestroy: errorOrDestroy
 };
 }).call(this)}).call(this,require('_process'))
-},{"_process":5}],275:[function(require,module,exports){
+},{"_process":5}],290:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 
@@ -46670,12 +56018,12 @@ function eos(stream, opts, callback) {
   };
 }
 module.exports = eos;
-},{"../../../errors":266}],276:[function(require,module,exports){
+},{"../../../errors":281}],291:[function(require,module,exports){
 module.exports = function () {
   throw new Error('Readable.from is not available in the browser')
 };
 
-},{}],277:[function(require,module,exports){
+},{}],292:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 
@@ -46762,7 +56110,7 @@ function pipeline() {
   return streams.reduce(pipe);
 }
 module.exports = pipeline;
-},{"../../../errors":266,"./end-of-stream":275}],278:[function(require,module,exports){
+},{"../../../errors":281,"./end-of-stream":290}],293:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -46785,10 +56133,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":266}],279:[function(require,module,exports){
+},{"../../../errors":281}],294:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":3}],280:[function(require,module,exports){
+},{"events":3}],295:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -46799,7 +56147,7 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":267,"./lib/_stream_passthrough.js":268,"./lib/_stream_readable.js":269,"./lib/_stream_transform.js":270,"./lib/_stream_writable.js":271,"./lib/internal/streams/end-of-stream.js":275,"./lib/internal/streams/pipeline.js":277}],281:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":282,"./lib/_stream_passthrough.js":283,"./lib/_stream_readable.js":284,"./lib/_stream_transform.js":285,"./lib/_stream_writable.js":286,"./lib/internal/streams/end-of-stream.js":290,"./lib/internal/streams/pipeline.js":292}],296:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -46887,7 +56235,7 @@ if (typeof window !== 'undefined') {
 }
 module.exports = keccak256;
 
-},{"bn.js":132,"buffer":2,"keccak":260}],282:[function(require,module,exports){
+},{"bn.js":147,"buffer":2,"keccak":275}],297:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -46951,7 +56299,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":2}],283:[function(require,module,exports){
+},{"buffer":2}],298:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -47248,7 +56596,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":282}],284:[function(require,module,exports){
+},{"safe-buffer":297}],299:[function(require,module,exports){
 (function(nacl) {
 'use strict';
 
@@ -49641,7 +58989,7 @@ nacl.setPRNG = function(fn) {
 
 })(typeof module !== 'undefined' && module.exports ? module.exports : (self.nacl = self.nacl || {}));
 
-},{"crypto":133}],285:[function(require,module,exports){
+},{"crypto":148}],300:[function(require,module,exports){
 (function (global){(function (){
 
 /**
@@ -49712,3849 +59060,9 @@ function config (name) {
 }
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],286:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ValiError = exports.UUID_REGEX = exports.ULID_REGEX = exports.OCTAL_REGEX = exports.MAC64_REGEX = exports.MAC48_REGEX = exports.ISO_WEEK_REGEX = exports.ISO_TIME_SECOND_REGEX = exports.ISO_TIME_REGEX = exports.ISO_TIMESTAMP_REGEX = exports.ISO_DATE_TIME_REGEX = exports.ISO_DATE_REGEX = exports.IPV6_REGEX = exports.IPV4_REGEX = exports.IMEI_REGEX = exports.HEX_COLOR_REGEX = exports.HEXADECIMAL_REGEX = exports.EMOJI_REGEX = exports.EMAIL_REGEX = exports.DECIMAL_REGEX = exports.CUID2_REGEX = exports.BrandSymbol = exports.BIC_REGEX = void 0;
-exports.actionIssue = actionIssue;
-exports.actionOutput = actionOutput;
-exports.any = any;
-exports.anyAsync = anyAsync;
-exports.array = array;
-exports.arrayAsync = arrayAsync;
-exports.bic = bic;
-exports.bigint = bigint;
-exports.bigintAsync = bigintAsync;
-exports.blob = blob;
-exports.blobAsync = blobAsync;
-exports.boolean = boolean;
-exports.booleanAsync = booleanAsync;
-exports.brand = brand;
-exports.bytes = bytes;
-exports.coerce = coerce;
-exports.coerceAsync = coerceAsync;
-exports.creditCard = creditCard;
-exports.cuid2 = cuid2;
-exports.custom = custom;
-exports.customAsync = customAsync;
-exports.date = date;
-exports.dateAsync = dateAsync;
-exports.decimal = decimal;
-exports.defaultArgs = defaultArgs;
-exports.discriminatedUnionAsync = exports.discriminatedUnion = void 0;
-exports.email = email;
-exports.emoji = emoji;
-exports.endsWith = endsWith;
-exports.enumAsync = enumAsync;
-exports.enumTypeAsync = exports.enumType = void 0;
-exports.enum_ = enum_;
-exports.equal = equal;
-exports.excludes = excludes;
-exports.fallback = fallback;
-exports.fallbackAsync = fallbackAsync;
-exports.finite = finite;
-exports.flatten = flatten;
-exports.forward = forward;
-exports.getDefault = getDefault;
-exports.getDefaultAsync = getDefaultAsync;
-exports.getDefaults = getDefaults;
-exports.getDefaultsAsync = getDefaultsAsync;
-exports.getFallback = getFallback;
-exports.getFallbackAsync = getFallbackAsync;
-exports.getFallbacks = getFallbacks;
-exports.getFallbacksAsync = getFallbacksAsync;
-exports.hexColor = hexColor;
-exports.hexadecimal = hexadecimal;
-exports.imei = imei;
-exports.includes = includes;
-exports.instance = instance;
-exports.instanceAsync = instanceAsync;
-exports.integer = integer;
-exports.intersect = intersect;
-exports.intersection = void 0;
-exports.ip = ip;
-exports.ipv4 = ipv4;
-exports.ipv6 = ipv6;
-exports.is = is;
-exports.isLuhnAlgo = isLuhnAlgo;
-exports.isoDate = isoDate;
-exports.isoDateTime = isoDateTime;
-exports.isoTime = isoTime;
-exports.isoTimeSecond = isoTimeSecond;
-exports.isoTimestamp = isoTimestamp;
-exports.isoWeek = isoWeek;
-exports.keyof = keyof;
-exports.length = length;
-exports.literal = literal;
-exports.literalAsync = literalAsync;
-exports.mac = mac;
-exports.mac48 = mac48;
-exports.mac64 = mac64;
-exports.map = map;
-exports.mapAsync = mapAsync;
-exports.maxBytes = maxBytes;
-exports.maxLength = maxLength;
-exports.maxRange = void 0;
-exports.maxSize = maxSize;
-exports.maxValue = maxValue;
-exports.merge = merge;
-exports.mergeAsync = mergeAsync;
-exports.mimeType = mimeType;
-exports.minBytes = minBytes;
-exports.minLength = minLength;
-exports.minRange = void 0;
-exports.minSize = minSize;
-exports.minValue = minValue;
-exports.multipleOf = multipleOf;
-exports.nan = nan;
-exports.nanAsync = nanAsync;
-exports.nativeEnumAsync = exports.nativeEnum = void 0;
-exports.never = never;
-exports.neverAsync = neverAsync;
-exports.nonNullable = nonNullable;
-exports.nonNullableAsync = nonNullableAsync;
-exports.nonNullish = nonNullish;
-exports.nonNullishAsync = nonNullishAsync;
-exports.nonOptional = nonOptional;
-exports.nonOptionalAsync = nonOptionalAsync;
-exports.notBytes = notBytes;
-exports.notLength = notLength;
-exports.notSize = notSize;
-exports.notValue = notValue;
-exports.nullAsync = nullAsync;
-exports.nullTypeAsync = exports.nullType = void 0;
-exports.null_ = null_;
-exports.nullable = nullable;
-exports.nullableAsync = nullableAsync;
-exports.nullish = nullish;
-exports.nullishAsync = nullishAsync;
-exports.number = number;
-exports.numberAsync = numberAsync;
-exports.object = object;
-exports.objectAsync = objectAsync;
-exports.octal = octal;
-exports.omit = omit;
-exports.omitAsync = omitAsync;
-exports.optional = optional;
-exports.optionalAsync = optionalAsync;
-exports.parse = parse;
-exports.parseAsync = parseAsync;
-exports.parseResult = parseResult;
-exports.partial = partial;
-exports.partialAsync = partialAsync;
-exports.passthrough = passthrough;
-exports.passthroughAsync = passthroughAsync;
-exports.pick = pick;
-exports.pickAsync = pickAsync;
-exports.picklist = picklist;
-exports.picklistAsync = picklistAsync;
-exports.pipeResult = pipeResult;
-exports.pipeResultAsync = pipeResultAsync;
-exports.record = record;
-exports.recordAsync = recordAsync;
-exports.recursive = recursive;
-exports.recursiveAsync = recursiveAsync;
-exports.regex = regex;
-exports.required = required;
-exports.requiredAsync = requiredAsync;
-exports.restAndDefaultArgs = restAndDefaultArgs;
-exports.safeInteger = safeInteger;
-exports.safeParse = safeParse;
-exports.safeParseAsync = safeParseAsync;
-exports.schemaIssue = schemaIssue;
-exports.set = set;
-exports.setAsync = setAsync;
-exports.size = size;
-exports.special = special;
-exports.specialAsync = specialAsync;
-exports.startsWith = startsWith;
-exports.strict = strict;
-exports.strictAsync = strictAsync;
-exports.string = string;
-exports.stringAsync = stringAsync;
-exports.strip = strip;
-exports.stripAsync = stripAsync;
-exports.symbol = symbol;
-exports.symbolAsync = symbolAsync;
-exports.toCustom = toCustom;
-exports.toCustomAsync = toCustomAsync;
-exports.toLowerCase = toLowerCase;
-exports.toMaxValue = toMaxValue;
-exports.toMinValue = toMinValue;
-exports.toTrimmed = toTrimmed;
-exports.toTrimmedEnd = toTrimmedEnd;
-exports.toTrimmedStart = toTrimmedStart;
-exports.toUpperCase = toUpperCase;
-exports.transform = transform;
-exports.transformAsync = transformAsync;
-exports.tuple = tuple;
-exports.tupleAsync = tupleAsync;
-exports.ulid = ulid;
-exports.undefinedAsync = undefinedAsync;
-exports.undefinedTypeAsync = exports.undefinedType = void 0;
-exports.undefined_ = undefined_;
-exports.union = union;
-exports.unionAsync = unionAsync;
-exports.unknown = unknown;
-exports.unknownAsync = unknownAsync;
-exports.unwrap = unwrap;
-exports.url = url;
-exports.useDefault = void 0;
-exports.uuid = uuid;
-exports.value = value;
-exports.variant = variant;
-exports.variantAsync = variantAsync;
-exports.voidAsync = voidAsync;
-exports.voidTypeAsync = exports.voidType = void 0;
-exports.void_ = void_;
-exports.withDefault = withDefault;
-// src/error/flatten/flatten.ts
-function flatten(arg1) {
-  return (Array.isArray(arg1) ? arg1 : arg1.issues).reduce((flatErrors, issue) => {
-    if (issue.path) {
-      if (issue.path.every(({
-        key
-      }) => typeof key === "string" || typeof key === "number")) {
-        const path = issue.path.map(({
-          key
-        }) => key).join(".");
-        if (flatErrors.nested[path]) {
-          flatErrors.nested[path].push(issue.message);
-        } else {
-          flatErrors.nested[path] = [issue.message];
-        }
-      }
-    } else {
-      if (flatErrors.root) {
-        flatErrors.root.push(issue.message);
-      } else {
-        flatErrors.root = [issue.message];
-      }
-    }
-    return flatErrors;
-  }, {
-    nested: {}
-  });
-}
-
-// src/error/ValiError/ValiError.ts
-var ValiError = class extends Error {
-  issues;
-  /**
-   * Creates a Valibot error with useful information.
-   *
-   * @param issues The error issues.
-   */
-  constructor(issues) {
-    super(issues[0].message);
-    this.name = "ValiError";
-    this.issues = issues;
-  }
-};
-
-// src/methods/brand/brand.ts
-exports.ValiError = ValiError;
-var BrandSymbol = exports.BrandSymbol = Symbol("brand");
-function brand(schema, name) {
-  return schema;
-}
-
-// src/methods/coerce/coerce.ts
-function coerce(schema, action) {
-  return {
-    ...schema,
-    _parse(input, info) {
-      return schema._parse(action(input), info);
-    }
-  };
-}
-
-// src/methods/coerce/coerceAsync.ts
-function coerceAsync(schema, action) {
-  return {
-    ...schema,
-    async _parse(input, info) {
-      return schema._parse(await action(input), info);
-    }
-  };
-}
-
-// src/utils/errorMessage/errorMessage.ts
-function errorMessage(message) {
-  return typeof message === "function" ? message() : message;
-}
-
-// src/utils/actionIssue/actionIssue.ts
-function actionIssue(validation, message, input, requirement, path) {
-  return {
-    issues: [{
-      validation,
-      message: errorMessage(message),
-      input,
-      requirement,
-      path
-    }]
-  };
-}
-
-// src/utils/actionOutput/actionOutput.ts
-function actionOutput(output) {
-  return {
-    output
-  };
-}
-
-// src/utils/defaultArgs/defaultArgs.ts
-function defaultArgs(arg1, arg2) {
-  return Array.isArray(arg1) ? [void 0, arg1] : [arg1, arg2];
-}
-
-// src/utils/parseResult/parseResult.ts
-function parseResult(typed, output, issues) {
-  return {
-    typed,
-    output,
-    issues
-  };
-}
-
-// src/utils/restAndDefaultArgs/restAndDefaultArgs.ts
-function restAndDefaultArgs(arg1, arg2, arg3) {
-  if (!arg1 || typeof arg1 === "object" && !Array.isArray(arg1)) {
-    const [error2, pipe2] = defaultArgs(arg2, arg3);
-    return [arg1, error2, pipe2];
-  }
-  const [error, pipe] = defaultArgs(arg1, arg2);
-  return [void 0, error, pipe];
-}
-
-// src/utils/isLuhnAlgo/isLuhnAlgo.ts
-var NON_DIGIT_REGEX = /\D/gu;
-function isLuhnAlgo(input) {
-  const number2 = input.replace(NON_DIGIT_REGEX, "");
-  let length2 = number2.length;
-  let bit = 1;
-  let sum = 0;
-  while (length2) {
-    const value2 = +number2[--length2];
-    bit ^= 1;
-    sum += bit ? [0, 2, 4, 6, 8, 1, 3, 5, 7, 9][value2] : value2;
-  }
-  return sum % 10 === 0;
-}
-
-// src/utils/pipeResult/utils/pipeIssue/pipeIssue.ts
-function pipeIssue(info, issue) {
-  return {
-    reason: info?.reason,
-    validation: issue.validation,
-    origin: info?.origin || "value",
-    message: issue.message,
-    input: issue.input,
-    requirement: issue?.requirement,
-    path: issue.path,
-    abortEarly: info?.abortEarly,
-    abortPipeEarly: info?.abortPipeEarly,
-    skipPipe: info?.skipPipe
-  };
-}
-
-// src/utils/pipeResult/utils/pipeInfo/pipeInfo.ts
-function pipeInfo(info, reason) {
-  return {
-    reason,
-    origin: info?.origin,
-    abortEarly: info?.abortEarly,
-    abortPipeEarly: info?.abortPipeEarly,
-    skipPipe: info?.skipPipe
-  };
-}
-
-// src/utils/pipeResult/pipeResult.ts
-function pipeResult(input, pipe, parseInfo, reason, issues) {
-  let info;
-  let output = input;
-  if (pipe?.length && !parseInfo?.skipPipe) {
-    for (const action of pipe) {
-      const result = action._parse(output);
-      if (result.issues) {
-        info = info || pipeInfo(parseInfo, reason);
-        for (const issueInfo of result.issues) {
-          const issue = pipeIssue(info, issueInfo);
-          issues ? issues.push(issue) : issues = [issue];
-        }
-        if (info.abortEarly || info.abortPipeEarly) {
-          break;
-        }
-      } else {
-        output = result.output;
-      }
-    }
-  }
-  return parseResult(true, output, issues);
-}
-
-// src/utils/pipeResult/pipeResultAsync.ts
-async function pipeResultAsync(input, pipe, parseInfo, reason, issues) {
-  let info;
-  let output = input;
-  if (pipe?.length && !parseInfo?.skipPipe) {
-    for (const action of pipe) {
-      const result = await action._parse(output);
-      if (result.issues) {
-        info = info || pipeInfo(parseInfo, reason);
-        for (const issueInfo of result.issues) {
-          const issue = pipeIssue(info, issueInfo);
-          issues ? issues.push(issue) : issues = [issue];
-        }
-        if (info.abortEarly || info.abortPipeEarly) {
-          break;
-        }
-      } else {
-        output = result.output;
-      }
-    }
-  }
-  return parseResult(true, output, issues);
-}
-
-// src/utils/schemaIssue/schemaIssue.ts
-function schemaIssue(info, reason, validation, message, input, path, issues) {
-  return {
-    typed: false,
-    output: input,
-    issues: [{
-      reason,
-      validation,
-      origin: info?.origin || "value",
-      message: errorMessage(message),
-      input,
-      path,
-      issues,
-      abortEarly: info?.abortEarly,
-      abortPipeEarly: info?.abortPipeEarly,
-      skipPipe: info?.skipPipe
-    }]
-  };
-}
-
-// src/methods/getFallback/getFallback.ts
-function getFallback(schema, info) {
-  return typeof schema.fallback === "function" ? schema.fallback(info) : schema.fallback;
-}
-
-// src/methods/getFallback/getFallbackAsync.ts
-async function getFallbackAsync(schema, info) {
-  return typeof schema.fallback === "function" ? await schema.fallback(info) : schema.fallback;
-}
-
-// src/methods/fallback/fallback.ts
-function fallback(schema, fallback2) {
-  return {
-    ...schema,
-    fallback: fallback2,
-    _parse(input, info) {
-      const result = schema._parse(input, info);
-      return result.issues ? parseResult(true, getFallback(this, {
-        input,
-        issues: result.issues
-      })) : result;
-    }
-  };
-}
-
-// src/methods/fallback/fallbackAsync.ts
-function fallbackAsync(schema, fallback2) {
-  return {
-    ...schema,
-    fallback: fallback2,
-    async _parse(input, info) {
-      const result = await schema._parse(input, info);
-      return result.issues ? parseResult(true, await getFallbackAsync(this, {
-        input,
-        issues: result.issues
-      })) : result;
-    }
-  };
-}
-
-// src/methods/forward/forward.ts
-function forward(validation, pathList) {
-  return {
-    ...validation,
-    _parse(input) {
-      const result = validation._parse(input);
-      if (result.issues) {
-        for (const issue of result.issues) {
-          let pathInput = input;
-          for (const key of pathList) {
-            const pathValue = pathInput[key];
-            issue.input = pathValue;
-            const pathItem = {
-              type: "unknown",
-              input: pathInput,
-              key,
-              value: pathValue
-            };
-            issue.path ? issue.path.push(pathItem) : issue.path = [pathItem];
-            if (!pathValue) {
-              break;
-            }
-            pathInput = pathValue;
-          }
-        }
-      }
-      return result;
-    }
-  };
-}
-
-// src/methods/getDefault/getDefault.ts
-function getDefault(schema) {
-  return typeof schema.default === "function" ? schema.default() : schema.default;
-}
-
-// src/methods/getDefault/getDefaultAsync.ts
-async function getDefaultAsync(schema) {
-  return typeof schema.default === "function" ? await schema.default() : schema.default;
-}
-
-// src/methods/getDefaults/getDefaults.ts
-function getDefaults(schema) {
-  let defaults;
-  if (schema.default) {
-    defaults = getDefault(schema);
-  } else if ("type" in schema) {
-    if (schema.type === "object") {
-      defaults = {};
-      for (const key in schema.entries) {
-        defaults[key] = getDefaults(schema.entries[key]);
-      }
-    } else if (schema.type === "tuple") {
-      defaults = [];
-      for (let key = 0; key < schema.items.length; key++) {
-        defaults.push(getDefaults(schema.items[key]));
-      }
-    }
-  }
-  return defaults;
-}
-
-// src/methods/getDefaults/getDefaultsAsync.ts
-async function getDefaultsAsync(schema) {
-  let defaults;
-  if (schema.default) {
-    defaults = await getDefaultAsync(schema);
-  } else if ("type" in schema) {
-    if (schema.type === "object") {
-      defaults = {};
-      for (const key in schema.entries) {
-        defaults[key] = await getDefaultsAsync(schema.entries[key]);
-      }
-    } else if (schema.type === "tuple") {
-      defaults = [];
-      for (let key = 0; key < schema.items.length; key++) {
-        defaults.push(await getDefaultsAsync(schema.items[key]));
-      }
-    }
-  }
-  return defaults;
-}
-
-// src/methods/getFallbacks/getFallbacks.ts
-function getFallbacks(schema) {
-  let fallbacks;
-  if (schema.fallback) {
-    fallbacks = getFallback(schema);
-  } else if ("type" in schema) {
-    if (schema.type === "object") {
-      fallbacks = {};
-      for (const key in schema.entries) {
-        fallbacks[key] = getFallbacks(schema.entries[key]);
-      }
-    } else if (schema.type === "tuple") {
-      fallbacks = [];
-      for (let key = 0; key < schema.items.length; key++) {
-        fallbacks.push(getFallbacks(schema.items[key]));
-      }
-    }
-  }
-  return fallbacks;
-}
-
-// src/methods/getFallbacks/getFallbacksAsync.ts
-async function getFallbacksAsync(schema) {
-  let fallbacks;
-  if (schema.fallback) {
-    fallbacks = await getFallbackAsync(schema);
-  } else if ("type" in schema) {
-    if (schema.type === "object") {
-      fallbacks = {};
-      await Promise.all(Object.entries(schema.entries).map(async ([key, schema2]) => {
-        fallbacks[key] = await getFallbacksAsync(schema2);
-      }));
-    } else if (schema.type === "tuple") {
-      fallbacks = await Promise.all(schema.items.map(schema2 => getFallbacksAsync(schema2)));
-    }
-  }
-  return fallbacks;
-}
-
-// src/methods/is/is.ts
-function is(schema, input, info) {
-  return !schema._parse(input, {
-    abortEarly: true,
-    skipPipe: info?.skipPipe
-  }).issues;
-}
-
-// src/schemas/any/any.ts
-function any(pipe) {
-  return {
-    type: "any",
-    async: false,
-    pipe,
-    _parse(input, info) {
-      return pipeResult(input, this.pipe, info, "any");
-    }
-  };
-}
-
-// src/schemas/any/anyAsync.ts
-function anyAsync(pipe) {
-  return {
-    type: "any",
-    async: true,
-    pipe,
-    async _parse(input, info) {
-      return pipeResultAsync(input, this.pipe, info, "any");
-    }
-  };
-}
-
-// src/schemas/array/array.ts
-function array(item, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "array",
-    async: false,
-    item,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!Array.isArray(input)) {
-        return schemaIssue(info, "type", "array", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = [];
-      for (let key = 0; key < input.length; key++) {
-        const value2 = input[key];
-        const result = this.item._parse(value2, info);
-        if (result.issues) {
-          const pathItem = {
-            type: "array",
-            input,
-            key,
-            value: value2
-          };
-          for (const issue of result.issues) {
-            if (issue.path) {
-              issue.path.unshift(pathItem);
-            } else {
-              issue.path = [pathItem];
-            }
-            issues?.push(issue);
-          }
-          if (!issues) {
-            issues = result.issues;
-          }
-          if (info?.abortEarly) {
-            typed = false;
-            break;
-          }
-        }
-        if (!result.typed) {
-          typed = false;
-        }
-        output.push(result.output);
-      }
-      if (typed) {
-        return pipeResult(output, this.pipe, info, "array", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/array/arrayAsync.ts
-function arrayAsync(item, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "array",
-    async: true,
-    item,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!Array.isArray(input)) {
-        return schemaIssue(info, "type", "array", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = [];
-      await Promise.all(input.map(async (value2, key) => {
-        if (!(info?.abortEarly && issues)) {
-          const result = await this.item._parse(value2, info);
-          if (!(info?.abortEarly && issues)) {
-            if (result.issues) {
-              const pathItem = {
-                type: "array",
-                input,
-                key,
-                value: value2
-              };
-              for (const issue of result.issues) {
-                if (issue.path) {
-                  issue.path.unshift(pathItem);
-                } else {
-                  issue.path = [pathItem];
-                }
-                issues?.push(issue);
-              }
-              if (!issues) {
-                issues = result.issues;
-              }
-              if (info?.abortEarly) {
-                typed = false;
-                throw null;
-              }
-            }
-            if (!result.typed) {
-              typed = false;
-            }
-            output[key] = result.output;
-          }
-        }
-      })).catch(() => null);
-      if (typed) {
-        return pipeResultAsync(output, this.pipe, info, "array", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/bigint/bigint.ts
-function bigint(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "bigint",
-    async: false,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (typeof input !== "bigint") {
-        return schemaIssue(info, "type", "bigint", this.message, input);
-      }
-      return pipeResult(input, this.pipe, info, "bigint");
-    }
-  };
-}
-
-// src/schemas/bigint/bigintAsync.ts
-function bigintAsync(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "bigint",
-    async: true,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (typeof input !== "bigint") {
-        return schemaIssue(info, "type", "bigint", this.message, input);
-      }
-      return pipeResultAsync(input, this.pipe, info, "bigint");
-    }
-  };
-}
-
-// src/schemas/blob/blob.ts
-function blob(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "blob",
-    async: false,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!(input instanceof Blob)) {
-        return schemaIssue(info, "type", "blob", this.message, input);
-      }
-      return pipeResult(input, this.pipe, info, "blob");
-    }
-  };
-}
-
-// src/schemas/blob/blobAsync.ts
-function blobAsync(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "blob",
-    async: true,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!(input instanceof Blob)) {
-        return schemaIssue(info, "type", "blob", this.message, input);
-      }
-      return pipeResultAsync(input, this.pipe, info, "blob");
-    }
-  };
-}
-
-// src/schemas/boolean/boolean.ts
-function boolean(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "boolean",
-    async: false,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (typeof input !== "boolean") {
-        return schemaIssue(info, "type", "boolean", this.message, input);
-      }
-      return pipeResult(input, this.pipe, info, "boolean");
-    }
-  };
-}
-
-// src/schemas/boolean/booleanAsync.ts
-function booleanAsync(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "boolean",
-    async: true,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (typeof input !== "boolean") {
-        return schemaIssue(info, "type", "boolean", this.message, input);
-      }
-      return pipeResultAsync(input, this.pipe, info, "boolean");
-    }
-  };
-}
-
-// src/schemas/date/date.ts
-function date(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "date",
-    async: false,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!(input instanceof Date) || isNaN(input.getTime())) {
-        return schemaIssue(info, "type", "date", this.message, input);
-      }
-      return pipeResult(input, this.pipe, info, "date");
-    }
-  };
-}
-
-// src/schemas/date/dateAsync.ts
-function dateAsync(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "date",
-    async: true,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!(input instanceof Date) || isNaN(input.getTime())) {
-        return schemaIssue(info, "type", "date", this.message, input);
-      }
-      return pipeResultAsync(input, this.pipe, info, "date");
-    }
-  };
-}
-
-// src/schemas/enum/enum.ts
-function enum_(enum_2, message = "Invalid type") {
-  return {
-    type: "enum",
-    async: false,
-    enum: enum_2,
-    message,
-    _parse(input, info) {
-      if (!Object.values(this.enum).includes(input)) {
-        return schemaIssue(info, "type", "enum", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var nativeEnum = exports.nativeEnum = enum_;
-
-// src/schemas/enum/enumAsync.ts
-function enumAsync(enum_2, message = "Invalid type") {
-  return {
-    type: "enum",
-    async: true,
-    enum: enum_2,
-    message,
-    async _parse(input, info) {
-      if (!Object.values(this.enum).includes(input)) {
-        return schemaIssue(info, "type", "enum", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var nativeEnumAsync = exports.nativeEnumAsync = enumAsync;
-
-// src/schemas/instance/instance.ts
-function instance(class_, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "instance",
-    async: false,
-    class: class_,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!(input instanceof this.class)) {
-        return schemaIssue(info, "type", "instance", this.message, input);
-      }
-      return pipeResult(input, this.pipe, info, "instance");
-    }
-  };
-}
-
-// src/schemas/instance/instanceAsync.ts
-function instanceAsync(class_, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "instance",
-    async: true,
-    class: class_,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!(input instanceof this.class)) {
-        return schemaIssue(info, "type", "instance", this.message, input);
-      }
-      return pipeResultAsync(input, this.pipe, info, "instance");
-    }
-  };
-}
-
-// src/schemas/intersect/utils/mergeOutputs/mergeOutputs.ts
-function mergeOutputs(output1, output2) {
-  if (typeof output1 === typeof output2) {
-    if (output1 === output2 || output1 instanceof Date && output2 instanceof Date && +output1 === +output2) {
-      return {
-        output: output1
-      };
-    }
-    if (Array.isArray(output1) && Array.isArray(output2)) {
-      if (output1.length === output2.length) {
-        const array2 = [];
-        for (let index = 0; index < output1.length; index++) {
-          const result = mergeOutputs(output1[index], output2[index]);
-          if (result.invalid) {
-            return result;
-          }
-          array2.push(result.output);
-        }
-        return {
-          output: array2
-        };
-      }
-      return {
-        invalid: true
-      };
-    }
-    if (output1 && output2 && output1.constructor === Object && output2.constructor === Object) {
-      const object2 = {
-        ...output1,
-        ...output2
-      };
-      for (const key in output1) {
-        if (key in output2) {
-          const result = mergeOutputs(output1[key], output2[key]);
-          if (result.invalid) {
-            return result;
-          }
-          object2[key] = result.output;
-        }
-      }
-      return {
-        output: object2
-      };
-    }
-  }
-  return {
-    invalid: true
-  };
-}
-
-// src/schemas/intersect/intersect.ts
-function intersect(options, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "intersect",
-    async: false,
-    options,
-    message,
-    pipe,
-    _parse(input, info) {
-      let typed = true;
-      let issues;
-      let output;
-      const outputs = [];
-      for (const schema of this.options) {
-        const result = schema._parse(input, info);
-        if (result.issues) {
-          if (issues) {
-            for (const issue of result.issues) {
-              issues.push(issue);
-            }
-          } else {
-            issues = result.issues;
-          }
-          if (info?.abortEarly) {
-            typed = false;
-            break;
-          }
-        }
-        if (!result.typed) {
-          typed = false;
-        }
-        outputs.push(result.output);
-      }
-      if (typed) {
-        output = outputs[0];
-        for (let index = 1; index < outputs.length; index++) {
-          const result = mergeOutputs(output, outputs[index]);
-          if (result.invalid) {
-            return schemaIssue(info, "type", "intersect", this.message, input);
-          }
-          output = result.output;
-        }
-        return pipeResult(output, this.pipe, info, "intersect", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-var intersection = exports.intersection = intersect;
-
-// src/schemas/literal/literal.ts
-function literal(literal2, message = "Invalid type") {
-  return {
-    type: "literal",
-    async: false,
-    literal: literal2,
-    message,
-    _parse(input, info) {
-      if (input !== this.literal) {
-        return schemaIssue(info, "type", "literal", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-
-// src/schemas/literal/literalAsync.ts
-function literalAsync(literal2, message = "Invalid type") {
-  return {
-    type: "literal",
-    async: true,
-    literal: literal2,
-    message,
-    async _parse(input, info) {
-      if (input !== this.literal) {
-        return schemaIssue(info, "type", "literal", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-
-// src/schemas/map/map.ts
-function map(key, value2, arg3, arg4) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg3, arg4);
-  return {
-    type: "map",
-    async: false,
-    key,
-    value: value2,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!(input instanceof Map)) {
-        return schemaIssue(info, "type", "map", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = /* @__PURE__ */new Map();
-      for (const [inputKey, inputValue] of input.entries()) {
-        let pathItem;
-        const keyResult = this.key._parse(inputKey, {
-          origin: "key",
-          abortEarly: info?.abortEarly,
-          abortPipeEarly: info?.abortPipeEarly,
-          skipPipe: info?.skipPipe
-        });
-        if (keyResult.issues) {
-          pathItem = {
-            type: "map",
-            input,
-            key: inputKey,
-            value: inputValue
-          };
-          for (const issue of keyResult.issues) {
-            if (issue.path) {
-              issue.path.unshift(pathItem);
-            } else {
-              issue.path = [pathItem];
-            }
-            issues?.push(issue);
-          }
-          if (!issues) {
-            issues = keyResult.issues;
-          }
-          if (info?.abortEarly) {
-            typed = false;
-            break;
-          }
-        }
-        const valueResult = this.value._parse(inputValue, info);
-        if (valueResult.issues) {
-          pathItem = pathItem || {
-            type: "map",
-            input,
-            key: inputKey,
-            value: inputValue
-          };
-          for (const issue of valueResult.issues) {
-            if (issue.path) {
-              issue.path.unshift(pathItem);
-            } else {
-              issue.path = [pathItem];
-            }
-            issues?.push(issue);
-          }
-          if (!issues) {
-            issues = valueResult.issues;
-          }
-          if (info?.abortEarly) {
-            typed = false;
-            break;
-          }
-        }
-        if (!keyResult.typed || !valueResult.typed) {
-          typed = false;
-        }
-        output.set(keyResult.output, valueResult.output);
-      }
-      if (typed) {
-        return pipeResult(output, this.pipe, info, "map", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/map/mapAsync.ts
-function mapAsync(key, value2, arg3, arg4) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg3, arg4);
-  return {
-    type: "map",
-    async: true,
-    key,
-    value: value2,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!(input instanceof Map)) {
-        return schemaIssue(info, "type", "map", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = /* @__PURE__ */new Map();
-      await Promise.all(Array.from(input.entries()).map(async ([inputKey, inputValue]) => {
-        let pathItem;
-        const [keyResult, valueResult] = await Promise.all([{
-          schema: this.key,
-          value: inputKey,
-          origin: "key"
-        }, {
-          schema: this.value,
-          value: inputValue,
-          origin: "value"
-        }].map(async ({
-          schema,
-          value: value3,
-          origin
-        }) => {
-          if (!(info?.abortEarly && issues)) {
-            const result = await schema._parse(value3, {
-              origin,
-              abortEarly: info?.abortEarly,
-              abortPipeEarly: info?.abortPipeEarly,
-              skipPipe: info?.skipPipe
-            });
-            if (!(info?.abortEarly && issues)) {
-              if (result.issues) {
-                pathItem = pathItem || {
-                  type: "map",
-                  input,
-                  key: inputKey,
-                  value: inputValue
-                };
-                for (const issue of result.issues) {
-                  if (issue.path) {
-                    issue.path.unshift(pathItem);
-                  } else {
-                    issue.path = [pathItem];
-                  }
-                  issues?.push(issue);
-                }
-                if (!issues) {
-                  issues = result.issues;
-                }
-                if (info?.abortEarly) {
-                  throw null;
-                }
-              }
-              return result;
-            }
-          }
-        })).catch(() => []);
-        if (!keyResult?.typed || !valueResult?.typed) {
-          typed = false;
-        }
-        if (keyResult && valueResult) {
-          output.set(keyResult.output, valueResult.output);
-        }
-      }));
-      if (typed) {
-        return pipeResultAsync(output, this.pipe, info, "map", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/nan/nan.ts
-function nan(message = "Invalid type") {
-  return {
-    type: "nan",
-    async: false,
-    message,
-    _parse(input, info) {
-      if (!Number.isNaN(input)) {
-        return schemaIssue(info, "type", "nan", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-
-// src/schemas/nan/nanAsync.ts
-function nanAsync(message = "Invalid type") {
-  return {
-    type: "nan",
-    async: true,
-    message,
-    async _parse(input, info) {
-      if (!Number.isNaN(input)) {
-        return schemaIssue(info, "type", "nan", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-
-// src/schemas/never/never.ts
-function never(message = "Invalid type") {
-  return {
-    type: "never",
-    async: false,
-    message,
-    _parse(input, info) {
-      return schemaIssue(info, "type", "never", this.message, input);
-    }
-  };
-}
-
-// src/schemas/never/neverAsync.ts
-function neverAsync(message = "Invalid type") {
-  return {
-    type: "never",
-    async: true,
-    message,
-    async _parse(input, info) {
-      return schemaIssue(info, "type", "never", this.message, input);
-    }
-  };
-}
-
-// src/schemas/nonNullable/nonNullable.ts
-function nonNullable(wrapped, message = "Invalid type") {
-  return {
-    type: "non_nullable",
-    async: false,
-    wrapped,
-    message,
-    _parse(input, info) {
-      if (input === null) {
-        return schemaIssue(info, "type", "non_nullable", this.message, input);
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nonNullable/nonNullableAsync.ts
-function nonNullableAsync(wrapped, message = "Invalid type") {
-  return {
-    type: "non_nullable",
-    async: true,
-    wrapped,
-    message,
-    async _parse(input, info) {
-      if (input === null) {
-        return schemaIssue(info, "type", "non_nullable", this.message, input);
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nonNullish/nonNullish.ts
-function nonNullish(wrapped, message = "Invalid type") {
-  return {
-    type: "non_nullish",
-    async: false,
-    wrapped,
-    message,
-    _parse(input, info) {
-      if (input === null || input === void 0) {
-        return schemaIssue(info, "type", "non_nullish", this.message, input);
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nonNullish/nonNullishAsync.ts
-function nonNullishAsync(wrapped, message = "Invalid type") {
-  return {
-    type: "non_nullish",
-    async: true,
-    wrapped,
-    message,
-    async _parse(input, info) {
-      if (input === null || input === void 0) {
-        return schemaIssue(info, "type", "non_nullish", this.message, input);
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nonOptional/nonOptional.ts
-function nonOptional(wrapped, message = "Invalid type") {
-  return {
-    type: "non_optional",
-    async: false,
-    wrapped,
-    message,
-    _parse(input, info) {
-      if (input === void 0) {
-        return schemaIssue(info, "type", "non_optional", this.message, input);
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nonOptional/nonOptionalAsync.ts
-function nonOptionalAsync(wrapped, message = "Invalid type") {
-  return {
-    type: "non_optional",
-    async: true,
-    wrapped,
-    message,
-    async _parse(input, info) {
-      if (input === void 0) {
-        return schemaIssue(info, "type", "non_optional", this.message, input);
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nullable/nullable.ts
-function nullable(wrapped, default_) {
-  return {
-    type: "nullable",
-    async: false,
-    wrapped,
-    default: default_,
-    _parse(input, info) {
-      if (input === null) {
-        const override = getDefault(this);
-        if (override === void 0) {
-          return parseResult(true, input);
-        }
-        input = override;
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nullable/nullableAsync.ts
-function nullableAsync(wrapped, default_) {
-  return {
-    type: "nullable",
-    async: true,
-    wrapped,
-    default: default_,
-    async _parse(input, info) {
-      if (input === null) {
-        const override = await getDefaultAsync(this);
-        if (override === void 0) {
-          return parseResult(true, input);
-        }
-        input = override;
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nullish/nullish.ts
-function nullish(wrapped, default_) {
-  return {
-    type: "nullish",
-    async: false,
-    wrapped,
-    default: default_,
-    _parse(input, info) {
-      if (input === null || input === void 0) {
-        const override = getDefault(this);
-        if (override === void 0) {
-          return parseResult(true, input);
-        }
-        input = override;
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/nullish/nullishAsync.ts
-function nullishAsync(wrapped, default_) {
-  return {
-    type: "nullish",
-    async: true,
-    wrapped,
-    default: default_,
-    async _parse(input, info) {
-      if (input === null || input === void 0) {
-        const override = await getDefaultAsync(this);
-        if (override === void 0) {
-          return parseResult(true, input);
-        }
-        input = override;
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/null/null.ts
-function null_(message = "Invalid type") {
-  return {
-    type: "null",
-    async: false,
-    message,
-    _parse(input, info) {
-      if (input !== null) {
-        return schemaIssue(info, "type", "null", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var nullType = exports.nullType = null_;
-
-// src/schemas/null/nullAsync.ts
-function nullAsync(message = "Invalid type") {
-  return {
-    type: "null",
-    async: true,
-    message,
-    async _parse(input, info) {
-      if (input !== null) {
-        return schemaIssue(info, "type", "null", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var nullTypeAsync = exports.nullTypeAsync = nullAsync;
-
-// src/schemas/number/number.ts
-function number(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "number",
-    async: false,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (typeof input !== "number" || isNaN(input)) {
-        return schemaIssue(info, "type", "number", this.message, input);
-      }
-      return pipeResult(input, this.pipe, info, "number");
-    }
-  };
-}
-
-// src/schemas/number/numberAsync.ts
-function numberAsync(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "number",
-    async: true,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (typeof input !== "number" || isNaN(input)) {
-        return schemaIssue(info, "type", "number", this.message, input);
-      }
-      return pipeResultAsync(input, this.pipe, info, "number");
-    }
-  };
-}
-
-// src/schemas/object/object.ts
-function object(entries, arg2, arg3, arg4) {
-  const [rest, message = "Invalid type", pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  let cachedEntries;
-  return {
-    type: "object",
-    async: false,
-    entries,
-    rest,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!input || typeof input !== "object") {
-        return schemaIssue(info, "type", "object", this.message, input);
-      }
-      cachedEntries = cachedEntries || Object.entries(this.entries);
-      let typed = true;
-      let issues;
-      const output = {};
-      for (const [key, schema] of cachedEntries) {
-        const value2 = input[key];
-        const result = schema._parse(value2, info);
-        if (result.issues) {
-          const pathItem = {
-            type: "object",
-            input,
-            key,
-            value: value2
-          };
-          for (const issue of result.issues) {
-            if (issue.path) {
-              issue.path.unshift(pathItem);
-            } else {
-              issue.path = [pathItem];
-            }
-            issues?.push(issue);
-          }
-          if (!issues) {
-            issues = result.issues;
-          }
-          if (info?.abortEarly) {
-            typed = false;
-            break;
-          }
-        }
-        if (!result.typed) {
-          typed = false;
-        }
-        if (result.output !== void 0 || key in input) {
-          output[key] = result.output;
-        }
-      }
-      if (this.rest && !(info?.abortEarly && issues)) {
-        for (const key in input) {
-          if (!(key in this.entries)) {
-            const value2 = input[key];
-            const result = this.rest._parse(value2, info);
-            if (result.issues) {
-              const pathItem = {
-                type: "object",
-                input,
-                key,
-                value: value2
-              };
-              for (const issue of result.issues) {
-                if (issue.path) {
-                  issue.path.unshift(pathItem);
-                } else {
-                  issue.path = [pathItem];
-                }
-                issues?.push(issue);
-              }
-              if (!issues) {
-                issues = result.issues;
-              }
-              if (info?.abortEarly) {
-                typed = false;
-                break;
-              }
-            }
-            if (!result.typed) {
-              typed = false;
-            }
-            output[key] = result.output;
-          }
-        }
-      }
-      if (typed) {
-        return pipeResult(output, this.pipe, info, "object", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/object/objectAsync.ts
-function objectAsync(entries, arg2, arg3, arg4) {
-  const [rest, message = "Invalid type", pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  let cachedEntries;
-  return {
-    type: "object",
-    async: true,
-    entries,
-    rest,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!input || typeof input !== "object") {
-        return schemaIssue(info, "type", "object", this.message, input);
-      }
-      cachedEntries = cachedEntries || Object.entries(this.entries);
-      let typed = true;
-      let issues;
-      const output = {};
-      await Promise.all([Promise.all(cachedEntries.map(async ([key, schema]) => {
-        if (!(info?.abortEarly && issues)) {
-          const value2 = input[key];
-          const result = await schema._parse(value2, info);
-          if (!(info?.abortEarly && issues)) {
-            if (result.issues) {
-              const pathItem = {
-                type: "object",
-                input,
-                key,
-                value: value2
-              };
-              for (const issue of result.issues) {
-                if (issue.path) {
-                  issue.path.unshift(pathItem);
-                } else {
-                  issue.path = [pathItem];
-                }
-                issues?.push(issue);
-              }
-              if (!issues) {
-                issues = result.issues;
-              }
-              if (info?.abortEarly) {
-                typed = false;
-                throw null;
-              }
-            }
-            if (!result.typed) {
-              typed = false;
-            }
-            if (result.output !== void 0 || key in input) {
-              output[key] = result.output;
-            }
-          }
-        }
-      })), this.rest && Promise.all(Object.entries(input).map(async ([key, value2]) => {
-        if (!(info?.abortEarly && issues)) {
-          if (!(key in this.entries)) {
-            const result = await this.rest._parse(value2, info);
-            if (!(info?.abortEarly && issues)) {
-              if (result.issues) {
-                const pathItem = {
-                  type: "object",
-                  input,
-                  key,
-                  value: value2
-                };
-                for (const issue of result.issues) {
-                  if (issue.path) {
-                    issue.path.unshift(pathItem);
-                  } else {
-                    issue.path = [pathItem];
-                  }
-                  issues?.push(issue);
-                }
-                if (!issues) {
-                  issues = result.issues;
-                }
-                if (info?.abortEarly) {
-                  typed = false;
-                  throw null;
-                }
-              }
-              if (!result.typed) {
-                typed = false;
-              }
-              output[key] = result.output;
-            }
-          }
-        }
-      }))]).catch(() => null);
-      if (typed) {
-        return pipeResultAsync(output, this.pipe, info, "object", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/optional/optional.ts
-function optional(wrapped, default_) {
-  return {
-    type: "optional",
-    async: false,
-    wrapped,
-    default: default_,
-    _parse(input, info) {
-      if (input === void 0) {
-        const override = getDefault(this);
-        if (override === void 0) {
-          return parseResult(true, input);
-        }
-        input = override;
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/optional/optionalAsync.ts
-function optionalAsync(wrapped, default_) {
-  return {
-    type: "optional",
-    async: true,
-    wrapped,
-    default: default_,
-    async _parse(input, info) {
-      if (input === void 0) {
-        const override = await getDefaultAsync(this);
-        if (override === void 0) {
-          return parseResult(true, input);
-        }
-        input = override;
-      }
-      return this.wrapped._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/picklist/picklist.ts
-function picklist(options, message = "Invalid type") {
-  return {
-    type: "picklist",
-    async: false,
-    options,
-    message,
-    _parse(input, info) {
-      if (!this.options.includes(input)) {
-        return schemaIssue(info, "type", "picklist", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var enumType = exports.enumType = picklist;
-
-// src/schemas/picklist/picklistAsync.ts
-function picklistAsync(options, message = "Invalid type") {
-  return {
-    type: "picklist",
-    async: true,
-    options,
-    message,
-    async _parse(input, info) {
-      if (!this.options.includes(input)) {
-        return schemaIssue(info, "type", "picklist", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var enumTypeAsync = exports.enumTypeAsync = picklistAsync;
-
-// src/schemas/string/string.ts
-function string(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "string",
-    async: false,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (typeof input !== "string") {
-        return schemaIssue(info, "type", "string", this.message, input);
-      }
-      return pipeResult(input, this.pipe, info, "string");
-    }
-  };
-}
-
-// src/schemas/string/stringAsync.ts
-function stringAsync(arg1, arg2) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg1, arg2);
-  return {
-    type: "string",
-    async: true,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (typeof input !== "string") {
-        return schemaIssue(info, "type", "string", this.message, input);
-      }
-      return pipeResultAsync(input, this.pipe, info, "string");
-    }
-  };
-}
-
-// src/schemas/record/utils/recordArgs/recordArgs.ts
-function recordArgs(arg1, arg2, arg3, arg4) {
-  if (typeof arg2 === "object" && !Array.isArray(arg2)) {
-    const [message2, pipe2] = defaultArgs(arg3, arg4);
-    return [arg1, arg2, message2, pipe2];
-  }
-  const [message, pipe] = defaultArgs(arg2, arg3);
-  return [string(), arg1, message, pipe];
-}
-
-// src/schemas/record/values.ts
-var BLOCKED_KEYS = ["__proto__", "prototype", "constructor"];
-
-// src/schemas/record/record.ts
-function record(arg1, arg2, arg3, arg4) {
-  const [key, value2, message = "Invalid type", pipe] = recordArgs(arg1, arg2, arg3, arg4);
-  return {
-    type: "record",
-    async: false,
-    key,
-    value: value2,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!input || typeof input !== "object") {
-        return schemaIssue(info, "type", "record", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = {};
-      for (const [inputKey, inputValue] of Object.entries(input)) {
-        if (!BLOCKED_KEYS.includes(inputKey)) {
-          let pathItem;
-          const keyResult = this.key._parse(inputKey, {
-            origin: "key",
-            abortEarly: info?.abortEarly,
-            abortPipeEarly: info?.abortPipeEarly,
-            skipPipe: info?.skipPipe
-          });
-          if (keyResult.issues) {
-            pathItem = {
-              type: "record",
-              input,
-              key: inputKey,
-              value: inputValue
-            };
-            for (const issue of keyResult.issues) {
-              issue.path = [pathItem];
-              issues?.push(issue);
-            }
-            if (!issues) {
-              issues = keyResult.issues;
-            }
-            if (info?.abortEarly) {
-              typed = false;
-              break;
-            }
-          }
-          const valueResult = this.value._parse(inputValue, info);
-          if (valueResult.issues) {
-            pathItem = pathItem || {
-              type: "record",
-              input,
-              key: inputKey,
-              value: inputValue
-            };
-            for (const issue of valueResult.issues) {
-              if (issue.path) {
-                issue.path.unshift(pathItem);
-              } else {
-                issue.path = [pathItem];
-              }
-              issues?.push(issue);
-            }
-            if (!issues) {
-              issues = valueResult.issues;
-            }
-            if (info?.abortEarly) {
-              typed = false;
-              break;
-            }
-          }
-          if (!keyResult.typed || !valueResult.typed) {
-            typed = false;
-          }
-          if (keyResult.typed) {
-            output[keyResult.output] = valueResult.output;
-          }
-        }
-      }
-      if (typed) {
-        return pipeResult(output, this.pipe, info, "record", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/record/recordAsync.ts
-function recordAsync(arg1, arg2, arg3, arg4) {
-  const [key, value2, message = "Invalid type", pipe] = recordArgs(arg1, arg2, arg3, arg4);
-  return {
-    type: "record",
-    async: true,
-    key,
-    value: value2,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!input || typeof input !== "object") {
-        return schemaIssue(info, "type", "record", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = {};
-      await Promise.all(
-      // Note: `Object.entries(...)` converts each key to a string
-      Object.entries(input).map(async ([inputKey, inputValue]) => {
-        if (!BLOCKED_KEYS.includes(inputKey)) {
-          let pathItem;
-          const [keyResult, valueResult] = await Promise.all([{
-            schema: this.key,
-            value: inputKey,
-            origin: "key"
-          }, {
-            schema: this.value,
-            value: inputValue,
-            origin: "value"
-          }].map(async ({
-            schema,
-            value: value3,
-            origin
-          }) => {
-            if (!(info?.abortEarly && issues)) {
-              const result = await schema._parse(value3, {
-                origin,
-                abortEarly: info?.abortEarly,
-                abortPipeEarly: info?.abortPipeEarly,
-                skipPipe: info?.skipPipe
-              });
-              if (!(info?.abortEarly && issues)) {
-                if (result.issues) {
-                  pathItem = pathItem || {
-                    type: "record",
-                    input,
-                    key: inputKey,
-                    value: inputValue
-                  };
-                  for (const issue of result.issues) {
-                    if (issue.path) {
-                      issue.path.unshift(pathItem);
-                    } else {
-                      issue.path = [pathItem];
-                    }
-                    issues?.push(issue);
-                  }
-                  if (!issues) {
-                    issues = result.issues;
-                  }
-                  if (info?.abortEarly) {
-                    throw null;
-                  }
-                }
-                return result;
-              }
-            }
-          })).catch(() => []);
-          if (!keyResult?.typed || !valueResult?.typed) {
-            typed = false;
-          }
-          if (keyResult?.typed && valueResult) {
-            output[keyResult.output] = valueResult.output;
-          }
-        }
-      }));
-      if (typed) {
-        return pipeResultAsync(output, this.pipe, info, "record", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/recursive/recursive.ts
-function recursive(getter) {
-  return {
-    type: "recursive",
-    async: false,
-    getter,
-    _parse(input, info) {
-      return this.getter()._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/recursive/recursiveAsync.ts
-function recursiveAsync(getter) {
-  return {
-    type: "recursive",
-    async: true,
-    getter,
-    async _parse(input, info) {
-      return this.getter()._parse(input, info);
-    }
-  };
-}
-
-// src/schemas/set/set.ts
-function set(value2, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "set",
-    async: false,
-    value: value2,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!(input instanceof Set)) {
-        return schemaIssue(info, "type", "set", this.message, input);
-      }
-      let key = 0;
-      let typed = true;
-      let issues;
-      const output = /* @__PURE__ */new Set();
-      for (const inputValue of input) {
-        const result = this.value._parse(inputValue, info);
-        if (result.issues) {
-          const pathItem = {
-            type: "set",
-            input,
-            key,
-            value: inputValue
-          };
-          for (const issue of result.issues) {
-            if (issue.path) {
-              issue.path.unshift(pathItem);
-            } else {
-              issue.path = [pathItem];
-            }
-            issues?.push(issue);
-          }
-          if (!issues) {
-            issues = result.issues;
-          }
-          if (info?.abortEarly) {
-            typed = false;
-            break;
-          }
-        }
-        if (!result.typed) {
-          typed = false;
-        }
-        output.add(result.output);
-        key++;
-      }
-      if (typed) {
-        return pipeResult(output, this.pipe, info, "set", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/set/setAsync.ts
-function setAsync(value2, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "set",
-    async: true,
-    value: value2,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!(input instanceof Set)) {
-        return schemaIssue(info, "type", "set", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = /* @__PURE__ */new Set();
-      await Promise.all(Array.from(input.values()).map(async (inputValue, key) => {
-        if (!(info?.abortEarly && issues)) {
-          const result = await this.value._parse(inputValue, info);
-          if (!(info?.abortEarly && issues)) {
-            if (result.issues) {
-              const pathItem = {
-                type: "set",
-                input,
-                key,
-                value: inputValue
-              };
-              for (const issue of result.issues) {
-                if (issue.path) {
-                  issue.path.unshift(pathItem);
-                } else {
-                  issue.path = [pathItem];
-                }
-                issues?.push(issue);
-              }
-              if (!issues) {
-                issues = result.issues;
-              }
-              if (info?.abortEarly) {
-                typed = false;
-                throw null;
-              }
-            }
-            if (!result.typed) {
-              typed = false;
-            }
-            output.add(result.output);
-          }
-        }
-      })).catch(() => null);
-      if (typed) {
-        return pipeResultAsync(output, this.pipe, info, "set", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/special/special.ts
-function special(check, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "special",
-    async: false,
-    check,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!this.check(input)) {
-        return schemaIssue(info, "type", "special", this.message, input);
-      }
-      return pipeResult(input, this.pipe, info, "special");
-    }
-  };
-}
-
-// src/schemas/special/specialAsync.ts
-function specialAsync(check, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "special",
-    async: true,
-    check,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!(await this.check(input))) {
-        return schemaIssue(info, "type", "special", this.message, input);
-      }
-      return pipeResultAsync(input, this.pipe, info, "special");
-    }
-  };
-}
-
-// src/schemas/symbol/symbol.ts
-function symbol(message = "Invalid type") {
-  return {
-    type: "symbol",
-    async: false,
-    message,
-    _parse(input, info) {
-      if (typeof input !== "symbol") {
-        return schemaIssue(info, "type", "symbol", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-
-// src/schemas/symbol/symbolAsync.ts
-function symbolAsync(message = "Invalid type") {
-  return {
-    type: "symbol",
-    async: true,
-    message,
-    async _parse(input, info) {
-      if (typeof input !== "symbol") {
-        return schemaIssue(info, "type", "symbol", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-
-// src/schemas/tuple/tuple.ts
-function tuple(items, arg2, arg3, arg4) {
-  const [rest, message = "Invalid type", pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  return {
-    type: "tuple",
-    async: false,
-    items,
-    rest,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!Array.isArray(input) || this.items.length > input.length) {
-        return schemaIssue(info, "type", "tuple", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = [];
-      for (let key = 0; key < this.items.length; key++) {
-        const value2 = input[key];
-        const result = this.items[key]._parse(value2, info);
-        if (result.issues) {
-          const pathItem = {
-            type: "tuple",
-            input,
-            key,
-            value: value2
-          };
-          for (const issue of result.issues) {
-            if (issue.path) {
-              issue.path.unshift(pathItem);
-            } else {
-              issue.path = [pathItem];
-            }
-            issues?.push(issue);
-          }
-          if (!issues) {
-            issues = result.issues;
-          }
-          if (info?.abortEarly) {
-            typed = false;
-            break;
-          }
-        }
-        if (!result.typed) {
-          typed = false;
-        }
-        output[key] = result.output;
-      }
-      if (this.rest && !(info?.abortEarly && issues)) {
-        for (let key = this.items.length; key < input.length; key++) {
-          const value2 = input[key];
-          const result = this.rest._parse(value2, info);
-          if (result.issues) {
-            const pathItem = {
-              type: "tuple",
-              input,
-              key,
-              value: value2
-            };
-            for (const issue of result.issues) {
-              if (issue.path) {
-                issue.path.unshift(pathItem);
-              } else {
-                issue.path = [pathItem];
-              }
-              issues?.push(issue);
-            }
-            if (!issues) {
-              issues = result.issues;
-            }
-            if (info?.abortEarly) {
-              typed = false;
-              break;
-            }
-          }
-          if (!result.typed) {
-            typed = false;
-          }
-          output[key] = result.output;
-        }
-      }
-      if (typed) {
-        return pipeResult(output, this.pipe, info, "tuple", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/tuple/tupleAsync.ts
-function tupleAsync(items, arg2, arg3, arg4) {
-  const [rest, message = "Invalid type", pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  return {
-    type: "tuple",
-    async: true,
-    items,
-    rest,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!Array.isArray(input) || this.items.length > input.length) {
-        return schemaIssue(info, "type", "tuple", this.message, input);
-      }
-      let typed = true;
-      let issues;
-      const output = [];
-      await Promise.all([
-      // Parse schema of each tuple item
-      Promise.all(this.items.map(async (schema, key) => {
-        if (!(info?.abortEarly && issues)) {
-          const value2 = input[key];
-          const result = await schema._parse(value2, info);
-          if (!(info?.abortEarly && issues)) {
-            if (result.issues) {
-              const pathItem = {
-                type: "tuple",
-                input,
-                key,
-                value: value2
-              };
-              for (const issue of result.issues) {
-                if (issue.path) {
-                  issue.path.unshift(pathItem);
-                } else {
-                  issue.path = [pathItem];
-                }
-                issues?.push(issue);
-              }
-              if (!issues) {
-                issues = result.issues;
-              }
-              if (info?.abortEarly) {
-                typed = false;
-                throw null;
-              }
-            }
-            if (!result.typed) {
-              typed = false;
-            }
-            output[key] = result.output;
-          }
-        }
-      })),
-      // If necessary parse schema of each rest item
-      this.rest && Promise.all(input.slice(this.items.length).map(async (value2, index) => {
-        if (!(info?.abortEarly && issues)) {
-          const key = this.items.length + index;
-          const result = await this.rest._parse(value2, info);
-          if (!(info?.abortEarly && issues)) {
-            if (result.issues) {
-              const pathItem = {
-                type: "tuple",
-                input,
-                key,
-                value: value2
-              };
-              for (const issue of result.issues) {
-                if (issue.path) {
-                  issue.path.unshift(pathItem);
-                } else {
-                  issue.path = [pathItem];
-                }
-                issues?.push(issue);
-              }
-              if (!issues) {
-                issues = result.issues;
-              }
-              if (info?.abortEarly) {
-                typed = false;
-                throw null;
-              }
-            }
-            if (!result.typed) {
-              typed = false;
-            }
-            output[key] = result.output;
-          }
-        }
-      }))]).catch(() => null);
-      if (typed) {
-        return pipeResultAsync(output, this.pipe, info, "tuple", issues);
-      }
-      return parseResult(false, output, issues);
-    }
-  };
-}
-
-// src/schemas/undefined/undefined.ts
-function undefined_(message = "Invalid type") {
-  return {
-    type: "undefined",
-    async: false,
-    message,
-    _parse(input, info) {
-      if (typeof input !== "undefined") {
-        return schemaIssue(info, "type", "undefined", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var undefinedType = exports.undefinedType = undefined_;
-
-// src/schemas/undefined/undefinedAsync.ts
-function undefinedAsync(message = "Invalid type") {
-  return {
-    type: "undefined",
-    async: true,
-    message,
-    async _parse(input, info) {
-      if (typeof input !== "undefined") {
-        return schemaIssue(info, "type", "undefined", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var undefinedTypeAsync = exports.undefinedTypeAsync = undefinedAsync;
-
-// src/schemas/union/union.ts
-function union(options, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "union",
-    async: false,
-    options,
-    message,
-    pipe,
-    _parse(input, info) {
-      let issues;
-      let output;
-      for (const schema of this.options) {
-        const result = schema._parse(input, info);
-        if (result.issues) {
-          if (issues) {
-            for (const issue of result.issues) {
-              issues.push(issue);
-            }
-          } else {
-            issues = result.issues;
-          }
-        } else {
-          output = [result.output];
-          break;
-        }
-      }
-      if (output) {
-        return pipeResult(output[0], this.pipe, info, "union");
-      }
-      return schemaIssue(info, "type", "union", this.message, input, void 0, issues);
-    }
-  };
-}
-
-// src/schemas/union/unionAsync.ts
-function unionAsync(options, arg2, arg3) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg2, arg3);
-  return {
-    type: "union",
-    async: true,
-    options,
-    message,
-    pipe,
-    async _parse(input, info) {
-      let issues;
-      let output;
-      for (const schema of this.options) {
-        const result = await schema._parse(input, info);
-        if (result.issues) {
-          if (issues) {
-            for (const issue of result.issues) {
-              issues.push(issue);
-            }
-          } else {
-            issues = result.issues;
-          }
-        } else {
-          output = [result.output];
-          break;
-        }
-      }
-      if (output) {
-        return pipeResultAsync(output[0], this.pipe, info, "union");
-      }
-      return schemaIssue(info, "type", "union", this.message, input, void 0, issues);
-    }
-  };
-}
-
-// src/schemas/unknown/unknown.ts
-function unknown(pipe) {
-  return {
-    type: "unknown",
-    async: false,
-    pipe,
-    _parse(input, info) {
-      return pipeResult(input, this.pipe, info, "unknown");
-    }
-  };
-}
-
-// src/schemas/unknown/unknownAsync.ts
-function unknownAsync(pipe) {
-  return {
-    type: "unknown",
-    async: true,
-    pipe,
-    async _parse(input, info) {
-      return pipeResultAsync(input, this.pipe, info, "unknown");
-    }
-  };
-}
-
-// src/schemas/variant/variant.ts
-function variant(key, options, arg3, arg4) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg3, arg4);
-  return {
-    type: "variant",
-    async: false,
-    key,
-    options,
-    message,
-    pipe,
-    _parse(input, info) {
-      if (!input || typeof input !== "object") {
-        return schemaIssue(info, "type", "variant", this.message, input);
-      }
-      if (this.key in input) {
-        let issues;
-        let output;
-        const parseOptions = options2 => {
-          for (const schema of options2) {
-            if (schema.type === "object") {
-              const keyResult = schema.entries[this.key]._parse(input[this.key], info);
-              if (!keyResult.issues) {
-                const dataResult = schema._parse(input, info);
-                if (dataResult.issues) {
-                  issues = dataResult.issues;
-                } else {
-                  output = [dataResult.output];
-                  break;
-                }
-              }
-            } else if (schema.type === "variant") {
-              parseOptions(schema.options);
-              if (output) {
-                break;
-              }
-            }
-          }
-        };
-        parseOptions(this.options);
-        if (output) {
-          return pipeResult(output[0], this.pipe, info, "variant");
-        }
-        if (issues) {
-          return parseResult(false, output, issues);
-        }
-      }
-      return schemaIssue(info, "type", "variant", this.message, input, [{
-        type: "object",
-        input,
-        key: this.key,
-        value: void 0
-      }]);
-    }
-  };
-}
-var discriminatedUnion = exports.discriminatedUnion = variant;
-
-// src/schemas/variant/variantAsync.ts
-function variantAsync(key, options, arg3, arg4) {
-  const [message = "Invalid type", pipe] = defaultArgs(arg3, arg4);
-  return {
-    type: "variant",
-    async: true,
-    key,
-    options,
-    message,
-    pipe,
-    async _parse(input, info) {
-      if (!input || typeof input !== "object") {
-        return schemaIssue(info, "type", "variant", this.message, input);
-      }
-      if (this.key in input) {
-        let issues;
-        let output;
-        const parseOptions = async options2 => {
-          for (const schema of options2) {
-            if (schema.type === "object") {
-              const keyResult = await schema.entries[this.key]._parse(input[this.key], info);
-              if (!keyResult.issues) {
-                const dataResult = await schema._parse(input, info);
-                if (dataResult.issues) {
-                  issues = dataResult.issues;
-                } else {
-                  output = [dataResult.output];
-                  break;
-                }
-              }
-            } else if (schema.type === "variant") {
-              await parseOptions(schema.options);
-              if (output) {
-                break;
-              }
-            }
-          }
-        };
-        await parseOptions(this.options);
-        if (output) {
-          return pipeResultAsync(output[0], this.pipe, info, "variant");
-        }
-        if (issues) {
-          return parseResult(false, output, issues);
-        }
-      }
-      return schemaIssue(info, "type", "variant", this.message, input, [{
-        type: "object",
-        input,
-        key: this.key,
-        value: void 0
-      }]);
-    }
-  };
-}
-var discriminatedUnionAsync = exports.discriminatedUnionAsync = variantAsync;
-
-// src/schemas/void/void.ts
-function void_(message = "Invalid type") {
-  return {
-    type: "void",
-    async: false,
-    message,
-    _parse(input, info) {
-      if (typeof input !== "undefined") {
-        return schemaIssue(info, "type", "void", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var voidType = exports.voidType = void_;
-
-// src/schemas/void/voidAsync.ts
-function voidAsync(message = "Invalid type") {
-  return {
-    type: "void",
-    async: true,
-    message,
-    async _parse(input, info) {
-      if (typeof input !== "undefined") {
-        return schemaIssue(info, "type", "void", this.message, input);
-      }
-      return parseResult(true, input);
-    }
-  };
-}
-var voidTypeAsync = exports.voidTypeAsync = voidAsync;
-
-// src/methods/keyof/keyof.ts
-function keyof(schema) {
-  return picklist(Object.keys(schema.entries));
-}
-
-// src/methods/merge/merge.ts
-function merge(schemas, arg2, arg3, arg4) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  return object(schemas.reduce((entries, schema) => ({
-    ...entries,
-    ...schema.entries
-  }), {}), rest, message, pipe);
-}
-
-// src/methods/merge/mergeAsync.ts
-function mergeAsync(schemas, arg2, arg3, arg4) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  return objectAsync(schemas.reduce((entries, schema) => ({
-    ...entries,
-    ...schema.entries
-  }), {}), rest, message, pipe);
-}
-
-// src/methods/omit/omit.ts
-function omit(schema, keys, arg3, arg4, arg5) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg3, arg4, arg5);
-  return object(Object.entries(schema.entries).reduce((entries, [key, schema2]) => keys.includes(key) ? entries : {
-    ...entries,
-    [key]: schema2
-  }, {}), rest, message, pipe);
-}
-
-// src/methods/omit/omitAsync.ts
-function omitAsync(schema, keys, arg3, arg4, arg5) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg3, arg4, arg5);
-  return objectAsync(Object.entries(schema.entries).reduce((entries, [key, schema2]) => keys.includes(key) ? entries : {
-    ...entries,
-    [key]: schema2
-  }, {}), rest, message, pipe);
-}
-
-// src/methods/parse/parse.ts
-function parse(schema, input, info) {
-  const result = schema._parse(input, info);
-  if (result.issues) {
-    throw new ValiError(result.issues);
-  }
-  return result.output;
-}
-
-// src/methods/parse/parseAsync.ts
-async function parseAsync(schema, input, info) {
-  const result = await schema._parse(input, info);
-  if (result.issues) {
-    throw new ValiError(result.issues);
-  }
-  return result.output;
-}
-
-// src/methods/partial/partial.ts
-function partial(schema, arg2, arg3, arg4) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  return object(Object.entries(schema.entries).reduce((entries, [key, schema2]) => ({
-    ...entries,
-    [key]: optional(schema2)
-  }), {}), rest, message, pipe);
-}
-
-// src/methods/partial/partialAsync.ts
-function partialAsync(schema, arg2, arg3, arg4) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  return objectAsync(Object.entries(schema.entries).reduce((entries, [key, schema2]) => ({
-    ...entries,
-    [key]: optionalAsync(schema2)
-  }), {}), rest, message, pipe);
-}
-
-// src/methods/passthrough/passthrough.ts
-function passthrough(schema) {
-  return {
-    ...schema,
-    _parse(input, info) {
-      const result = schema._parse(input, info);
-      if (result.typed) {
-        result.output = {
-          ...input,
-          ...result.output
-        };
-      }
-      return result;
-    }
-  };
-}
-
-// src/methods/passthrough/passthroughAsync.ts
-function passthroughAsync(schema) {
-  return {
-    ...schema,
-    async _parse(input, info) {
-      const result = await schema._parse(input, info);
-      if (result.typed) {
-        result.output = {
-          ...input,
-          ...result.output
-        };
-      }
-      return result;
-    }
-  };
-}
-
-// src/methods/pick/pick.ts
-function pick(schema, keys, arg3, arg4, arg5) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg3, arg4, arg5);
-  return object(Object.entries(schema.entries).reduce((entries, [key, schema2]) => keys.includes(key) ? {
-    ...entries,
-    [key]: schema2
-  } : entries, {}), rest, message, pipe);
-}
-
-// src/methods/pick/pickAsync.ts
-function pickAsync(schema, keys, arg3, arg4, arg5) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg3, arg4, arg5);
-  return objectAsync(Object.entries(schema.entries).reduce((entries, [key, schema2]) => keys.includes(key) ? {
-    ...entries,
-    [key]: schema2
-  } : entries, {}), rest, message, pipe);
-}
-
-// src/methods/required/required.ts
-function required(schema, arg2, arg3, arg4) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  return object(Object.entries(schema.entries).reduce((entries, [key, schema2]) => ({
-    ...entries,
-    [key]: nonOptional(schema2)
-  }), {}), rest, message, pipe);
-}
-
-// src/methods/required/requiredAsync.ts
-function requiredAsync(schema, arg2, arg3, arg4) {
-  const [rest, message, pipe] = restAndDefaultArgs(arg2, arg3, arg4);
-  return objectAsync(Object.entries(schema.entries).reduce((entries, [key, schema2]) => ({
-    ...entries,
-    [key]: nonOptionalAsync(schema2)
-  }), {}), rest, message, pipe);
-}
-
-// src/methods/safeParse/safeParse.ts
-function safeParse(schema, input, info) {
-  const result = schema._parse(input, info);
-  return {
-    typed: result.typed,
-    success: !result.issues,
-    data: result.output,
-    output: result.output,
-    error: result.issues && new ValiError(result.issues),
-    issues: result.issues
-  };
-}
-
-// src/methods/safeParse/safeParseAsync.ts
-async function safeParseAsync(schema, input, info) {
-  const result = await schema._parse(input, info);
-  return {
-    typed: result.typed,
-    success: !result.issues,
-    data: result.output,
-    output: result.output,
-    error: result.issues && new ValiError(result.issues),
-    issues: result.issues
-  };
-}
-
-// src/methods/strict/strict.ts
-function strict(schema, message = "Invalid keys") {
-  return {
-    ...schema,
-    _parse(input, info) {
-      const result = schema._parse(input, info);
-      return !result.issues && Object.keys(input).some(key => !(key in schema.entries)) ? schemaIssue(info, "object", "strict", message, input) : result;
-    }
-  };
-}
-
-// src/methods/strict/strictAsync.ts
-function strictAsync(schema, message = "Invalid keys") {
-  return {
-    ...schema,
-    message,
-    async _parse(input, info) {
-      const result = await schema._parse(input, info);
-      return !result.issues && Object.keys(input).some(key => !(key in schema.entries)) ? schemaIssue(info, "object", "strict", message, input) : result;
-    }
-  };
-}
-
-// src/methods/strip/strip.ts
-function strip(schema) {
-  let cachedKeys;
-  return {
-    ...schema,
-    _parse(input, info) {
-      const result = schema._parse(input, info);
-      if (result.typed) {
-        cachedKeys = cachedKeys || Object.keys(schema.entries);
-        const output = {};
-        for (const key of cachedKeys) {
-          output[key] = result.output[key];
-        }
-        result.output = output;
-      }
-      return result;
-    }
-  };
-}
-
-// src/methods/strip/stripAsync.ts
-function stripAsync(schema) {
-  let cachedKeys;
-  return {
-    ...schema,
-    async _parse(input, info) {
-      const result = await schema._parse(input, info);
-      if (result.typed) {
-        cachedKeys = cachedKeys || Object.keys(schema.entries);
-        const output = {};
-        for (const key of cachedKeys) {
-          output[key] = result.output[key];
-        }
-        result.output = output;
-      }
-      return result;
-    }
-  };
-}
-
-// src/methods/transform/transform.ts
-function transform(schema, action, arg1) {
-  return {
-    ...schema,
-    _parse(input, info) {
-      const result = schema._parse(input, info);
-      if (result.typed) {
-        result.output = action(result.output, {
-          issues: result.issues
-        });
-        if (result.issues || !arg1) {
-          return result;
-        }
-        if (Array.isArray(arg1)) {
-          return pipeResult(result.output, arg1, info, typeof result.output);
-        }
-        return arg1._parse(result.output, info);
-      }
-      return result;
-    }
-  };
-}
-
-// src/methods/transform/transformAsync.ts
-function transformAsync(schema, action, arg1) {
-  return {
-    ...schema,
-    async: true,
-    async _parse(input, info) {
-      const result = await schema._parse(input, info);
-      if (result.typed) {
-        result.output = await action(result.output, {
-          issues: result.issues
-        });
-        if (result.issues || !arg1) {
-          return result;
-        }
-        if (Array.isArray(arg1)) {
-          return pipeResultAsync(result.output, arg1, info, typeof result.output);
-        }
-        return arg1._parse(result.output, info);
-      }
-      return result;
-    }
-  };
-}
-
-// src/methods/unwrap/unwrap.ts
-function unwrap(schema) {
-  return schema.wrapped;
-}
-
-// src/methods/withDefault/withDefault.ts
-function withDefault(schema, value2) {
-  return {
-    ...schema,
-    _parse(input, info) {
-      return schema._parse(input === void 0 ? typeof value2 === "function" ? value2() : value2 : input, info);
-    }
-  };
-}
-var useDefault = exports.useDefault = withDefault;
-
-// src/regex.ts
-var BIC_REGEX = exports.BIC_REGEX = /^[A-Z]{6}(?!00)[A-Z\d]{2}(?:[A-Z\d]{3})?$/u;
-var CUID2_REGEX = exports.CUID2_REGEX = /^[a-z][\da-z]*$/u;
-var DECIMAL_REGEX = exports.DECIMAL_REGEX = /^\d+$/u;
-var EMAIL_REGEX = exports.EMAIL_REGEX = /^[\w+-]+(?:\.[\w+-]+)*@[\da-z]+(?:[.-][\da-z]+)*\.[a-z]{2,}$/iu;
-var EMOJI_REGEX = exports.EMOJI_REGEX = /^[\p{Extended_Pictographic}\p{Emoji_Component}]+$/u;
-var HEXADECIMAL_REGEX = exports.HEXADECIMAL_REGEX = /^(0h|0x)?[\da-f]+$/iu;
-var HEX_COLOR_REGEX = exports.HEX_COLOR_REGEX = /^#([\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/iu;
-var IMEI_REGEX = exports.IMEI_REGEX = /^\d{2}(?:[ /|-]?\d{6}){2}[ /|-]?\d$/u;
-var IPV4_REGEX = exports.IPV4_REGEX =
-// eslint-disable-next-line redos-detector/no-unsafe-regex -- false positive
-/^(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])(?:\.(?:(?:[1-9]|1\d|2[0-4])?\d|25[0-5])){3}$/u;
-var IPV6_REGEX = exports.IPV6_REGEX = /^(?:(?:[\da-f]{1,4}:){7}[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,7}:|(?:[\da-f]{1,4}:){1,6}:[\da-f]{1,4}|(?:[\da-f]{1,4}:){1,5}(?::[\da-f]{1,4}){1,2}|(?:[\da-f]{1,4}:){1,4}(?::[\da-f]{1,4}){1,3}|(?:[\da-f]{1,4}:){1,3}(?::[\da-f]{1,4}){1,4}|(?:[\da-f]{1,4}:){1,2}(?::[\da-f]{1,4}){1,5}|[\da-f]{1,4}:(?::[\da-f]{1,4}){1,6}|:(?:(?::[\da-f]{1,4}){1,7}|:)|fe80:(?::[\da-f]{0,4}){0,4}%[\da-z]+|::(?:f{4}(?::0{1,4})?:)?(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d)|(?:[\da-f]{1,4}:){1,4}:(?:(?:25[0-5]|(?:2[0-4]|1?\d)?\d)\.){3}(?:25[0-5]|(?:2[0-4]|1?\d)?\d))$/iu;
-var ISO_DATE_REGEX = exports.ISO_DATE_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])$/u;
-var ISO_DATE_TIME_REGEX = exports.ISO_DATE_TIME_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])T(?:0\d|1\d|2[0-3]):[0-5]\d$/u;
-var ISO_TIME_REGEX = exports.ISO_TIME_REGEX = /^(?:0\d|1\d|2[0-3]):[0-5]\d$/u;
-var ISO_TIME_SECOND_REGEX = exports.ISO_TIME_SECOND_REGEX = /^(?:0\d|1\d|2[0-3])(?::[0-5]\d){2}$/u;
-var ISO_TIMESTAMP_REGEX = exports.ISO_TIMESTAMP_REGEX = /^\d{4}-(?:0[1-9]|1[0-2])-(?:[12]\d|0[1-9]|3[01])T(?:0\d|1\d|2[0-3])(?::[0-5]\d){2}\.\d{3}Z$/u;
-var ISO_WEEK_REGEX = exports.ISO_WEEK_REGEX = /^\d{4}-W(?:0[1-9]|[1-4]\d|5[0-3])$/u;
-var MAC48_REGEX = exports.MAC48_REGEX = /^(?:[\da-f]{2}:){5}[\da-f]{2}$|^(?:[\da-f]{2}-){5}[\da-f]{2}$|^(?:[\da-f]{4}\.){2}[\da-f]{4}$/iu;
-var MAC64_REGEX = exports.MAC64_REGEX = /^(?:[\da-f]{2}:){7}[\da-f]{2}$|^(?:[\da-f]{2}-){7}[\da-f]{2}$|^(?:[\da-f]{4}\.){3}[\da-f]{4}$|^(?:[\da-f]{4}:){3}[\da-f]{4}$/iu;
-var OCTAL_REGEX = exports.OCTAL_REGEX = /^(0o)?[0-7]+$/iu;
-var ULID_REGEX = exports.ULID_REGEX = /^[\da-hjkmnp-tv-z]{26}$/iu;
-var UUID_REGEX = exports.UUID_REGEX = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
-
-// src/transformations/toCustom/toCustom.ts
-function toCustom(action) {
-  return {
-    type: "to_custom",
-    async: false,
-    _parse(input) {
-      return actionOutput(action(input));
-    }
-  };
-}
-
-// src/transformations/toCustom/toCustomAsync.ts
-function toCustomAsync(action) {
-  return {
-    type: "to_custom",
-    async: true,
-    async _parse(input) {
-      return actionOutput(await action(input));
-    }
-  };
-}
-
-// src/transformations/toLowerCase/toLowerCase.ts
-function toLowerCase() {
-  return {
-    type: "to_lower_case",
-    async: false,
-    _parse(input) {
-      return actionOutput(input.toLocaleLowerCase());
-    }
-  };
-}
-
-// src/transformations/toMaxValue/toMaxValue.ts
-function toMaxValue(requirement) {
-  return {
-    type: "to_max_value",
-    async: false,
-    requirement,
-    _parse(input) {
-      return actionOutput(input > this.requirement ? this.requirement : input);
-    }
-  };
-}
-
-// src/transformations/toMinValue/toMinValue.ts
-function toMinValue(requirement) {
-  return {
-    type: "to_min_value",
-    async: false,
-    requirement,
-    _parse(input) {
-      return actionOutput(input < this.requirement ? this.requirement : input);
-    }
-  };
-}
-
-// src/transformations/toTrimmed/toTrimmed.ts
-function toTrimmed() {
-  return {
-    type: "to_trimmed",
-    async: false,
-    _parse(input) {
-      return actionOutput(input.trim());
-    }
-  };
-}
-
-// src/transformations/toTrimmedEnd/toTrimmedEnd.ts
-function toTrimmedEnd() {
-  return {
-    type: "to_trimmed_end",
-    async: false,
-    _parse(input) {
-      return actionOutput(input.trimEnd());
-    }
-  };
-}
-
-// src/transformations/toTrimmedStart/toTrimmedStart.ts
-function toTrimmedStart() {
-  return {
-    type: "to_trimmed_start",
-    async: false,
-    _parse(input) {
-      return actionOutput(input.trimStart());
-    }
-  };
-}
-
-// src/transformations/toUpperCase/toUpperCase.ts
-function toUpperCase() {
-  return {
-    type: "to_upper_case",
-    async: false,
-    _parse(input) {
-      return actionOutput(input.toUpperCase());
-    }
-  };
-}
-
-// src/validations/bic/bic.ts
-function bic(message = "Invalid BIC") {
-  return {
-    type: "bic",
-    async: false,
-    message,
-    requirement: BIC_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input.toUpperCase()) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/bytes/bytes.ts
-function bytes(requirement, message = "Invalid byte length") {
-  return {
-    type: "bytes",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return new TextEncoder().encode(input).length !== this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/creditCard/creditCard.ts
-var SANITIZE_REGEX = /[- ]+/gu;
-var PROVIDER_REGEX_LIST = [
-// American Express
-/^3[47]\d{13}$/u,
-// Diners Club
-/^3(?:0[0-5]|[68]\d)\d{11}$/u,
-// Discover
-/^6(?:011|5\d{2})\d{12,15}$/u,
-// JCB
-/^(?:2131|1800|35\d{3})\d{11}$/u,
-// Mastercard
-/^5[1-5]\d{2}|(222\d|22[3-9]\d|2[3-6]\d{2}|27[01]\d|2720)\d{12}$/u,
-// UnionPay
-/^(6[27]\d{14}|81\d{14,17})$/u,
-// Visa
-/^4\d{12}(?:\d{3,6})?$/u];
-function creditCard(message = "Invalid credit card") {
-  return {
-    type: "credit_card",
-    async: false,
-    message,
-    requirement: input => {
-      const sanitized = input.replace(SANITIZE_REGEX, "");
-      return PROVIDER_REGEX_LIST.some(regex2 => regex2.test(sanitized)) && isLuhnAlgo(sanitized);
-    },
-    _parse(input) {
-      return !this.requirement(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/cuid2/cuid2.ts
-function cuid2(message = "Invalid Cuid2") {
-  return {
-    type: "cuid2",
-    async: false,
-    message,
-    requirement: CUID2_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/custom/custom.ts
-function custom(requirement, message = "Invalid input") {
-  return {
-    type: "custom",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return !this.requirement(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/custom/customAsync.ts
-function customAsync(requirement, message = "Invalid input") {
-  return {
-    type: "custom",
-    async: true,
-    message,
-    requirement,
-    async _parse(input) {
-      return !(await this.requirement(input)) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/decimal/decimal.ts
-function decimal(message = "Invalid decimal") {
-  return {
-    type: "decimal",
-    async: false,
-    message,
-    requirement: DECIMAL_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/email/email.ts
-function email(message = "Invalid email") {
-  return {
-    type: "email",
-    async: false,
-    message,
-    requirement: EMAIL_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/emoji/emoji.ts
-function emoji(message = "Invalid emoji") {
-  return {
-    type: "emoji",
-    async: false,
-    message,
-    requirement: EMOJI_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/endsWith/endsWith.ts
-function endsWith(requirement, message = "Invalid end") {
-  return {
-    type: "ends_with",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return !input.endsWith(this.requirement) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/equal/equal.ts
-function equal(requirement, message = "Invalid input") {
-  return {
-    type: "equal",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input !== this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/excludes/excludes.ts
-function excludes(requirement, message = "Invalid content") {
-  return {
-    type: "excludes",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.includes(this.requirement) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/finite/finite.ts
-function finite(message = "Invalid finite number") {
-  return {
-    type: "finite",
-    async: false,
-    message,
-    requirement: Number.isFinite,
-    _parse(input) {
-      return !this.requirement(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/hexadecimal/hexadecimal.ts
-function hexadecimal(message = "Invalid hexadecimal") {
-  return {
-    type: "hexadecimal",
-    async: false,
-    message,
-    requirement: HEXADECIMAL_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/hexColor/hexColor.ts
-function hexColor(message = "Invalid hex color") {
-  return {
-    type: "hex_color",
-    async: false,
-    message,
-    requirement: HEX_COLOR_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/imei/imei.ts
-function imei(message = "Invalid IMEI") {
-  return {
-    type: "imei",
-    async: false,
-    message,
-    requirement: [IMEI_REGEX, isLuhnAlgo],
-    _parse(input) {
-      return !this.requirement[0].test(input) || !this.requirement[1](input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/includes/includes.ts
-function includes(requirement, message = "Invalid content") {
-  return {
-    type: "includes",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return !input.includes(requirement) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/integer/integer.ts
-function integer(message = "Invalid integer") {
-  return {
-    type: "integer",
-    async: false,
-    message,
-    requirement: Number.isInteger,
-    _parse(input) {
-      return !this.requirement(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/ip/ip.ts
-function ip(message = "Invalid IP") {
-  return {
-    type: "ip",
-    async: false,
-    message,
-    requirement: [IPV4_REGEX, IPV6_REGEX],
-    _parse(input) {
-      return !this.requirement[0].test(input) && !this.requirement[1].test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/ipv4/ipv4.ts
-function ipv4(message = "Invalid IPv4") {
-  return {
-    type: "ipv4",
-    async: false,
-    message,
-    requirement: IPV4_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/ipv6/ipv6.ts
-function ipv6(message = "Invalid IPv6") {
-  return {
-    type: "ipv6",
-    async: false,
-    message,
-    requirement: IPV6_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/isoDate/isoDate.ts
-function isoDate(message = "Invalid date") {
-  return {
-    type: "iso_date",
-    async: false,
-    message,
-    requirement: ISO_DATE_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/isoDateTime/isoDateTime.ts
-function isoDateTime(message = "Invalid date-time") {
-  return {
-    type: "iso_date_time",
-    async: false,
-    message,
-    requirement: ISO_DATE_TIME_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/isoTime/isoTime.ts
-function isoTime(message = "Invalid time") {
-  return {
-    type: "iso_time",
-    async: false,
-    message,
-    requirement: ISO_TIME_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/isoTimeSecond/isoTimeSecond.ts
-function isoTimeSecond(message = "Invalid time second") {
-  return {
-    type: "iso_time_second",
-    async: false,
-    message,
-    requirement: ISO_TIME_SECOND_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/isoTimestamp/isoTimestamp.ts
-function isoTimestamp(message = "Invalid timestamp") {
-  return {
-    type: "iso_timestamp",
-    async: false,
-    message,
-    requirement: ISO_TIMESTAMP_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/isoWeek/isoWeek.ts
-function isoWeek(message = "Invalid week") {
-  return {
-    type: "iso_week",
-    async: false,
-    message,
-    requirement: ISO_WEEK_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/length/length.ts
-function length(requirement, message = "Invalid length") {
-  return {
-    type: "length",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.length !== this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/mac/mac.ts
-function mac(message = "Invalid MAC") {
-  return {
-    type: "mac",
-    async: false,
-    message,
-    requirement: [MAC48_REGEX, MAC64_REGEX],
-    _parse(input) {
-      return !this.requirement[0].test(input) && !this.requirement[1].test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/mac48/mac48.ts
-function mac48(message = "Invalid 48 bit MAC") {
-  return {
-    type: "mac48",
-    async: false,
-    message,
-    requirement: MAC48_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/mac64/mac64.ts
-function mac64(message = "Invalid 64 bit MAC") {
-  return {
-    type: "mac64",
-    async: false,
-    message,
-    requirement: MAC64_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/maxBytes/maxBytes.ts
-function maxBytes(requirement, message = "Invalid byte length") {
-  return {
-    type: "max_bytes",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return new TextEncoder().encode(input).length > this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/maxLength/maxLength.ts
-function maxLength(requirement, message = "Invalid length") {
-  return {
-    type: "max_length",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.length > this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/maxSize/maxSize.ts
-function maxSize(requirement, message = "Invalid size") {
-  return {
-    type: "max_size",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.size > this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/maxValue/maxValue.ts
-function maxValue(requirement, message = "Invalid value") {
-  return {
-    type: "max_value",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input > this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-var maxRange = exports.maxRange = maxValue;
-
-// src/validations/minBytes/minBytes.ts
-function minBytes(requirement, message = "Invalid byte length") {
-  return {
-    type: "min_bytes",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return new TextEncoder().encode(input).length < this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/mimeType/mimeType.ts
-function mimeType(requirement, message = "Invalid MIME type") {
-  return {
-    type: "mime_type",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return !this.requirement.includes(input.type) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/minLength/minLength.ts
-function minLength(requirement, message = "Invalid length") {
-  return {
-    type: "min_length",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.length < this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/minSize/minSize.ts
-function minSize(requirement, message = "Invalid size") {
-  return {
-    type: "min_size",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.size < this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/minValue/minValue.ts
-function minValue(requirement, message = "Invalid value") {
-  return {
-    type: "min_value",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input < this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-var minRange = exports.minRange = minValue;
-
-// src/validations/multipleOf/multipleOf.ts
-function multipleOf(requirement, message = "Invalid multiple") {
-  return {
-    type: "multiple_of",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input % this.requirement !== 0 ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/notBytes/notBytes.ts
-function notBytes(requirement, message = "Invalid byte length") {
-  return {
-    type: "not_bytes",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return new TextEncoder().encode(input).length === this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/notLength/notLength.ts
-function notLength(requirement, message = "Invalid length") {
-  return {
-    type: "not_length",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.length === this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/notSize/notSize.ts
-function notSize(requirement, message = "Invalid size") {
-  return {
-    type: "not_size",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.size === this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/notValue/notValue.ts
-function notValue(requirement, message = "Invalid value") {
-  return {
-    type: "not_value",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input === this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/octal/octal.ts
-function octal(message = "Invalid octal") {
-  return {
-    type: "octal",
-    async: false,
-    message,
-    requirement: OCTAL_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/regex/regex.ts
-function regex(requirement, message = "Invalid regex") {
-  return {
-    type: "regex",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/safeInteger/safeInteger.ts
-function safeInteger(message = "Invalid safe integer") {
-  return {
-    type: "safe_integer",
-    async: false,
-    message,
-    requirement: Number.isSafeInteger,
-    _parse(input) {
-      return !this.requirement(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/size/size.ts
-function size(requirement, message = "Invalid size") {
-  return {
-    type: "size",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input.size !== this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/startsWith/startsWith.ts
-function startsWith(requirement, message = "Invalid start") {
-  return {
-    type: "stars_with",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return !input.startsWith(this.requirement) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/ulid/ulid.ts
-function ulid(message = "Invalid ULID") {
-  return {
-    type: "ulid",
-    async: false,
-    message,
-    requirement: ULID_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/url/url.ts
-function url(message = "Invalid URL") {
-  return {
-    type: "url",
-    async: false,
-    message,
-    requirement(input) {
-      try {
-        new URL(input);
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    _parse(input) {
-      return !this.requirement(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/uuid/uuid.ts
-function uuid(message = "Invalid UUID") {
-  return {
-    type: "uuid",
-    async: false,
-    message,
-    requirement: UUID_REGEX,
-    _parse(input) {
-      return !this.requirement.test(input) ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-// src/validations/value/value.ts
-function value(requirement, message = "Invalid value") {
-  return {
-    type: "value",
-    async: false,
-    message,
-    requirement,
-    _parse(input) {
-      return input !== this.requirement ? actionIssue(this.type, this.message, input, this.requirement) : actionOutput(input);
-    }
-  };
-}
-
-},{}],287:[function(require,module,exports){
+},{}],301:[function(require,module,exports){
 var obelisk = require('@0xobelisk/sui-client');
 
 window.obelisk = obelisk;
 
-},{"@0xobelisk/sui-client":7}]},{},[287]);
+},{"@0xobelisk/sui-client":7}]},{},[301]);
