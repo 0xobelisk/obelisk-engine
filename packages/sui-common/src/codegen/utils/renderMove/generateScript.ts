@@ -14,6 +14,7 @@ export async function generateDeployHook(config: ObeliskConfig, srcPrefix: strin
     use ${config.name}::dapp_key::DappKey;
     use std::ascii;
     use sui::clock::Clock;
+    use sui::transfer::public_share_object;
     #[test_only]
       use obelisk::dapps_schema;
       #[test_only]
@@ -33,11 +34,15 @@ export async function generateDeployHook(config: ObeliskConfig, srcPrefix: strin
             ctx
         );
         ${Object.keys(config.schemas).map(schemaName => {
-            return `${config.name}::${schemaName}_schema::register(dapps, ctx);`
+            return `let ${schemaName} = ${config.name}::${schemaName}_schema::register(dapps, ctx);`
         }).join("\n")}
-        
         // Logic that needs to be automated once the contract is deployed
 
+
+        // Share the dapp object with the public
+        ${Object.keys(config.schemas).map(schemaName => {
+          return `public_share_object(${schemaName});`
+        }).join("\n")}
     }
 
     #[test_only]

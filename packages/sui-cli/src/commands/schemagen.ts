@@ -7,7 +7,7 @@ type Options = {
 };
 
 const commandModule: CommandModule<Options, Options> = {
-  command: "schemagen <configPath>",
+  command: "schemagen",
 
   describe: "Autogenerate Obelisk schemas based on the config file",
 

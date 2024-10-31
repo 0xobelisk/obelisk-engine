@@ -143,7 +143,6 @@ export async function generateSchemaStructure(projectName: string, schemas: Reco
         const schemaMoudle = `module ${projectName}::${schemaName}_schema {
                     use std::ascii::String;
                     use std::type_name;
-                    use sui::transfer::{public_share_object};
                     use obelisk::dapps_system;
                     use obelisk::dapps_schema::Dapps;
                     use obelisk::storage_value::{Self, StorageValue};
@@ -168,14 +167,14 @@ export async function generateSchemaStructure(projectName: string, schemas: Reco
                     `
                     }).join('')} 
                     
-                    public entry fun register(dapps: &mut Dapps, ctx: &mut TxContext) {
+                    public fun register(dapps: &mut Dapps, ctx: &mut TxContext): ${capitalizeAndRemoveUnderscores(schemaName)} {
                       let package_id = dapps_system::current_package_id<DappKey>();
                       assert!(dapps.borrow_metadata().contains_key(package_id), 0);
                       assert!(dapps.borrow_admin().get(package_id) == ctx.sender(), 0);
                       let schema = type_name::get<${capitalizeAndRemoveUnderscores(schemaName)}>().into_string();
                       assert!(!dapps.borrow_schemas().get(package_id).contains(&schema), 0);
-                
-                        public_share_object(${capitalizeAndRemoveUnderscores(schemaName)} {
+                      dapps_system::add_schema<${capitalizeAndRemoveUnderscores(schemaName)}>(dapps, package_id, ctx);
+                      ${capitalizeAndRemoveUnderscores(schemaName)} {
                           id: object::new(ctx),
                           ${Object.entries(schema.structure).map(([key, value]) => {
                                 let storage_type = ""
@@ -189,9 +188,7 @@ export async function generateSchemaStructure(projectName: string, schemas: Reco
                                 return `${key}: ${storage_type},`
                             }).join(' ')
                             }
-                        });
-                
-                      dapps_system::add_schema<${capitalizeAndRemoveUnderscores(schemaName)}>(dapps, package_id, ctx);
+                        }
                     }
                
            }`;
