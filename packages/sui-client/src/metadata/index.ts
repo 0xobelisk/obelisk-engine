@@ -6,10 +6,11 @@ import { NetworkType } from '../types';
 
 export async function loadMetadata(
   networkType: NetworkType,
-  packageId: string
+  packageId: string,
+  fullnodeUrls?: string[]
 ) {
   // Init the rpc provider
-  const fullnodeUrls = [getFullnodeUrl(networkType)];
+  fullnodeUrls = fullnodeUrls || [getFullnodeUrl(networkType)];
   const suiInteractor = new SuiInteractor(fullnodeUrls);
   if (packageId !== undefined) {
     const jsonData = await suiInteractor.getNormalizedMoveModulesByPackage(
