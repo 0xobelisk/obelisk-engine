@@ -5204,8 +5204,8 @@ var MultiSigClient = exports.MultiSigClient = class _MultiSigClient {
 
 // src/metadata/index.ts
 
-async function loadMetadata(networkType, packageId) {
-  const fullnodeUrls = [(0, _client.getFullnodeUrl)(networkType)];
+async function loadMetadata(networkType, packageId, fullnodeUrls) {
+  fullnodeUrls = fullnodeUrls || [(0, _client.getFullnodeUrl)(networkType)];
   const suiInteractor = new SuiInteractor(fullnodeUrls);
   if (packageId !== void 0) {
     const jsonData = await suiInteractor.getNormalizedMoveModulesByPackage(packageId);
