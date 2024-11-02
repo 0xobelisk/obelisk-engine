@@ -1,22 +1,22 @@
-import { BaseType, SchemaType, BaseValueType, MoveType } from "../../types";
-import fs from "fs";
+import { MoveType } from '../../types';
+import fs from 'fs';
 
 export function deleteFolderRecursive(path: string) {
-  if (fs.existsSync(path)) {
-    fs.readdirSync(path).forEach((file) => {
-      const curPath = `${path}/${file}`;
-      if (fs.lstatSync(curPath).isDirectory()) {
-        deleteFolderRecursive(curPath);
-      } else {
-        fs.unlinkSync(curPath);
-      }
-    });
-    fs.rmdirSync(path);
-  }
+	if (fs.existsSync(path)) {
+		fs.readdirSync(path).forEach(file => {
+			const curPath = `${path}/${file}`;
+			if (fs.lstatSync(curPath).isDirectory()) {
+				deleteFolderRecursive(curPath);
+			} else {
+				fs.unlinkSync(curPath);
+			}
+		});
+		fs.rmdirSync(path);
+	}
 }
 
 export function capitalizeFirstLetter(input: string): string {
-  return input.charAt(0).toUpperCase() + input.slice(1);
+	return input.charAt(0).toUpperCase() + input.slice(1);
 }
 
 /**
@@ -26,14 +26,16 @@ export function capitalizeFirstLetter(input: string): string {
  * @return [ name, age, birth_time ]
  */
 export function getStructAttrs(
-  values: Record<string, string> | string,
+	values: Record<string, string> | string
 ): string {
-  return Object.entries(values).map(([key, _]) => `${key}`).join(",");
+	return Object.entries(values)
+		.map(([key, _]) => `${key}`)
+		.join(',');
 }
 
 function isAddress(str: string): boolean {
-  const regex = /^0x[a-fA-F0-9]+$/;
-  return regex.test(str);
+	const regex = /^0x[a-fA-F0-9]+$/;
+	return regex.test(str);
 }
 
 /**
@@ -43,11 +45,11 @@ function isAddress(str: string): boolean {
  */
 // export function getStructTypes(values: SchemaType): string {
 export function getStructTypes(
-  values: MoveType | Record<string, MoveType>
+	values: MoveType | Record<string, MoveType>
 ): string {
-  return typeof values === "string"
-    ? values
-    : `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
+	return typeof values === 'string'
+		? values
+		: `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
 }
 
 /**
@@ -56,9 +58,9 @@ export function getStructTypes(
  * @return Attributes and types of the struct. [ name: string, age: u64 ]
  */
 export function getStructAttrsWithType(
-  values: Record<string, string>
+	values: Record<string, string>
 ): string[] {
-  return Object.entries(values).map(([key, type]) => `${key}: ${type}`);
+	return Object.entries(values).map(([key, type]) => `${key}: ${type}`);
 }
 
 /**
@@ -67,12 +69,10 @@ export function getStructAttrsWithType(
  * @return [ data.name, data.age ]
  */
 export function getStructAttrsQuery(
-  values: MoveType | Record<string, MoveType>,
-  prefixArgs: string
+	values: MoveType | Record<string, MoveType>,
+	prefixArgs: string
 ): string[] {
-  return typeof values === "string"
-    ? [`${prefixArgs}self.value`]
-    : Object.entries(values).map(
-        ([key, _]) => `${prefixArgs}self.${key}`
-      );
+	return typeof values === 'string'
+		? [`${prefixArgs}self.value`]
+		: Object.entries(values).map(([key, _]) => `${prefixArgs}self.${key}`);
 }

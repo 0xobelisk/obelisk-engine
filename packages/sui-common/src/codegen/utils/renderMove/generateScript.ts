@@ -1,14 +1,22 @@
-import { ObeliskConfig } from "../../types";
-import { formatAndWriteMove } from "../formatAndWrite";
-import { existsSync } from "fs";
+import { ObeliskConfig } from '../../types';
+import { formatAndWriteMove } from '../formatAndWrite';
+import { existsSync } from 'fs';
 
-export async function generateDeployHook(config: ObeliskConfig, srcPrefix: string) {
-    if (
-        !existsSync(
-            `${srcPrefix}/contracts/${config.name}/sources/script/deploy_hook.move`
-        )
-    ) {
-        let code = `module ${config.name}::deploy_hook {
+export async function generateDeployHook(
+	config: ObeliskConfig,
+	srcPrefix: string
+) {
+	console.log('\n📝 Starting Deploy Hook Generation...');
+	console.log(
+		`  └─ Output path: ${srcPrefix}/contracts/${config.name}/sources/script/deploy_hook.move`
+	);
+
+	if (
+		!existsSync(
+			`${srcPrefix}/contracts/${config.name}/sources/script/deploy_hook.move`
+		)
+	) {
+		let code = `module ${config.name}::deploy_hook {
     use obelisk::dapps_schema::Dapps;
     use obelisk::dapps_system;
     use ${config.name}::dapp_key::DappKey;
@@ -33,16 +41,20 @@ export async function generateDeployHook(config: ObeliskConfig, srcPrefix: strin
             clock,
             ctx
         );
-        ${Object.keys(config.schemas).map(schemaName => {
-            return `let ${schemaName} = ${config.name}::${schemaName}_schema::register(dapps, ctx);`
-        }).join("\n")}
+        ${Object.keys(config.schemas)
+			.map(schemaName => {
+				return `let ${schemaName} = ${config.name}::${schemaName}_schema::register(dapps, ctx);`;
+			})
+			.join('\n')}
         // Logic that needs to be automated once the contract is deployed
 
 
         // Share the dapp object with the public
-        ${Object.keys(config.schemas).map(schemaName => {
-          return `public_share_object(${schemaName});`
-        }).join("\n")}
+        ${Object.keys(config.schemas)
+			.map(schemaName => {
+				return `public_share_object(${schemaName});`;
+			})
+			.join('\n')}
     }
 
     #[test_only]
@@ -63,21 +75,22 @@ export async function generateDeployHook(config: ObeliskConfig, srcPrefix: strin
   }
 }
 `;
-        await formatAndWriteMove(
-            code,
-            `${srcPrefix}/contracts/${config.name}/sources/script/deploy_hook.move`,
-            "formatAndWriteMove"
-        );
-    }
+		await formatAndWriteMove(
+			code,
+			`${srcPrefix}/contracts/${config.name}/sources/script/deploy_hook.move`,
+			'formatAndWriteMove'
+		);
+	}
+	console.log('✅ Deploy Hook Generation Complete\n');
 }
 
 export function generateMigrate(config: ObeliskConfig, srcPrefix: string) {
-    if (
-        !existsSync(
-            `${srcPrefix}/contracts/${config.name}/sources/script/migrate.move`
-        )
-    ) {
-        let code = `module ${config.name}::migrate {
+	if (
+		!existsSync(
+			`${srcPrefix}/contracts/${config.name}/sources/script/migrate.move`
+		)
+	) {
+		let code = `module ${config.name}::migrate {
     use obelisk::world::{World, AdminCap};
 
     /// Not the right admin for this world
@@ -97,11 +110,10 @@ export function generateMigrate(config: ObeliskConfig, srcPrefix: string) {
     }
 }
 `;
-        formatAndWriteMove(
-            code,
-            `${srcPrefix}/contracts/${config.name}/sources/script/migrate.move`,
-            "formatAndWriteMove"
-        );
-    }
+		formatAndWriteMove(
+			code,
+			`${srcPrefix}/contracts/${config.name}/sources/script/migrate.move`,
+			'formatAndWriteMove'
+		);
+	}
 }
-

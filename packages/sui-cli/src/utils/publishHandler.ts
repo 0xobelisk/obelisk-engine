@@ -11,17 +11,29 @@ import { ObeliskCliError } from './errors';
 import {
 	updateVersionInFile,
 	saveContractData,
-	validatePrivateKey, schema,
+	validatePrivateKey,
+	schema,
 } from './utils';
-import {log} from "node:util";
+
+async function getDappsObjectId(
+	network: 'mainnet' | 'testnet' | 'devnet' | 'localnet'
+) {
+	switch (network) {
+		case 'testnet':
+			return '0xa66942c08d9fc318a70ab9d0cfd7e75f1a2dd1ac31aff12fde008d25bfa9604b';
+		default:
+			return '0xa66942c08d9fc318a70ab9d0cfd7e75f1a2dd1ac31aff12fde008d25bfa9604b';
+	}
+}
 
 export async function publishHandler(
 	name: string,
-	network: 'mainnet' | 'testnet' | 'devnet' | 'localnet'
+	network: 'mainnet' | 'testnet' | 'devnet' | 'localnet',
+	dappsObjectId?: string
 ) {
 	const path = process.cwd();
 	const projectPath = `${path}/contracts/${name}`;
-
+	dappsObjectId = dappsObjectId || (await getDappsObjectId(network));
 	const privateKey = process.env.PRIVATE_KEY;
 	if (!privateKey)
 		throw new ObeliskCliError(
@@ -71,10 +83,7 @@ in your contracts directory to use the default sui private key.`
 		modules,
 		dependencies,
 	});
-	tx.transferObjects(
-		[upgradeCap],
-		keypair.toSuiAddress()
-	);
+	tx.transferObjects([upgradeCap], keypair.toSuiAddress());
 
 	let result: SuiTransactionBlockResponse;
 	try {
@@ -126,8 +135,8 @@ in your contracts directory to use the default sui private key.`
 	deployHookTx.moveCall({
 		target: `${packageId}::deploy_hook::run`,
 		arguments: [
-			deployHookTx.object("0xa66942c08d9fc318a70ab9d0cfd7e75f1a2dd1ac31aff12fde008d25bfa9604b"),
-			deployHookTx.object("0x6"),
+			deployHookTx.object(dappsObjectId),
+			deployHookTx.object('0x6'),
 		],
 	});
 
@@ -138,7 +147,7 @@ in your contracts directory to use the default sui private key.`
 			transaction: deployHookTx,
 			options: {
 				showEffects: true,
-				showObjectChanges: true
+				showObjectChanges: true,
 			},
 		});
 	} catch (error: any) {
@@ -159,10 +168,17 @@ in your contracts directory to use the default sui private key.`
 		);
 		deployHookResult.objectChanges?.map(object => {
 			if (
-				object.type === 'created' && object.objectType.includes("schema")
+				object.type === 'created' &&
+				object.objectType.includes('schema')
 			) {
-				console.log(chalk.blue(`${name} Schema Object id: ${object.objectId}`));
-				console.log(chalk.blue(`${name} Schema Object type: ${object.objectType}`));
+				console.log(
+					chalk.blue(`${name} Schema Object id: ${object.objectId}`)
+				);
+				console.log(
+					chalk.blue(
+						`${name} Schema Object type: ${object.objectType}`
+					)
+				);
 				schemas.push({
 					name: object.objectType,
 					objectId: object.objectId,

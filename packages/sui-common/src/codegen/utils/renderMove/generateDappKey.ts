@@ -1,19 +1,28 @@
-import { ObeliskConfig } from "../../types";
-import { formatAndWriteMove } from "../formatAndWrite";
+import { ObeliskConfig } from '../../types';
+import { formatAndWriteMove } from '../formatAndWrite';
 
-export async function generateDappKey(config: ObeliskConfig, srcPrefix: string) {
-  let code = `module ${config.name}::dapp_key {
-  /// Authorization token for the app.
-    public struct DappKey has drop {}
+export async function generateDappKey(
+	config: ObeliskConfig,
+	srcPrefix: string
+) {
+	console.log('\n🔑 Starting DappKey Generation...');
+	console.log(
+		`  └─ Output path: ${srcPrefix}/contracts/${config.name}/sources/codegen/dapp_key.move`
+	);
 
-    public(package) fun new(): DappKey {
-        DappKey {  }
-    }
+	let code = `module ${config.name}::dapp_key {
+\t/// Authorization token for the app.
+\tpublic struct DappKey has drop {}
+
+\tpublic(package) fun new(): DappKey {
+\t\tDappKey {  }
+\t}
 }
 `;
-  await formatAndWriteMove(
-    code,
-    `${srcPrefix}/contracts/${config.name}/sources/codegen/dapp_key.move`,
-    "formatAndWriteMove"
-  );
+	await formatAndWriteMove(
+		code,
+		`${srcPrefix}/contracts/${config.name}/sources/codegen/dapp_key.move`,
+		'formatAndWriteMove'
+	);
+	console.log('✅ DappKey Generation Complete\n');
 }

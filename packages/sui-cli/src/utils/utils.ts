@@ -3,17 +3,18 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
 import { SUI_PRIVATE_KEY_PREFIX } from '@mysten/sui/cryptography';
 import { FsIibError } from './errors';
+export * from './localnode';
 
 export type schema = {
-	name: string,
-	objectId: string
-}
+	name: string;
+	objectId: string;
+};
 
 export type DeploymentJsonType = {
 	projectName: string;
 	network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
 	packageId: string;
-	schemas: schema[]
+	schemas: schema[];
 	upgradeCap: string;
 	version: number;
 };
@@ -112,7 +113,8 @@ export async function getObjectIdBySchemaName(
 	schemaName: string
 ): Promise<string | undefined> {
 	const deployment = await getDeploymentJson(projectPath, network);
-	return deployment.schemas.find((schema) => schema.name.includes(schemaName))?.objectId;
+	return deployment.schemas.find(schema => schema.name.includes(schemaName))
+		?.objectId;
 }
 
 export function saveContractData(
