@@ -56,16 +56,35 @@ const commandModule: CommandModule<Options, Options> = {
 		} else {
 			faucet_address = recipient;
 		}
+
+		console.log('\n🌊 Starting Faucet Operation...');
+		console.log(`  ├─ Network: ${network}`);
+
+		if (recipient === undefined) {
+			console.log('  ├─ Using Environment Private Key');
+			console.log(`  ├─ Generated Address: ${faucet_address}`);
+		} else {
+			console.log(`  ├─ Using Provided Address: ${faucet_address}`);
+		}
+
+		console.log('  ├─ Requesting funds from faucet...');
 		await requestSuiFromFaucetV0({
 			host: getFaucetHost(network),
 			recipient: faucet_address,
 		});
+
+		console.log('  └─ Checking balance...');
 		const client = new SuiClient({ url: getFullnodeUrl(network) });
 		let params = {
 			owner: faucet_address,
 		} as GetBalanceParams;
-		console.log(`Account: ${faucet_address}`);
-		console.log(await client.getBalance(params));
+
+		const balance = await client.getBalance(params);
+		console.log('\n💰 Account Summary');
+		console.log(`  ├─ Address: ${faucet_address}`);
+		console.log(`  └─ Balance: ${balance.totalBalance} SUI`);
+
+		console.log('\n✅ Faucet Operation Complete\n');
 		process.exit(0);
 	},
 };

@@ -18,7 +18,7 @@ const commandModule: CommandModule = {
 				alias: 'b',
 				type: 'boolean',
 				description: 'Run node in background',
-				default: true,
+				default: false,
 			});
 	},
 

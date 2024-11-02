@@ -31,36 +31,39 @@ export async function publishHandler(
 	network: 'mainnet' | 'testnet' | 'devnet' | 'localnet',
 	dappsObjectId?: string
 ) {
+	console.log('\n🚀 Starting Contract Publication...');
+	console.log(`  ├─ Project: ${name}`);
+	console.log(`  ├─ Network: ${network}`);
+
 	const path = process.cwd();
 	const projectPath = `${path}/contracts/${name}`;
 	dappsObjectId = dappsObjectId || (await getDappsObjectId(network));
+
+	console.log('  ├─ Validating Environment...');
 	const privateKey = process.env.PRIVATE_KEY;
-	if (!privateKey)
+	if (!privateKey) {
 		throw new ObeliskCliError(
 			`Missing PRIVATE_KEY environment variable.
 Run 'echo "PRIVATE_KEY=YOUR_PRIVATE_KEY" > .env'
 in your contracts directory to use the default sui private key.`
 		);
+	}
 
 	const privateKeyFormat = validatePrivateKey(privateKey);
 	if (privateKeyFormat === false) {
 		throw new ObeliskCliError(`Please check your privateKey.`);
 	}
-	const obelisk = new Obelisk({
-		secretKey: privateKeyFormat,
-	});
+
+	const obelisk = new Obelisk({ secretKey: privateKeyFormat });
 	const keypair = obelisk.getKeypair();
+	console.log(`  └─ Account: ${keypair.toSuiAddress()}`);
 
-	const client = new SuiClient({
-		url: getFullnodeUrl(network),
-	});
+	const client = new SuiClient({ url: getFullnodeUrl(network) });
 
+	console.log('\n📦 Building Contract...');
 	let modules: any, dependencies: any;
 	try {
-		const {
-			modules: extractedModules,
-			dependencies: extractedDependencies,
-		} = JSON.parse(
+		const buildResult = JSON.parse(
 			execSync(
 				`sui move build --dump-bytecode-as-base64 --path ${projectPath}`,
 				{
@@ -68,21 +71,18 @@ in your contracts directory to use the default sui private key.`
 				}
 			)
 		);
-		modules = extractedModules;
-		dependencies = extractedDependencies;
+		modules = buildResult.modules;
+		dependencies = buildResult.dependencies;
+		console.log('  └─ Build successful');
 	} catch (error: any) {
-		console.error(chalk.red('Error executing sui move build:'));
+		console.error(chalk.red('  └─ Build failed'));
 		console.error(error.stdout);
-		process.exit(1); // You might want to exit with a non-zero status code to indicate an error
+		process.exit(1);
 	}
 
-	console.log(chalk.blue(`Account: ${keypair.toSuiAddress()}`));
-
+	console.log('\n🔄 Publishing Contract...');
 	const tx = new Transaction();
-	const [upgradeCap] = tx.publish({
-		modules,
-		dependencies,
-	});
+	const [upgradeCap] = tx.publish({ modules, dependencies });
 	tx.transferObjects([upgradeCap], keypair.toSuiAddress());
 
 	let result: SuiTransactionBlockResponse;
@@ -90,48 +90,45 @@ in your contracts directory to use the default sui private key.`
 		result = await client.signAndExecuteTransaction({
 			signer: keypair,
 			transaction: tx,
-			options: {
-				showObjectChanges: true,
-			},
+			options: { showObjectChanges: true },
 		});
 	} catch (error: any) {
-		console.error(chalk.red(`Failed to execute publish, please republish`));
+		console.error(chalk.red('  └─ Publication failed'));
 		console.error(error.message);
 		process.exit(1);
 	}
 
 	if (result.effects?.status.status === 'failure') {
-		console.log(chalk.red(`Failed to execute publish, please republish`));
+		console.log(chalk.red('  └─ Publication failed'));
 		process.exit(1);
 	}
 
+	console.log('  ├─ Processing publication results...');
 	let version = 1;
 	let packageId = '';
 	let schemas: schema[] = [];
 	let upgradeCapId = '';
+
 	result.objectChanges!.map(object => {
 		if (object.type === 'published') {
-			console.log(chalk.blue(`${name} PackageId: ${object.packageId}`));
+			console.log(`  ├─ Package ID: ${object.packageId}`);
 			packageId = object.packageId;
 		}
 		if (
 			object.type === 'created' &&
 			object.objectType === '0x2::package::UpgradeCap'
 		) {
-			console.log(chalk.blue(`${name} UpgradeCap: ${object.objectId}`));
+			console.log(`  ├─ Upgrade Cap: ${object.objectId}`);
 			upgradeCapId = object.objectId;
 		}
 	});
 
-	console.log(chalk.green(`Publish transaction digest: ${result.digest}`));
+	console.log(`  └─ Transaction: ${result.digest}`);
 
-	console.log('Executing the deployHook: ');
-	const delay = (ms: number) =>
-		new Promise(resolve => setTimeout(resolve, ms));
-	await delay(5000);
+	console.log('\n⚡ Executing Deploy Hook...');
+	await new Promise(resolve => setTimeout(resolve, 5000));
 
 	const deployHookTx = new Transaction();
-
 	deployHookTx.moveCall({
 		target: `${packageId}::deploy_hook::run`,
 		arguments: [
@@ -145,46 +142,33 @@ in your contracts directory to use the default sui private key.`
 		deployHookResult = await client.signAndExecuteTransaction({
 			signer: keypair,
 			transaction: deployHookTx,
-			options: {
-				showEffects: true,
-				showObjectChanges: true,
-			},
+			options: { showEffects: true, showObjectChanges: true },
 		});
 	} catch (error: any) {
-		console.error(
-			chalk.red(
-				`Failed to execute deployHook, please republish or manually call deploy_hook::run`
-			)
-		);
+		console.error(chalk.red('  └─ Deploy hook execution failed'));
 		console.error(error.message);
 		process.exit(1);
 	}
 
 	if (deployHookResult.effects?.status.status === 'success') {
-		console.log(
-			chalk.green(
-				`Successful auto-execution of deployHook, please check the transaction digest: ${deployHookResult.digest}`
-			)
-		);
+		console.log('  ├─ Hook execution successful');
+		console.log(`  ├─ Transaction: ${deployHookResult.digest}`);
+
+		console.log('\n📋 Created Schemas:');
 		deployHookResult.objectChanges?.map(object => {
 			if (
 				object.type === 'created' &&
 				object.objectType.includes('schema')
 			) {
-				console.log(
-					chalk.blue(`${name} Schema Object id: ${object.objectId}`)
-				);
-				console.log(
-					chalk.blue(
-						`${name} Schema Object type: ${object.objectType}`
-					)
-				);
+				console.log(`  ├─ ${object.objectType}`);
+				console.log(`     └─ ID: ${object.objectId}`);
 				schemas.push({
 					name: object.objectType,
 					objectId: object.objectId,
 				});
 			}
 		});
+
 		saveContractData(
 			name,
 			network,
@@ -193,10 +177,12 @@ in your contracts directory to use the default sui private key.`
 			upgradeCapId,
 			version
 		);
+		console.log('\n✅ Contract Publication Complete\n');
 	} else {
+		console.log(chalk.yellow('  └─ Deploy hook execution failed'));
 		console.log(
 			chalk.yellow(
-				`Failed to execute deployHook, please republish or manually call deploy_hook::run`
+				'     Please republish or manually call deploy_hook::run'
 			)
 		);
 	}
