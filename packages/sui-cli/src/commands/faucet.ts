@@ -46,7 +46,7 @@ const commandModule: CommandModule<Options, Options> = {
 
 			const privateKeyFormat = validatePrivateKey(privateKey);
 			if (privateKeyFormat === false) {
-				throw new ObeliskCliError(`Please check your privateKey.`);
+				throw new ObeliskCliError(`Please check your PRIVATE_KEY.`);
 			}
 			const obelisk = new Obelisk({
 				secretKey: privateKeyFormat,
@@ -61,7 +61,7 @@ const commandModule: CommandModule<Options, Options> = {
 		console.log(`  ├─ Network: ${network}`);
 
 		if (recipient === undefined) {
-			console.log('  ├─ Using Environment Private Key');
+			console.log('  ├─ Using Environment PrivateKey');
 			console.log(`  ├─ Generated Address: ${faucet_address}`);
 		} else {
 			console.log(`  ├─ Using Provided Address: ${faucet_address}`);
@@ -80,9 +80,14 @@ const commandModule: CommandModule<Options, Options> = {
 		} as GetBalanceParams;
 
 		const balance = await client.getBalance(params);
+
 		console.log('\n💰 Account Summary');
 		console.log(`  ├─ Address: ${faucet_address}`);
-		console.log(`  └─ Balance: ${balance.totalBalance} SUI`);
+		console.log(
+			`  └─ Balance: ${(
+				Number(balance.totalBalance) / 1_000_000_000
+			).toFixed(4)} SUI`
+		);
 
 		console.log('\n✅ Faucet Operation Complete\n');
 		process.exit(0);
