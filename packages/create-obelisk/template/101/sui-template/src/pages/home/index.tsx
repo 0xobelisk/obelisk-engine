@@ -1,5 +1,5 @@
 import { loadMetadata, Obelisk, Transaction, TransactionResult, DevInspectResults } from '@0xobelisk/sui-client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { Value } from '../../jotai';
 import { useRouter } from 'next/router';
@@ -9,6 +9,7 @@ import { PRIVATEKEY } from '../../chain/key';
 const Home = () => {
   const router = useRouter();
   const [value, setValue] = useAtom(Value);
+  const [loading, setLoading] = useState(false);
 
   const query_counter_value = async () => {
     const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
@@ -27,18 +28,27 @@ const Home = () => {
   };
 
   const counter = async () => {
-    const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
-    const obelisk = new Obelisk({
-      networkType: NETWORK,
-      packageId: PACKAGE_ID,
-      metadata: metadata,
-      secretKey: PRIVATEKEY,
-    });
-    const tx = new Transaction();
-    (await obelisk.tx.counter_system.inc(tx, [tx.object(Counter_Object_Id)], undefined, true)) as TransactionResult;
-    const response = await obelisk.signAndSendTxn(tx);
-    if (response.effects.status.status == 'success') {
-      query_counter_value();
+    setLoading(true);
+    try {
+      const metadata = await loadMetadata(NETWORK, PACKAGE_ID);
+      const obelisk = new Obelisk({
+        networkType: NETWORK,
+        packageId: PACKAGE_ID,
+        metadata: metadata,
+        secretKey: PRIVATEKEY,
+      });
+      const tx = new Transaction();
+      (await obelisk.tx.counter_system.inc(tx, [tx.object(Counter_Object_Id)], undefined, true)) as TransactionResult;
+      const response = await obelisk.signAndSendTxn(tx);
+      if (response.effects.status.status == 'success') {
+        setTimeout(async () => {
+          await query_counter_value();
+          setLoading(false);
+        }, 200);
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error(error);
     }
   };
 
@@ -57,11 +67,10 @@ const Home = () => {
             <button
               type="button"
               className="mx-auto px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              onClick={() => {
-                counter();
-              }}
+              onClick={() => counter()}
+              disabled={loading}
             >
-              Increment
+              {loading ? 'Processing...' : 'Increment'}
             </button>
           </div>
         </div>

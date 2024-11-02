@@ -1,11 +1,42 @@
 import { Obelisk } from '@0xobelisk/sui-client';
 import * as fs from 'fs';
 
-function generateAccount() {
+async function generateAccount() {
+  const path = process.cwd();
+
+  // Check if .env file exists and has content
+  let privateKey: string;
+  try {
+    const envContent = fs.readFileSync(`${path}/.env`, 'utf8');
+    const match = envContent.match(/PRIVATE_KEY=(.+)/);
+    if (match && match[1]) {
+      privateKey = match[1];
+      const obelisk = new Obelisk({ secretKey: privateKey });
+      const keypair = obelisk.getKeypair();
+
+      // Only update key.ts file
+      const chainFolderPath = `${path}/src/chain`;
+      fs.mkdirSync(chainFolderPath, { recursive: true });
+
+      fs.writeFileSync(
+        `${path}/src/chain/key.ts`,
+        `export const PRIVATEKEY = '${privateKey}';
+export const ACCOUNT = '${keypair.toSuiAddress()}';
+`,
+      );
+
+      console.log(`Using existing Account: ${keypair.toSuiAddress()}`);
+      return;
+    }
+  } catch (error) {
+    // .env file doesn't exist or failed to read, continue to generate new account
+  }
+
+  // If no existing private key, generate new account
   const obelisk = new Obelisk();
   const keypair = obelisk.getKeypair();
-  const privateKey = keypair.getSecretKey();
-  const path = process.cwd();
+  privateKey = keypair.getSecretKey();
+
   const chainFolderPath = `${path}/src/chain`;
   fs.mkdirSync(chainFolderPath, { recursive: true });
 
