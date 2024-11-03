@@ -1,5 +1,4 @@
-import { Obelisk, loadMetadata } from '@0xobelisk/sui-client';
-import { Transaction } from '@mysten/sui/transactions';
+import { Obelisk, loadMetadata, Transaction } from '@0xobelisk/sui-client';
 import { execSync } from 'child_process';
 import * as fsAsync from 'fs/promises';
 import { mkdirSync, writeFileSync } from 'fs';
