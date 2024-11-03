@@ -96,9 +96,6 @@ export async function deployFramework() {
   const frameworkPath = `${path}/localnet/obelisk-framework`;
 
   try {
-    // Reset Move.toml addresses before compilation
-    await updateFrameworkMoveToml(frameworkPath);
-
     // Try to get historical deployment information
     const deploymentData = await getDeploymentJson(path, network);
 
@@ -117,6 +114,9 @@ export async function deployFramework() {
   } catch (error) {
     console.log(chalk.yellow('No previous deployment found, proceeding with new deployment'));
   }
+
+  // Reset Move.toml addresses before compilation
+  await updateFrameworkMoveToml(frameworkPath);
 
   // Check for private key in environment variables
   const privateKey = process.env.PRIVATE_KEY;
