@@ -4,17 +4,10 @@ import * as fsAsync from 'fs/promises';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
 import chalk from 'chalk';
+import { FrameworkDeploymentJsonType } from './types';
+import { getFrameworkDeploymentJson } from './common';
 import dotenv from 'dotenv';
 dotenv.config();
-
-export type DeploymentJsonType = {
-  projectName: string;
-  network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
-  packageId: string;
-  upgradeCap: string;
-  dappsObjectId: string;
-  version: number;
-};
 
 export async function writeOutput(output: string, fullOutputPath: string, logPrefix?: string): Promise<void> {
   mkdirSync(dirname(fullOutputPath), { recursive: true });
@@ -22,18 +15,6 @@ export async function writeOutput(output: string, fullOutputPath: string, logPre
   writeFileSync(fullOutputPath, output);
   if (logPrefix !== undefined) {
     console.log(`${logPrefix}: ${fullOutputPath}`);
-  }
-}
-
-async function getDeploymentJson(projectPath: string, network: string) {
-  try {
-    const data = await fsAsync.readFile(
-      `${projectPath}/localnet/obelisk-framework/.history/sui_${network}/latest.json`,
-      'utf8',
-    );
-    return JSON.parse(data) as DeploymentJsonType;
-  } catch {
-    throw new Error('Failed to read deployment file.');
   }
 }
 
@@ -45,7 +26,7 @@ export function saveContractData(
   dappsObjectId: string,
   version: number,
 ) {
-  const DeploymentData: DeploymentJsonType = {
+  const DeploymentData: FrameworkDeploymentJsonType = {
     projectName,
     network,
     packageId,
@@ -96,7 +77,7 @@ export async function deployFramework() {
 
   try {
     // Try to get historical deployment information
-    const deploymentData = await getDeploymentJson(path, network);
+    const deploymentData = await getFrameworkDeploymentJson(path, network);
 
     // Check if the contract exists
     try {
