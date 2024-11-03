@@ -3,27 +3,8 @@ import { obeliskConfig } from '../../obelisk.config';
 import * as fsAsync from 'fs/promises';
 import * as path from 'path';
 import chalk from 'chalk';
-
-export type DeploymentJsonType = {
-  projectName: string;
-  network: 'mainnet' | 'testnet' | 'devnet' | 'localnet';
-  packageId: string;
-  upgradeCap: string;
-  dappsObjectId: string;
-  version: number;
-};
-
-export async function getDeploymentJson(projectPath: string, network: string): Promise<DeploymentJsonType> {
-  try {
-    const data = await fsAsync.readFile(
-      `${projectPath}/localnet/obelisk-framework/.history/sui_${network}/latest.json`,
-      'utf8',
-    );
-    return JSON.parse(data) as DeploymentJsonType;
-  } catch {
-    throw new Error('Failed to read deployment history file');
-  }
-}
+import { FrameworkDeploymentJsonType } from './types';
+import { getFrameworkDeploymentJson } from './common';
 
 async function updateMoveToml(packageName: string, obeliskPackageId: string) {
   const moveTomlPath = path.join(process.cwd(), 'contracts', packageName, 'Move.toml');
@@ -45,7 +26,7 @@ async function updateMoveToml(packageName: string, obeliskPackageId: string) {
   }
 }
 
-export async function validateAndUpdatePackageId(): Promise<DeploymentJsonType> {
+export async function validateAndUpdatePackageId(): Promise<FrameworkDeploymentJsonType> {
   const network = 'localnet';
   const projectPath = process.cwd();
 
@@ -57,7 +38,7 @@ export async function validateAndUpdatePackageId(): Promise<DeploymentJsonType> 
     }
 
     // Get historical deployment information
-    const deploymentData = await getDeploymentJson(projectPath, network);
+    const deploymentData = await getFrameworkDeploymentJson(projectPath, network);
 
     // Verify if packageId exists on chain
     try {
