@@ -1,5 +1,5 @@
 module examples::deploy_hook {
-    use obelisk::world::{World, AdminCap};
+    use dubhe::world::{World, AdminCap};
 
     /// Not the right admin for this world
     const ENotAdmin: u64 = 0;

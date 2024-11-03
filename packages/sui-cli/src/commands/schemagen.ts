@@ -1,5 +1,5 @@
 import type { CommandModule } from 'yargs';
-import { schemaGen, loadConfig, ObeliskConfig } from '@0xobelisk/sui-common';
+import { schemaGen, loadConfig, DubheConfig } from '@0xobelisk/sui-common';
 import chalk from 'chalk';
 
 type Options = {
@@ -11,12 +11,12 @@ type Options = {
 const commandModule: CommandModule<Options, Options> = {
 	command: 'schemagen',
 
-	describe: 'Autogenerate Obelisk schemas based on the config file',
+	describe: 'Autogenerate Dubhe schemas based on the config file',
 
 	builder: {
 		configPath: {
 			type: 'string',
-			default: 'obelisk.config.ts',
+			default: 'dubhe.config.ts',
 			desc: 'Path to the config file',
 		},
 		network: {
@@ -32,10 +32,10 @@ const commandModule: CommandModule<Options, Options> = {
 
 	async handler({ configPath, network, frameworkId }) {
 		try {
-			const obeliskConfig = (await loadConfig(
+			const dubheConfig = (await loadConfig(
 				configPath
-			)) as ObeliskConfig;
-			await schemaGen(obeliskConfig, undefined, network, frameworkId);
+			)) as DubheConfig;
+			await schemaGen(dubheConfig, undefined, network, frameworkId);
 			process.exit(0);
 		} catch (error: any) {
 			console.log(chalk.red('Schemagen failed!'));

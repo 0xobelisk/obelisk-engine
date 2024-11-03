@@ -1,7 +1,7 @@
 import type { CommandModule } from 'yargs';
 import { logError } from '../utils/errors';
 import { publishHandler } from '../utils';
-import { loadConfig, ObeliskConfig } from '@0xobelisk/sui-common';
+import { loadConfig, DubheConfig } from '@0xobelisk/sui-common';
 
 type Options = {
 	network: any;
@@ -12,7 +12,7 @@ type Options = {
 const commandModule: CommandModule<Options, Options> = {
 	command: 'publish',
 
-	describe: 'Publish obelisk move contract',
+	describe: 'Publish dubhe move contract',
 
 	builder(yargs) {
 		return yargs.options({
@@ -23,7 +23,7 @@ const commandModule: CommandModule<Options, Options> = {
 			},
 			configPath: {
 				type: 'string',
-				default: 'obelisk.config.ts',
+				default: 'dubhe.config.ts',
 				desc: 'Configuration file path',
 			},
 			dappsObjectId: {
@@ -35,10 +35,10 @@ const commandModule: CommandModule<Options, Options> = {
 
 	async handler({ network, configPath, dappsObjectId }) {
 		try {
-			const obeliskConfig = (await loadConfig(
+			const dubheConfig = (await loadConfig(
 				configPath
-			)) as ObeliskConfig;
-			await publishHandler(obeliskConfig.name, network, dappsObjectId);
+			)) as DubheConfig;
+			await publishHandler(dubheConfig.name, network, dappsObjectId);
 		} catch (error: any) {
 			logError(error);
 			process.exit(1);

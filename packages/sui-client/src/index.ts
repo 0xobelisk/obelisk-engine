@@ -6,7 +6,7 @@ export * from '@mysten/sui/keypairs/ed25519';
 export * from '@mysten/sui/keypairs/secp256k1';
 export * from '@mysten/sui/keypairs/secp256r1';
 export { bcs, BcsType } from '@mysten/bcs';
-export { Obelisk } from './obelisk';
+export { Dubhe } from './dubhe';
 export { SuiAccountManager } from './libs/suiAccountManager';
 export { SuiTx } from './libs/suiTxBuilder';
 export { MultiSigClient } from './libs/multiSig';

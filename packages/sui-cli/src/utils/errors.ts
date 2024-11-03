@@ -4,11 +4,11 @@ import { fromZodError, ValidationError } from "zod-validation-error";
 
 export class NotInsideProjectError extends Error {
   name = "NotInsideProjectError";
-  message = "You are not inside a Obelisk project";
+  message = "You are not inside a Dubhe project";
 }
 
-export class ObeliskCliError extends Error {
-  name = "ObeliskCliError";
+export class DubheCliError extends Error {
+  name = "DubheCliError";
 }
 
 export class UpgradeError extends Error {
@@ -35,10 +35,10 @@ export function logError(error: unknown) {
     // TODO add docs to the website and update the link to the specific page
     console.log(
       chalk.blue(
-        `To learn more about Obelisk's configuration, please go to https://github.com/0xobelisk`
+        `To learn more about Dubhe's configuration, please go to https://github.com/0xobelisk`
       )
     );
-  } else if (error instanceof ObeliskCliError) {
+  } else if (error instanceof DubheCliError) {
     console.log(chalk.red(error));
   } else {
     console.log(error);

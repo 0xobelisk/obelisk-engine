@@ -6,7 +6,7 @@ manifest_digest = "BEB16644382E13CE65CC5FF04B0517B09D4C6F44FE2F48931ED6CF708BAE9
 deps_digest = "3C4103934B1E040BB6B23F1D610B4EF9F2F1166A50A104EADCF77467C004C600"
 
 dependencies = [
-  { name = "Obelisk" },
+  { name = "Dubhe" },
   { name = "Sui" },
 ]
 
@@ -15,8 +15,8 @@ name = "MoveStdlib"
 source = { git = "https://github.com/MystenLabs/sui.git", rev = "framework/testnet", subdir = "crates/sui-framework/packages/move-stdlib" }
 
 [[move.package]]
-name = "Obelisk"
-source = { local = "../../packages/obelisk-framework" }
+name = "Dubhe"
+source = { local = "../../packages/dubhe-framework" }
 
 dependencies = [
   { name = "Sui" },

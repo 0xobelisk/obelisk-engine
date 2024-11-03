@@ -1,4 +1,4 @@
-import { SchemaMapType, ObeliskConfig } from "../../types";
+import { SchemaMapType, DubheConfig } from "../../types";
 import { rmdirSync, existsSync } from "fs";
 import { deleteFolderRecursive } from "./common";
 import { generateSystem } from "./generateSystem";
@@ -9,7 +9,7 @@ import { generateEps } from "./generateEps";
 import { generateSchema } from "./generateSchema";
 import {generateScript} from "./generateScript";
 
-export function worldgen(config: ObeliskConfig, srcPrefix?: string) {
+export function worldgen(config: DubheConfig, srcPrefix?: string) {
   let path = "";
   if (srcPrefix === undefined) {
     path = process.cwd();

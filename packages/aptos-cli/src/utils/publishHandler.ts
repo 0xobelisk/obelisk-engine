@@ -13,7 +13,7 @@ import {
 	Types,
 } from '@0xobelisk/aptos-client';
 
-import { ObeliskCliError } from './errors';
+import { DubheCliError } from './errors';
 import { saveContractData, validatePrivateKey } from './utils';
 
 const {
@@ -40,7 +40,7 @@ export async function publishHandler(
 ) {
 	const privateKey = process.env.PRIVATE_KEY;
 	if (!privateKey)
-		throw new ObeliskCliError(
+		throw new DubheCliError(
 			`Missing PRIVATE_KEY environment variable.
   Run 'echo "PRIVATE_KEY=YOUR_PRIVATE_KEY" > .env'
   in your contracts directory to use the default aptos private key.`
@@ -48,7 +48,7 @@ export async function publishHandler(
 
 	const privateKeyFormat = validatePrivateKey(privateKey);
 	if (privateKeyFormat === false) {
-		throw new ObeliskCliError(`Please check your privateKey.`);
+		throw new DubheCliError(`Please check your privateKey.`);
 	}
 
 	const keypair = AptosAccount.fromAptosAccountObject({

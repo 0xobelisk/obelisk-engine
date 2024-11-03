@@ -1,4 +1,4 @@
-import { ObeliskConfig } from "../../types";
+import { DubheConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import {
   getRegisterSchema,
@@ -6,7 +6,7 @@ import {
   capitalizeFirstLetter,
 } from "./common";
 
-export function generateInit(config: ObeliskConfig, srcPrefix: string) {
+export function generateInit(config: DubheConfig, srcPrefix: string) {
   let code = `module ${config.name}::init {
     use std::string;
     use ${config.name}::world;

@@ -1,9 +1,9 @@
-import { ObeliskConfig } from '../../types';
+import { DubheConfig } from '../../types';
 import { formatAndWriteMove } from '../formatAndWrite';
 import { existsSync } from 'fs';
 
 export async function generateDeployHook(
-	config: ObeliskConfig,
+	config: DubheConfig,
 	srcPrefix: string
 ) {
 	console.log('\n📝 Starting Deploy Hook Generation...');
@@ -17,14 +17,14 @@ export async function generateDeployHook(
 		)
 	) {
 		let code = `module ${config.name}::deploy_hook {
-    use obelisk::dapps_schema::Dapps;
-    use obelisk::dapps_system;
+    use dubhe::dapps_schema::Dapps;
+    use dubhe::dapps_system;
     use ${config.name}::dapp_key::DappKey;
     use std::ascii;
     use sui::clock::Clock;
     use sui::transfer::public_share_object;
     #[test_only]
-      use obelisk::dapps_schema;
+      use dubhe::dapps_schema;
       #[test_only]
       use sui::clock;
       #[test_only]
@@ -33,7 +33,7 @@ export async function generateDeployHook(
       use sui::test_scenario::Scenario;
 
     public entry fun run(dapps: &mut Dapps, clock: &Clock, ctx: &mut TxContext) {
-        // Register the dapp to obelisk.
+        // Register the dapp to dubhe.
         dapps_system::register<DappKey>(
             dapps,
             ascii::string(b"${config.name}"),
@@ -84,14 +84,14 @@ export async function generateDeployHook(
 	console.log('✅ Deploy Hook Generation Complete\n');
 }
 
-export function generateMigrate(config: ObeliskConfig, srcPrefix: string) {
+export function generateMigrate(config: DubheConfig, srcPrefix: string) {
 	if (
 		!existsSync(
 			`${srcPrefix}/contracts/${config.name}/sources/script/migrate.move`
 		)
 	) {
 		let code = `module ${config.name}::migrate {
-    use obelisk::world::{World, AdminCap};
+    use dubhe::world::{World, AdminCap};
 
     /// Not the right admin for this world
     const ENotAdmin: u64 = 0;
@@ -102,7 +102,7 @@ export function generateMigrate(config: ObeliskConfig, srcPrefix: string) {
     public entry fun run(world: &mut World, admin_cap: &AdminCap) {
         assert!(world.admin() == object::id(admin_cap), ENotAdmin);
         assert!(world.version() < VERSION, ENotUpgrade);
-        *obelisk::world::mut_version(world, admin_cap) = VERSION;
+        *dubhe::world::mut_version(world, admin_cap) = VERSION;
     }
 
     public fun assert_version(world: &World){

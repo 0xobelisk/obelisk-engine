@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/obelisk.ts"],
+  entry: ["src/dubhe.ts"],
   target: "esnext",
   format: ["esm"],
   dts: false,

@@ -1,4 +1,4 @@
-import { NetworkType, Obelisk, Types } from './../src';
+import { NetworkType, Dubhe, Types } from './../src';
 import { loadMetadata } from '../src/metadata/index';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -12,64 +12,64 @@ async function init() {
     '0x35cc4910b9934ceacf0bbb014e3a823f9dee5b8725110360729b500ee81a2d3a';
   const metadata = await loadMetadata(network, packageId);
   const privateKey = process.env.PRIVATE_KEY;
-  const obelisk = new Obelisk({
+  const dubhe = new Dubhe({
     networkType: network as NetworkType,
     packageId: packageId,
     metadata: metadata,
     secretKey: privateKey,
   });
 
-  let myAddr = obelisk.getAddress();
-  let myBalance = await obelisk.getBalance();
+  let myAddr = dubhe.getAddress();
+  let myBalance = await dubhe.getBalance();
   console.log(`Addr: ${myAddr}`);
   console.log(`Balance: ${myBalance}`);
 
   console.log('======= query other user message ========');
 
-  let message = await obelisk.query.message.get_message([
+  let message = await dubhe.query.message.get_message([
     '0x35cc4910b9934ceacf0bbb014e3a823f9dee5b8725110360729b500ee81a2d3a',
   ]);
   console.log(message);
 
   console.log('======= set our message ========');
-  const res1 = (await obelisk.tx.message.set_message(obelisk.getAddress(), [
+  const res1 = (await dubhe.tx.message.set_message(dubhe.getAddress(), [
     'first set',
   ])) as Types.PendingTransaction;
   console.log(res1.hash);
   await delay(1000);
 
   console.log('======= query our message ========');
-  let myMessage = await obelisk.query.message.get_message([myAddr]);
+  let myMessage = await dubhe.query.message.get_message([myAddr]);
   console.log(myMessage);
 
   console.log('======= set our message again ========');
 
-  const res2 = (await obelisk.tx.message.set_message(obelisk.getAddress(), [
+  const res2 = (await dubhe.tx.message.set_message(dubhe.getAddress(), [
     'hello world',
   ])) as Types.PendingTransaction;
   console.log(res2.hash);
   await delay(1000);
 
   console.log('======= query our message ========');
-  let mySecondMessage = await obelisk.query.message.get_message([myAddr]);
+  let mySecondMessage = await dubhe.query.message.get_message([myAddr]);
   console.log(mySecondMessage);
 
-  let faucetRes = await obelisk.requestFaucet(network);
+  let faucetRes = await dubhe.requestFaucet(network);
   console.log(faucetRes);
-  // const counter = await obelisk.getEntity('single_value');
+  // const counter = await dubhe.getEntity('single_value');
   // console.log(counter);
 
   // console.log('\n======= send inc transaction ========');
   // const res =
-  //   (await obelisk.tx.example_system.increase()) as Types.PendingTransaction;
+  //   (await dubhe.tx.example_system.increase()) as Types.PendingTransaction;
   // console.log(res.hash);
 
   // console.log('=======================================\n');
   // await delay(1000);
-  // const counterend = await obelisk.query.single_value_schema.get();
+  // const counterend = await dubhe.query.single_value_schema.get();
   // console.log(counterend);
 
-  // const balance = await obelisk.getBalance();
+  // const balance = await dubhe.getBalance();
   // console.log(balance);
 }
 

@@ -2,7 +2,7 @@ import { HexString, Network, Types } from 'aptos';
 
 import { MoveModuleFuncType } from '../libs/aptosContractFactory/types';
 
-export type ObeliskParams = {
+export type DubheParams = {
   mnemonics?: string;
   secretKey?: string;
   fullnodeUrls?: string[];

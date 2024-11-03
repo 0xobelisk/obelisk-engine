@@ -17,7 +17,7 @@ import {
 } from './libs/aptosContractFactory/types';
 
 import {
-  ObeliskParams,
+  DubheParams,
   DerivePathParams,
   ComponentContentType,
   ContractQuery,
@@ -93,10 +93,10 @@ function createTx(
 }
 
 /**
- * @class Obelisk
+ * @class Dubhe
  * @description This class is used to aggregate the tools that used to interact with SUI network.
  */
-export class Obelisk {
+export class Dubhe {
   public accountManager: AptosAccountManager;
   public aptosInteractor: AptosInteractor;
   public contractFactory: AptosContractFactory;
@@ -106,7 +106,7 @@ export class Obelisk {
   readonly #query: MapModuleFuncQuery = {};
   readonly #tx: MapModuleFuncTx = {};
   /**
-   * Support the following ways to init the ObeliskClient:
+   * Support the following ways to init the DubheClient:
    * 1. mnemonics
    * 2. secretKey (base64 or hex)
    * If none of them is provided, will generate a random mnemonics with 24 words.
@@ -124,7 +124,7 @@ export class Obelisk {
     fullnodeUrls,
     packageId,
     metadata,
-  }: ObeliskParams = {}) {
+  }: DubheParams = {}) {
     // Init the account manager
     this.accountManager = new AptosAccountManager({ mnemonics, secretKey });
     // Init the rpc provider

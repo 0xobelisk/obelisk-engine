@@ -1,8 +1,8 @@
-import { ObeliskConfig } from '../../types';
+import { DubheConfig } from '../../types';
 import { formatAndWriteMove } from '../formatAndWrite';
 
 export async function generateToml(
-	config: ObeliskConfig,
+	config: DubheConfig,
 	srcPrefix: string,
 	frameworkId: string
 ) {
@@ -18,11 +18,11 @@ edition = "2024.beta"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet-v1.31.1" }
-Obelisk = { git = "https://github.com/0xobelisk/obelisk-engine.git", subdir = "packages/obelisk-framework", rev = "main" }
+Dubhe = { git = "https://github.com/0xobelisk/dubhe.git", subdir = "packages/dubhe-framework", rev = "main" }
 
 [addresses]
 sui = "0x2"
-obelisk = "${frameworkId}"
+dubhe = "${frameworkId}"
 ${config.name} = "0x0"
 `;
 	await formatAndWriteMove(

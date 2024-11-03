@@ -29,27 +29,27 @@ module examples::world {
     }
 
     public(friend) fun resource_signer(): signer acquires World {
-        let _obelisk_world = borrow_global_mut<World>(@examples);
-        create_signer_with_capability(&_obelisk_world.resource_cap)
+        let _dubhe_world = borrow_global_mut<World>(@examples);
+        create_signer_with_capability(&_dubhe_world.resource_cap)
     }
 
     // ============================= View Function =============================
 
     #[view]
     public fun resource_address(): address acquires World {
-        let _obelisk_world = borrow_global_mut<World>(@examples);
-        get_signer_capability_address(&_obelisk_world.resource_cap)
+        let _dubhe_world = borrow_global_mut<World>(@examples);
+        get_signer_capability_address(&_dubhe_world.resource_cap)
     }
 
     #[view]
     public fun deployer_address(): address acquires World {
-        let _obelisk_world = borrow_global_mut<World>(@examples);
-        _obelisk_world.deployer
+        let _dubhe_world = borrow_global_mut<World>(@examples);
+        _dubhe_world.deployer
     }
 
     #[view]
     public fun info(): (String, String, address, address) acquires World {
-        let _obelisk_world = borrow_global_mut<World>(@examples);
-        (_obelisk_world.name, _obelisk_world.description, _obelisk_world.deployer, get_signer_capability_address(&_obelisk_world.resource_cap))
+        let _dubhe_world = borrow_global_mut<World>(@examples);
+        (_dubhe_world.name, _dubhe_world.description, _dubhe_world.deployer, get_signer_capability_address(&_dubhe_world.resource_cap))
     }
 }

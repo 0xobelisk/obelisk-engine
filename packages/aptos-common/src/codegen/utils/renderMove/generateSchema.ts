@@ -1,5 +1,5 @@
 import {
-  ObeliskConfig,
+  DubheConfig,
   BaseValueType,
   BaseType,
   RenderSchemaOptions,
@@ -28,7 +28,7 @@ import {
   renderSingleGetAttrsFunc, renderStructEvent, renderSingleStruct,
 } from "./common";
 
-export function getRenderSchemaOptions(config: ObeliskConfig) {
+export function getRenderSchemaOptions(config: DubheConfig) {
   const options: RenderSchemaOptions[] = [];
   for (const schemaName of Object.keys(config.schemas)) {
     const schemaData = config.schemas[schemaName];
@@ -103,7 +103,7 @@ export function getRenderSchemaOptions(config: ObeliskConfig) {
   return options;
 }
 
-export function generateSchema(config: ObeliskConfig, srcPrefix: string) {
+export function generateSchema(config: DubheConfig, srcPrefix: string) {
   const options = getRenderSchemaOptions(config);
   for (const option of options) {
     let code: string;

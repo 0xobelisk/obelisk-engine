@@ -1,7 +1,7 @@
 // import type { CommandModule } from "yargs";
 // import { logError } from "../utils/errors";
 // import { upgradeHandler } from "../utils";
-// import { ObeliskConfig, loadConfig, ValueType } from "@0xobelisk/sui-common";
+// import { DubheConfig, loadConfig, ValueType } from "@0xobelisk/sui-common";
 
 // type Options = {
 //   network: any;
@@ -22,7 +22,7 @@
 //       },
 //       configPath: {
 //         type: "string",
-//         default: "obelisk.config.ts",
+//         default: "dubhe.config.ts",
 //         decs: "Path to the config file",
 //       },
 //     });
@@ -30,18 +30,18 @@
 
 //   async handler({ network, configPath }) {
 //     try {
-//       const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
+//       const dubheConfig = (await loadConfig(configPath)) as DubheConfig;
 
-//       let schemaNames = Object.keys(obeliskConfig.schemas).filter(
+//       let schemaNames = Object.keys(dubheConfig.schemas).filter(
 //         (key) =>
 //           !(
-//             typeof obeliskConfig.schemas === "object" &&
-//             "ephemeral" in obeliskConfig.schemas &&
-//             (obeliskConfig.schemas[key] as ValueType).ephemeral
+//             typeof dubheConfig.schemas === "object" &&
+//             "ephemeral" in dubheConfig.schemas &&
+//             (dubheConfig.schemas[key] as ValueType).ephemeral
 //           )
 //       );
 
-//       await upgradeHandler(obeliskConfig.name, network, schemaNames);
+//       await upgradeHandler(dubheConfig.name, network, schemaNames);
 //     } catch (error: any) {
 //       logError(error);
 //       process.exit(1);

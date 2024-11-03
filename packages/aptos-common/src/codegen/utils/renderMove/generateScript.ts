@@ -1,8 +1,8 @@
-import { ObeliskConfig } from "../../types";
+import { DubheConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import { existsSync } from "fs";
 
-export function generateScript(config: ObeliskConfig, srcPrefix: string) {
+export function generateScript(config: DubheConfig, srcPrefix: string) {
     if (
         !existsSync(
             `${srcPrefix}/contracts/${config.name}/sources/script/deploy_hook.move`

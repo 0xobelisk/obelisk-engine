@@ -1,8 +1,8 @@
-import { ObeliskConfig } from "../../types";
+import { DubheConfig } from "../../types";
 import { formatAndWriteMove } from "../formatAndWrite";
 import { existsSync } from "fs";
 
-export function generateSystem2(config: ObeliskConfig, srcPrefix: string) {
+export function generateSystem2(config: DubheConfig, srcPrefix: string) {
   config.systems.map((systemName) => {
     let code = `module ${config.name}::${systemName} {
 
@@ -32,7 +32,7 @@ export function generateNewSystem1(
   );
 }
 
-export function generateSystem(config: ObeliskConfig, srcPrefix: string) {
+export function generateSystem(config: DubheConfig, srcPrefix: string) {
   config.systems.map((systemName) => {
     if (
       !existsSync(

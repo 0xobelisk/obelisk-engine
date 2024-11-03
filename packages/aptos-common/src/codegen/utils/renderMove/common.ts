@@ -57,7 +57,7 @@ export function getUseSchema(
 
 /**
  * @param values
- * @return [ name_schema::register(&mut _obelisk_world, ctx) ,info_schema::register(&mut _obelisk_world, ctx) ]
+ * @return [ name_schema::register(&mut _dubhe_world, ctx) ,info_schema::register(&mut _dubhe_world, ctx) ]
  */
 export function getRegisterSchema(
   values: Record<string, SchemaMapType>
@@ -130,8 +130,8 @@ export function getDestStructAttrs(
         key === dest
           ? `${prefixArgs}${key}`
           : isSingle
-          ? `${prefixArgs}${key}: _obelisk_schema.${key}`
-          : `${prefixArgs}${key}: _obelisk_data.${key}`
+          ? `${prefixArgs}${key}: _dubhe_schema.${key}`
+          : `${prefixArgs}${key}: _dubhe_data.${key}`
       );
 }
 
@@ -308,9 +308,9 @@ export function getStructAttrsQuery(
   prefixArgs: string
 ): string[] {
   return typeof values === "string"
-    ? [`${prefixArgs}_obelisk_data.value`]
+    ? [`${prefixArgs}_dubhe_data.value`]
     : Object.entries(values).map(
-        ([key, _]) => `${prefixArgs}_obelisk_data.${key}`
+        ([key, _]) => `${prefixArgs}_dubhe_data.${key}`
       );
 }
 
@@ -362,9 +362,9 @@ ${getStructAttrs(values, "\t\t\t").join(", \n")}
 export function renderRegisterFunc(): string {
   return `\tpublic fun register(deployer: &signer) {
 \t\tassert!(address_of(deployer) == world::deployer_address(), 0);
-\t\tlet _obelisk_schema = SchemaData { value: table::new() };
+\t\tlet _dubhe_schema = SchemaData { value: table::new() };
 \t\tlet resource_signer = world::resource_signer();
-\t\tmove_to(&resource_signer, _obelisk_schema)
+\t\tmove_to(&resource_signer, _dubhe_schema)
 \t}`;
 }
 
@@ -372,23 +372,23 @@ export function renderSetFunc(
   structName: string,
   values: Record<string, string> | string
 ): string {
-  return `\tpublic(friend) fun set(_obelisk_entity_key: address, ${getStructAttrsWithType(
+  return `\tpublic(friend) fun set(_dubhe_entity_key: address, ${getStructAttrsWithType(
     values,
     " "
   )}) acquires SchemaData {
-\t\tlet _obelisk_resource_address = world::resource_address();
-\t\tlet _obelisk_schema = borrow_global_mut<SchemaData>(_obelisk_resource_address);
-\t\tif(table::contains<address, ${structName}>(&_obelisk_schema.value, _obelisk_entity_key)) {
-\t\t\tlet _obelisk_data = table::borrow_mut<address, ${structName}>(&mut _obelisk_schema.value, _obelisk_entity_key);
+\t\tlet _dubhe_resource_address = world::resource_address();
+\t\tlet _dubhe_schema = borrow_global_mut<SchemaData>(_dubhe_resource_address);
+\t\tif(table::contains<address, ${structName}>(&_dubhe_schema.value, _dubhe_entity_key)) {
+\t\t\tlet _dubhe_data = table::borrow_mut<address, ${structName}>(&mut _dubhe_schema.value, _dubhe_entity_key);
 ${
   typeof values === "string"
-    ? `\t\t\t_obelisk_data.value = value;`
+    ? `\t\t\t_dubhe_data.value = value;`
     : Object.entries(values)
-        .map(([key, _]) => `\t\t\t_obelisk_data.${key} = ${key};`)
+        .map(([key, _]) => `\t\t\t_dubhe_data.${key} = ${key};`)
         .join("\n")
 }
 \t\t} else {
-\t\t\ttable::add(&mut _obelisk_schema.value, _obelisk_entity_key, new(${getStructAttrs(
+\t\t\ttable::add(&mut _dubhe_schema.value, _obelisk_entity_key, new(${getStructAttrs(
     values,
     " "
   )}));

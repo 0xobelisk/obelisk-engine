@@ -1,5 +1,5 @@
 import type { CommandModule } from 'yargs';
-import { worldgen, loadConfig, ObeliskConfig } from '@0xobelisk/aptos-common';
+import { worldgen, loadConfig, DubheConfig } from '@0xobelisk/aptos-common';
 import chalk from 'chalk';
 
 type Options = {
@@ -9,7 +9,7 @@ type Options = {
 const commandModule: CommandModule<Options, Options> = {
 	command: 'schemagen <configPath>',
 
-	describe: 'Autogenerate Obelisk schemas based on the config file',
+	describe: 'Autogenerate Dubhe schemas based on the config file',
 
 	builder(yargs) {
 		return yargs.options({});
@@ -17,10 +17,10 @@ const commandModule: CommandModule<Options, Options> = {
 
 	async handler({ configPath }) {
 		try {
-			const obeliskConfig = (await loadConfig(
+			const dubheConfig = (await loadConfig(
 				configPath
-			)) as ObeliskConfig;
-			worldgen(obeliskConfig);
+			)) as DubheConfig;
+			worldgen(dubheConfig);
 			process.exit(0);
 		} catch (error: any) {
 			console.log(chalk.red('Schemagen failed!'));

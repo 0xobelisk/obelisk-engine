@@ -1,6 +1,6 @@
 module examples::ephemeral_schema {
 	use std::option::none;
-	use obelisk::events;
+	use dubhe::events;
     
     const SCHEMA_ID: vector<u8> = b"ephemeral";
     const SCHEMA_TYPE: u8 = 2;

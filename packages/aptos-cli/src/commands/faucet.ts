@@ -7,7 +7,7 @@ import type { CommandModule } from 'yargs';
 
 import {
 	validatePrivateKey,
-	ObeliskCliError,
+	DubheCliError,
 	requestFaucet,
 	getBalance,
 } from '../utils';
@@ -22,7 +22,7 @@ type Options = {
 const commandModule: CommandModule<Options, Options> = {
 	command: 'faucet',
 
-	describe: 'Interact with a Obelisk faucet',
+	describe: 'Interact with a Dubhe faucet',
 
 	builder(yargs) {
 		return yargs.options({
@@ -56,7 +56,7 @@ const commandModule: CommandModule<Options, Options> = {
 		if (recipient === undefined) {
 			const privateKey = process.env.PRIVATE_KEY;
 			if (!privateKey)
-				throw new ObeliskCliError(
+				throw new DubheCliError(
 					`Missing PRIVATE_KEY environment variable.
     Run 'echo "PRIVATE_KEY=YOUR_PRIVATE_KEY" > .env'
     in your contracts directory to use the default aptos private key.`
@@ -64,7 +64,7 @@ const commandModule: CommandModule<Options, Options> = {
 
 			const privateKeyFormat = validatePrivateKey(privateKey);
 			if (privateKeyFormat === false) {
-				throw new ObeliskCliError(`Please check your privateKey.`);
+				throw new DubheCliError(`Please check your privateKey.`);
 			}
 			const keypair = AptosAccount.fromAptosAccountObject({
 				privateKeyHex: privateKeyFormat.toString(),

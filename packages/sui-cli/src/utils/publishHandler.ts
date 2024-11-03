@@ -1,4 +1,4 @@
-import { Obelisk } from '@0xobelisk/sui-client';
+import { Dubhe } from '@0xobelisk/sui-client';
 import { Transaction } from '@mysten/sui/transactions';
 import {
 	getFullnodeUrl,
@@ -7,7 +7,7 @@ import {
 } from '@mysten/sui/client';
 import { execSync } from 'child_process';
 import chalk from 'chalk';
-import { ObeliskCliError } from './errors';
+import { DubheCliError } from './errors';
 import {
 	updateVersionInFile,
 	saveContractData,
@@ -42,7 +42,7 @@ export async function publishHandler(
 	console.log('  ├─ Validating Environment...');
 	const privateKey = process.env.PRIVATE_KEY;
 	if (!privateKey) {
-		throw new ObeliskCliError(
+		throw new DubheCliError(
 			`Missing PRIVATE_KEY environment variable.
 Run 'echo "PRIVATE_KEY=YOUR_PRIVATE_KEY" > .env'
 in your contracts directory to use the default sui private key.`
@@ -51,11 +51,11 @@ in your contracts directory to use the default sui private key.`
 
 	const privateKeyFormat = validatePrivateKey(privateKey);
 	if (privateKeyFormat === false) {
-		throw new ObeliskCliError(`Please check your privateKey.`);
+		throw new DubheCliError(`Please check your privateKey.`);
 	}
 
-	const obelisk = new Obelisk({ secretKey: privateKeyFormat });
-	const keypair = obelisk.getKeypair();
+	const dubhe = new Dubhe({ secretKey: privateKeyFormat });
+	const keypair = dubhe.getKeypair();
 	console.log(`  └─ Account: ${keypair.toSuiAddress()}`);
 
 	const client = new SuiClient({ url: getFullnodeUrl(network) });

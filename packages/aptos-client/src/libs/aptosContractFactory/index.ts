@@ -8,7 +8,7 @@ export class AptosContractFactory {
   // readonly #query: MapMessageQuery<ApiTypes> = {};
   // readonly #tx: MapMessageTx<ApiTypes> = {};
   /**
-   * Support the following ways to init the Aptos Obelisk:
+   * Support the following ways to init the Aptos Dubhe:
    * 1. mnemonics
    * 2. secretKey (base64 or hex)
    * If none of them is provided, will generate a random mnemonics with 24 words.

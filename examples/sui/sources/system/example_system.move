@@ -1,6 +1,6 @@
 module examples::example_system {
     use examples::single_value_schema;
-    use obelisk::world::World;
+    use dubhe::world::World;
     #[test_only]
     use std::ascii::string;
     #[test_only]

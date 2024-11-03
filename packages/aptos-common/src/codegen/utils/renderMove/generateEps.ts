@@ -1,9 +1,9 @@
 import { formatAndWriteMove } from "../formatAndWrite";
-import {ObeliskConfig} from "../../types";
+import {DubheConfig} from "../../types";
 import {getFriendSchema} from "./common";
 
 export function generateEps(
-    config: ObeliskConfig,
+    config: DubheConfig,
   srcPrefix: string,
   version?: number
 ) {
@@ -12,7 +12,7 @@ export function generateEps(
 }
 
 function generateWorld(
-    config: ObeliskConfig,
+    config: DubheConfig,
   srcPrefix: string,
   version?: number
 ) {
@@ -47,7 +47,7 @@ ${getFriendSchema(config.name, config.schemas)}
     }
 
     public(friend) fun resource_signer(): signer acquires World {
-        let _obelisk_world = borrow_global_mut<World>(@${config.name});
+        let _dubhe_world = borrow_global_mut<World>(@${config.name});
         create_signer_with_capability(&_obelisk_world.resource_cap)
     }
 

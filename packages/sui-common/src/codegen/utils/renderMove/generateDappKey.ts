@@ -1,8 +1,8 @@
-import { ObeliskConfig } from '../../types';
+import { DubheConfig } from '../../types';
 import { formatAndWriteMove } from '../formatAndWrite';
 
 export async function generateDappKey(
-	config: ObeliskConfig,
+	config: DubheConfig,
 	srcPrefix: string
 ) {
 	console.log('\n🔑 Starting DappKey Generation...');

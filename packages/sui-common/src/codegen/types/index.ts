@@ -56,7 +56,7 @@ export type SchemaType =  {
   structure: Record<string, string>;
 }
 
-export type ObeliskConfig = {
+export type DubheConfig = {
   name: string;
   description: string;
   systems: string[];

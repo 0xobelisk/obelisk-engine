@@ -1,8 +1,8 @@
-import { ObeliskConfig } from '../../types';
+import { DubheConfig } from '../../types';
 import { formatAndWriteMove } from '../formatAndWrite';
 import { existsSync } from 'fs';
 
-export async function generateSystem(config: ObeliskConfig, srcPrefix: string) {
+export async function generateSystem(config: DubheConfig, srcPrefix: string) {
 	console.log('\n⚙️ Starting System Generation...');
 	config.systems.map(async systemName => {
 		console.log(`  ├─ Generating system: ${systemName}`);

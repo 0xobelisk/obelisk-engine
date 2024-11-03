@@ -30,46 +30,46 @@ module examples::single_column_schema {
 
 	public fun register(deployer: &signer) {
 		assert!(address_of(deployer) == world::deployer_address(), 0);
-		let _obelisk_schema = SchemaData { value: table::new() };
+		let _dubhe_schema = SchemaData { value: table::new() };
 		let resource_signer = world::resource_signer();
-		move_to(&resource_signer, _obelisk_schema)
+		move_to(&resource_signer, _dubhe_schema)
 	}
 
-	public(friend) fun set(_obelisk_entity_key: address,  value: u64) acquires SchemaData {
-		let _obelisk_resource_address = world::resource_address();
-		let _obelisk_schema = borrow_global_mut<SchemaData>(_obelisk_resource_address);
-		if(table::contains<address, SingleColumnData>(&_obelisk_schema.value, _obelisk_entity_key)) {
-			let _obelisk_data = table::borrow_mut<address, SingleColumnData>(&mut _obelisk_schema.value, _obelisk_entity_key);
-			_obelisk_data.value = value;
+	public(friend) fun set(_dubhe_entity_key: address,  value: u64) acquires SchemaData {
+		let _dubhe_resource_address = world::resource_address();
+		let _dubhe_schema = borrow_global_mut<SchemaData>(_dubhe_resource_address);
+		if(table::contains<address, SingleColumnData>(&_dubhe_schema.value, _dubhe_entity_key)) {
+			let _dubhe_data = table::borrow_mut<address, SingleColumnData>(&mut _dubhe_schema.value, _dubhe_entity_key);
+			_dubhe_data.value = value;
 		} else {
-			table::add(&mut _obelisk_schema.value, _obelisk_entity_key, new( value));
+			table::add(&mut _dubhe_schema.value, _dubhe_entity_key, new( value));
 		};
-		events::emit_set(schema_id(), schema_type(), some(_obelisk_entity_key), SingleColumnDataEvent{  value });
+		events::emit_set(schema_id(), schema_type(), some(_dubhe_entity_key), SingleColumnDataEvent{  value });
 	}
 
-	public(friend) fun remove(_obelisk_entity_key: address) acquires SchemaData {
-		let _obelisk_resource_address = world::resource_address();
-		let _obelisk_schema = borrow_global_mut<SchemaData>(_obelisk_resource_address);
-		let _obelisk_data = table::remove(&mut _obelisk_schema.value, _obelisk_entity_key);
-		events::emit_remove(schema_id(), _obelisk_entity_key);
-		let SingleColumnData { value: _value } = _obelisk_data;
+	public(friend) fun remove(_dubhe_entity_key: address) acquires SchemaData {
+		let _dubhe_resource_address = world::resource_address();
+		let _dubhe_schema = borrow_global_mut<SchemaData>(_dubhe_resource_address);
+		let _dubhe_data = table::remove(&mut _dubhe_schema.value, _dubhe_entity_key);
+		events::emit_remove(schema_id(), _dubhe_entity_key);
+		let SingleColumnData { value: _value } = _dubhe_data;
 	}
 
 	#[view]
-	public fun get(_obelisk_entity_key: address): u64 acquires SchemaData {
-		let _obelisk_resource_address = world::resource_address();
-		let _obelisk_schema = borrow_global<SchemaData>(_obelisk_resource_address);
-		let _obelisk_data = table::borrow<address, SingleColumnData>(&_obelisk_schema.value, _obelisk_entity_key);
+	public fun get(_dubhe_entity_key: address): u64 acquires SchemaData {
+		let _dubhe_resource_address = world::resource_address();
+		let _dubhe_schema = borrow_global<SchemaData>(_dubhe_resource_address);
+		let _dubhe_data = table::borrow<address, SingleColumnData>(&_dubhe_schema.value, _dubhe_entity_key);
 		(
-			_obelisk_data.value
+			_dubhe_data.value
 		)
 	}
 
 	#[view]
-	public fun contains(_obelisk_entity_key: address): bool acquires SchemaData {
-		let _obelisk_resource_address = world::resource_address();
-		let _obelisk_schema = borrow_global<SchemaData>(_obelisk_resource_address);
-		table::contains<address, SingleColumnData>(&_obelisk_schema.value, _obelisk_entity_key)
+	public fun contains(_dubhe_entity_key: address): bool acquires SchemaData {
+		let _dubhe_resource_address = world::resource_address();
+		let _dubhe_schema = borrow_global<SchemaData>(_dubhe_resource_address);
+		table::contains<address, SingleColumnData>(&_dubhe_schema.value, _dubhe_entity_key)
 	}
 
 	#[view]

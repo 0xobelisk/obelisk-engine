@@ -1,5 +1,5 @@
 import {
-  Obelisk,
+  Dubhe,
   NetworkType,
   TransactionArgument,
   loadMetadata,
@@ -23,16 +23,16 @@ async function init() {
 
   const privateKey = process.env.PRIVATE_KEY;
 
-  const obelisk = new Obelisk({
+  const dubhe = new Dubhe({
     networkType: network as NetworkType,
     packageId: packageId,
     metadata: metadata,
     secretKey: privateKey,
   });
 
-  console.log(obelisk.getAddress());
-  // await obelisk.requestFaucet();
-  let balance = await obelisk.getBalance();
+  console.log(dubhe.getAddress());
+  // await dubhe.requestFaucet();
+  let balance = await dubhe.getBalance();
   console.log('balance', balance);
 
   // let tx = new Transaction();
@@ -41,12 +41,12 @@ async function init() {
   //   '0xbb3e90c52cb585aeb926edb6fb3d01146d47e96d9692394bd9d691ce1b0bd693'
   // );
   // let params: TransactionArgument[] = [assets, owner];
-  // const query = (await obelisk.query.assets_system.owned_assets(
+  // const query = (await dubhe.query.assets_system.owned_assets(
   //   tx,
   //   params
   // )) as DevInspectResults;
   // console.log(query);
-  // const formatData = obelisk.view(query);
+  // const formatData = dubhe.view(query);
   // console.log(formatData);
 
   let tx = new Transaction();
@@ -57,12 +57,12 @@ async function init() {
   let asset_id = tx.pure.u32(assetId);
   let params: TransactionArgument[] = [assets, asset_id];
 
-  let asset_metadata = (await obelisk.query.assets_system.metadata_of(
+  let asset_metadata = (await dubhe.query.assets_system.metadata_of(
     tx,
     params
   )) as DevInspectResults;
   console.log('asset_metadata.results[0]', asset_metadata.results![0]);
-  const format_metadata = obelisk.view(asset_metadata);
+  const format_metadata = dubhe.view(asset_metadata);
 
   // setAssetMetadata({ id: assetId, metadata });
   console.log('metadata', format_metadata);

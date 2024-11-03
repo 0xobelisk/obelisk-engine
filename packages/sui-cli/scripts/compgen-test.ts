@@ -5,7 +5,7 @@ type SchemaValueType = string;
 
 type ConfigDataType = Record<string, string>;
 
-type ObeliskConfig = {
+type DubheConfig = {
 	name: string;
 	systems: string[];
 	schemas: Record<string, SchemaMapType | SchemaValueType>;
@@ -60,7 +60,7 @@ async function init() {
 			// Key - Single value
 			suifren: 'bool',
 		},
-	} as ObeliskConfig;
+	} as DubheConfig;
 
 	let output = `module eps::entity {
     use sui::bag::Bag;
@@ -107,7 +107,7 @@ async function init() {
 }`;
 	let a = formatAndWriteMove(
 		output,
-		'/Users/feng/Desktop/obelisk/obelisk-engine/packages/cli',
+		'/Users/feng/Desktop/obelisk/dubhe/packages/cli',
 		'formatAndWriteMove'
 	);
 	// console.log(output)

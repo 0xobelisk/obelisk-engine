@@ -1,4 +1,4 @@
-import { loadConfig, ObeliskConfig } from "@0xobelisk/aptos-common";
+import { loadConfig, DubheConfig } from "@0xobelisk/aptos-common";
 import type { CommandModule } from "yargs";
 import { execSync } from "child_process";
 import chalk from "chalk";
@@ -10,25 +10,25 @@ type Options = {
 const commandModule: CommandModule<Options, Options> = {
   command: "test",
 
-  describe: "Run tests in Obelisk contracts",
+  describe: "Run tests in Dubhe contracts",
 
   builder(yargs) {
     return yargs.options({
       configPath: {
         type: "string",
-        default: "obelisk.config.ts",
+        default: "dubhe.config.ts",
         decs: "Path to the config file",
       },
     });
   },
 
   async handler({ configPath }) {
-    const obeliskConfig = (await loadConfig(configPath)) as ObeliskConfig;
+    const dubheConfig = (await loadConfig(configPath)) as DubheConfig;
 
     // Start an internal anvil process if no world address is provided
     try {
       const logs = execSync(
-        `aptos move test --package-dir contracts/${obeliskConfig.name} --named-addresses ${obeliskConfig.name}=0x0`,
+        `aptos move test --package-dir contracts/${dubheConfig.name} --named-addresses ${dubheConfig.name}=0x0`,
         {
           encoding: "utf-8",
         }

@@ -26,7 +26,7 @@ export async function checkLocalNodeStatus() {
 		} else {
 			console.log(chalk.red('\n❌ Node Status: Not Running'));
 			console.log(chalk.yellow('\n💡 Quick Start:'));
-			console.log(chalk.yellow('  └─ Run `obelisk localnode start`'));
+			console.log(chalk.yellow('  └─ Run `dubhe localnode start`'));
 		}
 	} catch (error) {
 		console.log(chalk.red('\n❌ Node Status: Not Running'));

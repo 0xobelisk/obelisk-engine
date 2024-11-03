@@ -1,4 +1,4 @@
-import { Obelisk } from '@0xobelisk/sui-client';
+import { Dubhe } from '@0xobelisk/sui-client';
 import type { CommandModule } from 'yargs';
 import { requestSuiFromFaucetV0, getFaucetHost } from '@mysten/sui/faucet';
 import {
@@ -6,7 +6,7 @@ import {
 	getFullnodeUrl,
 	GetBalanceParams,
 } from '@mysten/sui/client';
-import { validatePrivateKey, ObeliskCliError } from '../utils';
+import { validatePrivateKey, DubheCliError } from '../utils';
 
 type Options = {
 	network: any;
@@ -16,13 +16,13 @@ type Options = {
 const commandModule: CommandModule<Options, Options> = {
 	command: 'faucet',
 
-	describe: 'Interact with a Obelisk faucet',
+	describe: 'Interact with a Dubhe faucet',
 
 	builder(yargs) {
 		return yargs.options({
 			network: {
 				type: 'string',
-				desc: 'URL of the Obelisk faucet',
+				desc: 'URL of the Dubhe faucet',
 				choices: ['testnet', 'devnet', 'localnet'],
 				default: 'localnet',
 			},
@@ -38,7 +38,7 @@ const commandModule: CommandModule<Options, Options> = {
 		if (recipient === undefined) {
 			const privateKey = process.env.PRIVATE_KEY;
 			if (!privateKey)
-				throw new ObeliskCliError(
+				throw new DubheCliError(
 					`Missing PRIVATE_KEY environment variable.
     Run 'echo "PRIVATE_KEY=YOUR_PRIVATE_KEY" > .env'
     in your contracts directory to use the default sui private key.`
@@ -46,12 +46,12 @@ const commandModule: CommandModule<Options, Options> = {
 
 			const privateKeyFormat = validatePrivateKey(privateKey);
 			if (privateKeyFormat === false) {
-				throw new ObeliskCliError(`Please check your PRIVATE_KEY.`);
+				throw new DubheCliError(`Please check your PRIVATE_KEY.`);
 			}
-			const obelisk = new Obelisk({
+			const dubhe = new Dubhe({
 				secretKey: privateKeyFormat,
 			});
-			const keypair = obelisk.getKeypair();
+			const keypair = dubhe.getKeypair();
 			faucet_address = keypair.toSuiAddress();
 		} else {
 			faucet_address = recipient;

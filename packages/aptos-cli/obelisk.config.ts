@@ -1,6 +1,6 @@
-import { ObeliskConfig } from '@0xobelisk/aptos-common';
+import { DubheConfig } from '@0xobelisk/aptos-common';
 
-export const obeliskConfig = {
+export const dubheConfig = {
 	name: 'examples',
 	description: 'examples',
 	systems: ['example_system'],
@@ -113,4 +113,4 @@ export const obeliskConfig = {
 			},
 		},
 	},
-} as ObeliskConfig;
+} as DubheConfig;

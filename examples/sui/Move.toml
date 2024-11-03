@@ -5,10 +5,10 @@ edition = "2024.beta"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
-# Obelisk = { local = "../../packages/obelisk-framework" }
-Obelisk = { git = "https://github.com/0xobelisk/obelisk-engine.git", subdir = "packages/obelisk-framework", rev = "main" }
+# Dubhe = { local = "../../packages/dubhe-framework" }
+Dubhe = { git = "https://github.com/0xobelisk/dubhe.git", subdir = "packages/dubhe-framework", rev = "main" }
 
 [addresses]
 sui =  "0x2"
-obelisk =  "0x0"
+dubhe =  "0x0"
 examples = "0x0"

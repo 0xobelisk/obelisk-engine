@@ -10,11 +10,11 @@
 	],
 	"type": "module",
 	"author": "team@obelisk.build",
-	"homepage": "https://github.com/0xobelisk/obelisk-engine/tree/main/packages/aptos-cli#readme",
-	"bugs": "https://github.com/0xobelisk/obelisk-engine/issues",
+	"homepage": "https://github.com/0xobelisk/dubhe/tree/main/packages/aptos-cli#readme",
+	"bugs": "https://github.com/0xobelisk/dubhe/issues",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/0xobelisk/obelisk-engine.git"
+		"url": "https://github.com/0xobelisk/dubhe.git"
 	},
 	"license": "Apache-2.0",
 	"publishConfig": {
@@ -28,11 +28,11 @@
 	},
 	"types": "src/index.ts",
 	"bin": {
-		"obelisk": "./dist/obelisk.js"
+		"dubhe": "./dist/dubhe.js"
 	},
 	"scripts": {
 		"build": "pnpm run build:js",
-		"build:js": "tsup && chmod +x ./dist/obelisk.js",
+		"build:js": "tsup && chmod +x ./dist/dubhe.js",
 		"clean": "pnpm run clean:js",
 		"clean:js": "rimraf dist",
 		"dev": "tsup --watch",

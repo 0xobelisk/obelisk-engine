@@ -8,8 +8,8 @@
 //     use sui::coin::{TreasuryCap, Coin};
 //
 //     const SYMBOL: vector<u8> = b"OBK";
-//     const NAME: vector<u8> = b"Obelisk Coin";
-//     const DESCRIPTION: vector<u8> = b"Obelisk Coin";
+//     const NAME: vector<u8> = b"Dubhe Coin";
+//     const DESCRIPTION: vector<u8> = b"Dubhe Coin";
 //     const ICON_URL: vector<u8> = b"https://avatars.githubusercontent.com/u/136115432?s=200&v=4";
 //     const DECIMALS: u8 = 8;
 //     // 10e

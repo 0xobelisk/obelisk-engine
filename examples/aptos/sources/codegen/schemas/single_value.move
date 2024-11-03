@@ -25,24 +25,24 @@ module examples::single_value_schema {
 
 	public fun register(deployer: &signer) {
 		assert!(address_of(deployer) == world::deployer_address(), 0);
-		let _obelisk_schema = new(1000);
+		let _dubhe_schema = new(1000);
 		let resource_signer = world::resource_signer();
-		move_to(&resource_signer, _obelisk_schema)
+		move_to(&resource_signer, _dubhe_schema)
 	}
 
 	public(friend) fun set( value: u64) acquires SingleValueData {
-		let _obelisk_resource_address = world::resource_address();
-		let _obelisk_schema = borrow_global_mut<SingleValueData>(_obelisk_resource_address);
-		_obelisk_schema.value = value;
+		let _dubhe_resource_address = world::resource_address();
+		let _dubhe_schema = borrow_global_mut<SingleValueData>(_dubhe_resource_address);
+		_dubhe_schema.value = value;
 		events::emit_set(schema_id(), schema_type(), none(), SingleValueDataEvent {  value });
 	}
 
 	#[view]
 	public fun get(): u64 acquires SingleValueData {
-		let _obelisk_resource_address = world::resource_address();
-		let _obelisk_schema = borrow_global<SingleValueData>(_obelisk_resource_address);
+		let _dubhe_resource_address = world::resource_address();
+		let _dubhe_schema = borrow_global<SingleValueData>(_dubhe_resource_address);
 		(
-			_obelisk_schema.value
+			_dubhe_schema.value
 		)
 	}
 

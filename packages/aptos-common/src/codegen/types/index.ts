@@ -42,7 +42,7 @@ export interface ValueType {
 
 export type SchemaMapType = BaseType | ValueType;
 
-export type ObeliskConfig = {
+export type DubheConfig = {
   name: string;
   description: string;
   systems: string[];

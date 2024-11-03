@@ -1,4 +1,4 @@
-import { SchemaType, ObeliskConfig } from '../../types';
+import { SchemaType, DubheConfig } from '../../types';
 import { rmdirSync, existsSync } from 'fs';
 import { deleteFolderRecursive } from './common';
 import { generateSystem } from './generateSystem';
@@ -21,7 +21,7 @@ function matchFrameworkId(
 }
 
 export async function schemaGen(
-	config: ObeliskConfig,
+	config: DubheConfig,
 	srcPrefix?: string,
 	network?: 'mainnet' | 'testnet' | 'devnet' | 'localnet',
 	frameworkId?: string

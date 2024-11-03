@@ -79,7 +79,7 @@ module examples::example_system {
 
         // admin == 0x1, fee == 100
         let (name, admin, fee) = single_struct_schema::get();
-        assert!(name == string::utf8(b"obelisk"), 0);
+        assert!(name == string::utf8(b"dubhe"), 0);
         assert!(admin == @0x1, 0);
         assert!(fee == 100, 0);
 
@@ -90,10 +90,10 @@ module examples::example_system {
         assert!(fee == 100, 0);
 
         // Update admin to 0x2, Update fee to 101,
-        single_struct_schema::set(string::utf8(b"obelisk"),@0x2, 101);
+        single_struct_schema::set(string::utf8(b"dubhe"),@0x2, 101);
         // admin == 0x2, fee == 101
         let (name, admin, fee) = single_struct_schema::get();
-        assert!(name == string::utf8(b"obelisk"), 0);
+        assert!(name == string::utf8(b"dubhe"), 0);
         assert!(admin == @0x2, 0);
         assert!(fee == 101, 0);
 
@@ -109,7 +109,7 @@ module examples::example_system {
 
         // admin == 0x3, fee == 102
         let (name, admin, fee) = single_struct_schema::get();
-        assert!(name == string::utf8(b"obelisk"), 0);
+        assert!(name == string::utf8(b"dubhe"), 0);
         assert!(admin == @0x3, 0);
         assert!(fee == 102, 0);
 

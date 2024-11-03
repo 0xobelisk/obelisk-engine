@@ -200,11 +200,11 @@ export async function generateSchemaStructure(
 		const schemaMoudle = `module ${projectName}::${schemaName}_schema {
                     use std::ascii::String;
                     use std::type_name;
-                    use obelisk::dapps_system;
-                    use obelisk::dapps_schema::Dapps;
-                    use obelisk::storage_value::{Self, StorageValue};
-                    use obelisk::storage_map::{Self, StorageMap};
-                    use obelisk::storage_double_map::{Self, StorageDoubleMap};
+                    use dubhe::dapps_system;
+                    use dubhe::dapps_schema::Dapps;
+                    use dubhe::storage_value::{Self, StorageValue};
+                    use dubhe::storage_map::{Self, StorageMap};
+                    use dubhe::storage_double_map::{Self, StorageDoubleMap};
                     use ${projectName}::dapp_key::DappKey;
                     ${generateImport(projectName, schemaName, schema)}
 

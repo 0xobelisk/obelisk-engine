@@ -25,7 +25,7 @@ import { SuiMoveMoudleFuncType } from '../libs/suiContractFactory/types';
 export const ObjectContentFields = record(string(), any());
 export type ObjectContentFields = Infer<typeof ObjectContentFields>;
 
-export type ObeliskObjectData = {
+export type DubheObjectData = {
   objectId: string;
   objectType: string;
   objectVersion: number;
@@ -33,14 +33,14 @@ export type ObeliskObjectData = {
   objectFields: ObjectContentFields;
 };
 
-export type ObeliskObjectContent = {
+export type DubheObjectContent = {
   dataType: 'moveObject';
   fields: MoveStruct;
   hasPublicTransfer: boolean;
   type: string;
 };
 
-export type ObeliskParams = {
+export type DubheParams = {
   mnemonics?: string;
   secretKey?: string;
   fullnodeUrls?: string[];
@@ -275,6 +275,6 @@ export type ObjectContent = {
   dataType: string;
 };
 
-export type SuiObeliskReturnType<T extends boolean> = T extends true
+export type SuiDubheReturnType<T extends boolean> = T extends true
   ? SuiTransactionBlockResponse
   : SuiTx;

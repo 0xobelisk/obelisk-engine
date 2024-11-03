@@ -1,6 +1,6 @@
-# Obelisk Client SDK
+# Dubhe Client SDK
 
-Obelisk is client agnostic: any client -- a browser, a game engine, or an ios/android app -- can implement the synchronization protocol and a client-side cache to replicate Store tables, along with the necessary infrastructure to send transactions to the World.
+Dubhe is client agnostic: any client -- a browser, a game engine, or an ios/android app -- can implement the synchronization protocol and a client-side cache to replicate Store tables, along with the necessary infrastructure to send transactions to the World.
 
 Currently we only support browsers, Node and the COCOS game engine.
 
@@ -16,7 +16,7 @@ We create a Project called Counter and declare sigleton schema called counter, w
 
 
 ```typescript
-import { ObeliskConfig } from '@0xobelisk/sui-common';
+import { DubheConfig } from '@0xobelisk/sui-common';
 
 export const obeliskConfig = {
   name: 'counter',
@@ -29,13 +29,13 @@ export const obeliskConfig = {
     },
   },
   sample_schema: 'u64',
-} as ObeliskConfig;
+} as DubheConfig;
 ```
 
-Through the CLI, we will generate the corresponding contract based on obelisk.config.ts At this point we need to write the system logic.
+Through the CLI, we will generate the corresponding contract based on dubhe.config.ts At this point we need to write the system logic.
 
 ```bash
-obelisk schemagen obelisk.config.ts
+obelisk schemagen dubhe.config.ts
 ```
 
 The next step is simply to write the system file method.
@@ -57,22 +57,22 @@ Finally we deploy the complete contract to devnet
 
 
 ```bash
-obelisk publish --network devnet --configPath obelisk.config.ts
+obelisk publish --network devnet --configPath dubhe.config.ts
 ```
 
 We'll get the `packageId` and `worldId` on the command line.
 
-### Init Obelisk Client
+### Init Dubhe Client
 
 ```typescript
-import { getMetadata, Obelisk, NetworkType } from "@0xobelisk/sui-client";
+import { getMetadata, Dubhe, NetworkType } from "@0xobelisk/sui-client";
 
 const network = "devnet" as NetworkType
 const packageId = "0x804578b9eed47d461bba52c393cf148302819e2ba0a0f558356cc419b3e941ed"
 
 const metadata = await getMetadata(network, packageId);
 
-const obelisk = new Obelisk({
+const obelisk = new Dubhe({
     networkType: network,
     packageId: packageId,
     metadata: metadata,
@@ -85,11 +85,11 @@ const obelisk = new Obelisk({
 If you need to call a method in the system, you can do so using the `obelisk.tx.moudleName.funcName()` form.
 
 ```typescript
-import { getMetadata, Obelisk, TransactionBlock } from "@0xobelisk/sui-client";
+import { getMetadata, Dubhe, TransactionBlock } from "@0xobelisk/sui-client";
 
 const metadata = await getMetadata(network, packageId);
 
-const obelisk = new Obelisk({
+const obelisk = new Dubhe({
     networkType: network,
     packageId: packageId,
     metadata: metadata,
@@ -130,7 +130,7 @@ If your system method provides a method with no modification status and a return
 
 ```typescript
 const metadata = await getMetadata(NETWORK, PACKAGE_ID);
-const obelisk = new Obelisk({
+const obelisk = new Dubhe({
     networkType: NETWORK,
     packageId: PACKAGE_ID,
     metadata: metadata,
@@ -150,7 +150,7 @@ Queries the Object information of worldId.
 
 ```typescript
     const metadata = await getMetadata(NETWORK, PACKAGE_ID);
-    const obelisk = new Obelisk({
+    const obelisk = new Dubhe({
         networkType: NETWORK,
         packageId: PACKAGE_ID,
         metadata: metadata,
@@ -165,7 +165,7 @@ List all schema name in the world store.
 
 ```typescript
 const metadata = await getMetadata(NETWORK, PACKAGE_ID);
-const obelisk = new Obelisk({
+const obelisk = new Dubhe({
     networkType: NETWORK,
     packageId: PACKAGE_ID,
     metadata: metadata,
@@ -182,7 +182,7 @@ Get the entity's data based on schema name and entity id(option).
 
 ```typescript
 const metadata = await getMetadata(NETWORK, PACKAGE_ID);
-const obelisk = new Obelisk({
+const obelisk = new Dubhe({
     networkType: NETWORK,
     packageId: PACKAGE_ID,
     metadata: metadata,
@@ -215,7 +215,7 @@ Determine if the entity exists
 
 ```typescript
 const metadata = await getMetadata(NETWORK, PACKAGE_ID);
-const obelisk = new Obelisk({
+const obelisk = new Dubhe({
     networkType: NETWORK,
     packageId: PACKAGE_ID,
     metadata: metadata,
@@ -247,7 +247,7 @@ Query all the objects under the current worldId that are owned by a certain addr
 
 ```typescript
 const metadata = await getMetadata(NETWORK, PACKAGE_ID);
-const obelisk = new Obelisk({
+const obelisk = new Dubhe({
     networkType: NETWORK,
     packageId: PACKAGE_ID,
     metadata: metadata,
