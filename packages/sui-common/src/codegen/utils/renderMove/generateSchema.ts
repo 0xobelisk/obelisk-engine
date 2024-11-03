@@ -47,10 +47,10 @@ export function renderSetFunc(
 
 export function renderGetAllFunc(
 	schemaName: string,
-	fields: BaseType | Record<string, BaseType>
+	fields: Record<string, string>
 ): string {
 	return `public fun get(self: &${schemaName}): ${getStructTypes(fields)} {
-        (${getStructAttrsQuery(fields, '')})
+        (${getStructAttrsQuery(fields)})
     }`;
 }
 

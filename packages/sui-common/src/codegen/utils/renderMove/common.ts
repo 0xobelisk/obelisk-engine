@@ -45,11 +45,9 @@ function isAddress(str: string): boolean {
  */
 // export function getStructTypes(values: SchemaType): string {
 export function getStructTypes(
-	values: MoveType | Record<string, MoveType>
+	values: Record<string, string>
 ): string {
-	return typeof values === 'string'
-		? values
-		: `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
+	return `(${Object.entries(values).map(([_, type]) => `${type}`)})`;
 }
 
 /**
@@ -65,14 +63,10 @@ export function getStructAttrsWithType(
 
 /**
  * @param values
- * @param prefixArgs
  * @return [ data.name, data.age ]
  */
 export function getStructAttrsQuery(
-	values: MoveType | Record<string, MoveType>,
-	prefixArgs: string
+	values: Record<string, string>,
 ): string[] {
-	return typeof values === 'string'
-		? [`${prefixArgs}self.value`]
-		: Object.entries(values).map(([key, _]) => `${prefixArgs}self.${key}`);
+	return Object.entries(values).map(([key, _]) => `self.${key}`);
 }
