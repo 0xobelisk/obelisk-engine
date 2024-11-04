@@ -11,7 +11,8 @@ module dubhe::dapps_schema {
         version: StorageMap<address, u32>,
         metadata: StorageMap<address, DappMetadata>,
         schemas: StorageMap<address, vector<String>>,
-        safe_mode: StorageMap<address, bool>
+        safe_mode: StorageMap<address, bool>,
+        verified: StorageMap<address, bool>
     }
 
 
@@ -35,6 +36,10 @@ module dubhe::dapps_schema {
         &mut self.safe_mode
     }
 
+    public(package) fun borrow_mut_verified(self: &mut Dapps): &mut StorageMap<address, bool> {
+        &mut self.verified
+    }
+
     public fun borrow_admin(self: &Dapps): &StorageMap<address, address> {
         &self.admin
     }
@@ -55,6 +60,10 @@ module dubhe::dapps_schema {
         &self.safe_mode
     }
 
+    public fun borrow_verified(self: &mut Dapps): &StorageMap<address, bool> {
+        &self.verified
+    }
+
     fun init(ctx: &mut TxContext) {
         public_share_object(Dapps {
             id: object::new(ctx),
@@ -62,7 +71,8 @@ module dubhe::dapps_schema {
             version: storage_map::new(),
             metadata: storage_map::new(),
             schemas: storage_map::new(),
-            safe_mode: storage_map::new()
+            safe_mode: storage_map::new(),
+            verified: storage_map::new(),
         });
     }
 
