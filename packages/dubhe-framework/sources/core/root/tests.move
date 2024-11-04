@@ -1,6 +1,5 @@
 #[test_only]
 module dubhe::root_tests {
-    use std::option;
     use dubhe::root_schema::Root;
     use dubhe::root_schema;
     use dubhe::root_system;

@@ -2,6 +2,8 @@ module dubhe::dapps_system {
     use std::ascii::String;
     use std::ascii;
     use std::type_name;
+    use dubhe::root_schema::Root;
+    use dubhe::root_system;
     use sui::address;
     use dubhe::dapp_metadata;
     use sui::clock::Clock;
@@ -75,6 +77,18 @@ module dubhe::dapps_system {
     ) {
         assert!(dapps.borrow_admin().get(package_id) == ctx.sender(), 0);
         dapps.borrow_mut_admin().set(package_id, new_admin);
+    }
+
+    public entry fun add_verification(dapps: &mut Dapps, root: &Root, package_id: address, ctx: &mut TxContext) {
+        root_system::ensure_root(root, ctx);
+        assert!(dapps.borrow_metadata().contains_key(package_id), 0);
+        dapps.borrow_mut_verified().set(package_id, true);
+    }
+
+    public entry fun remove_verification(dapps: &mut Dapps, root: &Root, package_id: address, ctx: &mut TxContext) {
+        root_system::ensure_root(root, ctx);
+        assert!(dapps.borrow_metadata().contains_key(package_id), 0);
+        dapps.borrow_mut_verified().remove(package_id);
     }
 
     public fun assert_admin<T: drop>(dapps: &Dapps, ctx: &TxContext) {
